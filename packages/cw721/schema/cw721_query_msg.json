@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Cw721QueryMsg",
-  "anyOf": [
+  "oneOf": [
     {
       "description": "Return the owner of the given token, error if token does not exist Return type: OwnerOfResponse",
       "type": "object",
