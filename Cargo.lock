@@ -200,6 +200,7 @@ version = "0.9.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw721",
  "cw721-base",
  "schemars",
  "serde",
