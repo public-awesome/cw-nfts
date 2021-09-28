@@ -2,9 +2,8 @@ import axios from  "axios";
 import fs from "fs";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { GasPrice, calculateFee, StdFee } from "@cosmjs/stargate";
-import {  makeCosmoshubPath } from "@cosmjs/proto-signing";
+import {  DirectSecp256k1HdWallet, makeCosmoshubPath } from "@cosmjs/proto-signing";
 import { Slip10RawIndex } from "@cosmjs/crypto";
-import { Secp256k1HdWallet } from "@cosmjs/launchpad";
 import path from "path";
 /*
  * This is a set of helpers meant for use with @cosmjs/cli
@@ -60,36 +59,30 @@ interface Network {
 
 const useOptions = (options: Options): Network => {
 
-  const loadOrCreateWallet = async (options: Options, filename: string, password: string): Promise<Secp256k1HdWallet> => {
+  const loadOrCreateWallet = async (options: Options, filename: string, password: string): Promise<DirectSecp256k1HdWallet> => {
     let encrypted: string;
     try {
       encrypted = fs.readFileSync(filename, 'utf8');
     } catch (err) {
       // generate if no file exists
-      const wallet = await Secp256k1HdWallet.generate(12, options.hdPath, options.bech32prefix);
+      const wallet = await DirectSecp256k1HdWallet.generate(12, {hdPaths: [options.hdPath], prefix: options.bech32prefix});
       const encrypted = await wallet.serialize(password);
       fs.writeFileSync(filename, encrypted, 'utf8');
       return wallet;
     }
     // otherwise, decrypt the file (we cannot put deserialize inside try or it will over-write on a bad password)
-    const wallet = await Secp256k1HdWallet.deserialize(encrypted, password);
+    const wallet = await DirectSecp256k1HdWallet.deserialize(encrypted, password);
     return wallet;
   };
 
   const connect = async (
-    wallet: Secp256k1HdWallet,
+    wallet: DirectSecp256k1HdWallet,
     options: Options
   ): Promise<SigningCosmWasmClient> => {
-    const [{ address }] = await wallet.getAccounts();
-
-    const client = new SigningCosmWasmClient(
-      options.httpUrl,
-      address,
-      wallet,
-      options.gasPrice,
-      options.gasLimits,
-    );
-    return client;
+    const clientOptions = {
+      prefix: options.bech32prefix
+    }
+    return await SigningCosmWasmClient.connectWithSigner(options.httpUrl, wallet, clientOptions)
   };
 
   const hitFaucet = async (
@@ -100,26 +93,27 @@ const useOptions = (options: Options): Network => {
     await axios.post(faucetUrl, { denom, address });
   }
 
-  const setup = async (password: string, filename?: string): Promise<SigningCosmWasmClient> => {
+  const setup = async (password: string, filename?: string): Promise<[string, SigningCosmWasmClient]> => {
     const keyfile = filename || options.defaultKeyFile;
-    const wallet = await loadOrCreateWallet(options, keyfile, password);
-    const client = await connect(wallet, options);
+    const wallet = await loadOrCreateWallet(pebblenetOptions, keyfile, password);
+    const client = await connect(wallet, pebblenetOptions);
 
+    const [account] = await wallet.getAccounts();
     // ensure we have some tokens
     if (options.faucetUrl) {
-      const account = await client.getAccount();
-      if (!account) {
+      const tokens = await client.getBalance(account.address, options.feeToken)
+      if (tokens.amount === '0') {
         console.log(`Getting ${options.feeToken} from faucet`);
-        await hitFaucet(options.faucetUrl, client.senderAddress, options.faucetToken);
+        await hitFaucet(options.faucetUrl, account.address, options.feeToken);
       }
     }
 
-    return client;
+    return [account.address, client];
   }
 
   const recoverMnemonic = async (password: string, filename?: string): Promise<string> => {
     const keyfile = filename || options.defaultKeyFile;
-    const wallet = await loadOrCreateWallet(options, keyfile, password);
+    const wallet = await loadOrCreateWallet(pebblenetOptions, keyfile, password);
     return wallet.mnemonic;
   }
 
