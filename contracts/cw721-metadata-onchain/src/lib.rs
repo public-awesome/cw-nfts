@@ -11,6 +11,7 @@ pub struct Trait {
     pub value: String,
 }
 
+// see: https://docs.opensea.io/docs/metadata-standards
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct Metadata {
     pub image: Option<String>,
