@@ -1,4 +1,4 @@
-# CW721 Metadata URI
+# CW721 Metadata Onchain
 
 In Ethereum, the ERC721 standard includes a metadata_uri field to store all metadata offchain.
 With CW721-Base in CosmWasm, we allow you to store any data on chain you wish, using a generic `extension: T`.

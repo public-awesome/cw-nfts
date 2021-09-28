@@ -5,7 +5,7 @@ members = ["packages/*", "contracts/*"]
 codegen-units = 1
 incremental = false
 
-[profile.release.package.cw721-metadata-uri]
+[profile.release.package.cw721-metadata-onchain]
 codegen-units = 1
 incremental = false
 

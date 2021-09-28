@@ -4,7 +4,7 @@ workflows:
   test:
     jobs:
       - contract_cw721_base
-      - contract_cw721_metadata_uri
+      - contract_cw721_metadata_onchain
       - package_cw721
       - lint
       - wasm-build
@@ -55,7 +55,7 @@ jobs:
           key: cargocache-cw721-base-rust:1.53.0-{{ checksum "~/project/Cargo.lock" }}
 
 
-  contract_cw721_metadata_uri:
+  contract_cw721_metadata_onchain:
     docker:
       - image: rust:1.53.0
     working_directory: ~/project/contracts/cw721-metadata-onchain

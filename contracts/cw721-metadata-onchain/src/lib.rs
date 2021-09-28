@@ -112,9 +112,7 @@ mod tests {
             .unwrap();
 
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
-        assert_eq!(res.name, mint_msg.name);
-        assert_eq!(res.description, mint_msg.description.unwrap());
-        assert_eq!(res.image, mint_msg.image);
+        assert_eq!(res.token_uri, mint_msg.token_uri);
         assert_eq!(res.extension, mint_msg.extension);
     }
 }
