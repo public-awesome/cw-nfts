@@ -1,3 +1,11 @@
+import axios from  "axios";
+import fs from "fs";
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { GasPrice, calculateFee, StdFee } from "@cosmjs/stargate";
+import {  makeCosmoshubPath } from "@cosmjs/proto-signing";
+import { Slip10RawIndex } from "@cosmjs/crypto";
+import { Secp256k1HdWallet } from "@cosmjs/launchpad";
+import path from "path";
 /*
  * This is a set of helpers meant for use with @cosmjs/cli
  * With these you can easily use the cw721 contract without worrying about forming messages and parsing queries.
@@ -14,59 +22,39 @@
  * If you want to use this code inside an app, you will need several imports from https://github.com/CosmWasm/cosmjs
  */
 
-const path = require("path");
-
 interface Options {
   readonly httpUrl: string
   readonly networkId: string
   readonly feeToken: string
-  readonly gasPrice: GasPrice
   readonly bech32prefix: string
   readonly hdPath: readonly Slip10RawIndex[]
-  readonly faucetToken: string
   readonly faucetUrl?: string
-  readonly defaultKeyFile: string
-  readonly gasLimits: Partial<GasLimits<CosmWasmFeeTable>>
+  readonly defaultKeyFile: string,
+  readonly fees: {
+    upload: StdFee,
+    init: StdFee,
+    exec: StdFee
+  }
 }
 
-const defaultOptions: Options = {
-  httpUrl: 'https://rest.cosmwasm.hub.hackatom.dev',
-  networkId: 'hackatom-wasm',
-  feeToken: 'ucosm',
-  gasPrice: GasPrice.fromString("0.025ucosm"),
-  bech32prefix: 'cosmos',
-  faucetToken: 'COSM',
-  faucetUrl: 'https://faucet.cosmwasm.hub.hackatom.dev/credit',
+const pebblenetGasPrice = GasPrice.fromString("0.01upebble");
+const pebblenetOptions: Options = {
+  httpUrl: 'https://rpc.pebblenet.cosmwasm.com',
+  networkId: 'pebblenet-1',
+  bech32prefix: 'wasm',
+  feeToken: 'upebble',
+  faucetUrl: 'https://faucet.pebblenet.cosmwasm.com/credit',
   hdPath: makeCosmoshubPath(0),
-  defaultKeyFile: path.join(process.env.HOME, ".hackatom.key"),
-  gasLimits: {
-    upload: 1500000,
-    init: 600000,
-    register: 800000,
-    transfer: 80000,
-  },
-}
-
-const localnetOptions: Options = {
-  httpUrl: "http://localhost:1317",
-  networkId: 'localnet',
-  feeToken: 'ucosm',
-  gasPrice: GasPrice.fromString("0.025ucosm"),
-  bech32prefix: 'cosmos',
-  hdPath: makeCosmoshubPath(0),
-  faucetToken: "SHELL",
-  faucetUrl: "http://localhost",
-  defaultKeyFile: path.join(process.env.HOME, "localnet.key"),
-  gasLimits: {
-    upload: 1500000,
-    init: 600000,
-    register: 800000,
-    transfer: 80000,
+  defaultKeyFile: path.join(process.env.HOME, ".pebblenet.key"),
+  fees: {
+    upload: calculateFee(1500000, pebblenetGasPrice),
+    init: calculateFee(500000, pebblenetGasPrice),
+    exec: calculateFee(200000, pebblenetGasPrice),
   },
 }
 
 interface Network {
-  setup: (password: string, filename?: string) => Promise<SigningCosmWasmClient>
+  setup: (password: string, filename?: string) => Promise<[string, SigningCosmWasmClient]>
   recoverMnemonic: (password: string, filename?: string) => Promise<string>
 }
 
