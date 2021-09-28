@@ -89,12 +89,10 @@ pub struct TokenInfo<T> {
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
     pub approvals: Vec<Approval>,
 
-    /// Identifies the asset to which this NFT represents
-    pub name: String,
-    /// Describes the asset to which this NFT represents
-    pub description: String,
-    /// A URI pointing to an image representing the asset
-    pub image: Option<String>,
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: T,

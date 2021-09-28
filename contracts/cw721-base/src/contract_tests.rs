@@ -72,15 +72,12 @@ fn minting() {
     let contract = setup_contract(deps.as_mut());
 
     let token_id = "petrify".to_string();
-    let name = "Petrify with Gaze".to_string();
-    let description = "Allows the owner to petrify anyone looking at him or her".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),
         owner: String::from("medusa"),
-        name: name.clone(),
-        description: Some(description.clone()),
-        image: None,
+        token_uri: Some(token_uri.clone()),
         extension: None,
     });
 
@@ -111,9 +108,7 @@ fn minting() {
     assert_eq!(
         info,
         NftInfoResponse::<Extension> {
-            name,
-            description,
-            image: None,
+            token_uri: Some(token_uri),
             extension: None,
         }
     );
@@ -134,9 +129,7 @@ fn minting() {
     let mint_msg2 = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),
         owner: String::from("hercules"),
-        name: "copy cat".into(),
-        description: None,
-        image: None,
+        token_uri: None,
         extension: None,
     });
 
@@ -159,15 +152,12 @@ fn transferring_nft() {
 
     // Mint a token
     let token_id = "melt".to_string();
-    let name = "Melting power".to_string();
-    let description = "Allows the owner to melt anyone looking at him or her".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),
         owner: String::from("venus"),
-        name,
-        description: Some(description),
-        image: None,
+        token_uri: Some(token_uri),
         extension: None,
     });
 
@@ -216,15 +206,12 @@ fn sending_nft() {
 
     // Mint a token
     let token_id = "melt".to_string();
-    let name = "Melting power".to_string();
-    let description = "Allows the owner to melt anyone looking at him or her".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),
         owner: String::from("venus"),
-        name,
-        description: Some(description),
-        image: None,
+        token_uri: Some(token_uri),
         extension: None,
     });
 
@@ -285,15 +272,12 @@ fn approving_revoking() {
 
     // Mint a token
     let token_id = "grow".to_string();
-    let name = "Growing power".to_string();
-    let description = "Allows the owner to grow anything".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/grow".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),
         owner: String::from("demeter"),
-        name,
-        description: Some(description),
-        image: None,
+        token_uri: Some(token_uri),
         extension: None,
     });
 
@@ -392,18 +376,15 @@ fn approving_all_revoking_all() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let name1 = "Growing power".to_string();
-    let description1 = "Allows the owner the power to grow anything".to_string();
+    let token_uri1 = "https://www.merriam-webster.com/dictionary/grow1".to_string();
+
     let token_id2 = "grow2".to_string();
-    let name2 = "More growing power".to_string();
-    let description2 = "Allows the owner the power to grow anything even faster".to_string();
+    let token_uri2 = "https://www.merriam-webster.com/dictionary/grow2".to_string();
 
     let mint_msg1 = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id1.clone(),
         owner: String::from("demeter"),
-        name: name1,
-        description: Some(description1),
-        image: None,
+        token_uri: Some(token_uri1),
         extension: None,
     });
 
@@ -415,9 +396,7 @@ fn approving_all_revoking_all() {
     let mint_msg2 = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id2.clone(),
         owner: String::from("demeter"),
-        name: name2,
-        description: Some(description2),
-        image: None,
+        token_uri: Some(token_uri2),
         extension: None,
     });
 
@@ -621,9 +600,7 @@ fn query_tokens_by_owner() {
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id1.clone(),
         owner: demeter.clone(),
-        name: "Growing power".to_string(),
-        description: Some("Allows the owner the power to grow anything".to_string()),
-        image: None,
+        token_uri: None,
         extension: None,
     });
     contract
@@ -633,9 +610,7 @@ fn query_tokens_by_owner() {
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id2.clone(),
         owner: ceres.clone(),
-        name: "More growing power".to_string(),
-        description: Some("Allows the owner the power to grow anything even faster".to_string()),
-        image: None,
+        token_uri: None,
         extension: None,
     });
     contract
@@ -645,9 +620,7 @@ fn query_tokens_by_owner() {
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id3.clone(),
         owner: demeter.clone(),
-        name: "Sing a lullaby".to_string(),
-        description: Some("Calm even the most excited children".to_string()),
-        image: None,
+        token_uri: None,
         extension: None,
     });
     contract

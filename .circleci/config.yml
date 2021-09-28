@@ -58,7 +58,7 @@ jobs:
   contract_cw721_metadata_uri:
     docker:
       - image: rust:1.53.0
-    working_directory: ~/project/contracts/cw721-metadata-uri
+    working_directory: ~/project/contracts/cw721-metadata-onchain
     steps:
       - checkout:
           path: ~/project
@@ -67,7 +67,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw721-metadata-uri-rust:1.53.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw721-metadata-onchain-rust:1.53.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -89,7 +89,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw721-metadata-uri-rust:1.53.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw721-metadata-onchain-rust:1.53.0-{{ checksum "~/project/Cargo.lock" }}
 
 
   package_cw721:

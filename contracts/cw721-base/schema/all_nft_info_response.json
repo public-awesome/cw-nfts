@@ -98,15 +98,7 @@
     },
     "NftInfoResponse_for_Nullable_Empty": {
       "type": "object",
-      "required": [
-        "description",
-        "name"
-      ],
       "properties": {
-        "description": {
-          "description": "Describes the asset to which this NFT represents",
-          "type": "string"
-        },
         "extension": {
           "description": "You can add any custom metadata here when you extend cw721-base",
           "anyOf": [
@@ -118,16 +110,12 @@
             }
           ]
         },
-        "image": {
-          "description": "\"A URI pointing to a resource with mime type image/* representing the asset to which this NFT represents. Consider making any images at a width between 320 and 1080 pixels and aspect ratio between 1.91:1 and 4:5 inclusive. TODO: Use https://docs.rs/url_serde for type-safety",
+        "token_uri": {
+          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
           "type": [
             "string",
             "null"
           ]
-        },
-        "name": {
-          "description": "Identifies the asset to which this NFT represents",
-          "type": "string"
         }
       }
     },

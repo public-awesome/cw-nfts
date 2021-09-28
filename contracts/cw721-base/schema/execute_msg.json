@@ -241,18 +241,10 @@
     "MintMsg_for_Nullable_Empty": {
       "type": "object",
       "required": [
-        "name",
         "owner",
         "token_id"
       ],
       "properties": {
-        "description": {
-          "description": "Describes the asset to which this NFT represents (may be empty)",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "extension": {
           "description": "Any custom extension used by this contract",
           "anyOf": [
@@ -264,17 +256,6 @@
             }
           ]
         },
-        "image": {
-          "description": "A URI pointing to an image representing the asset",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "name": {
-          "description": "Identifies the asset to which this NFT represents",
-          "type": "string"
-        },
         "owner": {
           "description": "The owner of the newly minter NFT",
           "type": "string"
@@ -282,6 +263,13 @@
         "token_id": {
           "description": "Unique ID of the NFT",
           "type": "string"
+        },
+        "token_uri": {
+          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
