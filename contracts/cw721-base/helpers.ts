@@ -9,7 +9,7 @@ import path from "path";
  * This is a set of helpers meant for use with @cosmjs/cli
  * With these you can easily use the cw721 contract without worrying about forming messages and parsing queries.
  * 
- * Usage: npx @cosmjs/cli@^0.23 --init https://raw.githubusercontent.com/CosmWasm/cosmwasm-plus/master/contracts/cw721-base/helpers.ts
+ * Usage: npx @cosmjs/cli@^0.26 --init https://raw.githubusercontent.com/CosmWasm/cosmwasm-plus/master/contracts/cw721-base/helpers.ts
  * 
  * Create a client:
  *   const [addr, client] = await useOptions(pebblenetOptions).setup('password');
@@ -19,7 +19,19 @@ import path from "path";
  * 
  * Create contract:
  *   const contract = 271(client);
+ * 
+ * Upload contract:
+ *   const codeId = await contract.upload(addr);
  *
+ * Instantiate contract example:
+ *   const initMsg = {
+ *     name: "Potato Coin",
+ *     symbol: "TATER",
+ *     decimals: 2,
+ *     initial_balances: [{ address: addr, amount: "10000" }],
+ *     mint: { "minter": addr }
+ *   };
+ *   const instance = await contract.instantiate(addr, codeId, initMsg, 'Potato Coin!');
  * If you want to use this code inside an app, you will need several imports from https://github.com/CosmWasm/cosmjs
  */
 
@@ -370,10 +382,10 @@ const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
 
   const upload = async (): Promise<number> => {
     const meta = {
-      source: "https://github.com/CosmWasm/cosmwasm-plus/tree/v0.4.0/contracts/cw721-base",
+      source: "https://github.com/CosmWasm/cw-plus/tree/v0.9.0/contracts/cw721-base",
       builder: "cosmwasm/workspace-optimizer:0.10.7"
     };
-    const sourceUrl = "https://github.com/CosmWasm/cosmwasm-plus/releases/download/v0.4.0/cw721_base.wasm";
+    const sourceUrl = "https://github.com/CosmWasm/cosmwasm-plus/releases/download/v0.9.0/cw721_base.wasm";
     const wasm = await downloadWasm(sourceUrl);
     const result = await client.upload(wasm, meta);
     return result.codeId;
