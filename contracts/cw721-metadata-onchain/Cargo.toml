@@ -1,9 +1,9 @@
 [package]
-name = "cw721-metadata-uri"
+name = "cw721-metadata-onchain"
 version = "0.9.1"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2018"
-description = "Example extending CW721 NFT with ERC20 like metadata_uri"
+description = "Example extending CW721 NFT to store metadata on chain"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-plus"
 homepage = "https://cosmwasm.com"

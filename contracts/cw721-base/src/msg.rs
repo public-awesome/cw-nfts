@@ -60,12 +60,10 @@ pub struct MintMsg<T> {
     pub token_id: String,
     /// The owner of the newly minter NFT
     pub owner: String,
-    /// Identifies the asset to which this NFT represents
-    pub name: String,
-    /// Describes the asset to which this NFT represents (may be empty)
-    pub description: Option<String>,
-    /// A URI pointing to an image representing the asset
-    pub image: Option<String>,
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
     /// Any custom extension used by this contract
     pub extension: T,
 }

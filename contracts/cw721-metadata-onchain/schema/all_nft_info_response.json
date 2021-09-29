@@ -19,7 +19,7 @@
       "description": "Data on the token itself,",
       "allOf": [
         {
-          "$ref": "#/definitions/NftInfoResponse_for_Extension"
+          "$ref": "#/definitions/NftInfoResponse_for_Nullable_Metadata"
         }
       ]
     }
@@ -92,47 +92,88 @@
         }
       ]
     },
-    "Extension": {
+    "Metadata": {
       "type": "object",
-      "required": [
-        "metadata_uri"
-      ],
       "properties": {
-        "metadata_uri": {
-          "type": "string"
-        }
-      }
-    },
-    "NftInfoResponse_for_Extension": {
-      "type": "object",
-      "required": [
-        "description",
-        "extension",
-        "name"
-      ],
-      "properties": {
-        "description": {
-          "description": "Describes the asset to which this NFT represents",
-          "type": "string"
+        "animation_url": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
-        "extension": {
-          "description": "You can add any custom metadata here when you extend cw721-base",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Extension"
-            }
+        "attributes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "background_color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_url": {
+          "type": [
+            "string",
+            "null"
           ]
         },
         "image": {
-          "description": "\"A URI pointing to a resource with mime type image/* representing the asset to which this NFT represents. Consider making any images at a width between 320 and 1080 pixels and aspect ratio between 1.91:1 and 4:5 inclusive. TODO: Use https://docs.rs/url_serde for type-safety",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_data": {
           "type": [
             "string",
             "null"
           ]
         },
         "name": {
-          "description": "Identifies the asset to which this NFT represents",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "youtube_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NftInfoResponse_for_Nullable_Metadata": {
+      "type": "object",
+      "properties": {
+        "extension": {
+          "description": "You can add any custom metadata here when you extend cw721-base",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Metadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "token_uri": {
+          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -163,6 +204,27 @@
           "$ref": "#/definitions/Uint64"
         }
       ]
+    },
+    "Trait": {
+      "type": "object",
+      "required": [
+        "trait_type",
+        "value"
+      ],
+      "properties": {
+        "display_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trait_type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
     },
     "Uint64": {
       "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",

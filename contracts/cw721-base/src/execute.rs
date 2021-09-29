@@ -95,9 +95,7 @@ where
         let token = TokenInfo {
             owner: deps.api.addr_validate(&msg.owner)?,
             approvals: vec![],
-            name: msg.name,
-            description: msg.description.unwrap_or_default(),
-            image: msg.image,
+            token_uri: msg.token_uri,
             extension: msg.extension,
         };
         self.tokens

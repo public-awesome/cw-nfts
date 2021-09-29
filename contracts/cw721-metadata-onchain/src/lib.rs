@@ -4,10 +4,28 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::Empty;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Extension {
-    pub metadata_uri: String,
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct Trait {
+    pub display_type: Option<String>,
+    pub trait_type: String,
+    pub value: String,
 }
+
+// see: https://docs.opensea.io/docs/metadata-standards
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct Metadata {
+    pub image: Option<String>,
+    pub image_data: Option<String>,
+    pub external_url: Option<String>,
+    pub description: Option<String>,
+    pub name: Option<String>,
+    pub attributes: Option<Vec<Trait>>,
+    pub background_color: Option<String>,
+    pub animation_url: Option<String>,
+    pub youtube_url: Option<String>,
+}
+
+pub type Extension = Option<Metadata>;
 
 pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
@@ -76,12 +94,18 @@ mod tests {
         let mint_msg = MintMsg {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
-            name: "Starship USS Enterprise".to_string(),
-            description: Some("Spaceship with Warp Drive".into()),
-            image: None,
-            extension: Extension {
-                metadata_uri: "http://starships.example.com/Starship/Enterprise.json".into(),
-            },
+            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
+            extension: Some(Metadata {
+                image: None,
+                image_data: None,
+                external_url: None,
+                description: Some("Spaceship with Warp Drive".into()),
+                name: Some("Starship USS Enterprise".to_string()),
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
         };
         let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
         contract
@@ -89,9 +113,7 @@ mod tests {
             .unwrap();
 
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
-        assert_eq!(res.name, mint_msg.name);
-        assert_eq!(res.description, mint_msg.description.unwrap());
-        assert_eq!(res.image, mint_msg.image);
+        assert_eq!(res.token_uri, mint_msg.token_uri);
         assert_eq!(res.extension, mint_msg.extension);
     }
 }

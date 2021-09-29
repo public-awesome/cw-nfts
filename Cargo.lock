@@ -195,7 +195,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw721-metadata-uri"
+name = "cw721-metadata-onchain"
 version = "0.9.1"
 dependencies = [
  "cosmwasm-schema",
