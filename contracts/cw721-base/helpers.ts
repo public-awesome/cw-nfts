@@ -232,30 +232,30 @@ interface CW721Instance {
   allTokens: (startAfter?: string, limit?: number) => Promise<TokensResponse>
 
   // actions
-  mint: (tokenId: TokenId, owner: string, name: string, level: number, description?: string, image?: string) => Promise<string>
-  transferNft: (recipient: string, tokenId: TokenId) => Promise<string>
-  sendNft: (contract: string, token_id: TokenId, msg?: BinaryType) => Promise<string>
-  approve: (spender: string, tokenId: TokenId, expires?: Expiration) => Promise<string>
-  approveAll: (operator: string, expires?: Expiration) => Promise<string>
-  revoke: (spender: string, tokenId: TokenId) => Promise<string>
-  revokeAll: (operator: string) => Promise<string>
+  mint: (senderAddress: string, tokenId: TokenId, owner: string, name: string, level: number, description?: string, image?: string) => Promise<string>
+  transferNft: (senderAddress: string, recipient: string, tokenId: TokenId) => Promise<string>
+  sendNft: (senderAddress: string, contract: string, token_id: TokenId, msg?: BinaryType) => Promise<string>
+  approve: (senderAddress: string, spender: string, tokenId: TokenId, expires?: Expiration) => Promise<string>
+  approveAll: (senderAddress: string, operator: string, expires?: Expiration) => Promise<string>
+  revoke: (senderAddress: string, spender: string, tokenId: TokenId) => Promise<string>
+  revokeAll: (senderAddress: string, operator: string) => Promise<string>
 }
 
 interface CW721Contract {
   // upload a code blob and returns a codeId
-  upload: () => Promise<number>
+  upload: (senderAddress: string) => Promise<number>
 
   // instantiates a cw721 contract
   // codeId must come from a previous deploy
   // label is the public name of the contract in listing
   // if you set admin, you can run migrations on this contract (likely client.senderAddress)
-  instantiate: (codeId: number, initMsg: Record<string, unknown>, label: string, admin?: string) => Promise<CW721Instance>
+  instantiate: (senderAddress: string, codeId: number, initMsg: Record<string, unknown>, label: string, admin?: string) => Promise<CW721Instance>
 
   use: (contractAddress: string) => CW721Instance
 }
 
 
-export const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
+export const CW721 = (client: SigningCosmWasmClient, fees: Options['fees']): CW721Contract => {
   const use = (contractAddress: string): CW721Instance => {
 
     // queries
@@ -311,40 +311,40 @@ export const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
     }
 
     // actions 
-    const mint = async (token_id: TokenId, owner: string, name: string, level: number, description?: string, image?: string): Promise<string> => {
-      const result = await client.execute(contractAddress, { mint: { token_id, owner, name, level, description, image } });
+    const mint = async (senderAddress: string, token_id: TokenId, owner: string, name: string, level: number, description?: string, image?: string): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { mint: { token_id, owner, name, level, description, image } }, fees.exec);
       return result.transactionHash;
     }
 
     // transfers ownership, returns transactionHash
-    const transferNft = async (recipient: string, token_id: TokenId): Promise<string> => {
-      const result = await client.execute(contractAddress, { transfer_nft: { recipient, token_id } });
+    const transferNft = async (senderAddress: string, recipient: string, token_id: TokenId): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { transfer_nft: { recipient, token_id } }, fees.exec);
       return result.transactionHash;
     }
 
     // sends an nft token to another contract (TODO: msg type any needs to be revisited once receiveNft is implemented)
-    const sendNft = async (contract: string, token_id: TokenId, msg?: any): Promise<string> => {
-      const result = await client.execute(contractAddress, { send_nft: { contract, token_id, msg } })
+    const sendNft = async (senderAddress: string, contract: string, token_id: TokenId, msg?: any): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { send_nft: { contract, token_id, msg } }, fees.exec)
       return result.transactionHash;
     }
 
-    const approve = async (spender: string, token_id: TokenId, expires?: Expiration): Promise<string> => {
-      const result = await client.execute(contractAddress, { approve: { spender, token_id, expires } });
+    const approve = async (senderAddress: string, spender: string, token_id: TokenId, expires?: Expiration): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { approve: { spender, token_id, expires } }, fees.exec);
       return result.transactionHash;
     }
 
-    const approveAll = async (operator: string, expires?: Expiration): Promise<string> => {
-      const result = await client.execute(contractAddress, { approve_all: { operator, expires } })
+    const approveAll = async (senderAddress: string, operator: string, expires?: Expiration): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { approve_all: { operator, expires } }, fees.exec)
       return result.transactionHash
     }
 
-    const revoke = async (spender: string, token_id: TokenId): Promise<string> => {
-      const result = await client.execute(contractAddress, { revoke: { spender, token_id } });
+    const revoke = async (senderAddress: string, spender: string, token_id: TokenId): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { revoke: { spender, token_id } }, fees.exec);
       return result.transactionHash;
     }
 
-    const revokeAll = async (operator: string): Promise<string> => {
-      const result = await client.execute(contractAddress, { revoke_all: { operator } })
+    const revokeAll = async (senderAddress: string, operator: string): Promise<string> => {
+      const result = await client.execute(senderAddress, contractAddress, { revoke_all: { operator } }, fees.exec)
       return result.transactionHash;
     }
 
@@ -380,19 +380,15 @@ export const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
     return r.data
   }
 
-  const upload = async (): Promise<number> => {
-    const meta = {
-      source: "https://github.com/CosmWasm/cw-plus/tree/v0.9.0/contracts/cw721-base",
-      builder: "cosmwasm/workspace-optimizer:0.10.7"
-    };
+  const upload = async (senderAddress: string): Promise<number> => {
     const sourceUrl = "https://github.com/CosmWasm/cosmwasm-plus/releases/download/v0.9.0/cw721_base.wasm";
     const wasm = await downloadWasm(sourceUrl);
-    const result = await client.upload(wasm, meta);
+    const result = await client.upload(senderAddress, wasm, fees.upload);
     return result.codeId;
   }
 
-  const instantiate = async (codeId: number, initMsg: Record<string, unknown>, label: string, admin?: string): Promise<CW721Instance> => {
-    const result = await client.instantiate(codeId, initMsg, label, { memo: `Init ${label}`, admin });
+  const instantiate = async (senderAddress: string, codeId: number, initMsg: Record<string, unknown>, label: string, admin?: string): Promise<CW721Instance> => {
+    const result = await client.instantiate(senderAddress, codeId, initMsg, label, fees.init, { memo: `Init ${label}`, admin });
     return use(result.contractAddress);
   }
 
