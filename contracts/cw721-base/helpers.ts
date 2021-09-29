@@ -255,7 +255,7 @@ interface CW721Contract {
 }
 
 
-const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
+export const CW721 = (client: SigningCosmWasmClient): CW721Contract => {
   const use = (contractAddress: string): CW721Instance => {
 
     // queries
