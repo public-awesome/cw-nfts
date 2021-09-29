@@ -12,12 +12,14 @@ import path from "path";
  * Usage: npx @cosmjs/cli@^0.23 --init https://raw.githubusercontent.com/CosmWasm/cosmwasm-plus/master/contracts/cw721-base/helpers.ts
  * 
  * Create a client:
- *   const client = await useOptions(defaultOptions).setup(password);
- *   await client.getAccount()
+ *   const [addr, client] = await useOptions(pebblenetOptions).setup('password');
  * 
  * Get the mnemonic:
- *   await useOptions(coralnetOptions).recoverMnemonic(password)
+ *   await useOptions(pebblenetOptions).recoverMnemonic(password);
  * 
+ * Create contract:
+ *   const contract = 271(client);
+ *
  * If you want to use this code inside an app, you will need several imports from https://github.com/CosmWasm/cosmjs
  */
 
