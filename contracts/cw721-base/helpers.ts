@@ -18,7 +18,7 @@ import path from "path";
  *   await useOptions(pebblenetOptions).recoverMnemonic(password);
  * 
  * Create contract:
- *   const contract = 271(client);
+ *   const contract = CW721(client);
  * 
  * Upload contract:
  *   const codeId = await contract.upload(addr);
