@@ -18,7 +18,7 @@ import path from "path";
  *   await useOptions(pebblenetOptions).recoverMnemonic(password);
  * 
  * Create contract:
- *   const contract = CW721(client);
+ *   const contract = CW721(client, pebblenetOptions.fees);
  * 
  * Upload contract:
  *   const codeId = await contract.upload(addr);
@@ -27,9 +27,7 @@ import path from "path";
  *   const initMsg = {
  *     name: "Potato Coin",
  *     symbol: "TATER",
- *     decimals: 2,
- *     initial_balances: [{ address: addr, amount: "10000" }],
- *     mint: { "minter": addr }
+ *     minter: addr
  *   };
  *   const instance = await contract.instantiate(addr, codeId, initMsg, 'Potato Coin!');
  * If you want to use this code inside an app, you will need several imports from https://github.com/CosmWasm/cosmjs
