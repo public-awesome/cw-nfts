@@ -92,16 +92,10 @@ pub struct ContractInfoResponse {
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct NftInfoResponse<T> {
-    /// Identifies the asset to which this NFT represents
-    pub name: String,
-    /// Describes the asset to which this NFT represents
-    pub description: String,
-    /// "A URI pointing to a resource with mime type image/* representing the asset to which this
-    /// NFT represents. Consider making any images at a width between 320 and 1080 pixels and aspect
-    /// ratio between 1.91:1 and 4:5 inclusive.
-    /// TODO: Use https://docs.rs/url_serde for type-safety
-    pub image: Option<String>,
-
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: T,
 }
