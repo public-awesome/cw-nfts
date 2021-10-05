@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::Empty;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
 pub struct Trait {
     pub display_type: Option<String>,
     pub trait_type: String,
@@ -12,7 +12,7 @@ pub struct Trait {
 }
 
 // see: https://docs.opensea.io/docs/metadata-standards
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
 pub struct Metadata {
     pub image: Option<String>,
     pub image_data: Option<String>,
@@ -96,15 +96,9 @@ mod tests {
             owner: "john".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
-                image: None,
-                image_data: None,
-                external_url: None,
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
-                attributes: None,
-                background_color: None,
-                animation_url: None,
-                youtube_url: None,
+                ..Metadata::default()
             }),
         };
         let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
