@@ -17,6 +17,7 @@ but rather by 4 highly active community members working on NFT projects of their
 * [alwin-peng](https://github.com/alwin-peng)
 * [ben2x4](https://github.com/ben2x4)
 * [JakeHartnell](https://github.com/JakeHartnell)
+* [orkunkl](https://github.com/orkunkl)
 * [the-frey](https://github.com/the-frey)
 
 ## Contributing
