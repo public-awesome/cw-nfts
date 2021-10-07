@@ -255,8 +255,7 @@ interface CW721Contract {
 
 export const CW721 = (client: SigningCosmWasmClient, fees: Options['fees']): CW721Contract => {
   const use = (contractAddress: string): CW721Instance => {
-
-    // queries
+    
     const allowance = async (owner: string, spender: string): Promise<AllowanceResponse> => {
       return client.queryContractSmart(contractAddress, { allowance: { owner, spender } });
     };
