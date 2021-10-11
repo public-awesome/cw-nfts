@@ -194,6 +194,7 @@ fn transferring_nft() {
         Response::new()
             .add_attribute("action", "transfer_nft")
             .add_attribute("sender", "venus")
+            .add_attribute("from", "venus")
             .add_attribute("recipient", "random")
             .add_attribute("token_id", token_id)
     );

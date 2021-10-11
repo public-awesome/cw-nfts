@@ -128,11 +128,15 @@ where
         recipient: String,
         token_id: String,
     ) -> Result<Response<C>, ContractError> {
+        let token_info = self.tokens.load(deps.storage, &token_id)?;
+        let owner = token_info.owner.to_string();
+
         self._transfer_nft(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
             .add_attribute("sender", info.sender)
+            .add_attribute("from", owner)
             .add_attribute("recipient", recipient)
             .add_attribute("token_id", token_id))
     }
