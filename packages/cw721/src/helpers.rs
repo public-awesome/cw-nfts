@@ -1,7 +1,9 @@
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use cosmwasm_std::{to_binary, Addr, CosmosMsg, Querier, QuerierWrapper, StdResult, WasmMsg, WasmQuery, Empty};
+use cosmwasm_std::{
+    to_binary, Addr, CosmosMsg, Empty, Querier, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
+};
 
 use crate::{
     AllNftInfoResponse, Approval, ApprovedForAllResponse, ContractInfoResponse, Cw721ExecuteMsg,
