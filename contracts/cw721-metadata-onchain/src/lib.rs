@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn use_metadata_extension() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
         let contract = Cw721MetadataContract::default();
 
         let info = mock_info(CREATOR, &[]);
