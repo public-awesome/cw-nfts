@@ -30,7 +30,7 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty>
 
 #[test]
 fn proper_instantiation() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = Cw721Contract::<Extension, Empty>::default();
 
     let msg = InstantiateMsg {
@@ -68,7 +68,7 @@ fn proper_instantiation() {
 
 #[test]
 fn minting() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
     let token_id = "petrify".to_string();
@@ -147,7 +147,7 @@ fn minting() {
 
 #[test]
 fn transferring_nft() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
     // Mint a token
@@ -201,7 +201,7 @@ fn transferring_nft() {
 
 #[test]
 fn sending_nft() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
     // Mint a token
@@ -267,7 +267,7 @@ fn sending_nft() {
 
 #[test]
 fn approving_revoking() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
     // Mint a token
@@ -371,7 +371,7 @@ fn approving_revoking() {
 
 #[test]
 fn approving_all_revoking_all() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
     // Mint a couple tokens (from the same owner)
@@ -586,7 +586,7 @@ fn approving_all_revoking_all() {
 
 #[test]
 fn query_tokens_by_owner() {
-    let mut deps = mock_dependencies(&[]);
+    let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
     let minter = mock_info(MINTER, &[]);
 
