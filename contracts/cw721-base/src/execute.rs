@@ -338,7 +338,7 @@ where
     }
 
     /// returns true iff the sender can transfer ownership of the token
-    fn check_can_send(
+    pub fn check_can_send(
         &self,
         deps: Deps,
         env: &Env,
