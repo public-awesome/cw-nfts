@@ -1,9 +1,9 @@
 [package]
-name = "cw721"
+name = "cw1155"
 version = "0.10.0"
-authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
-edition = "2018"
-description = "Definition and types for the CosmWasm-721 NFT interface"
+authors = ["Shashank Goyal <sgoya@users.noreply.github.com>"]
+edition = "2021"
+description = "Definition and types for the CosmWasm-1155 NFT interface"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-nfts"
 homepage = "https://cosmwasm.com"
