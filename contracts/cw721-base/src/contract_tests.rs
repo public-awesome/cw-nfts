@@ -146,6 +146,55 @@ fn minting() {
 }
 
 #[test]
+fn burning() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    let token_id = "petrify".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
+
+    let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
+        token_id: token_id.clone(),
+        owner: MINTER.to_string(),
+        token_uri: Some(token_uri),
+        extension: None,
+    });
+
+    let burn_msg = ExecuteMsg::Burn { token_id };
+
+    // mint some NFT
+    let allowed = mock_info(MINTER, &[]);
+    let _ = contract
+        .execute(deps.as_mut(), mock_env(), allowed.clone(), mint_msg)
+        .unwrap();
+
+    // random not allowed to burn
+    let random = mock_info("random", &[]);
+    let err = contract
+        .execute(deps.as_mut(), mock_env(), random, burn_msg.clone())
+        .unwrap_err();
+
+    assert_eq!(err, ContractError::Unauthorized {});
+
+    let _ = contract
+        .execute(deps.as_mut(), mock_env(), allowed, burn_msg)
+        .unwrap();
+
+    // ensure num tokens decreases
+    let count = contract.num_tokens(deps.as_ref()).unwrap();
+    assert_eq!(0, count.count);
+
+    // trying to get nft returns error
+    let _ = contract
+        .nft_info(deps.as_ref(), "petrify".to_string())
+        .unwrap_err();
+
+    // list the token_ids
+    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    assert!(tokens.tokens.is_empty());
+}
+
+#[test]
 fn transferring_nft() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
