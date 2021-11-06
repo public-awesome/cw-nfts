@@ -84,7 +84,7 @@ pub mod entry {
             Cw2981QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
             _ => Cw2981Contract::default()
                 .query(deps, env, msg.into())
-                .map_err(|err| err.into()),
+                .map_err(|err| err),
         }
     }
 }
@@ -110,7 +110,7 @@ pub fn query_royalties_info(
 
     let royalty_address = match token_info.extension {
         Some(ext) => match ext.royalty_payment_address {
-            Some(addr) => addr.to_string(),
+            Some(addr) => addr,
             None => String::from(""),
         },
         None => String::from(""),
@@ -200,7 +200,7 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
+        let exec_msg = ExecuteMsg::Mint(mint_msg);
         contract
             .execute(deps.as_mut(), mock_env(), info, exec_msg)
             .unwrap();
@@ -252,7 +252,7 @@ mod tests {
         )
         .unwrap();
         let expected = RoyaltiesInfoResponse {
-            address: mint_msg.owner.to_string(),
+            address: mint_msg.owner,
             royalty_amount: Uint128::new(10).u128(),
         };
         assert_eq!(res, expected);
