@@ -1,6 +1,6 @@
 [package]
 name = "cw721-base"
-version = "0.9.3"
+version = "0.10.0"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2018"
 description = "Basic implementation cw721 NFTs"
@@ -27,7 +27,7 @@ library = []
 [dependencies]
 cw0 = { version = "0.10.2" }
 cw2 = { version = "0.10.2" }
-cw721 = { path = "../../packages/cw721", version = "0.9.3" }
+cw721 = { path = "../../packages/cw721", version = "0.10.0" }
 cw-storage-plus = { version = "0.10.2" }
 cosmwasm-std = { version = "1.0.0-beta2" }
 schemars = "0.8.6"
