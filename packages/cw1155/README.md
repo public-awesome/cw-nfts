@@ -1,10 +1,10 @@
-# CW721 Spec: Non Fungible Tokens
+# CW1155 Spec: Multi Token Standard
 
-CW721 is a specification for non-fungible tokens based on CosmWasm.
-The name and design is based on Ethereum's ERC721 standard,
+CW1155 is a specification for multiple token types on CosmWasm.
+The name and design is based on Ethereum's ERC1155 standard,
 with some enhancements. The types in here can be imported by 
 contracts that wish to implement this  spec, or by contracts that call 
-to any standard cw721 contract.
+to any standard 1155 contract.
 
 The specification is split into multiple sections, a contract may only
 implement some of this functionality, but must implement the base.
@@ -17,42 +17,49 @@ as well as an ID. The ID is an arbitrary string, unique within the contract.
 
 ### Messages
 
-`TransferNft{recipient, token_id}` - 
-This transfers ownership of the token to `recipient` account. This is 
+`TransferNft{recipient, token_id, amount}` - 
+Moves `amount` tokens to `recipient` account. This is 
 designed to send to an address controlled by a private key and *does not* 
 trigger any actions on the recipient if it is a contract.
 
-Requires `token_id` to point to a valid token, and `env.sender` to be 
-the owner of it, or have an allowance to transfer it. 
+Requires `token_id` to point to a valid token, `info.sender` to be 
+the owner of it and `info.sender` to have a balance of at least amount
+tokens.
 
-`SendNft{contract, token_id, msg}` - 
-This transfers ownership of the token to `contract` account. `contract` 
+`SendNft{contract, token_id, amount, msg}` - 
+Moves `amount` tokens to `contract` account. `contract` 
 must be an address controlled by a smart contract, which implements
-the CW721Receiver interface. The `msg` will be passed to the recipient 
+the CW1155Receiver interface. The `msg` will be passed to the recipient 
 contract, along with the token_id.
 
-Requires `token_id` to point to a valid token, and `env.sender` to be 
-the owner of it, or have an allowance to transfer it. 
+Requires `token_id` to point to a valid token, `info.sender` to be 
+the owner of it and `info.sender` to have a balance of at least amount
+tokens.
 
-`Approve{spender, token_id, expires}` - Grants permission to `spender` to
-transfer or send the given token. This can only be performed when
-`env.sender` is the owner of the given `token_id` or an `operator`. 
-There can multiple spender accounts per token, and they are cleared once
-the token is transfered or sent.
+`IncreaseAllowance{spender, token_id, amount, expires}`
+Set or increase the allowance such that `spender` may access up to
+`amount + current_allowance` `token_id` tokens from the `info.sender`
+account. This may optionally come with an `Expiration`time, which 
+if set limits when the approval can be used (by time or height).
 
-`Revoke{spender, token_id}` - This revokes a previously granted permission
-to transfer the given `token_id`. This can only be granted when
-`env.sender` is the owner of the given `token_id` or an `operator`.
+`DecreaseAllowance{spender, token_id, amount, expires}`
+Decrease or clear the allowance such that `spender` may access up to
+`amount + current_allowance` `token_id` tokens from the `info.sender`
+account. This may optionally come with an `Expiration`time, which 
+if set limits when the approval can be used (by time or height).
+If `amount >= current_allowance`, this will clear the allowance (delete it).
 
 `ApproveAll{operator, expires}` - Grant `operator` permission to transfer or send
-all tokens owned by `env.sender`. This approval is tied to the owner, not the
+all tokens owned by `info.sender`. This approval is tied to the owner, not the
 tokens and applies to any future token that the owner receives as well.
 
 `RevokeAll{operator}` - Revoke a previous `ApproveAll` permission granted
 to the given `operator`.
 
-### Queries
 
+### WIP
+<!-- 
+### Queries
 `OwnerOf{token_id}` - Returns the owner of the given token,
 as well as anyone with approval on this particular token.
 If the token is unknown, returns an error. Return type is
@@ -72,7 +79,7 @@ any contract that wishes to manage CW721 tokens. This is generally *not*
 implemented by any CW721 contract.
 
 `ReceiveNft{sender, token_id, msg}` - This is designed to handle `SendNft`
-messages. The address of the contract is stored in `env.sender`
+messages. The address of the contract is stored in `info.sender`
 so it cannot be faked. The contract should ensure the sender matches
 the token contract it expects to handle, and not allow arbitrary addresses.
 
@@ -119,4 +126,4 @@ as the `start_after` value in a future query.
 Return type is `TokensResponse{tokens: Vec<token_id>}`.
 
 `AllTokens{start_after, limit}` - Requires pagination. Lists all token_ids controlled by 
-the contract.
+the contract. -->

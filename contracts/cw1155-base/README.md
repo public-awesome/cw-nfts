@@ -1,24 +1,24 @@
-# Cw721 Basic
+# Cw1155 Basic
 
-This is a basic implementation of a cw721 NFT contract. It implements
-the [CW721 spec](../../packages/cw721/README.md) and is designed to
+This is a basic implementation of a cw1155 NFT contract. It implements
+the [CW1155 spec](../../packages/cw1155/README.md) and is designed to
 be deployed as is, or imported into other contracts to easily build
-cw721-compatible NFTs with custom logic.
+cw1155-compatible NFTs with custom logic.
 
 Implements:
 
-- [x] CW721 Base
+- [x] CW1155 Base
 - [x] Metadata extension
 - [ ] Enumerable extension (AllTokens done, but not Tokens - requires [#81](https://github.com/CosmWasm/cw-plus/issues/81))
 
 ## Implementation
 
-The `ExecuteMsg` and `QueryMsg` implementations follow the [CW721 spec](../../packages/cw721/README.md) and are described there.
+The `ExecuteMsg` and `QueryMsg` implementations follow the [CW1155 spec](../../packages/cw1155/README.md) and are described there.
 Beyond that, we make a few additions:
 
 * `InstantiateMsg` takes name and symbol (for metadata), as well as a **Minter** address. This is a special address that has full 
 power to mint new NFTs (but not modify existing ones)
-* `ExecuteMsg::Mint{token_id, owner, token_uri}` - creates a new token with given owner and (optional) metadata. It can only be called by
+* `ExecuteMsg::Mint{token_id, owner, token_uri, amount, token_extension}` - creates a new token with given owner and (optional) metadata. It can only be called by
 the Minter set in `instantiate`.
 * `QueryMsg::Minter{}` - returns the minter address for this contract.
 

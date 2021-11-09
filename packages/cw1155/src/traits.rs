@@ -55,10 +55,9 @@ where
         env: Env,
         info: MessageInfo,
         spender: String,
-        owner: Option<String>,
         token_id: String,
-        expires: Option<Expiration>,
         amount: Uint64,
+        expires: Option<Expiration>,
     ) -> Result<Response<C>, Self::Err>;
 
     fn decrease_allowance(
@@ -67,9 +66,9 @@ where
         env: Env,
         info: MessageInfo,
         spender: String,
-        owner: Option<String>,
         token_id: String,
         amount: Uint64,
+        expires: Option<Expiration>,
     ) -> Result<Response<C>, Self::Err>;
 
     fn approve_all(

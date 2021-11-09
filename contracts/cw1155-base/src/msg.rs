@@ -41,19 +41,16 @@ pub enum ExecuteMsg<T> {
     /// If expiration is set, then this allowance has a time/height limit
     IncreaseAllowance {
         spender: String,
-        /// If owner is not specified its assumed that the sender is the owner
-        owner: Option<String>,
         token_id: String,
-        expires: Option<Expiration>,
         amount: Uint64,
+        expires: Option<Expiration>,
     },
     /// Remove previously granted Approval
     DecreaseAllowance {
         spender: String,
-        /// If owner is not specified its assumed that the sender is the owner
-        owner: Option<String>,
         token_id: String,
         amount: Uint64,
+        expires: Option<Expiration>,
     },
     /// Allows operator to transfer / send any token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit

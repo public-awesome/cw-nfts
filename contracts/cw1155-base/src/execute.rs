@@ -49,19 +49,16 @@ where
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
             ExecuteMsg::IncreaseAllowance {
                 spender,
-                owner,
                 token_id,
-                expires,
                 amount,
-            } => {
-                self.increase_allowance(deps, env, info, spender, owner, token_id, expires, amount)
-            }
+                expires,
+            } => self.increase_allowance(deps, env, info, spender, token_id, amount, expires),
             ExecuteMsg::DecreaseAllowance {
                 spender,
-                owner,
                 token_id,
                 amount,
-            } => self.decrease_allowance(deps, env, info, spender, owner, token_id, amount),
+                expires,
+            } => self.decrease_allowance(deps, env, info, spender, token_id, amount, expires),
             ExecuteMsg::ApproveAll { operator, expires } => {
                 self.approve_all(deps, env, info, operator, expires)
             }
@@ -235,16 +232,12 @@ where
         env: Env,
         info: MessageInfo,
         spender: String,
-        owner: Option<String>,
         token_id: String,
-        expires: Option<Expiration>,
         amount: Uint64,
+        expires: Option<Expiration>,
     ) -> Result<Response<C>, ContractError> {
-        let owner = match owner {
-            Some(owner) => deps.api.addr_validate(&owner)?,
-            None => info.sender,
-        };
-        self._update_approvals(
+        let owner = info.sender;
+        self._update_allowances(
             deps, &env, &info, &spender, &owner, &token_id, true, expires, amount,
         )?;
 
@@ -261,16 +254,13 @@ where
         env: Env,
         info: MessageInfo,
         spender: String,
-        owner: Option<String>,
         token_id: String,
         amount: Uint64,
+        expires: Option<Expiration>,
     ) -> Result<Response<C>, ContractError> {
-        let owner = match owner {
-            Some(owner) => deps.api.addr_validate(&owner)?,
-            None => info.sender,
-        };
-        self._update_approvals(
-            deps, &env, &info, &spender, &owner, &token_id, false, None, amount,
+        let owner = info.sender;
+        self._update_allowances(
+            deps, &env, &info, &spender, &owner, &token_id, false, expires, amount,
         )?;
 
         Ok(Response::new()
@@ -435,7 +425,7 @@ where
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn _update_approvals(
+    pub fn _update_allowances(
         &self,
         deps: DepsMut,
         env: &Env,
@@ -450,32 +440,48 @@ where
     ) -> Result<(), ContractError> {
         self.check_can_approve(deps.as_ref(), env, info, owner)?;
 
+        // reject expired data as invalid
+        if expires.unwrap_or_default().is_expired(&env.block) {
+            return Err(ContractError::Expired {});
+        }
+
         //update the approval list (remove any for the same spender before adding)
         let spender_addr = deps.api.addr_validate(spender)?;
         let owner_info = self
             .token_owned_info
             .load(deps.storage, (token_id, owner))?;
-        owner_info.approvals = owner_info
+        let (spender_approval, other_approvals): (Vec<Approval>, Vec<Approval>) = owner_info
             .approvals
             .into_iter()
-            .filter(|apr| apr.spender != spender_addr)
-            .collect();
+            .partition(|apr| apr.spender == spender_addr);
 
-        // only difference between approve and revoke
         if add {
-            // reject expired data as invalid
-            let expires = expires.unwrap_or_default();
-            if expires.is_expired(&env.block) {
-                return Err(ContractError::Expired {});
+            if spender_approval.len() > 0 {
+                spender_approval[0].allowance += amount;
+                if expires.is_some() {
+                    spender_approval[0].expires = expires.unwrap();
+                }
+            } else {
+                let approval = Approval {
+                    spender: spender_addr,
+                    expires: expires.unwrap_or_default(),
+                    allowance: amount,
+                };
             }
-            let approval = Approval {
-                spender: spender_addr,
-                expires: expires,
-                allowance: amount,
-            };
-            owner_info.approvals.push(approval);
+            other_approvals.push(spender_approval[0]);
+        } else {
+            // Subtract the amount if the spender allowance exists and is more than
+            // the amount to be removed. In other cases clear the allowance.
+            if spender_approval.len() > 0 && spender_approval[0].allowance > amount {
+                spender_approval[0].allowance =
+                    spender_approval[0].allowance.checked_sub(amount).unwrap();
+                if expires.is_some() {
+                    spender_approval[0].expires = expires.unwrap();
+                }
+                other_approvals.push(spender_approval[0]);
+            }
         }
-
+        owner_info.approvals = other_approvals;
         self.token_owned_info
             .save(deps.storage, (token_id, owner), &owner_info)?;
 
@@ -529,7 +535,7 @@ where
                 return Ok(());
             } else {
                 return Err(ContractError::InsufficientBalance {
-                    token_id: *token_id,
+                    token_id: (*token_id).to_string(),
                     owner: *owner,
                 });
             }

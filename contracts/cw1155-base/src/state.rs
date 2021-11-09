@@ -40,6 +40,7 @@ where
         Self::new(
             "nft_info",
             "minter",
+            "token_count",
             "total_tokens",
             "operators",
             "tokens",
