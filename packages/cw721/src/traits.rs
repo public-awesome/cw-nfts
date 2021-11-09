@@ -82,6 +82,14 @@ where
         info: MessageInfo,
         operator: String,
     ) -> Result<Response<C>, Self::Err>;
+
+    fn burn(
+        &self,
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        token_id: String,
+    ) -> Result<Response<C>, Self::Err>;
 }
 
 pub trait Cw721Query<T>
