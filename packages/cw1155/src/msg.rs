@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Binary, Uint128};
+use cosmwasm_std::{Binary, Uint64};
 use cw0::Expiration;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -11,25 +11,34 @@ pub enum Cw1155ExecuteMsg {
     TransferNft {
         recipient: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
     },
     /// Send is a base message to transfer a token to a contract and trigger an action
     /// on the receiving contract.
     SendNft {
         contract: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
         msg: Binary,
     },
     /// Allows operator to transfer / send the token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit
-    Approve {
+    IncreaseAllowance {
         spender: String,
+        /// If owner is not specified its assumed that the sender is the owner
+        owner: Option<String>,
         token_id: String,
         expires: Option<Expiration>,
+        amount: Uint64,
     },
     /// Remove previously granted Approval
-    Revoke { spender: String, token_id: String },
+    DecreaseAllowance {
+        spender: String,
+        /// If owner is not specified its assumed that the sender is the owner
+        owner: Option<String>,
+        token_id: String,
+        amount: Uint64,
+    },
     /// Allows operator to transfer / send any token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit
     ApproveAll {

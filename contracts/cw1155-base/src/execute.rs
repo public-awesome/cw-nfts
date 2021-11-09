@@ -1,14 +1,14 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint64};
 
 use cw1155::{ContractInfoResponse, CustomMsg, Cw1155Execute, Cw1155ReceiveMsg, Expiration};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
-use crate::state::{Approval, Cw1155Contract, TokenInfo};
+use crate::state::{Approval, Cw1155Contract, OwnerInfo, TokenInfo};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw1155-base";
@@ -47,14 +47,21 @@ where
     ) -> Result<Response<C>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
-            ExecuteMsg::Approve {
+            ExecuteMsg::IncreaseAllowance {
                 spender,
+                owner,
                 token_id,
                 expires,
-            } => self.approve(deps, env, info, spender, token_id, expires),
-            ExecuteMsg::Revoke { spender, token_id } => {
-                self.revoke(deps, env, info, spender, token_id)
+                amount,
+            } => {
+                self.increase_allowance(deps, env, info, spender, owner, token_id, expires, amount)
             }
+            ExecuteMsg::DecreaseAllowance {
+                spender,
+                owner,
+                token_id,
+                amount,
+            } => self.decrease_allowance(deps, env, info, spender, owner, token_id, amount),
             ExecuteMsg::ApproveAll { operator, expires } => {
                 self.approve_all(deps, env, info, operator, expires)
             }
@@ -94,19 +101,34 @@ where
         }
 
         // create the token
-        let token = TokenInfo {
-            owner: deps.api.addr_validate(&msg.owner)?,
-            approvals: vec![],
-            token_uri: msg.token_uri,
-            extension: msg.extension,
-        };
+        let owner = deps.api.addr_validate(&msg.owner)?;
         self.tokens
             .update(deps.storage, &msg.token_id, |old| match old {
-                Some(_) => Err(ContractError::Claimed {}),
-                None => Ok(token),
+                Some(old_token) => {
+                    old_token.owners.push(owner);
+                    old_token.supply += msg.amount;
+                    // DO NOT SUBMIT: Annoying error about the update function not being able to infer
+                    // the type of E in the update function if I dont have this if false here.
+                    if false {
+                        Err(ContractError::Claimed {})
+                    } else {
+                        Ok(old_token)
+                    }
+                }
+                None => Ok(TokenInfo::<T> {
+                    owners: vec![owner],
+                    token_uri: msg.token_uri,
+                    supply: msg.amount,
+                    extension: msg.extension,
+                }),
             })?;
-
-        self.increment_tokens(deps.storage)?;
+        let owner_info = OwnerInfo {
+            approvals: vec![],
+            balance: msg.amount,
+        };
+        self.token_owned_info
+            .save(deps.storage, (&msg.token_id, &owner), &owner_info)?;
+        self.increment_total_tokens(deps.storage, msg.amount)?;
 
         Ok(Response::new()
             .add_attribute("action", "mint")
@@ -129,9 +151,29 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
     ) -> Result<Response<C>, ContractError> {
-        self._transfer_nft(deps, &env, &info, &recipient, &token_id)?;
+        // TransferNFT can only be called by the owner.
+        // If the owner doesnt have a owner info associated with the token info we throw an Unauthroized error.
+        if !self
+            .token_owned_info
+            .load(deps.storage, (&token_id, &info.sender))
+            .is_ok()
+        {
+            return Err(ContractError::Unauthorized {});
+        };
+
+        let recipient = deps.api.addr_validate(&recipient)?;
+        // Transfer token
+        self._transfer_nft_from(
+            deps,
+            &env,
+            &info,
+            &recipient,
+            &token_id,
+            &info.sender,
+            amount,
+        )?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
@@ -147,11 +189,29 @@ where
         info: MessageInfo,
         contract: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
         msg: Binary,
     ) -> Result<Response<C>, ContractError> {
+        // TransferNFT can only be called by the owner.
+        // If the owner doesnt have a owner info associated with the token info we throw an Unauthroized error.
+        if !self
+            .token_owned_info
+            .load(deps.storage, (&token_id, &info.sender))
+            .is_ok()
+        {
+            return Err(ContractError::Unauthorized {});
+        };
+        let contract = deps.api.addr_validate(&contract)?;
         // Transfer token
-        self._transfer_nft(deps, &env, &info, &contract, &token_id)?;
+        self._transfer_nft_from(
+            deps,
+            &env,
+            &info,
+            &contract,
+            &token_id,
+            &info.sender,
+            amount,
+        )?;
 
         let send = Cw1155ReceiveMsg {
             sender: info.sender.to_string(),
@@ -169,16 +229,24 @@ where
             .add_attribute("token_id", token_id))
     }
 
-    fn approve(
+    fn increase_allowance(
         &self,
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
         spender: String,
+        owner: Option<String>,
         token_id: String,
         expires: Option<Expiration>,
+        amount: Uint64,
     ) -> Result<Response<C>, ContractError> {
-        self._update_approvals(deps, &env, &info, &spender, &token_id, true, expires)?;
+        let owner = match owner {
+            Some(owner) => deps.api.addr_validate(&owner)?,
+            None => info.sender,
+        };
+        self._update_approvals(
+            deps, &env, &info, &spender, &owner, &token_id, true, expires, amount,
+        )?;
 
         Ok(Response::new()
             .add_attribute("action", "approve")
@@ -187,15 +255,23 @@ where
             .add_attribute("token_id", token_id))
     }
 
-    fn revoke(
+    fn decrease_allowance(
         &self,
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
         spender: String,
+        owner: Option<String>,
         token_id: String,
+        amount: Uint64,
     ) -> Result<Response<C>, ContractError> {
-        self._update_approvals(deps, &env, &info, &spender, &token_id, false, None)?;
+        let owner = match owner {
+            Some(owner) => deps.api.addr_validate(&owner)?,
+            None => info.sender,
+        };
+        self._update_approvals(
+            deps, &env, &info, &spender, &owner, &token_id, false, None, amount,
+        )?;
 
         Ok(Response::new()
             .add_attribute("action", "revoke")
@@ -253,22 +329,109 @@ where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
 {
-    pub fn _transfer_nft(
+    pub fn _transfer_nft_from(
         &self,
         deps: DepsMut,
         env: &Env,
         info: &MessageInfo,
-        recipient: &str,
+        recipient: &Addr,
         token_id: &str,
-    ) -> Result<TokenInfo<T>, ContractError> {
+        owner: &Addr,
+        amount: Uint64,
+    ) -> Result<(), ContractError> {
         let mut token = self.tokens.load(deps.storage, &token_id)?;
         // ensure we have permissions
-        self.check_can_send(deps.as_ref(), env, info, &token)?;
+        self.check_can_send(deps.as_ref(), env, info, token_id, owner, amount)?;
         // set owner and remove existing approvals
-        token.owner = deps.api.addr_validate(recipient)?;
-        token.approvals = vec![];
-        self.tokens.save(deps.storage, &token_id, &token)?;
-        Ok(token)
+
+        // Update sender state
+        let old_owner_info = self
+            .token_owned_info
+            .load(deps.storage, (token_id, owner))?;
+        if old_owner_info.balance == amount {
+            // Delete old owner
+            self.token_owned_info
+                .remove(deps.storage, (token_id, owner));
+            self.tokens
+                .update(deps.storage, token_id, |val| match val {
+                    Some(token) => {
+                        token
+                            .owners
+                            .swap_remove(token.owners.iter().position(|x| *x == *owner).unwrap());
+                        Ok(token)
+                    }
+                    None => Err(ContractError::InvalidState {
+                        msg: "Owner does not exist for tokenid".into(),
+                    }),
+                })?;
+        } else {
+            // Reduce old owners balance
+            self.token_owned_info.update(
+                deps.storage,
+                (token_id, owner),
+                |map_val| match map_val {
+                    Some(owner_info) => {
+                        owner_info.balance =
+                            owner_info.balance.checked_sub(amount).or_else(|_| {
+                                Err(ContractError::InvalidState {
+                                    msg: "Owner balance is less than amount".into(),
+                                })
+                            })?;
+
+                        if info.sender != *owner {
+                            for val in owner_info.approvals.iter_mut() {
+                                if val.spender == info.sender {
+                                    val.allowance =
+                                        val.allowance.checked_sub(amount).or_else(|_| {
+                                            Err(ContractError::InvalidState {
+                                                msg: "Spender allowance is less than amount".into(),
+                                            })
+                                        })?;
+                                }
+                            }
+                        }
+                        Ok(owner_info)
+                    }
+                    None => Err(ContractError::InvalidState {
+                        msg: "Owner info does not exist for existing owner".into(),
+                    }),
+                },
+            )?;
+        }
+
+        // Update the recipient state
+        self.token_owned_info.update(
+            deps.storage,
+            (token_id, recipient),
+            |map_val| match map_val {
+                Some(owner_info) => {
+                    owner_info.balance = owner_info.balance.checked_add(amount).unwrap();
+                    Ok(owner_info)
+                }
+                None => {
+                    // If new owner doesnt exist add new owner to the owner vec in TokenInfo.
+                    self.tokens
+                        .update(deps.storage, token_id, |old| match old {
+                            Some(old_token) => {
+                                old_token.owners.push(*recipient);
+                                Ok(old_token)
+                            }
+                            None => Err(ContractError::InvalidState {
+                                msg: "TokenInfo doesnt exist".into(),
+                            }),
+                        })?;
+                    if false {
+                        Err(ContractError::Claimed {})
+                    } else {
+                        Ok(OwnerInfo {
+                            approvals: vec![],
+                            balance: amount,
+                        })
+                    }
+                }
+            },
+        )?;
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -278,18 +441,21 @@ where
         env: &Env,
         info: &MessageInfo,
         spender: &str,
+        owner: &Addr,
         token_id: &str,
         // if add == false, remove. if add == true, remove then set with this expiration
         add: bool,
         expires: Option<Expiration>,
-    ) -> Result<TokenInfo<T>, ContractError> {
-        let mut token = self.tokens.load(deps.storage, &token_id)?;
-        // ensure we have permissions
-        self.check_can_approve(deps.as_ref(), env, info, &token)?;
+        amount: Uint64,
+    ) -> Result<(), ContractError> {
+        self.check_can_approve(deps.as_ref(), env, info, owner)?;
 
-        // update the approval list (remove any for the same spender before adding)
+        //update the approval list (remove any for the same spender before adding)
         let spender_addr = deps.api.addr_validate(spender)?;
-        token.approvals = token
+        let owner_info = self
+            .token_owned_info
+            .load(deps.storage, (token_id, owner))?;
+        owner_info.approvals = owner_info
             .approvals
             .into_iter()
             .filter(|apr| apr.spender != spender_addr)
@@ -304,14 +470,16 @@ where
             }
             let approval = Approval {
                 spender: spender_addr,
-                expires,
+                expires: expires,
+                allowance: amount,
             };
-            token.approvals.push(approval);
+            owner_info.approvals.push(approval);
         }
 
-        self.tokens.save(deps.storage, &token_id, &token)?;
+        self.token_owned_info
+            .save(deps.storage, (token_id, owner), &owner_info)?;
 
-        Ok(token)
+        Ok(())
     }
 
     /// returns true iff the sender can execute approve or reject on the contract
@@ -320,16 +488,16 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        owner: &Addr,
     ) -> Result<(), ContractError> {
         // owner can approve
-        if token.owner == info.sender {
+        if *owner == info.sender {
             return Ok(());
         }
         // operator can approve
         let op = self
             .operators
-            .may_load(deps.storage, (&token.owner, &info.sender))?;
+            .may_load(deps.storage, (owner, &info.sender))?;
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {
@@ -348,26 +516,39 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        token_id: &str,
+        owner: &Addr,
+        amount: Uint64,
     ) -> Result<(), ContractError> {
         // owner can send
-        if token.owner == info.sender {
-            return Ok(());
+        if *owner == info.sender {
+            let owner_info = self
+                .token_owned_info
+                .load(deps.storage, (token_id, owner))?;
+            if owner_info.balance >= amount {
+                return Ok(());
+            } else {
+                return Err(ContractError::InsufficientBalance {
+                    token_id: *token_id,
+                    owner: *owner,
+                });
+            }
         }
 
         // any non-expired token approval can send
-        if token
-            .approvals
-            .iter()
-            .any(|apr| apr.spender == info.sender && !apr.is_expired(&env.block))
-        {
+        let token_owned_info = self
+            .token_owned_info
+            .load(deps.storage, (token_id, owner))?;
+        if token_owned_info.approvals.iter().any(|apr| {
+            apr.spender == info.sender && !apr.is_expired(&env.block) && apr.allowance >= amount
+        }) {
             return Ok(());
         }
 
         // operator can send
         let op = self
             .operators
-            .may_load(deps.storage, (&token.owner, &info.sender))?;
+            .may_load(deps.storage, (owner, &info.sender))?;
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {

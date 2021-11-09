@@ -26,7 +26,7 @@ where
     }
 
     fn num_tokens(&self, token_id: String, deps: Deps) -> StdResult<NumTokensResponse> {
-        let count = self.token_count(deps.storage)?;
+        let count = self.total_token_count(deps.storage)?;
         Ok(NumTokensResponse { count })
     }
 

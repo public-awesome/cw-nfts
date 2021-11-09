@@ -6,7 +6,7 @@ use crate::{
     AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Uint64};
 use cw0::Expiration;
 
 // TODO: move this somewhere else... ideally cosmwasm-std
@@ -35,7 +35,7 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
     ) -> Result<Response<C>, Self::Err>;
 
     fn send_nft(
@@ -45,27 +45,31 @@ where
         info: MessageInfo,
         contract: String,
         token_id: String,
-        amount: Uint128,
+        amount: Uint64,
         msg: Binary,
     ) -> Result<Response<C>, Self::Err>;
 
-    fn approve(
+    fn increase_allowance(
         &self,
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
         spender: String,
+        owner: Option<String>,
         token_id: String,
         expires: Option<Expiration>,
+        amount: Uint64,
     ) -> Result<Response<C>, Self::Err>;
 
-    fn revoke(
+    fn decrease_allowance(
         &self,
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
         spender: String,
+        owner: Option<String>,
         token_id: String,
+        amount: Uint64,
     ) -> Result<Response<C>, Self::Err>;
 
     fn approve_all(
