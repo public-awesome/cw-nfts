@@ -6,14 +6,14 @@ use cw1155::Expiration;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    /// Name of the NFT contract
+    /// Name of the contract
     pub name: String,
-    /// Symbol of the NFT contract
+    /// Symbol of the contract
     pub symbol: String,
 
-    /// The minter is the only one who can create new NFTs.
-    /// This is designed for a base NFT that is controlled by an external program
-    /// or contract. You will likely replace this with custom logic in custom NFTs
+    /// The minter is the only one who can create new tokens.
+    /// This is designed for a base 1155 contract that is controlled by an external program
+    /// or contract. You will likely replace this with custom logic in custom implementations.
     pub minter: String,
 }
 
@@ -24,17 +24,21 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg<T> {
     /// Transfer is a base message to move a token to another account without triggering actions
-    TransferNft {
+    /// owner is optional, if not specified its assumed that the sender is the owner.
+    Transfer {
         recipient: String,
         token_id: String,
         amount: Uint64,
+        owner: Option<String>,
     },
     /// Send is a base message to transfer a token to a contract and trigger an action
     /// on the receiving contract.
-    SendNft {
+    /// /// owner is optional, if not specified its assumed that the sender is the owner.
+    Send {
         contract: String,
         token_id: String,
         amount: Uint64,
+        owner: Option<String>,
         msg: Binary,
     },
     /// Allows operator to transfer / send the token from the owner's account.
@@ -61,17 +65,17 @@ pub enum ExecuteMsg<T> {
     /// Remove previously granted ApproveAll permission
     RevokeAll { operator: String },
 
-    /// Mint a new NFT, can only be called by the contract minter
+    /// Mint a new token, can only be called by the contract minter
     Mint(MintMsg<T>),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MintMsg<T> {
-    /// Unique ID of the NFT
+    /// Unique ID of the token
     pub token_id: String,
-    /// The owner of the newly minter NFT
+    /// The owner of the newly minter token
     pub owner: String,
-    /// Universal resource identifier for this NFT
+    /// Universal resource identifier for this token
     /// Should point to a JSON file that conforms to the ERC1155
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
@@ -90,9 +94,7 @@ pub enum QueryMsg {
     BalanceOf {
         token_id: String,
         // Address of the owner.
-        address: String,
-        /// unset or false will filter out expired approvals, you must set to true to see them
-        include_expired: Option<bool>,
+        owner: String,
     },
     /// List all operators that can access all of the owner's tokens
     /// Return type: `ApprovedForAllResponse`
@@ -107,32 +109,14 @@ pub enum QueryMsg {
     NumTokens {
         token_id: String,
     },
-
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract: `ContractInfoResponse`
     ContractInfo {},
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC1155 Metadata JSON Schema*
-    /// but directly from the contract: `NftInfoResponse`
-    NftInfo {
+    /// but directly from the contract: `TokenInfoResponse`
+    TokenInfo {
         token_id: String,
-    },
-    /// With MetaData Extension.
-    /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
-    /// for clients: `AllNftInfo`
-    AllNftInfo {
-        token_id: String,
-        /// unset or false will filter out expired approvals, you must set to true to see them
-        include_expired: Option<bool>,
-    },
-
-    /// With Enumerable extension.
-    /// Returns all tokens owned by the given address, [] if unset.
-    /// Return type: TokensResponse.
-    Tokens {
-        owner: String,
-        start_after: Option<String>,
-        limit: Option<u32>,
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.

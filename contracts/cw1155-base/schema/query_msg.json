@@ -3,24 +3,21 @@
   "title": "QueryMsg",
   "oneOf": [
     {
-      "description": "Return the owner of the given token, error if token does not exist Return type: OwnerOfResponse",
+      "description": "Returns the current balance of the given address, 0 if unset and error if token does not exist Return type: BalanceOfResponse",
       "type": "object",
       "required": [
-        "owner_of"
+        "balance_of"
       ],
       "properties": {
-        "owner_of": {
+        "balance_of": {
           "type": "object",
           "required": [
+            "owner",
             "token_id"
           ],
           "properties": {
-            "include_expired": {
-              "description": "unset or false will filter out expired approvals, you must set to true to see them",
-              "type": [
-                "boolean",
-                "null"
-              ]
+            "owner": {
+              "type": "string"
             },
             "token_id": {
               "type": "string"
@@ -80,7 +77,15 @@
       ],
       "properties": {
         "num_tokens": {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "token_id": {
+              "type": "string"
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -99,13 +104,13 @@
       "additionalProperties": false
     },
     {
-      "description": "With MetaData Extension. Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema* but directly from the contract: `NftInfoResponse`",
+      "description": "With MetaData Extension. Returns metadata about one particular token, based on *ERC1155 Metadata JSON Schema* but directly from the contract: `TokenInfoResponse`",
       "type": "object",
       "required": [
-        "nft_info"
+        "token_info"
       ],
       "properties": {
-        "nft_info": {
+        "token_info": {
           "type": "object",
           "required": [
             "token_id"
@@ -113,69 +118,6 @@
           "properties": {
             "token_id": {
               "type": "string"
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "With MetaData Extension. Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization for clients: `AllNftInfo`",
-      "type": "object",
-      "required": [
-        "all_nft_info"
-      ],
-      "properties": {
-        "all_nft_info": {
-          "type": "object",
-          "required": [
-            "token_id"
-          ],
-          "properties": {
-            "include_expired": {
-              "description": "unset or false will filter out expired approvals, you must set to true to see them",
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "token_id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "With Enumerable extension. Returns all tokens owned by the given address, [] if unset. Return type: TokensResponse.",
-      "type": "object",
-      "required": [
-        "tokens"
-      ],
-      "properties": {
-        "tokens": {
-          "type": "object",
-          "required": [
-            "owner"
-          ],
-          "properties": {
-            "limit": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "owner": {
-              "type": "string"
-            },
-            "start_after": {
-              "type": [
-                "string",
-                "null"
-              ]
             }
           }
         }

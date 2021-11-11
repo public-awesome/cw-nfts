@@ -1,22 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ExecuteMsg",
-  "description": "This is like Cw721ExecuteMsg but we add a Mint command for an owner to make this stand-alone. You will likely want to remove mint and use other control logic in any contract that inherits this.",
+  "description": "This is like Cw1155ExecuteMsg but we add a Mint command for an owner to make this stand-alone. You will likely want to remove mint and use other control logic in any contract that inherits this.",
   "oneOf": [
     {
       "description": "Transfer is a base message to move a token to another account without triggering actions",
       "type": "object",
       "required": [
-        "transfer_nft"
+        "transfer"
       ],
       "properties": {
-        "transfer_nft": {
+        "transfer": {
           "type": "object",
           "required": [
+            "amount",
             "recipient",
             "token_id"
           ],
           "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint64"
+            },
             "recipient": {
               "type": "string"
             },
@@ -32,17 +36,21 @@
       "description": "Send is a base message to transfer a token to a contract and trigger an action on the receiving contract.",
       "type": "object",
       "required": [
-        "send_nft"
+        "send"
       ],
       "properties": {
-        "send_nft": {
+        "send": {
           "type": "object",
           "required": [
+            "amount",
             "contract",
             "msg",
             "token_id"
           ],
           "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint64"
+            },
             "contract": {
               "type": "string"
             },
@@ -61,16 +69,20 @@
       "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit",
       "type": "object",
       "required": [
-        "approve"
+        "increase_allowance"
       ],
       "properties": {
-        "approve": {
+        "increase_allowance": {
           "type": "object",
           "required": [
+            "amount",
             "spender",
             "token_id"
           ],
           "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint64"
+            },
             "expires": {
               "anyOf": [
                 {
@@ -96,16 +108,30 @@
       "description": "Remove previously granted Approval",
       "type": "object",
       "required": [
-        "revoke"
+        "decrease_allowance"
       ],
       "properties": {
-        "revoke": {
+        "decrease_allowance": {
           "type": "object",
           "required": [
+            "amount",
             "spender",
             "token_id"
           ],
           "properties": {
+            "amount": {
+              "$ref": "#/definitions/Uint64"
+            },
+            "expires": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Expiration"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "spender": {
               "type": "string"
             },
@@ -170,7 +196,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Mint a new NFT, can only be called by the contract minter",
+      "description": "Mint a new token, can only be called by the contract minter",
       "type": "object",
       "required": [
         "mint"
@@ -241,10 +267,19 @@
     "MintMsg_for_Nullable_Empty": {
       "type": "object",
       "required": [
+        "amount",
         "owner",
         "token_id"
       ],
       "properties": {
+        "amount": {
+          "description": "The number of tokens to mint",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
         "extension": {
           "description": "Any custom extension used by this contract",
           "anyOf": [
@@ -257,15 +292,15 @@
           ]
         },
         "owner": {
-          "description": "The owner of the newly minter NFT",
+          "description": "The owner of the newly minter token",
           "type": "string"
         },
         "token_id": {
-          "description": "Unique ID of the NFT",
+          "description": "Unique ID of the token",
           "type": "string"
         },
         "token_uri": {
-          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+          "description": "Universal resource identifier for this token Should point to a JSON file that conforms to the ERC1155 Metadata JSON Schema",
           "type": [
             "string",
             "null"

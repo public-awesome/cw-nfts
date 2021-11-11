@@ -40,11 +40,9 @@ where
         Self::new(
             "nft_info",
             "minter",
-            "token_count",
-            "total_tokens",
+            "total_token_count",
             "operators",
             "tokens",
-            "tokens__owner",
             "tokens_owner_info",
         )
     }
@@ -57,17 +55,14 @@ where
     fn new(
         contract_key: &'a str,
         minter_key: &'a str,
-        token_count_key: &'a str,
         total_token_count_key: &'a str,
         operator_key: &'a str,
         tokens_key: &'a str,
-        tokens_owner_key: &'a str,
         tokens_owner_info_key: &'a str,
     ) -> Self {
         Self {
             contract_info: Item::new(contract_key),
             minter: Item::new(minter_key),
-            token_counts: Map::new(token_count_key),
             total_token_count: Item::new(total_token_count_key),
             operators: Map::new(operator_key),
             tokens: Map::new(tokens_key),
@@ -88,7 +83,7 @@ where
         storage: &mut dyn Storage,
         amount: Uint64,
     ) -> StdResult<u64> {
-        let val = self.total_token_count(storage)? + amount;
+        let val = self.get_total_token_count(storage)? + amount.u64();
         self.total_token_count.save(storage, &val)?;
         Ok(val)
     }
@@ -96,12 +91,7 @@ where
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TokenInfo<T> {
-    /// All owners that own this token
-    // dev: Storing owners in token info allows us to easily check which accounts
-    // have access to the token
-    pub owners: Vec<Addr>,
-
-    /// Universal resource identifier for this NFT
+    /// Universal resource identifier for this token
     /// Should point to a JSON file that conforms to the ERC1155
     /// Metadata JSON Schema
     pub token_uri: Option<String>,

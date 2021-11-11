@@ -1,9 +1,9 @@
 # Cw1155 Basic
 
-This is a basic implementation of a cw1155 NFT contract. It implements
+This is a basic implementation of a cw1155 contract. It implements
 the [CW1155 spec](../../packages/cw1155/README.md) and is designed to
 be deployed as is, or imported into other contracts to easily build
-cw1155-compatible NFTs with custom logic.
+cw1155-compatible tokens with custom logic.
 
 Implements:
 
@@ -17,12 +17,12 @@ The `ExecuteMsg` and `QueryMsg` implementations follow the [CW1155 spec](../../p
 Beyond that, we make a few additions:
 
 * `InstantiateMsg` takes name and symbol (for metadata), as well as a **Minter** address. This is a special address that has full 
-power to mint new NFTs (but not modify existing ones)
+power to mint new tokens (but not modify existing ones)
 * `ExecuteMsg::Mint{token_id, owner, token_uri, amount, token_extension}` - creates a new token with given owner and (optional) metadata. It can only be called by
 the Minter set in `instantiate`.
 * `QueryMsg::Minter{}` - returns the minter address for this contract.
 
-It requires all tokens to have defined metadata in the standard format (with no extensions). For generic NFTs this may
+It requires all tokens to have defined metadata in the standard format (with no extensions). For generic tokens this may
 often be enough.
 
 The *Minter* can either be an external actor (eg. web server, using PubKey) or another contract. If you just want to customize
@@ -43,9 +43,9 @@ Once you are happy with the content, you can compile it to wasm via:
 
 ```
 RUSTFLAGS='-C link-arg=-s' cargo wasm
-cp ../../target/wasm32-unknown-unknown/release/cw20_base.wasm .
-ls -l cw20_base.wasm
-sha256sum cw20_base.wasm
+cp ../../target/wasm32-unknown-unknown/release/cw155_base.wasm .
+ls -l cw155_base.wasm
+sha256sum cw155_base.wasm
 ```
 
 Or for a production-ready (optimized) build, run a build command in the
@@ -54,13 +54,13 @@ the repository root: https://github.com/CosmWasm/cw-plus#compiling.
 ## Importing this contract
 
 You can also import much of the logic of this contract to build another
-CW721-compliant contract, such as tradable names, crypto kitties,
-or tokenized real estate.
+CW1155-compliant contract, such as tradable game items or tokenized
+songs & books
 
 Basically, you just need to write your handle function and import 
-`cw721_base::contract::handle_transfer`, etc and dispatch to them.
+`cw1155_base::contract::handle_transfer`, etc and dispatch to them.
 This allows you to use custom `ExecuteMsg` and `QueryMsg` with your additional
-calls, but then use the underlying implementation for the standard cw721
+calls, but then use the underlying implementation for the standard cw1155
 messages you want to support. The same with `QueryMsg`. You will most
 likely want to write a custom, domain-specific `instantiate`.
 
@@ -68,4 +68,4 @@ likely want to write a custom, domain-specific `instantiate`.
 
 For now, you can look at [`cw20-staking`](../cw20-staking/README.md)
 for an example of how to "inherit" cw20 functionality and combine it with custom logic.
-The process is similar for cw721.
+The process is similar for cw1155.

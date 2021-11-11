@@ -4,8 +4,8 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
 
 use cw1155::{
-    AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OwnerOfResponse, TokensResponse,
+    ApprovedForAllResponse, BalanceOfResponse, ContractInfoResponse, NumTokensResponse,
+    TokenInfoResponse, TokensResponse,
 };
 use cw1155_base::{ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg};
 
@@ -18,20 +18,16 @@ fn main() {
     export_schema(&schema_for!(InstantiateMsg), &out_dir);
     export_schema_with_title(&schema_for!(ExecuteMsg<Extension>), &out_dir, "ExecuteMsg");
     export_schema(&schema_for!(QueryMsg), &out_dir);
-    export_schema_with_title(
-        &schema_for!(AllNftInfoResponse<Extension>),
-        &out_dir,
-        "AllNftInfoResponse",
-    );
+
     export_schema(&schema_for!(ApprovedForAllResponse), &out_dir);
     export_schema(&schema_for!(ContractInfoResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema_with_title(
-        &schema_for!(NftInfoResponse<Extension>),
+        &schema_for!(TokenInfoResponse<Extension>),
         &out_dir,
-        "NftInfoResponse",
+        "TokenInfoResponse",
     );
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
-    export_schema(&schema_for!(OwnerOfResponse), &out_dir);
+    export_schema(&schema_for!(BalanceOfResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);
 }
