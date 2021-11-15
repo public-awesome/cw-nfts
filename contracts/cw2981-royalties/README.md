@@ -15,7 +15,7 @@ Exposes two new query message types that can be called:
 RoyaltyInfo {
     token_id: String,
     // the denom of this sale must also be the denom returned by RoyaltiesInfoResponse
-    sale_price: u128,
+    sale_price: Uint128,
 },
 // Called against the contract to signal that CW-2981 is implemented
 CheckRoyalties {},
