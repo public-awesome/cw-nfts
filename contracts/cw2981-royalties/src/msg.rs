@@ -1,3 +1,4 @@
+use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +16,7 @@ pub enum Cw2981QueryMsg {
         // this was originally implemented as a Coin
         // however that would mean you couldn't buy using CW20s
         // as CW20 is just mapping of addr -> balance
-        sale_price: u128,
+        sale_price: Uint128,
     },
     // Called against contract to determine if this NFT
     // implements royalties
@@ -127,7 +128,7 @@ pub struct RoyaltiesInfoResponse {
     pub address: String,
     // Note that this must be the same denom as that passed in to RoyaltyInfo
     // rounding up or down is at the discretion of the implementer
-    pub royalty_amount: u128,
+    pub royalty_amount: Uint128,
 }
 
 /// Shows if the contract implements royalties
