@@ -1,8 +1,9 @@
 pub mod msg;
+pub mod query;
 
-use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
-use cosmwasm_std::{to_binary, Deps, StdResult, Uint128};
-use percentage::Percentage;
+use cosmwasm_std::to_binary;
+pub use query::{check_royalties, query_royalties_info};
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +34,7 @@ pub struct Metadata {
     /// specify whether royalties are set on this token
     pub royalty_payments: bool,
     /// This is how much the minter takes as a cut when sold
-    pub royalty_percentage: Option<u32>,
+    pub royalty_percentage: Option<u64>,
     /// The payment address, may be different to or the same
     /// as the minter addr
     /// question: how do we validate this?
@@ -89,48 +90,10 @@ pub mod entry {
     }
 }
 
-// NOTE: default behaviour here is to round down
-// EIP2981 specifies that the rounding behaviour is at the discretion of the implementer
-pub fn query_royalties_info(
-    deps: Deps,
-    token_id: String,
-    sale_price: Uint128,
-) -> StdResult<RoyaltiesInfoResponse> {
-    let contract = Cw2981Contract::default();
-    let token_info = contract.tokens.load(deps.storage, &token_id)?;
-
-    let royalty_percentage = match token_info.extension {
-        Some(ref ext) => match ext.royalty_percentage {
-            Some(percentage) => Percentage::from(percentage),
-            None => Percentage::from(0),
-        },
-        None => Percentage::from(0),
-    };
-    let royalty_from_sale_price = royalty_percentage.apply_to(sale_price.u128());
-
-    let royalty_address = match token_info.extension {
-        Some(ext) => match ext.royalty_payment_address {
-            Some(addr) => addr,
-            None => String::from(""),
-        },
-        None => String::from(""),
-    };
-
-    Ok(RoyaltiesInfoResponse {
-        address: royalty_address,
-        royalty_amount: Uint128::from(royalty_from_sale_price),
-    })
-}
-
-pub fn check_royalties(_deps: Deps) -> StdResult<CheckRoyaltiesResponse> {
-    Ok(CheckRoyaltiesResponse {
-        royalty_payments: true,
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
 
     use cosmwasm_std::{from_binary, Uint128};
 
@@ -237,7 +200,7 @@ mod tests {
             }),
         };
         let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
-        entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
+        entry::execute(deps.as_mut(), mock_env(), info.clone(), exec_msg).unwrap();
 
         let expected = RoyaltiesInfoResponse {
             address: mint_msg.owner,
@@ -255,5 +218,38 @@ mod tests {
         let query_res: RoyaltiesInfoResponse =
             from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
+
+        // check for rounding down
+        // which is the default behaviour
+        let voyager_token_id = "Voyager";
+        let second_mint_msg = MintMsg {
+            token_id: voyager_token_id.to_string(),
+            owner: "Janeway".to_string(),
+            token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
+            extension: Some(Metadata {
+                description: Some("Spaceship with Warp Drive".into()),
+                name: Some("Starship USS Voyager".to_string()),
+                royalty_payment_address: Some("Janeway".to_string()),
+                royalty_percentage: Some(4),
+                ..Metadata::default()
+            }),
+        };
+        let voyager_exec_msg = ExecuteMsg::Mint(second_mint_msg.clone());
+        entry::execute(deps.as_mut(), mock_env(), info, voyager_exec_msg).unwrap();
+
+        // 43 x 0.04 (i.e., 4%) should be 1.72
+        // we expect this to be rounded down to 1
+        let voyager_expected = RoyaltiesInfoResponse {
+            address: second_mint_msg.owner,
+            royalty_amount: Uint128::new(1),
+        };
+
+        let res = query_royalties_info(
+            deps.as_ref(),
+            voyager_token_id.to_string(),
+            Uint128::new(43),
+        )
+        .unwrap();
+        assert_eq!(res, voyager_expected);
     }
 }
