@@ -80,7 +80,7 @@ pub struct Approval {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct ApprovalResponse {
+pub struct ApprovedResponse {
     pub approval: Approval,
 }
 

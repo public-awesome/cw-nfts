@@ -5,7 +5,7 @@ use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdEr
 
 use cw0::maybe_addr;
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg,
+    AllNftInfoResponse, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg,
     Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
@@ -85,7 +85,7 @@ where
         _env: Env,
         owner: String,
         operator: String,
-    ) -> StdResult<ApprovalResponse> {
+    ) -> StdResult<ApprovedResponse> {
         let owner_addr = deps.api.addr_validate(&owner)?;
         let operator_addr = deps.api.addr_validate(&operator)?;
 
@@ -94,7 +94,7 @@ where
             .key((&owner_addr, &operator_addr))
             .load(deps.storage)?;
 
-        Ok(ApprovalResponse {
+        Ok(ApprovedResponse {
             approval: cw721::Approval {
                 spender: operator,
                 expires,

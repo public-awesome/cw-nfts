@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::query::ApprovalResponse;
+use crate::query::ApprovedResponse;
 use crate::{
     AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OwnerOfResponse, TokensResponse,
@@ -130,7 +130,7 @@ where
         env: Env,
         owner: String,
         spender: String,
-    ) -> StdResult<ApprovalResponse>;
+    ) -> StdResult<ApprovedResponse>;
 
     fn tokens(
         &self,

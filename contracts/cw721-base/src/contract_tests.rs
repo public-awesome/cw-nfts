@@ -3,7 +3,7 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
 
 use cw721::{
-    Approval, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse, Cw721Query,
+    Approval, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse, Cw721Query,
     Cw721ReceiveMsg, Expiration, NftInfoResponse, OwnerOfResponse,
 };
 
@@ -491,7 +491,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovalResponse {
+        ApprovedResponse {
             approval: Approval {
                 spender: String::from("random"),
                 expires: Expiration::Never {}

@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use crate::{
-    AllNftInfoResponse, Approval, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse,
+    AllNftInfoResponse, Approval, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse,
     Cw721ExecuteMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse,
     TokensResponse,
 };
@@ -66,12 +66,12 @@ impl Cw721Contract {
         querier: &Q,
         owner: T,
         operator: T,
-    ) -> StdResult<ApprovalResponse> {
+    ) -> StdResult<ApprovedResponse> {
         let req = Cw721QueryMsg::Approved {
             owner: owner.into(),
             operator: operator.into(),
         };
-        let res: ApprovalResponse = self.query(querier, req)?;
+        let res: ApprovedResponse = self.query(querier, req)?;
         Ok(res)
     }
 
