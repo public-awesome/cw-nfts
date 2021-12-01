@@ -9,7 +9,7 @@ pub use cw0::Expiration;
 pub use crate::helpers::Cw721Contract;
 pub use crate::msg::Cw721ExecuteMsg;
 pub use crate::query::{
-    AllNftInfoResponse, Approval, ApprovedForAllResponse, ContractInfoResponse, Cw721QueryMsg,
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse, Cw721QueryMsg,
     NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 pub use crate::receiver::Cw721ReceiveMsg;

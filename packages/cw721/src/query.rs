@@ -13,6 +13,14 @@ pub enum Cw721QueryMsg {
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
     },
+
+    /// List all operators that can access all of the owner's tokens.
+    /// Return type: `ApprovedForAllResponse`
+    Approved {
+        owner: String,
+        operator: String
+    },
+
     /// List all operators that can access all of the owner's tokens.
     /// Return type: `ApprovedForAllResponse`
     ApprovedForAll {
