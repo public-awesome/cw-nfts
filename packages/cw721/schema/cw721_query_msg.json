@@ -31,6 +31,31 @@
       "additionalProperties": false
     },
     {
+      "description": "Return operator that can access all of the owner's tokens. Return type: `ApprovedResponse`",
+      "type": "object",
+      "required": [
+        "approved"
+      ],
+      "properties": {
+        "approved": {
+          "type": "object",
+          "required": [
+            "operator",
+            "owner"
+          ],
+          "properties": {
+            "operator": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "List all operators that can access all of the owner's tokens. Return type: `ApprovedForAllResponse`",
       "type": "object",
       "required": [
