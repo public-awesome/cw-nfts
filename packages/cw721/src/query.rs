@@ -14,12 +14,9 @@ pub enum Cw721QueryMsg {
         include_expired: Option<bool>,
     },
 
-    /// List all operators that can access all of the owner's tokens.
-    /// Return type: `ApprovedForAllResponse`
-    Approved {
-        owner: String,
-        operator: String
-    },
+    /// Return operator that can access all of the owner's tokens.
+    /// Return type: `ApprovedResponse`
+    Approved { owner: String, operator: String },
 
     /// List all operators that can access all of the owner's tokens.
     /// Return type: `ApprovedForAllResponse`

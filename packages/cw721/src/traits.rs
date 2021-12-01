@@ -2,13 +2,13 @@ use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+use crate::query::ApprovalResponse;
 use crate::{
     AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw0::Expiration;
-use crate::query::ApprovalResponse;
 
 // TODO: move this somewhere else... ideally cosmwasm-std
 pub trait CustomMsg: Clone + std::fmt::Debug + PartialEq + JsonSchema {}
