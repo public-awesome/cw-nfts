@@ -79,6 +79,31 @@ where
         Ok(ApprovedForAllResponse { operators: res? })
     }
 
+    fn approval(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: String,
+        spender: String
+    ) -> StdResult<ApprovalResponse> {
+        let owner_addr = deps.api.addr_validate(&owner)?;
+        let spender_addr = deps.api.addr_validate(&spender)?;
+
+        let expiration = self.operators.key((&owner_addr, &spender_addr)).load(deps.storage)?;
+
+        let res: StdResult<Vec<_>> = self
+            .operators
+            .prefix(&owner_addr)
+            .range(deps.storage, start, None, Order::Ascending)
+            .filter(|r| {
+                include_expired || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
+            })
+            .take(limit)
+            .map(parse_approval)
+            .collect();
+        Ok(ApprovedForAllResponse { operators: res? })
+    }
+
     fn tokens(
         &self,
         deps: Deps,
