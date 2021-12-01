@@ -3,8 +3,8 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
 
 use cw721::{
-    ApprovedForAllResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
-    NftInfoResponse, OwnerOfResponse,
+    Approval, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse, Cw721Query,
+    Cw721ReceiveMsg, Expiration, NftInfoResponse, OwnerOfResponse,
 };
 
 use crate::{
@@ -470,7 +470,7 @@ fn approving_all_revoking_all() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
+        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_all_msg)
         .unwrap();
     assert_eq!(
         res,
@@ -478,6 +478,25 @@ fn approving_all_revoking_all() {
             .add_attribute("action", "approve_all")
             .add_attribute("sender", "demeter")
             .add_attribute("operator", "random")
+    );
+
+    // test approval query
+    let res = contract
+        .approval(
+            deps.as_ref(),
+            mock_env(),
+            owner.sender.into_string(),
+            String::from("random"),
+        )
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from("random"),
+                expires: Expiration::Never {}
+            }
+        }
     );
 
     // random can now transfer

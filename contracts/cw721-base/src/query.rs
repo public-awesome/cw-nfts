@@ -5,8 +5,8 @@ use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdEr
 
 use cw0::maybe_addr;
 use cw721::{
-    AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg, Cw721Query,
-    Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg,
+    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
 
@@ -82,26 +82,24 @@ where
     fn approval(
         &self,
         deps: Deps,
-        env: Env,
+        _env: Env,
         owner: String,
-        spender: String
+        operator: String,
     ) -> StdResult<ApprovalResponse> {
         let owner_addr = deps.api.addr_validate(&owner)?;
-        let spender_addr = deps.api.addr_validate(&spender)?;
+        let operator_addr = deps.api.addr_validate(&operator)?;
 
-        let expiration = self.operators.key((&owner_addr, &spender_addr)).load(deps.storage)?;
-
-        let res: StdResult<Vec<_>> = self
+        let expires = self
             .operators
-            .prefix(&owner_addr)
-            .range(deps.storage, start, None, Order::Ascending)
-            .filter(|r| {
-                include_expired || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
-            })
-            .take(limit)
-            .map(parse_approval)
-            .collect();
-        Ok(ApprovedForAllResponse { operators: res? })
+            .key((&owner_addr, &operator_addr))
+            .load(deps.storage)?;
+
+        Ok(ApprovalResponse {
+            approval: cw721::Approval {
+                spender: operator,
+                expires,
+            },
+        })
     }
 
     fn tokens(
@@ -221,6 +219,9 @@ where
             } => to_binary(&self.tokens(deps, owner, start_after, limit)?),
             QueryMsg::AllTokens { start_after, limit } => {
                 to_binary(&self.all_tokens(deps, start_after, limit)?)
+            }
+            QueryMsg::Approved { owner, operator } => {
+                to_binary(&self.approval(deps, env, owner, operator)?)
             }
         }
     }
