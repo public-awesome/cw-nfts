@@ -8,6 +8,7 @@ use crate::{
 };
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw0::Expiration;
+use crate::query::ApprovalResponse;
 
 // TODO: move this somewhere else... ideally cosmwasm-std
 pub trait CustomMsg: Clone + std::fmt::Debug + PartialEq + JsonSchema {}
@@ -122,6 +123,14 @@ where
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<ApprovedForAllResponse>;
+
+    fn approval(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: String,
+        spender: String,
+    ) -> StdResult<ApprovalResponse>;
 
     fn tokens(
         &self,
