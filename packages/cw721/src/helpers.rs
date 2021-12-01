@@ -5,10 +5,7 @@ use cosmwasm_std::{
     to_binary, Addr, CosmosMsg, Empty, Querier, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 
-use crate::{
-    AllNftInfoResponse, Approval, ApprovedForAllResponse, ContractInfoResponse, Cw721ExecuteMsg,
-    Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
-};
+use crate::{AllNftInfoResponse, Approval, ApprovedForAllResponse, ContractInfoResponse, Cw721ExecuteMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse, ApprovalResponse};
 
 /// Cw721Contract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
@@ -58,6 +55,20 @@ impl Cw721Contract {
             include_expired: Some(include_expired),
         };
         self.query(querier, req)
+    }
+
+    pub fn approved<Q: Querier, T: Into<String>>(
+        &self,
+        querier: &Q,
+        owner: T,
+        operator: T
+    ) -> StdResult<ApprovalResponse> {
+        let req = Cw721QueryMsg::Approved{
+            owner: owner.into(),
+            operator: operator.into()
+        };
+        let res: ApprovalResponse = self.query(querier, req)?;
+        Ok(res)
     }
 
     pub fn approved_for_all<Q: Querier, T: Into<String>>(
