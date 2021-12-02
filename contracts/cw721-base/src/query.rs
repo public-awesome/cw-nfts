@@ -5,7 +5,7 @@ use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdEr
 
 use cw0::maybe_addr;
 use cw721::{
-    AllNftInfoResponse, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg,
+    AllNftInfoResponse, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse, CustomMsg,
     Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;

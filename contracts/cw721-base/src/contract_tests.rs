@@ -3,7 +3,7 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
 
 use cw721::{
-    Approval, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse, Cw721Query,
+    Approval, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse, Cw721Query,
     Cw721ReceiveMsg, Expiration, NftInfoResponse, OwnerOfResponse,
 };
 

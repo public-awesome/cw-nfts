@@ -4,8 +4,8 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
 
 use cw721::{
-    AllNftInfoResponse, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse,
+    NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721_metadata_onchain::{ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg};
 

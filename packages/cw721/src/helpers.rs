@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use crate::{
-    AllNftInfoResponse, Approval, ApprovedResponse, ApprovedForAllResponse, ContractInfoResponse,
+    AllNftInfoResponse, Approval, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse,
     Cw721ExecuteMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse,
     TokensResponse,
 };
