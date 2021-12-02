@@ -1,9 +1,7 @@
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use cosmwasm_std::{
-    to_binary, Addr, CosmosMsg, Empty, Querier, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
-};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
 
 use crate::{
     AllNftInfoResponse, Approval, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse,
@@ -33,9 +31,9 @@ impl Cw721Contract {
         .into())
     }
 
-    pub fn query<Q: Querier, T: DeserializeOwned>(
+    pub fn query<T: DeserializeOwned>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         req: Cw721QueryMsg,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
@@ -43,14 +41,14 @@ impl Cw721Contract {
             msg: to_binary(&req)?,
         }
         .into();
-        QuerierWrapper::<Empty>::new(querier).query(&query)
+        querier.query(&query)
     }
 
     /*** queries ***/
 
-    pub fn owner_of<Q: Querier, T: Into<String>>(
+    pub fn owner_of<T: Into<String>>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         token_id: T,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
@@ -61,9 +59,9 @@ impl Cw721Contract {
         self.query(querier, req)
     }
 
-    pub fn approved<Q: Querier, T: Into<String>>(
+    pub fn approved<T: Into<String>>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         owner: T,
         operator: T,
     ) -> StdResult<ApprovedResponse> {
@@ -75,9 +73,9 @@ impl Cw721Contract {
         Ok(res)
     }
 
-    pub fn approved_for_all<Q: Querier, T: Into<String>>(
+    pub fn approved_for_all<T: Into<String>>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         owner: T,
         include_expired: bool,
         start_after: Option<String>,
@@ -93,22 +91,22 @@ impl Cw721Contract {
         Ok(res.operators)
     }
 
-    pub fn num_tokens<Q: Querier>(&self, querier: &Q) -> StdResult<u64> {
+    pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
         let req = Cw721QueryMsg::NumTokens {};
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
     }
 
     /// With metadata extension
-    pub fn contract_info<Q: Querier>(&self, querier: &Q) -> StdResult<ContractInfoResponse> {
+    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<ContractInfoResponse> {
         let req = Cw721QueryMsg::ContractInfo {};
         self.query(querier, req)
     }
 
     /// With metadata extension
-    pub fn nft_info<Q: Querier, T: Into<String>, U: DeserializeOwned>(
+    pub fn nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         token_id: T,
     ) -> StdResult<NftInfoResponse<U>> {
         let req = Cw721QueryMsg::NftInfo {
@@ -118,9 +116,9 @@ impl Cw721Contract {
     }
 
     /// With metadata extension
-    pub fn all_nft_info<Q: Querier, T: Into<String>, U: DeserializeOwned>(
+    pub fn all_nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         token_id: T,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<U>> {
@@ -132,9 +130,9 @@ impl Cw721Contract {
     }
 
     /// With enumerable extension
-    pub fn tokens<Q: Querier, T: Into<String>>(
+    pub fn tokens<T: Into<String>>(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         owner: T,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -148,9 +146,9 @@ impl Cw721Contract {
     }
 
     /// With enumerable extension
-    pub fn all_tokens<Q: Querier>(
+    pub fn all_tokens(
         &self,
-        querier: &Q,
+        querier: &QuerierWrapper,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
@@ -159,12 +157,12 @@ impl Cw721Contract {
     }
 
     /// returns true if the contract supports the metadata extension
-    pub fn has_metadata<Q: Querier>(&self, querier: &Q) -> bool {
+    pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
         self.contract_info(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension
-    pub fn has_enumerable<Q: Querier>(&self, querier: &Q) -> bool {
+    pub fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
         self.tokens(querier, self.addr(), None, Some(1)).is_ok()
     }
 }
