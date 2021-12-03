@@ -5,8 +5,8 @@ use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdEr
 
 use cw0::maybe_addr;
 use cw721::{
-    AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, CustomMsg, Cw721Query,
-    Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse, CustomMsg,
+    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
 
@@ -77,6 +77,29 @@ where
             .map(parse_approval)
             .collect();
         Ok(ApprovedForAllResponse { operators: res? })
+    }
+
+    fn approval(
+        &self,
+        deps: Deps,
+        _env: Env,
+        owner: String,
+        operator: String,
+    ) -> StdResult<ApprovedResponse> {
+        let owner_addr = deps.api.addr_validate(&owner)?;
+        let operator_addr = deps.api.addr_validate(&operator)?;
+
+        let expires = self
+            .operators
+            .key((&owner_addr, &operator_addr))
+            .load(deps.storage)?;
+
+        Ok(ApprovedResponse {
+            approval: cw721::Approval {
+                spender: operator,
+                expires,
+            },
+        })
     }
 
     fn tokens(
@@ -196,6 +219,9 @@ where
             } => to_binary(&self.tokens(deps, owner, start_after, limit)?),
             QueryMsg::AllTokens { start_after, limit } => {
                 to_binary(&self.all_tokens(deps, start_after, limit)?)
+            }
+            QueryMsg::Approved { owner, operator } => {
+                to_binary(&self.approval(deps, env, owner, operator)?)
             }
         }
     }

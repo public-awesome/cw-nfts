@@ -1,6 +1,6 @@
 [package]
 name = "cw721-metadata-onchain"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2018"
 description = "Example extending CW721 NFT to store metadata on chain"
