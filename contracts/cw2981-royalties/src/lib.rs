@@ -82,9 +82,7 @@ pub mod entry {
                 sale_price,
             } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
             Cw2981QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
-            _ => Cw2981Contract::default()
-                .query(deps, env, msg.into())
-                .map_err(|err| err),
+            _ => Cw2981Contract::default().query(deps, env, msg.into()),
         }
     }
 }
