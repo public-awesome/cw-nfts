@@ -75,7 +75,7 @@ impl Cw721Contract {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
-        let req = QueryMsg::ApprovedForAll {
+        let req = QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,

@@ -114,7 +114,7 @@ where
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse>;
 
-    fn all_approvals(
+    fn all_operators(
         &self,
         deps: Deps,
         env: Env,

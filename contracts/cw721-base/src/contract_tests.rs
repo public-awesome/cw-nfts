@@ -538,7 +538,7 @@ fn approving_all_revoking_all() {
         .unwrap();
 
     let res = contract
-        .all_approvals(
+        .all_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -570,7 +570,7 @@ fn approving_all_revoking_all() {
 
     // and paginate queries
     let res = contract
-        .all_approvals(
+        .all_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -589,7 +589,7 @@ fn approving_all_revoking_all() {
         }
     );
     let res = contract
-        .all_approvals(
+        .all_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -617,7 +617,7 @@ fn approving_all_revoking_all() {
 
     // Approvals are removed / cleared without affecting others
     let res = contract
-        .all_approvals(
+        .all_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -640,7 +640,7 @@ fn approving_all_revoking_all() {
     let mut late_env = mock_env();
     late_env.block.height = 1234568; //expired
     let res = contract
-        .all_approvals(
+        .all_operators(
             deps.as_ref(),
             late_env,
             String::from("person"),

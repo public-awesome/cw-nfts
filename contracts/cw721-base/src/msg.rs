@@ -91,7 +91,7 @@ pub enum QueryMsg {
 
     /// List all operators that can access all of the owner's tokens
     /// Return type: `ApprovedForAllResponse`
-    ApprovedForAll {
+    AllOperators {
         owner: String,
         /// unset or false will filter out expired items, you must set to true to see them
         include_expired: Option<bool>,

@@ -52,7 +52,8 @@ where
         })
     }
 
-    fn all_approvals(
+    /// all_operators returns all operators owner given access to
+    fn all_operators(
         &self,
         deps: Deps,
         env: Env,
@@ -198,12 +199,12 @@ where
                 token_id,
                 include_expired.unwrap_or(false),
             )?),
-            QueryMsg::ApprovedForAll {
+            QueryMsg::AllOperators {
                 owner,
                 include_expired,
                 start_after,
                 limit,
-            } => to_binary(&self.all_approvals(
+            } => to_binary(&self.all_operators(
                 deps,
                 env,
                 owner,
