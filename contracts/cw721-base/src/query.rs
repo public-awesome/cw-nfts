@@ -254,7 +254,7 @@ where
             QueryMsg::AllTokens { start_after, limit } => {
                 to_binary(&self.all_tokens(deps, start_after, limit)?)
             }
-            QueryMsg::Approved {
+            QueryMsg::Approval {
                 token_id,
                 spender,
                 include_expired,
@@ -265,6 +265,12 @@ where
                 spender,
                 include_expired.unwrap_or(false),
             )?),
+            QueryMsg::Approvals {
+                token_id,
+                include_expired,
+            } => {
+                to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
+            }
         }
     }
 }

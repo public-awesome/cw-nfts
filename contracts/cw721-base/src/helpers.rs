@@ -1,8 +1,8 @@
 use crate::{ExecuteMsg, QueryMsg};
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
 use cw721::{
-    AllNftInfoResponse, Approval, ApprovalResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
+    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -53,14 +53,14 @@ impl Cw721Contract {
         self.query(querier, req)
     }
 
-    pub fn approved<T: Into<String>>(
+    pub fn approval<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
         token_id: T,
         spender: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalResponse> {
-        let req = QueryMsg::Approved {
+        let req = QueryMsg::Approval {
             token_id: token_id.into(),
             spender: spender.into(),
             include_expired,
@@ -69,7 +69,21 @@ impl Cw721Contract {
         Ok(res)
     }
 
-    pub fn approved_for_all<T: Into<String>>(
+    pub fn approvals<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalsResponse> {
+        let req = QueryMsg::Approvals {
+            token_id: token_id.into(),
+            include_expired,
+        };
+        let res: ApprovalsResponse = self.query(querier, req)?;
+        Ok(res)
+    }
+
+    pub fn all_operators<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
         owner: T,
