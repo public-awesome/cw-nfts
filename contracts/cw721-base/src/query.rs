@@ -1,9 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{
-    to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, Record, StdError, StdResult,
-};
+use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdError, StdResult};
 
 use cw0::maybe_addr;
 use cw721::{
@@ -13,10 +11,8 @@ use cw721::{
 };
 use cw_storage_plus::Bound;
 
-use crate::error::ContractError::Std;
 use crate::msg::{MinterResponse, QueryMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
-use crate::ContractError;
 
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 30;

@@ -343,7 +343,7 @@ fn approving_revoking() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_msg)
+        .execute(deps.as_mut(), mock_env(), owner, approve_msg)
         .unwrap();
     assert_eq!(
         res,
@@ -490,7 +490,7 @@ fn approving_all_revoking_all() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_all_msg)
+        .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
         .unwrap();
     assert_eq!(
         res,
