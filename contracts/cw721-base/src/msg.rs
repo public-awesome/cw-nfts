@@ -83,15 +83,23 @@ pub enum QueryMsg {
     },
 
     /// Return operator that can access all of the owner's tokens.
-    /// Return type: `ApprovedResponse`
-    Approved {
-        owner: String,
-        operator: String,
+    /// Return type: `ApprovalResponse`
+    Approval {
+        token_id: String,
+        spender: String,
+        include_expired: Option<bool>,
+    },
+
+    /// Return approvals that a token has
+    /// Return type: `ApprovalsResponse`
+    Approvals {
+        token_id: String,
+        include_expired: Option<bool>,
     },
 
     /// List all operators that can access all of the owner's tokens
-    /// Return type: `ApprovedForAllResponse`
-    ApprovedForAll {
+    /// Return type: `OperatorsResponse`
+    AllOperators {
         owner: String,
         /// unset or false will filter out expired items, you must set to true to see them
         include_expired: Option<bool>,

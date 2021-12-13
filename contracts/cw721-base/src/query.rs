@@ -5,8 +5,9 @@ use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdEr
 
 use cw0::maybe_addr;
 use cw721::{
-    AllNftInfoResponse, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse, CustomMsg,
-    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, CustomMsg,
+    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    TokensResponse,
 };
 use cw_storage_plus::Bound;
 
@@ -52,7 +53,8 @@ where
         })
     }
 
-    fn all_approvals(
+    /// operators returns all operators owner given access to
+    fn operators(
         &self,
         deps: Deps,
         env: Env,
@@ -60,7 +62,7 @@ where
         include_expired: bool,
         start_after: Option<String>,
         limit: Option<u32>,
-    ) -> StdResult<ApprovedForAllResponse> {
+    ) -> StdResult<OperatorsResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
         let start_addr = maybe_addr(deps.api, start_after)?;
         let start = start_addr.map(|addr| Bound::exclusive(addr.as_ref()));
@@ -76,30 +78,58 @@ where
             .take(limit)
             .map(parse_approval)
             .collect();
-        Ok(ApprovedForAllResponse { operators: res? })
+        Ok(OperatorsResponse { operators: res? })
     }
 
     fn approval(
         &self,
         deps: Deps,
-        _env: Env,
-        owner: String,
-        operator: String,
-    ) -> StdResult<ApprovedResponse> {
-        let owner_addr = deps.api.addr_validate(&owner)?;
-        let operator_addr = deps.api.addr_validate(&operator)?;
+        env: Env,
+        token_id: String,
+        spender: String,
+        include_expired: bool,
+    ) -> StdResult<ApprovalResponse> {
+        let token = self.tokens.load(deps.storage, &token_id)?;
+        let filtered: Vec<_> = token
+            .approvals
+            .into_iter()
+            .filter(|t| t.spender == spender)
+            .filter(|t| include_expired || !t.is_expired(&env.block))
+            .map(|a| cw721::Approval {
+                spender: a.spender.into_string(),
+                expires: a.expires,
+            })
+            .collect();
 
-        let expires = self
-            .operators
-            .key((&owner_addr, &operator_addr))
-            .load(deps.storage)?;
+        if filtered.is_empty() {
+            return Err(StdError::not_found("Approval not found"));
+        }
+        // we expect only one item
+        let approval = filtered[0].clone();
 
-        Ok(ApprovedResponse {
-            approval: cw721::Approval {
-                spender: operator,
-                expires,
-            },
-        })
+        Ok(ApprovalResponse { approval })
+    }
+
+    /// approvals returns all approvals owner given access to
+    fn approvals(
+        &self,
+        deps: Deps,
+        env: Env,
+        token_id: String,
+        include_expired: bool,
+    ) -> StdResult<ApprovalsResponse> {
+        let token = self.tokens.load(deps.storage, &token_id)?;
+        let approvals: Vec<_> = token
+            .approvals
+            .into_iter()
+            .filter(|t| include_expired || !t.is_expired(&env.block))
+            .map(|a| cw721::Approval {
+                spender: a.spender.into_string(),
+                expires: a.expires,
+            })
+            .collect();
+
+        Ok(ApprovalsResponse { approvals })
     }
 
     fn tokens(
@@ -198,12 +228,12 @@ where
                 token_id,
                 include_expired.unwrap_or(false),
             )?),
-            QueryMsg::ApprovedForAll {
+            QueryMsg::AllOperators {
                 owner,
                 include_expired,
                 start_after,
                 limit,
-            } => to_binary(&self.all_approvals(
+            } => to_binary(&self.operators(
                 deps,
                 env,
                 owner,
@@ -220,8 +250,22 @@ where
             QueryMsg::AllTokens { start_after, limit } => {
                 to_binary(&self.all_tokens(deps, start_after, limit)?)
             }
-            QueryMsg::Approved { owner, operator } => {
-                to_binary(&self.approval(deps, env, owner, operator)?)
+            QueryMsg::Approval {
+                token_id,
+                spender,
+                include_expired,
+            } => to_binary(&self.approval(
+                deps,
+                env,
+                token_id,
+                spender,
+                include_expired.unwrap_or(false),
+            )?),
+            QueryMsg::Approvals {
+                token_id,
+                include_expired,
+            } => {
+                to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
         }
     }

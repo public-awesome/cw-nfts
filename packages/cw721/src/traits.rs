@@ -2,10 +2,10 @@ use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::query::ApprovedResponse;
+use crate::query::ApprovalResponse;
 use crate::{
-    AllNftInfoResponse, ApprovedForAllResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
+    NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw0::Expiration;
@@ -114,7 +114,7 @@ where
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse>;
 
-    fn all_approvals(
+    fn operators(
         &self,
         deps: Deps,
         env: Env,
@@ -122,15 +122,24 @@ where
         include_expired: bool,
         start_after: Option<String>,
         limit: Option<u32>,
-    ) -> StdResult<ApprovedForAllResponse>;
+    ) -> StdResult<OperatorsResponse>;
 
     fn approval(
         &self,
         deps: Deps,
         env: Env,
-        owner: String,
+        token_id: String,
         spender: String,
-    ) -> StdResult<ApprovedResponse>;
+        include_expired: bool,
+    ) -> StdResult<ApprovalResponse>;
+
+    fn approvals(
+        &self,
+        deps: Deps,
+        env: Env,
+        token_id: String,
+        include_expired: bool,
+    ) -> StdResult<ApprovalsResponse>;
 
     fn tokens(
         &self,

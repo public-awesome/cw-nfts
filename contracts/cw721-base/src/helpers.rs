@@ -1,8 +1,8 @@
 use crate::{ExecuteMsg, QueryMsg};
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
 use cw721::{
-    AllNftInfoResponse, Approval, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse,
-    NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, Approval, ApprovedResponse, ApprovalsResponse, ContractInfoResponse,
+    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Cw721Contract(pub Addr);
 
+#[allow(dead_code)]
 impl Cw721Contract {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -53,21 +54,37 @@ impl Cw721Contract {
         self.query(querier, req)
     }
 
-    pub fn approved<T: Into<String>>(
+    pub fn approval<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
-        owner: T,
-        operator: T,
-    ) -> StdResult<ApprovedResponse> {
-        let req = QueryMsg::Approved {
-            owner: owner.into(),
-            operator: operator.into(),
+        token_id: T,
+        spender: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalResponse> {
+        let req = QueryMsg::Approval {
+            token_id: token_id.into(),
+            spender: spender.into(),
+            include_expired,
         };
-        let res: ApprovedResponse = self.query(querier, req)?;
+        let res: ApprovalResponse = self.query(querier, req)?;
         Ok(res)
     }
 
-    pub fn approved_for_all<T: Into<String>>(
+    pub fn approvals<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalsResponse> {
+        let req = QueryMsg::Approvals {
+            token_id: token_id.into(),
+            include_expired,
+        };
+        let res: ApprovalsResponse = self.query(querier, req)?;
+        Ok(res)
+    }
+
+    pub fn all_operators<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
         owner: T,
@@ -75,13 +92,15 @@ impl Cw721Contract {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
-        let req = QueryMsg::ApprovedForAll {
+        let req = QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,
             limit,
         };
-        let res: ApprovedForAllResponse = self.query(querier, req)?;
+
+        let res: OperatorsResponse = self.query(querier, req)?;
+      
         Ok(res.operators)
     }
 
