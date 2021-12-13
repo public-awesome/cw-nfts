@@ -1,7 +1,7 @@
 use crate::{ExecuteMsg, QueryMsg};
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
 use cw721::{
-    AllNftInfoResponse, Approval, ApprovedResponse, ApprovalsResponse, ContractInfoResponse,
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
     NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
@@ -100,7 +100,7 @@ impl Cw721Contract {
         };
 
         let res: OperatorsResponse = self.query(querier, req)?;
-      
+
         Ok(res.operators)
     }
 
