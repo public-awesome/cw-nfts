@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Cw721Contract(pub Addr);
 
+#[allow(dead_code)]
 impl Cw721Contract {
     pub fn addr(&self) -> Addr {
         self.0.clone()
