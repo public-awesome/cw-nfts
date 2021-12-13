@@ -14,4 +14,7 @@ pub enum ContractError {
 
     #[error("Cannot set approval that is already expired")]
     Expired {},
+
+    #[error("Approval not found for: {spender}")]
+    ApprovalNotFound { spender: String },
 }

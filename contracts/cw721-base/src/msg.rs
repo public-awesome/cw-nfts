@@ -85,8 +85,9 @@ pub enum QueryMsg {
     /// Return operator that can access all of the owner's tokens.
     /// Return type: `ApprovedResponse`
     Approved {
-        owner: String,
-        operator: String,
+        token_id: String,
+        spender: String,
+        include_expired: Option<bool>,
     },
 
     /// List all operators that can access all of the owner's tokens

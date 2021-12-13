@@ -40,14 +40,20 @@
         "approved": {
           "type": "object",
           "required": [
-            "operator",
-            "owner"
+            "spender",
+            "token_id"
           ],
           "properties": {
-            "operator": {
+            "include_expired": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "spender": {
               "type": "string"
             },
-            "owner": {
+            "token_id": {
               "type": "string"
             }
           }
