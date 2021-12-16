@@ -43,9 +43,9 @@ Once you are happy with the content, you can compile it to wasm via:
 
 ```
 RUSTFLAGS='-C link-arg=-s' cargo wasm
-cp ../../target/wasm32-unknown-unknown/release/cw155_base.wasm .
-ls -l cw155_base.wasm
-sha256sum cw155_base.wasm
+cp ../../target/wasm32-unknown-unknown/release/cw1155_base.wasm .
+ls -l cw1155_base.wasm
+sha256sum cw1155_base.wasm
 ```
 
 Or for a production-ready (optimized) build, run a build command in the
@@ -64,8 +64,6 @@ calls, but then use the underlying implementation for the standard cw1155
 messages you want to support. The same with `QueryMsg`. You will most
 likely want to write a custom, domain-specific `instantiate`.
 
-**TODO: add example when written**
-
-For now, you can look at [`cw20-staking`](../cw20-staking/README.md)
-for an example of how to "inherit" cw20 functionality and combine it with custom logic.
+For now, you can look at [`cw721-metadata-onchain`](../cw721-metadata-onchain/README.md)
+for an example of how to "inherit" cw721 functionality and combine it with custom logic. 
 The process is similar for cw1155.
