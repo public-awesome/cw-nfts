@@ -172,8 +172,6 @@ pub fn execute_receive(
     Ok(Response::new().add_message(callback))
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
