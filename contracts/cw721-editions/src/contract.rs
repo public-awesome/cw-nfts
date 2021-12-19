@@ -206,7 +206,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         let res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
 
-        instantiate(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        instantiate(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
 
         assert_eq!(
             res.messages,
