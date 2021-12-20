@@ -73,7 +73,7 @@ pub fn execute_list_token(
     for t in tokens {
         let opt_token = TOKENS.may_load(deps.storage, t.id.clone())?;
         // if exists update listing, if not register
-        if let Some(token) = opt_token.clone() {
+        if let Some(mut token) = opt_token.clone() {
             if token.owner != info.sender {
                 return Err(ContractError::Unauthorized {});
             }
@@ -81,15 +81,14 @@ pub fn execute_list_token(
             nft_contract
                 .approval(
                     &deps.querier,
-                    token.id,
+                    token.id.clone(),
                     env.contract.address.clone().into_string(),
                     None,
                 )
                 .map_err(|_e| ContractError::NotApproved {})?;
 
-            let mut new_token = t.clone();
-            new_token.on_sale = true;
-            TOKENS.save(deps.storage, t.id.clone(), &new_token)?;
+            token.on_sale = true;
+            TOKENS.save(deps.storage, token.id.clone(), &token)?;
         } else {
             // only admin can register new tokens
             if cfg.admin != info.sender {
