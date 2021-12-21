@@ -229,7 +229,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw721-editions"
+name = "cw721-fixed-price"
 version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
@@ -339,6 +339,20 @@ checksum = "d0f40b2dcd8bc322217a5f6559ae5f9e9d1de202a2ecee2e9eafcbece7562a4f"
 dependencies = [
  "rand_core 0.6.3",
  "subtle",
+]
+
+[[package]]
+name = "fractions"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "cw2",
+ "schemars",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
