@@ -80,12 +80,17 @@ pub struct Approval {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct ApprovedResponse {
+pub struct ApprovalResponse {
     pub approval: Approval,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct ApprovedForAllResponse {
+pub struct ApprovalsResponse {
+    pub approvals: Vec<Approval>,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct OperatorsResponse {
     pub operators: Vec<Approval>,
 }
 

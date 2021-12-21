@@ -1,27 +1,22 @@
-use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
+use crate::{ExecuteMsg, QueryMsg};
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
-
-use crate::{
-    AllNftInfoResponse, Approval, ApprovedForAllResponse, ApprovedResponse, ContractInfoResponse,
-    Cw721ExecuteMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse,
-    TokensResponse,
+use cw721::{
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
+    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
-/// Cw721Contract is a wrapper around Addr that provides a lot of helpers
-/// for working with this.
-///
-/// If you wish to persist this, convert to Cw721CanonicalContract via .canonical()
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Cw721Contract(pub Addr);
 
+#[allow(dead_code)]
 impl Cw721Contract {
     pub fn addr(&self) -> Addr {
         self.0.clone()
     }
 
-    pub fn call(&self, msg: Cw721ExecuteMsg) -> StdResult<CosmosMsg> {
+    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T>) -> StdResult<CosmosMsg> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -34,7 +29,7 @@ impl Cw721Contract {
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg,
+        req: QueryMsg,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -52,28 +47,44 @@ impl Cw721Contract {
         token_id: T,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let req = Cw721QueryMsg::OwnerOf {
+        let req = QueryMsg::OwnerOf {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
         };
         self.query(querier, req)
     }
 
-    pub fn approved<T: Into<String>>(
+    pub fn approval<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
-        owner: T,
-        operator: T,
-    ) -> StdResult<ApprovedResponse> {
-        let req = Cw721QueryMsg::Approved {
-            owner: owner.into(),
-            operator: operator.into(),
+        token_id: T,
+        spender: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalResponse> {
+        let req = QueryMsg::Approval {
+            token_id: token_id.into(),
+            spender: spender.into(),
+            include_expired,
         };
-        let res: ApprovedResponse = self.query(querier, req)?;
+        let res: ApprovalResponse = self.query(querier, req)?;
         Ok(res)
     }
 
-    pub fn approved_for_all<T: Into<String>>(
+    pub fn approvals<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalsResponse> {
+        let req = QueryMsg::Approvals {
+            token_id: token_id.into(),
+            include_expired,
+        };
+        let res: ApprovalsResponse = self.query(querier, req)?;
+        Ok(res)
+    }
+
+    pub fn all_operators<T: Into<String>>(
         &self,
         querier: &QuerierWrapper,
         owner: T,
@@ -81,25 +92,25 @@ impl Cw721Contract {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
-        let req = Cw721QueryMsg::ApprovedForAll {
+        let req = QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,
             limit,
         };
-        let res: ApprovedForAllResponse = self.query(querier, req)?;
+        let res: OperatorsResponse = self.query(querier, req)?;
         Ok(res.operators)
     }
 
     pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
-        let req = Cw721QueryMsg::NumTokens {};
+        let req = QueryMsg::NumTokens {};
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
     }
 
     /// With metadata extension
     pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<ContractInfoResponse> {
-        let req = Cw721QueryMsg::ContractInfo {};
+        let req = QueryMsg::ContractInfo {};
         self.query(querier, req)
     }
 
@@ -109,7 +120,7 @@ impl Cw721Contract {
         querier: &QuerierWrapper,
         token_id: T,
     ) -> StdResult<NftInfoResponse<U>> {
-        let req = Cw721QueryMsg::NftInfo {
+        let req = QueryMsg::NftInfo {
             token_id: token_id.into(),
         };
         self.query(querier, req)
@@ -122,7 +133,7 @@ impl Cw721Contract {
         token_id: T,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<U>> {
-        let req = Cw721QueryMsg::AllNftInfo {
+        let req = QueryMsg::AllNftInfo {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
         };
@@ -137,7 +148,7 @@ impl Cw721Contract {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = Cw721QueryMsg::Tokens {
+        let req = QueryMsg::Tokens {
             owner: owner.into(),
             start_after,
             limit,
@@ -152,7 +163,7 @@ impl Cw721Contract {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = Cw721QueryMsg::AllTokens { start_after, limit };
+        let req = QueryMsg::AllTokens { start_after, limit };
         self.query(querier, req)
     }
 
