@@ -15,7 +15,7 @@ use cw721_base::{
 use utils::parse_reply_instantiate_data;
 
 // version info for migration info
-const CONTRACT_NAME: &str = "crates.io:cw721-editions";
+const CONTRACT_NAME: &str = "crates.io:cw721-fixed-price";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const INSTANTIATE_TOKEN_REPLY_ID: u64 = 1;
@@ -62,7 +62,7 @@ pub fn instantiate(
             })?,
             funds: vec![],
             admin: None,
-            label: String::from("Instantiate Limited Edition NFT"),
+            label: String::from("Instantiate fixed price NFT contract"),
         }
         .into(),
         id: INSTANTIATE_TOKEN_REPLY_ID,
@@ -221,7 +221,7 @@ mod tests {
                     .unwrap(),
                     funds: vec![],
                     admin: None,
-                    label: String::from("Instantiate Limited Edition NFT"),
+                    label: String::from("Instantiate fixed price NFT contract"),
                 }
                 .into(),
                 id: INSTANTIATE_TOKEN_REPLY_ID,

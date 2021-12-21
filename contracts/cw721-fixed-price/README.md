@@ -1,4 +1,4 @@
-# CW721 Editions
+# CW721 Fixed Price
 
 This contract enables the creation of limited edition fixed price NFTs according to the cw721 token standard.
 
