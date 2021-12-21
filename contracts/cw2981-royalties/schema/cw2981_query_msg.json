@@ -67,13 +67,13 @@
       "additionalProperties": false
     },
     {
-      "description": "List all operators that can access all of the owner's tokens. Return type: `ApprovedForAllResponse`",
+      "description": "List all operators that can access all of the owner's tokens. Return type: `OperatorsResponse`",
       "type": "object",
       "required": [
-        "approved_for_all"
+        "all_operators"
       ],
       "properties": {
-        "approved_for_all": {
+        "all_operators": {
           "type": "object",
           "required": [
             "owner"
