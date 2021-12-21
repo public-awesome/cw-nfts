@@ -7,9 +7,10 @@ use cw721_base::msg::QueryMsg as CW721QueryMsg;
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum Cw2981QueryMsg {
-    // Should be called on sale to see if royalties are owed
-    // by the marketplace selling the NFT.
-    // See https://eips.ethereum.org/EIPS/eip-2981
+    /// Should be called on sale to see if royalties are owed
+    /// by the marketplace selling the NFT, if CheckRoyalties
+    /// returns true
+    /// See https://eips.ethereum.org/EIPS/eip-2981
     RoyaltyInfo {
         token_id: String,
         // the denom of this sale must also be the denom returned by RoyaltiesInfoResponse
@@ -18,8 +19,11 @@ pub enum Cw2981QueryMsg {
         // as CW20 is just mapping of addr -> balance
         sale_price: Uint128,
     },
-    // Called against contract to determine if this NFT
-    // implements royalties
+    /// Called against contract to determine if this NFT
+    /// implements royalties. Should return a boolean as part of
+    /// CheckRoyaltiesResponse - default can simply be true
+    /// if royalties are implemented at token level
+    /// (i.e. always check on sale)
     CheckRoyalties {},
     /// Return the owner of the given token, error if token does not exist
     /// Return type: OwnerOfResponse
@@ -46,9 +50,7 @@ pub enum Cw2981QueryMsg {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract: `NftInfoResponse`
-    NftInfo {
-        token_id: String,
-    },
+    NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients: `AllNftInfo`

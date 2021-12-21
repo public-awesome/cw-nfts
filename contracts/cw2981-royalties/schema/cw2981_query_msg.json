@@ -3,6 +3,7 @@
   "title": "Cw2981QueryMsg",
   "oneOf": [
     {
+      "description": "Should be called on sale to see if royalties are owed by the marketplace selling the NFT, if CheckRoyalties returns true See https://eips.ethereum.org/EIPS/eip-2981",
       "type": "object",
       "required": [
         "royalty_info"
@@ -27,6 +28,7 @@
       "additionalProperties": false
     },
     {
+      "description": "Called against contract to determine if this NFT implements royalties. Should return a boolean as part of CheckRoyaltiesResponse - default can simply be true if royalties are implemented at token level (i.e. always check on sale)",
       "type": "object",
       "required": [
         "check_royalties"

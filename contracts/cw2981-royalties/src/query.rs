@@ -2,8 +2,8 @@ use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
 use crate::Cw2981Contract;
 use cosmwasm_std::{Decimal, Deps, StdResult, Uint128};
 
-// NOTE: default behaviour here is to round down
-// EIP2981 specifies that the rounding behaviour is at the discretion of the implementer
+/// NOTE: default behaviour here is to round down
+/// EIP2981 specifies that the rounding behaviour is at the discretion of the implementer
 pub fn query_royalties_info(
     deps: Deps,
     token_id: String,
@@ -35,6 +35,11 @@ pub fn query_royalties_info(
     })
 }
 
+/// As our default implementation here specifies royalties at token level
+/// and not at contract level, it is therefore logically true that
+/// on sale, every token managed by this contract should be checked
+/// to see if royalties are owed, and to whom. If you are importing
+/// this logic, you may want a custom implementation here
 pub fn check_royalties(_deps: Deps) -> StdResult<CheckRoyaltiesResponse> {
     Ok(CheckRoyaltiesResponse {
         royalty_payments: true,
