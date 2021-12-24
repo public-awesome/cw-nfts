@@ -3,8 +3,8 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
 
 use cw721::{
-    ApprovedForAllResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
-    NftInfoResponse, OwnerOfResponse,
+    Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
+    NftInfoResponse, OperatorsResponse, OwnerOfResponse,
 };
 
 use crate::{
@@ -354,6 +354,26 @@ fn approving_revoking() {
             .add_attribute("token_id", token_id.clone())
     );
 
+    // test approval query
+    let res = contract
+        .approval(
+            deps.as_ref(),
+            mock_env(),
+            token_id.clone(),
+            String::from("random"),
+            true,
+        )
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from("random"),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
     // random can now transfer
     let random = mock_info("random", &[]);
     let transfer_msg = ExecuteMsg::TransferNft {
@@ -519,7 +539,7 @@ fn approving_all_revoking_all() {
         .unwrap();
 
     let res = contract
-        .all_approvals(
+        .operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -530,7 +550,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovedForAllResponse {
+        OperatorsResponse {
             operators: vec![cw721::Approval {
                 spender: String::from("operator"),
                 expires: Expiration::Never {}
@@ -551,7 +571,7 @@ fn approving_all_revoking_all() {
 
     // and paginate queries
     let res = contract
-        .all_approvals(
+        .operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -562,7 +582,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovedForAllResponse {
+        OperatorsResponse {
             operators: vec![cw721::Approval {
                 spender: String::from("buddy"),
                 expires: buddy_expires,
@@ -570,7 +590,7 @@ fn approving_all_revoking_all() {
         }
     );
     let res = contract
-        .all_approvals(
+        .operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -581,7 +601,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovedForAllResponse {
+        OperatorsResponse {
             operators: vec![cw721::Approval {
                 spender: String::from("operator"),
                 expires: Expiration::Never {}
@@ -598,7 +618,7 @@ fn approving_all_revoking_all() {
 
     // Approvals are removed / cleared without affecting others
     let res = contract
-        .all_approvals(
+        .operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -609,7 +629,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovedForAllResponse {
+        OperatorsResponse {
             operators: vec![cw721::Approval {
                 spender: String::from("buddy"),
                 expires: buddy_expires,
@@ -621,7 +641,7 @@ fn approving_all_revoking_all() {
     let mut late_env = mock_env();
     late_env.block.height = 1234568; //expired
     let res = contract
-        .all_approvals(
+        .operators(
             deps.as_ref(),
             late_env,
             String::from("person"),

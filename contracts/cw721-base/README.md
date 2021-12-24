@@ -43,9 +43,9 @@ Once you are happy with the content, you can compile it to wasm via:
 
 ```
 RUSTFLAGS='-C link-arg=-s' cargo wasm
-cp ../../target/wasm32-unknown-unknown/release/cw20_base.wasm .
-ls -l cw20_base.wasm
-sha256sum cw20_base.wasm
+cp ../../target/wasm32-unknown-unknown/release/cw721_base.wasm .
+ls -l cw721_base.wasm
+sha256sum cw721_base.wasm
 ```
 
 Or for a production-ready (optimized) build, run a build command in the
@@ -66,6 +66,6 @@ likely want to write a custom, domain-specific `instantiate`.
 
 **TODO: add example when written**
 
-For now, you can look at [`cw20-staking`](../cw20-staking/README.md)
-for an example of how to "inherit" cw20 functionality and combine it with custom logic.
+For now, you can look at [`cw721-staking`](../cw721-staking/README.md)
+for an example of how to "inherit" cw721 functionality and combine it with custom logic.
 The process is similar for cw721.
