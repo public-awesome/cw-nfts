@@ -122,7 +122,6 @@ pub struct TokenIndexes<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    // pk goes to second tuple element
     pub owner: MultiIndex<'a, Addr, TokenInfo<T>, Addr>,
 }
 

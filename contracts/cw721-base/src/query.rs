@@ -143,19 +143,15 @@ where
         let start = start_after.map(Bound::exclusive);
 
         let owner_addr = deps.api.addr_validate(&owner)?;
-        let res = self
+        let tokens: Vec<String> = self
             .tokens
             .idx
             .owner
             .prefix(owner_addr)
             .keys(deps.storage, start, None, Order::Ascending)
-            .take(limit);
-
-        let tokens = res
-            .into_iter()
-            .flatten()
-            .map(|addr| addr.to_string())
-            .collect();
+            .take(limit)
+            .map(|x| x.map(|addr| addr.to_string()))
+            .collect::<StdResult<Vec<_>>>()?;
 
         Ok(TokensResponse { tokens })
     }
