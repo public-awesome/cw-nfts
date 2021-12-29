@@ -12,7 +12,7 @@ use cw721_base::{
     msg::ExecuteMsg as Cw721ExecuteMsg, msg::InstantiateMsg as Cw721InstantiateMsg, Extension,
     MintMsg,
 };
-use utils::parse_reply_instantiate_data;
+use cw_utils::parse_reply_instantiate_data;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-fixed-price";
