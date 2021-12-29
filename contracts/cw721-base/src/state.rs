@@ -122,8 +122,7 @@ pub struct TokenIndexes<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    // pk goes to second tuple element
-    pub owner: MultiIndex<'a, (Addr, Vec<u8>), TokenInfo<T>>,
+    pub owner: MultiIndex<'a, Addr, TokenInfo<T>, Addr>,
 }
 
 impl<'a, T> IndexList<TokenInfo<T>> for TokenIndexes<'a, T>
@@ -136,6 +135,6 @@ where
     }
 }
 
-pub fn token_owner_idx<T>(d: &TokenInfo<T>, k: Vec<u8>) -> (Addr, Vec<u8>) {
-    (d.owner.clone(), k)
+pub fn token_owner_idx<T>(d: &TokenInfo<T>) -> Addr {
+    d.owner.clone()
 }

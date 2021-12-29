@@ -1,15 +1,15 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_binary, Binary, BlockInfo, Deps, Env, Order, Record, StdError, StdResult};
+use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdError, StdResult};
 
-use cw0::maybe_addr;
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, CustomMsg,
     Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
     TokensResponse,
 };
 use cw_storage_plus::Bound;
+use cw_utils::maybe_addr;
 
 use crate::msg::{MinterResponse, QueryMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
@@ -143,17 +143,16 @@ where
         let start = start_after.map(Bound::exclusive);
 
         let owner_addr = deps.api.addr_validate(&owner)?;
-        let pks: Vec<_> = self
+        let tokens: Vec<String> = self
             .tokens
             .idx
             .owner
             .prefix(owner_addr)
             .keys(deps.storage, start, None, Order::Ascending)
             .take(limit)
-            .collect();
+            .map(|x| x.map(|addr| addr.to_string()))
+            .collect::<StdResult<Vec<_>>>()?;
 
-        let res: Result<Vec<_>, _> = pks.iter().map(|v| String::from_utf8(v.to_vec())).collect();
-        let tokens = res.map_err(StdError::invalid_utf8)?;
         Ok(TokensResponse { tokens })
     }
 
@@ -170,8 +169,9 @@ where
             .tokens
             .range(deps.storage, start, None, Order::Ascending)
             .take(limit)
-            .map(|item| item.map(|(k, _)| String::from_utf8_lossy(&k).to_string()))
+            .map(|item| item.map(|(k, _)| k))
             .collect();
+
         Ok(TokensResponse { tokens: tokens? })
     }
 
@@ -271,10 +271,10 @@ where
     }
 }
 
-fn parse_approval(item: StdResult<Record<Expiration>>) -> StdResult<cw721::Approval> {
-    item.and_then(|(k, expires)| {
-        let spender = String::from_utf8(k)?;
-        Ok(cw721::Approval { spender, expires })
+fn parse_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<cw721::Approval> {
+    item.map(|(spender, expires)| cw721::Approval {
+        spender: spender.to_string(),
+        expires,
     })
 }
 
