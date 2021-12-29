@@ -8,7 +8,7 @@ use crate::{
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
-use cw0::Expiration;
+use cw_utils::Expiration;
 
 // TODO: move this somewhere else... ideally cosmwasm-std
 pub trait CustomMsg: Clone + std::fmt::Debug + PartialEq + JsonSchema {}
