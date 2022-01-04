@@ -8,9 +8,11 @@ use cosmwasm_std::{Addr, BlockInfo, StdResult, Storage};
 use cw721::{ContractInfoResponse, CustomMsg, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, C>
+pub struct Cw721Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
+    E: CustomMsg,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
     pub minter: Item<'a, Addr>,
@@ -20,19 +22,25 @@ where
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
 
     pub(crate) _custom_response: PhantomData<C>,
+    pub(crate) _custom_query: PhantomData<Q>,
+    pub(crate) _custom_execute: PhantomData<E>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, C> Cw721<T, C> for Cw721Contract<'a, T, C>
+impl<'a, T, C, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    E: CustomMsg,
+    Q: CustomMsg,
 {
 }
 
-impl<T, C> Default for Cw721Contract<'static, T, C>
+impl<T, C, E, Q> Default for Cw721Contract<'static, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E: CustomMsg,
+    Q: CustomMsg,
 {
     fn default() -> Self {
         Self::new(
@@ -46,9 +54,11 @@ where
     }
 }
 
-impl<'a, T, C> Cw721Contract<'a, T, C>
+impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E: CustomMsg,
+    Q: CustomMsg,
 {
     fn new(
         contract_key: &'a str,
@@ -68,6 +78,8 @@ where
             operators: Map::new(operator_key),
             tokens: IndexedMap::new(tokens_key, indexes),
             _custom_response: PhantomData,
+            _custom_execute: PhantomData,
+            _custom_query: PhantomData,
         }
     }
 

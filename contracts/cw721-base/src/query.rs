@@ -17,10 +17,12 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 30;
 
-impl<'a, T, C> Cw721Query<T> for Cw721Contract<'a, T, C>
+impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    E: CustomMsg,
+    Q: CustomMsg,
 {
     fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
         self.contract_info.load(deps.storage)
@@ -196,10 +198,12 @@ where
     }
 }
 
-impl<'a, T, C> Cw721Contract<'a, T, C>
+impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    E: CustomMsg,
+    Q: CustomMsg,
 {
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
@@ -208,7 +212,7 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
@@ -267,6 +271,7 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
+            QueryMsg::CustomMsg { message: _ } => Ok(Binary::default()),
         }
     }
 }

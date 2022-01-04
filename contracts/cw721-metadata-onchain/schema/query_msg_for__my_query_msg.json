@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "QueryMsg",
+  "title": "QueryMsg_for_MyQueryMsg",
   "oneOf": [
     {
       "description": "Return the owner of the given token, error if token does not exist Return type: OwnerOfResponse",
@@ -280,6 +280,35 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Extension query",
+      "type": "object",
+      "required": [
+        "custom_msg"
+      ],
+      "properties": {
+        "custom_msg": {
+          "type": "object",
+          "required": [
+            "message"
+          ],
+          "properties": {
+            "message": {
+              "$ref": "#/definitions/MyQueryMsg"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
     }
-  ]
+  ],
+  "definitions": {
+    "MyQueryMsg": {
+      "type": "string",
+      "enum": [
+        "Test"
+      ]
+    }
+  }
 }

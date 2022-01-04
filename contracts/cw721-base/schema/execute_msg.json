@@ -202,6 +202,27 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Extension msg",
+      "type": "object",
+      "required": [
+        "custom_msg"
+      ],
+      "properties": {
+        "custom_msg": {
+          "type": "object",
+          "required": [
+            "message"
+          ],
+          "properties": {
+            "message": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
