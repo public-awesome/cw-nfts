@@ -207,16 +207,16 @@
       "description": "Extension msg",
       "type": "object",
       "required": [
-        "custom_msg"
+        "extension"
       ],
       "properties": {
-        "custom_msg": {
+        "extension": {
           "type": "object",
           "required": [
-            "message"
+            "msg"
           ],
           "properties": {
-            "message": {
+            "msg": {
               "$ref": "#/definitions/Empty"
             }
           }

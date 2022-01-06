@@ -57,7 +57,7 @@ pub enum ExecuteMsg<T, E> {
     Burn { token_id: String },
 
     /// Extension msg
-    CustomMsg { message: E },
+    Extension { msg: E },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -150,8 +150,8 @@ pub enum QueryMsg<Q> {
     Minter {},
 
     /// Extension query
-    CustomMsg {
-        message: Q,
+    Extension {
+        msg: Q,
     },
 }
 

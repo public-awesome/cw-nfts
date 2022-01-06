@@ -71,7 +71,7 @@ where
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
-            ExecuteMsg::CustomMsg { message: _ } => Ok(Response::default()),
+            ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
     }
 }

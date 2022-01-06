@@ -87,7 +87,7 @@ pub mod entry {
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
         match msg {
-            ExecuteMsg::CustomMsg { message } => match message {
+            ExecuteMsg::Extension { msg } => match msg {
                 MyExecuteMsg::Test => Ok(Response::default()),
             },
             _ => Cw721MetadataContract::default().execute(deps, env, info, msg),
@@ -97,7 +97,7 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::CustomMsg { message } => match message {
+            QueryMsg::Extension { msg } => match msg {
                 MyQueryMsg::Test => Ok(Binary::default()),
             },
             _ => Cw721MetadataContract::default().query(deps, env, msg),

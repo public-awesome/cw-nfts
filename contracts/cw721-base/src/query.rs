@@ -271,7 +271,7 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
-            QueryMsg::CustomMsg { message: _ } => Ok(Binary::default()),
+            QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }
 }
