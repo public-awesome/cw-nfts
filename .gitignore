@@ -11,6 +11,8 @@ target/
 .vscode/
 .idea/
 *.iml
+\#*\#
+.\#*
 
 # Auto-gen
 .cargo-ok
