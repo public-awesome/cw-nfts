@@ -9,6 +9,7 @@ use cw721::{ContractInfoResponse, CustomMsg, Cw721Execute, Cw721ReceiveMsg, Expi
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
+use crate::Version;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
@@ -25,8 +26,14 @@ where
         _env: Env,
         _info: MessageInfo,
         msg: InstantiateMsg,
+        version: Option<Version>,
     ) -> StdResult<Response<C>> {
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        match version {
+            Some(ver) => {
+                set_contract_version(deps.storage, ver.contract_name, ver.contract_version)?
+            }
+            None => set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?,
+        }
 
         let info = ContractInfoResponse {
             name: msg.name,

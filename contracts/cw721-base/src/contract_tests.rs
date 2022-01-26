@@ -23,7 +23,9 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty>
         minter: String::from(MINTER),
     };
     let info = mock_info("creator", &[]);
-    let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
+    let res = contract
+        .instantiate(deps, mock_env(), info, msg, None)
+        .unwrap();
     assert_eq!(0, res.messages.len());
     contract
 }
@@ -42,7 +44,7 @@ fn proper_instantiation() {
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(deps.as_mut(), mock_env(), info, msg)
+        .instantiate(deps.as_mut(), mock_env(), info, msg, None)
         .unwrap();
     assert_eq!(0, res.messages.len());
 

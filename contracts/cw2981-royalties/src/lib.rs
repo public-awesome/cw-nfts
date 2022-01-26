@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::msg::Cw2981QueryMsg;
 use cosmwasm_std::Empty;
-use cw721_base::Cw721Contract;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
+use cw721_base::{Cw721Contract, Version};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
 pub struct Trait {
@@ -47,6 +47,15 @@ pub type MintExtension = Option<Extension>;
 pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
 
+// version info for migration info
+const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+const VERSION: Version = Version {
+    contract_name: CONTRACT_NAME,
+    contract_version: CONTRACT_VERSION,
+};
+
 #[cfg(not(feature = "library"))]
 pub mod entry {
     use super::*;
@@ -61,7 +70,7 @@ pub mod entry {
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> StdResult<Response> {
-        Cw2981Contract::default().instantiate(deps, env, info, msg)
+        Cw2981Contract::default().instantiate(deps, env, info, msg, Some(VERSION))
     }
 
     #[entry_point]

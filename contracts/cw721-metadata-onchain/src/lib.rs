@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Empty;
-pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
+pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse, QueryMsg, Version};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
 pub struct Trait {
@@ -30,6 +30,15 @@ pub type Extension = Option<Metadata>;
 pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
 
+// version info for migration info
+const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+const VERSION: Version = Version {
+    contract_name: CONTRACT_NAME,
+    contract_version: CONTRACT_VERSION,
+};
+
 #[cfg(not(feature = "library"))]
 pub mod entry {
     use super::*;
@@ -47,7 +56,7 @@ pub mod entry {
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> StdResult<Response> {
-        Cw721MetadataContract::default().instantiate(deps, env, info, msg)
+        Cw721MetadataContract::default().instantiate(deps, env, info, msg, Some(VERSION))
     }
 
     #[entry_point]
@@ -87,7 +96,13 @@ mod tests {
             minter: CREATOR.to_string(),
         };
         contract
-            .instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg)
+            .instantiate(
+                deps.as_mut(),
+                mock_env(),
+                info.clone(),
+                init_msg,
+                Some(VERSION),
+            )
             .unwrap();
 
         let token_id = "Enterprise";

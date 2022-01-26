@@ -11,6 +11,12 @@ pub use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, MinterResponse, QueryM
 pub use crate::state::Cw721Contract;
 use cosmwasm_std::Empty;
 
+// This allows us to set version
+pub struct Version<'a> {
+    pub contract_name: &'a str,
+    pub contract_version: &'a str,
+}
+
 // This is a simple type to let us handle empty extensions
 pub type Extension = Option<Empty>;
 
@@ -30,7 +36,7 @@ pub mod entry {
         msg: InstantiateMsg,
     ) -> StdResult<Response> {
         let tract = Cw721Contract::<Extension, Empty>::default();
-        tract.instantiate(deps, env, info, msg)
+        tract.instantiate(deps, env, info, msg, None)
     }
 
     #[entry_point]
