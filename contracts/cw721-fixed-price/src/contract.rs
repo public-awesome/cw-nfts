@@ -161,7 +161,7 @@ pub fn execute_receive(
     });
 
     let callback = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: config.cw721_address.clone().unwrap().to_string(),
+        contract_addr: config.cw20_address.to_string(),
         msg: to_binary(&mint_msg)?,
         funds: vec![],
     });
@@ -372,7 +372,7 @@ mod tests {
             res.messages[0],
             SubMsg {
                 msg: CosmosMsg::Wasm(WasmMsg::Execute {
-                    contract_addr: "nftcontract".to_string(),
+                    contract_addr: String::from(MOCK_CONTRACT_ADDR),
                     msg: to_binary(&mint_msg).unwrap(),
                     funds: vec![],
                 }),
