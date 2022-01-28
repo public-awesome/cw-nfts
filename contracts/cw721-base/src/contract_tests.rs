@@ -335,6 +335,26 @@ fn approving_revoking() {
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
 
+    // token owner shows in approval query
+    let res = contract
+        .approval(
+            deps.as_ref(),
+            mock_env(),
+            token_id.clone(),
+            String::from("demeter"),
+            false,
+        )
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from("demeter"),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
     // Give random transferring power
     let approve_msg = ExecuteMsg::Approve {
         spender: String::from("random"),
