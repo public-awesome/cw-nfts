@@ -30,6 +30,9 @@ pub enum ContractError {
     #[error("InvalidTokenReplyId")]
     InvalidTokenReplyId {},
 
+    #[error("Cw721NotLinked")]
+    Cw721NotLinked {},
+
     #[error("Cw721AlreadyLinked")]
     Cw721AlreadyLinked {},
 }

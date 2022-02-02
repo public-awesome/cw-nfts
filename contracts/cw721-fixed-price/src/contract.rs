@@ -160,16 +160,19 @@ pub fn execute_receive(
         extension: config.extension.clone(),
     });
 
-    let callback = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: config.cw721_address.clone().unwrap().to_string(),
-        msg: to_binary(&mint_msg)?,
-        funds: vec![],
-    });
+    if let Some(cw721) = &config.cw721_address {
+        let callback = CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: cw721.to_string(),
+            msg: to_binary(&mint_msg)?,
+            funds: vec![],
+        });
 
-    config.unused_token_id += 1;
-    CONFIG.save(deps.storage, &config)?;
+        config.unused_token_id += 1;
+        CONFIG.save(deps.storage, &config)?;
 
-    Ok(Response::new().add_message(callback))
+        return Ok(Response::new().add_message(callback));
+    }
+    Err(ContractError::Cw721NotLinked {})
 }
 
 #[cfg(test)]
