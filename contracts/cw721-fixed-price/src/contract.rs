@@ -4,13 +4,13 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdResult, SubMsg, Uint128, WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
+    SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw721_base::{
-    msg::ExecuteMsg as Cw721ExecuteMsg, msg::InstantiateMsg as Cw721InstantiateMsg, Extension,
-    MintMsg,
+    helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
+    msg::InstantiateMsg as Cw721InstantiateMsg, Extension, MintMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -160,13 +160,8 @@ pub fn execute_receive(
         extension: config.extension.clone(),
     });
 
-    if let Some(cw721) = &config.cw721_address {
-        let callback = CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: cw721.to_string(),
-            msg: to_binary(&mint_msg)?,
-            funds: vec![],
-        });
-
+    if let Some(cw721) = config.cw721_address.clone() {
+        let callback = Cw721Contract(cw721).call(mint_msg)?;
         config.unused_token_id += 1;
         CONFIG.save(deps.storage, &config)?;
 
@@ -179,7 +174,9 @@ pub fn execute_receive(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_binary, to_binary, ContractResult, SubMsgExecutionResponse};
+    use cosmwasm_std::{
+        from_binary, to_binary, ContractResult, CosmosMsg, SubMsgExecutionResponse,
+    };
     use prost::Message;
 
     // Type for replies to contract instantiate messes
