@@ -119,6 +119,14 @@
             "owner": {
               "type": "string"
             },
+            "page": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
             "start_after": {
               "type": [
                 "string",
@@ -229,6 +237,14 @@
             "owner": {
               "type": "string"
             },
+            "page": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
             "start_after": {
               "type": [
                 "string",
@@ -251,6 +267,14 @@
           "type": "object",
           "properties": {
             "limit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "page": {
               "type": [
                 "integer",
                 "null"

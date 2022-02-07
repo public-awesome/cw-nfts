@@ -62,7 +62,9 @@ fn proper_instantiation() {
     assert_eq!(0, count.count);
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, None, None)
+        .unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
 
@@ -140,7 +142,9 @@ fn minting() {
     assert_eq!(err, ContractError::Claimed {});
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, None, None)
+        .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
 }
@@ -190,7 +194,9 @@ fn burning() {
         .unwrap_err();
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, None, None)
+        .unwrap();
     assert!(tokens.tokens.is_empty());
 }
 
@@ -494,7 +500,9 @@ fn approving_all_revoking_all() {
         .unwrap();
 
     // paginate the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(1), None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, Some(1), None)
+        .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id1.clone()], tokens.tokens);
     let tokens = contract
@@ -723,10 +731,14 @@ fn query_tokens_by_owner() {
 
     // get all tokens in order:
     let expected = vec![token_id1.clone(), token_id2.clone(), token_id3.clone()];
-    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, None, None)
+        .unwrap();
     assert_eq!(&expected, &tokens.tokens);
     // paginate
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(2), None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, Some(2), None)
+        .unwrap();
     assert_eq!(&expected[..2], &tokens.tokens[..]);
     let tokens = contract
         .all_tokens(deps.as_ref(), Some(expected[1].clone()), None, None)
@@ -741,7 +753,9 @@ fn query_tokens_by_owner() {
         .tokens(deps.as_ref(), demeter.clone(), None, None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
-    let tokens = contract.tokens(deps.as_ref(), ceres, None, None, None).unwrap();
+    let tokens = contract
+        .tokens(deps.as_ref(), ceres, None, None, None)
+        .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
@@ -750,7 +764,13 @@ fn query_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), Some(by_demeter[0].clone()), Some(3), None)
+        .tokens(
+            deps.as_ref(),
+            demeter.clone(),
+            Some(by_demeter[0].clone()),
+            Some(3),
+            None,
+        )
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
 
@@ -768,7 +788,12 @@ fn query_by_pages() {
     let owner = String::from("medusa");
 
     for n in 1..=42 {
-        mint(&contract, deps.as_mut(), String::from(n.to_string()), owner.clone());
+        mint(
+            &contract,
+            deps.as_mut(),
+            String::from(n.to_string()),
+            owner.clone(),
+        );
     }
 
     // ensure num tokens increases
@@ -776,7 +801,9 @@ fn query_by_pages() {
     assert_eq!(42, count.count);
 
     // get the last page
-    let tokens = contract.all_tokens(deps.as_ref(), None, None, Some(4)).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), None, None, Some(4))
+        .unwrap();
     assert_eq!(2, tokens.tokens.len());
     assert_eq!(vec!["8", "9"], tokens.tokens);
     // currently sorted by string
@@ -790,7 +817,7 @@ fn mint(
     token_id: String,
     owner: String,
 ) {
-    let token_uri = format!("{}{}","https://lunapunks.io/",token_id);
+    let token_uri = format!("{}{}", "https://lunapunks.io/", token_id);
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
         token_id: token_id.clone(),

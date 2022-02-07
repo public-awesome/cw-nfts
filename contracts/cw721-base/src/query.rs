@@ -270,9 +270,11 @@ where
                 limit,
                 page,
             } => to_binary(&self.tokens(deps, owner, start_after, limit, page)?),
-            QueryMsg::AllTokens { start_after, limit, page } => {
-                to_binary(&self.all_tokens(deps, start_after, limit, page)?)
-            }
+            QueryMsg::AllTokens {
+                start_after,
+                limit,
+                page,
+            } => to_binary(&self.all_tokens(deps, start_after, limit, page)?),
             QueryMsg::Approval {
                 token_id,
                 spender,

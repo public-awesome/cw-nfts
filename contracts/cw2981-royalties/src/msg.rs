@@ -97,6 +97,7 @@ impl From<Cw2981QueryMsg> for CW721QueryMsg {
                 include_expired,
                 start_after,
                 limit,
+                page: Some(0),
             },
             Cw2981QueryMsg::NumTokens {} => CW721QueryMsg::NumTokens {},
             Cw2981QueryMsg::ContractInfo {} => CW721QueryMsg::ContractInfo {},
@@ -116,10 +117,13 @@ impl From<Cw2981QueryMsg> for CW721QueryMsg {
                 owner,
                 start_after,
                 limit,
+                page: Some(0),
             },
-            Cw2981QueryMsg::AllTokens { start_after, limit } => {
-                CW721QueryMsg::AllTokens { start_after, limit }
-            }
+            Cw2981QueryMsg::AllTokens { start_after, limit } => CW721QueryMsg::AllTokens {
+                start_after,
+                limit,
+                page: Some(0),
+            },
             _ => panic!("cannot covert {:?} to CW721QueryMsg", msg),
         }
     }

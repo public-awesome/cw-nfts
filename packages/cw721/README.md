@@ -2,8 +2,8 @@
 
 CW721 is a specification for non-fungible tokens based on CosmWasm.
 The name and design is based on Ethereum's ERC721 standard,
-with some enhancements. The types in here can be imported by 
-contracts that wish to implement this  spec, or by contracts that call 
+with some enhancements. The types in here can be imported by
+contracts that wish to implement this  spec, or by contracts that call
 to any standard cw721 contract.
 
 The specification is split into multiple sections, a contract may only
@@ -12,31 +12,31 @@ implement some of this functionality, but must implement the base.
 ## Base
 
 This handles ownership, transfers, and allowances. These must be supported
-as is by all CW721 contracts. Note that all tokens must have an owner, 
+as is by all CW721 contracts. Note that all tokens must have an owner,
 as well as an ID. The ID is an arbitrary string, unique within the contract.
 
 ### Messages
 
-`TransferNft{recipient, token_id}` - 
-This transfers ownership of the token to `recipient` account. This is 
-designed to send to an address controlled by a private key and *does not* 
+`TransferNft{recipient, token_id}` -
+This transfers ownership of the token to `recipient` account. This is
+designed to send to an address controlled by a private key and *does not*
 trigger any actions on the recipient if it is a contract.
 
-Requires `token_id` to point to a valid token, and `env.sender` to be 
-the owner of it, or have an allowance to transfer it. 
+Requires `token_id` to point to a valid token, and `env.sender` to be
+the owner of it, or have an allowance to transfer it.
 
-`SendNft{contract, token_id, msg}` - 
-This transfers ownership of the token to `contract` account. `contract` 
+`SendNft{contract, token_id, msg}` -
+This transfers ownership of the token to `contract` account. `contract`
 must be an address controlled by a smart contract, which implements
-the CW721Receiver interface. The `msg` will be passed to the recipient 
+the CW721Receiver interface. The `msg` will be passed to the recipient
 contract, along with the token_id.
 
-Requires `token_id` to point to a valid token, and `env.sender` to be 
-the owner of it, or have an allowance to transfer it. 
+Requires `token_id` to point to a valid token, and `env.sender` to be
+the owner of it, or have an allowance to transfer it.
 
 `Approve{spender, token_id, expires}` - Grants permission to `spender` to
 transfer or send the given token. This can only be performed when
-`env.sender` is the owner of the given `token_id` or an `operator`. 
+`env.sender` is the owner of the given `token_id` or an `operator`.
 There can multiple spender accounts per token, and they are cleared once
 the token is transfered or sent.
 
@@ -80,9 +80,9 @@ The `sender` is the original account requesting to move the token
 and `msg` is a `Binary` data that can be decoded into a contract-specific
 message. This can be empty if we have only one default action,
 or it may be a `ReceiveMsg` variant to clarify the intention. For example,
-if I send to an exchange, I can specify the price I want to list the token 
+if I send to an exchange, I can specify the price I want to list the token
 for.
- 
+
 ## Metadata
 
 ### Queries
@@ -111,12 +111,17 @@ any particular values.
 
 If `start_after` is unset, the query returns the first results, ordered by
 lexogaphically by `token_id`. If `start_after` is set, then it returns the
-first `limit` tokens *after* the given one. This allows straight-forward 
+first `limit` tokens *after* the given one. This allows straight-forward
 pagination by taking the last result returned (a `token_id`) and using it
-as the `start_after` value in a future query. 
+as the `start_after` value in a future query.
 
-`Tokens{owner, start_after, limit}` - List all token_ids that belong to a given owner.
+Alternatively, pagination can also be acheived via `page` and `limit`.
+Page is a request set by the client, if unset, the contract will automatically
+return the first page (index starts at 0) of the query. If set, it will work along side the limit
+set and retrieve the data within the specific page.
+
+`Tokens{owner, start_after, limit, page}` - List all token_ids that belong to a given owner.
 Return type is `TokensResponse{tokens: Vec<token_id>}`.
 
-`AllTokens{start_after, limit}` - Requires pagination. Lists all token_ids controlled by 
+`AllTokens{start_after, limit, page}` - Requires pagination. Lists all token_ids controlled by
 the contract.

@@ -168,7 +168,11 @@ impl Cw721Contract {
         limit: Option<u32>,
         page: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::AllTokens { start_after, limit, page };
+        let req = QueryMsg::AllTokens {
+            start_after,
+            limit,
+            page,
+        };
         self.query(querier, req)
     }
 
@@ -179,6 +183,7 @@ impl Cw721Contract {
 
     /// returns true if the contract supports the enumerable extension
     pub fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
-        self.tokens(querier, self.addr(), None, Some(1), Some(1)).is_ok()
+        self.tokens(querier, self.addr(), None, Some(1), Some(1))
+            .is_ok()
     }
 }
