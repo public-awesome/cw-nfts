@@ -105,6 +105,7 @@ pub enum QueryMsg {
         include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     },
     /// Total number of tokens issued
     NumTokens {},
@@ -134,6 +135,7 @@ pub enum QueryMsg {
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
@@ -141,6 +143,7 @@ pub enum QueryMsg {
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     },
 
     // Return the minter

@@ -16,6 +16,7 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 30;
+const DEFAULT_PAGE: u32 = 0;
 
 impl<'a, T, C> Cw721Query<T> for Cw721Contract<'a, T, C>
 where
@@ -62,8 +63,10 @@ where
         include_expired: bool,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<OperatorsResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let page = page.unwrap_or(DEFAULT_PAGE) as usize * limit;
         let start_addr = maybe_addr(deps.api, start_after)?;
         let start = start_addr.map(|addr| Bound::exclusive(addr.as_ref()));
 
@@ -75,6 +78,7 @@ where
             .filter(|r| {
                 include_expired || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
             })
+            .skip(page)
             .take(limit)
             .map(parse_approval)
             .collect();
@@ -148,8 +152,10 @@ where
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let page = page.unwrap_or(DEFAULT_PAGE) as usize * limit;
         let start = start_after.map(Bound::exclusive);
 
         let owner_addr = deps.api.addr_validate(&owner)?;
@@ -159,6 +165,7 @@ where
             .owner
             .prefix(owner_addr)
             .keys(deps.storage, start, None, Order::Ascending)
+            .skip(page)
             .take(limit)
             .map(|x| x.map(|addr| addr.to_string()))
             .collect::<StdResult<Vec<_>>>()?;
@@ -171,13 +178,16 @@ where
         deps: Deps,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let page = page.unwrap_or(DEFAULT_PAGE) as usize * limit;
         let start = start_after.map(Bound::exclusive);
 
         let tokens: StdResult<Vec<String>> = self
             .tokens
             .range(deps.storage, start, None, Order::Ascending)
+            .skip(page)
             .take(limit)
             .map(|item| item.map(|(k, _)| k))
             .collect();
@@ -243,6 +253,7 @@ where
                 include_expired,
                 start_after,
                 limit,
+                page,
             } => to_binary(&self.operators(
                 deps,
                 env,
@@ -250,15 +261,17 @@ where
                 include_expired.unwrap_or(false),
                 start_after,
                 limit,
+                page,
             )?),
             QueryMsg::NumTokens {} => to_binary(&self.num_tokens(deps)?),
             QueryMsg::Tokens {
                 owner,
                 start_after,
                 limit,
-            } => to_binary(&self.tokens(deps, owner, start_after, limit)?),
-            QueryMsg::AllTokens { start_after, limit } => {
-                to_binary(&self.all_tokens(deps, start_after, limit)?)
+                page,
+            } => to_binary(&self.tokens(deps, owner, start_after, limit, page)?),
+            QueryMsg::AllTokens { start_after, limit, page } => {
+                to_binary(&self.all_tokens(deps, start_after, limit, page)?)
             }
             QueryMsg::Approval {
                 token_id,

@@ -122,6 +122,7 @@ where
         include_expired: bool,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<OperatorsResponse>;
 
     fn approval(
@@ -147,6 +148,7 @@ where
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse>;
 
     fn all_tokens(
@@ -154,6 +156,7 @@ where
         deps: Deps,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse>;
 
     fn all_nft_info(

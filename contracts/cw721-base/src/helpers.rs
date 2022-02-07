@@ -91,12 +91,14 @@ impl Cw721Contract {
         include_expired: bool,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
         let req = QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,
             limit,
+            page,
         };
         let res: OperatorsResponse = self.query(querier, req)?;
         Ok(res.operators)
@@ -147,11 +149,13 @@ impl Cw721Contract {
         owner: T,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse> {
         let req = QueryMsg::Tokens {
             owner: owner.into(),
             start_after,
             limit,
+            page,
         };
         self.query(querier, req)
     }
@@ -162,8 +166,9 @@ impl Cw721Contract {
         querier: &QuerierWrapper,
         start_after: Option<String>,
         limit: Option<u32>,
+        page: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::AllTokens { start_after, limit };
+        let req = QueryMsg::AllTokens { start_after, limit, page };
         self.query(querier, req)
     }
 
@@ -174,6 +179,6 @@ impl Cw721Contract {
 
     /// returns true if the contract supports the enumerable extension
     pub fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
-        self.tokens(querier, self.addr(), None, Some(1)).is_ok()
+        self.tokens(querier, self.addr(), None, Some(1), Some(1)).is_ok()
     }
 }

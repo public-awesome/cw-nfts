@@ -62,7 +62,7 @@ fn proper_instantiation() {
     assert_eq!(0, count.count);
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
 
@@ -140,7 +140,7 @@ fn minting() {
     assert_eq!(err, ContractError::Claimed {});
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
 }
@@ -190,7 +190,7 @@ fn burning() {
         .unwrap_err();
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
     assert!(tokens.tokens.is_empty());
 }
 
@@ -494,11 +494,11 @@ fn approving_all_revoking_all() {
         .unwrap();
 
     // paginate the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(1)).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, Some(1), None).unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id1.clone()], tokens.tokens);
     let tokens = contract
-        .all_tokens(deps.as_ref(), Some(token_id1.clone()), Some(3))
+        .all_tokens(deps.as_ref(), Some(token_id1.clone()), Some(3), None)
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id2.clone()], tokens.tokens);
@@ -566,6 +566,7 @@ fn approving_all_revoking_all() {
             true,
             None,
             None,
+            None,
         )
         .unwrap();
     assert_eq!(
@@ -598,6 +599,7 @@ fn approving_all_revoking_all() {
             true,
             None,
             Some(1),
+            None,
         )
         .unwrap();
     assert_eq!(
@@ -617,6 +619,7 @@ fn approving_all_revoking_all() {
             true,
             Some(String::from("buddy")),
             Some(2),
+            None,
         )
         .unwrap();
     assert_eq!(
@@ -645,6 +648,7 @@ fn approving_all_revoking_all() {
             false,
             None,
             None,
+            None,
         )
         .unwrap();
     assert_eq!(
@@ -666,6 +670,7 @@ fn approving_all_revoking_all() {
             late_env,
             String::from("person"),
             false,
+            None,
             None,
             None,
         )
@@ -718,34 +723,84 @@ fn query_tokens_by_owner() {
 
     // get all tokens in order:
     let expected = vec![token_id1.clone(), token_id2.clone(), token_id3.clone()];
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, None, None).unwrap();
     assert_eq!(&expected, &tokens.tokens);
     // paginate
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(2)).unwrap();
+    let tokens = contract.all_tokens(deps.as_ref(), None, Some(2), None).unwrap();
     assert_eq!(&expected[..2], &tokens.tokens[..]);
     let tokens = contract
-        .all_tokens(deps.as_ref(), Some(expected[1].clone()), None)
+        .all_tokens(deps.as_ref(), Some(expected[1].clone()), None, None)
         .unwrap();
     assert_eq!(&expected[2..], &tokens.tokens[..]);
 
     // get by owner
-    let by_ceres = vec![token_id2];
-    let by_demeter = vec![token_id1, token_id3];
+    let by_ceres = vec![token_id2.clone()];
+    let by_demeter = vec![token_id1.clone(), token_id3.clone()];
     // all tokens by owner
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, None)
+        .tokens(deps.as_ref(), demeter.clone(), None, None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
-    let tokens = contract.tokens(deps.as_ref(), ceres, None, None).unwrap();
+    let tokens = contract.tokens(deps.as_ref(), ceres, None, None, None).unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, Some(1))
+        .tokens(deps.as_ref(), demeter.clone(), None, Some(1), None)
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(deps.as_ref(), demeter, Some(by_demeter[0].clone()), Some(3))
+        .tokens(deps.as_ref(), demeter.clone(), Some(by_demeter[0].clone()), Some(3), None)
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
+
+    // paginate by sorted order
+    let tokens = contract
+        .tokens(deps.as_ref(), demeter.clone(), None, Some(1), Some(1))
+        .unwrap();
+    assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
+}
+
+#[test]
+fn query_by_pages() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+    let owner = String::from("medusa");
+
+    for n in 1..=42 {
+        mint(&contract, deps.as_mut(), String::from(n.to_string()), owner.clone());
+    }
+
+    // ensure num tokens increases
+    let count = contract.num_tokens(deps.as_ref()).unwrap();
+    assert_eq!(42, count.count);
+
+    // get the last page
+    let tokens = contract.all_tokens(deps.as_ref(), None, None, Some(4)).unwrap();
+    assert_eq!(2, tokens.tokens.len());
+    assert_eq!(vec!["8", "9"], tokens.tokens);
+    // currently sorted by string
+    // assert_eq!(vec!["41", "42"], tokens.tokens);
+}
+
+// helper functions for testing
+fn mint(
+    contract: &Cw721Contract<'static, Extension, Empty>,
+    deps: DepsMut<'_>,
+    token_id: String,
+    owner: String,
+) {
+    let token_uri = format!("{}{}","https://lunapunks.io/",token_id);
+
+    let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
+        token_id: token_id.clone(),
+        owner: owner,
+        token_uri: Some(token_uri.clone()),
+        extension: None,
+    });
+
+    let allowed = mock_info(MINTER, &[]);
+    let _ = contract
+        .execute(deps, mock_env(), allowed, mint_msg)
+        .unwrap();
 }
