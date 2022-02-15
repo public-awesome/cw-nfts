@@ -92,6 +92,16 @@ where
         include_expired: bool,
     ) -> StdResult<ApprovalResponse> {
         let token = self.tokens.load(deps.storage, &token_id)?;
+
+        // token owner has absolute approval
+        if token.owner == spender {
+            let approval = cw721::Approval {
+                spender: token.owner.to_string(),
+                expires: Expiration::Never {},
+            };
+            return Ok(ApprovalResponse { approval });
+        }
+
         let filtered: Vec<_> = token
             .approvals
             .into_iter()
