@@ -9,7 +9,7 @@ Implements:
 
 - [x] CW721 Base
 - [x] Metadata extension
-- [ ] Enumerable extension (AllTokens done, but not Tokens - requires [#81](https://github.com/CosmWasm/cw-plus/issues/81))
+- [x] Enumerable extension
 
 ## Implementation
 
@@ -22,10 +22,9 @@ power to mint new NFTs (but not modify existing ones)
 the Minter set in `instantiate`.
 * `QueryMsg::Minter{}` - returns the minter address for this contract.
 
-It requires all tokens to have defined metadata in the standard format (with no extensions). For generic NFTs this may
-often be enough.
+It requires all tokens to have defined metadata in the standard format (with no extensions). For generic NFTs this may often be enough.
 
-The *Minter* can either be an external actor (eg. web server, using PubKey) or another contract. If you just want to customize
+The *Minter* can either be an external actor (e.g. web server, using PubKey) or another contract. If you just want to customize
 the minting behavior but not other functionality, you could extend this contract (importing code and wiring it together)
 or just create a custom contract as the owner and use that contract to Mint.
 
@@ -48,8 +47,8 @@ ls -l cw721_base.wasm
 sha256sum cw721_base.wasm
 ```
 
-Or for a production-ready (optimized) build, run a build command in the
-the repository root: https://github.com/CosmWasm/cw-plus#compiling.
+Or for a production-ready (optimized) build, run a build command in the 
+repository root: https://github.com/CosmWasm/cw-plus#compiling.
 
 ## Importing this contract
 

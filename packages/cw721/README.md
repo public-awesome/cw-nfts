@@ -3,7 +3,7 @@
 CW721 is a specification for non-fungible tokens based on CosmWasm.
 The name and design is based on Ethereum's ERC721 standard,
 with some enhancements. The types in here can be imported by 
-contracts that wish to implement this  spec, or by contracts that call 
+contracts that wish to implement this spec, or by contracts that call 
 to any standard cw721 contract.
 
 The specification is split into multiple sections, a contract may only
@@ -37,8 +37,8 @@ the owner of it, or have an allowance to transfer it.
 `Approve{spender, token_id, expires}` - Grants permission to `spender` to
 transfer or send the given token. This can only be performed when
 `env.sender` is the owner of the given `token_id` or an `operator`. 
-There can multiple spender accounts per token, and they are cleared once
-the token is transfered or sent.
+There can be multiple spender accounts per token, and they are cleared once
+the token is transferred or sent.
 
 `Revoke{spender, token_id}` - This revokes a previously granted permission
 to transfer the given `token_id`. This can only be granted when
@@ -59,7 +59,7 @@ If the token is unknown, returns an error. Return type is
 `OwnerResponse{owner}`.
 
 `ApprovedForAll{owner, include_expired}` - List all operators that can
-access all of  the owner's tokens. Return type is `ApprovedForAllResponse`.
+access all of the owner's tokens. Return type is `ApprovedForAllResponse`.
 If `include_expired` is set, show expired owners in the results, otherwise,
 ignore them.
 
@@ -102,16 +102,16 @@ want both info to display one NFT.
 
 ### Queries
 
-Pagination is acheived via `start_after` and `limit`. Limit is a request
+Pagination is achieved via `start_after` and `limit`. Limit is a request
 set by the client, if unset, the contract will automatically set it to
 `DefaultLimit` (suggested 10). If set, it will be used up to a `MaxLimit`
 value (suggested 30). Contracts can define other `DefaultLimit` and `MaxLimit`
 values without violating the CW721 spec, and clients should not rely on
 any particular values.
 
-If `start_after` is unset, the query returns the first results, ordered by
-lexogaphically by `token_id`. If `start_after` is set, then it returns the
-first `limit` tokens *after* the given one. This allows straight-forward 
+If `start_after` is unset, the query returns the first results, ordered 
+lexicographically by `token_id`. If `start_after` is set, then it returns the
+first `limit` tokens *after* the given one. This allows straightforward 
 pagination by taking the last result returned (a `token_id`) and using it
 as the `start_after` value in a future query. 
 
