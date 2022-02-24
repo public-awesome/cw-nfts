@@ -1,6 +1,6 @@
 [package]
 name = "cw721-fixed-price"
-version = "0.1.0"
+version = "0.12.0"
 authors = ["Vernon Johnson <vtj2105@columbia.edu>"]
 edition = "2018"
 
@@ -40,19 +40,20 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-std = { version = "1.0.0-beta" }
-cosmwasm-storage = { version = "1.0.0-beta" }
-cw-storage-plus = "0.11.1"
-cw2 = "0.11.1"
+cosmwasm-std = { version = "1.0.0-beta5" }
+cosmwasm-storage = { version = "1.0.0-beta5" }
+cw-storage-plus = "0.12.1"
+cw2 = "0.12.1"
 schemars = "0.8.3"
 cw721-base = { path = "../cw721-base", version = "0.12.0", features = [
   "library",
 ] }
-cw20 = "0.11.1"
+cw20 = "0.12.1"
 serde = { version = "1.0.127", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.26" }
-cw-utils = { version = "0.11.1" }
+cw-utils = "0.12.1"
 prost = "0.9.0"
+cw3 = "0.12.1"
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.0.0-beta" }
+cosmwasm-schema = { version = "1.0.0-beta5" }
