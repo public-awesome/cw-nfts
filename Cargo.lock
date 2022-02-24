@@ -262,7 +262,7 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "cosmwasm-schema 1.0.0-beta5",
  "cosmwasm-std",
@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-base"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "cosmwasm-schema 1.0.0-beta5",
  "cosmwasm-std",
