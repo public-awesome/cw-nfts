@@ -33,7 +33,7 @@ pub struct Metadata {
 pub type Extension = Option<Metadata>;
 ```
 
-In particular, the fields defined conform to the properties supported in the [Opensea Metadata Standard](https://docs.opensea.io/docs/metadata-standards).
+In particular, the fields defined conform to the properties supported in the [OpenSea Metadata Standard](https://docs.opensea.io/docs/metadata-standards).
 
 
 This means when you query `NftInfo{name: "Enterprise"}`, you will get something like:
