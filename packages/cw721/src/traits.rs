@@ -114,6 +114,7 @@ where
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse>;
 
+    #[allow(clippy::too_many_arguments)]
     fn operators(
         &self,
         deps: Deps,

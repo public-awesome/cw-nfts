@@ -746,8 +746,8 @@ fn query_tokens_by_owner() {
     assert_eq!(&expected[2..], &tokens.tokens[..]);
 
     // get by owner
-    let by_ceres = vec![token_id2.clone()];
-    let by_demeter = vec![token_id1.clone(), token_id3.clone()];
+    let by_ceres = vec![token_id2];
+    let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
         .tokens(deps.as_ref(), demeter.clone(), None, None, None)
@@ -776,7 +776,7 @@ fn query_tokens_by_owner() {
 
     // paginate by sorted order
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, Some(1), Some(1))
+        .tokens(deps.as_ref(), demeter, None, Some(1), Some(1))
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
 }
@@ -791,7 +791,7 @@ fn query_by_pages() {
         mint(
             &contract,
             deps.as_mut(),
-            String::from(n.to_string()),
+            n.to_string(),
             owner.clone(),
         );
     }
@@ -820,9 +820,9 @@ fn mint(
     let token_uri = format!("{}{}", "https://lunapunks.io/", token_id);
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
-        token_id: token_id.clone(),
-        owner: owner,
-        token_uri: Some(token_uri.clone()),
+        token_id,
+        owner,
+        token_uri: Some(token_uri),
         extension: None,
     });
 
