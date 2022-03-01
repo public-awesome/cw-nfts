@@ -1,7 +1,10 @@
 [package]
 name = "cw721-base"
-version = "0.11.1"
-authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>", "Orkun Külçe <orkun@deuslabs.fi>"]
+version = "0.12.0"
+authors = [
+  "Ethan Frey <ethanfrey@users.noreply.github.com>",
+  "Orkun Külçe <orkun@deuslabs.fi>",
+]
 edition = "2018"
 description = "Basic implementation cw721 NFTs"
 license = "Apache-2.0"
@@ -25,14 +28,14 @@ backtraces = ["cosmwasm-std/backtraces"]
 library = []
 
 [dependencies]
-cw-utils = { version = "0.11" }
-cw2 = { version = "0.11" }
-cw721 = { path = "../../packages/cw721", version = "0.11" }
-cw-storage-plus = { version = "0.11" }
-cosmwasm-std = { version = "1.0.0-beta" }
+cw-utils = "0.12.1"
+cw2 = "0.12.1"
+cw721 = { path = "../../packages/cw721", version = "0.12.0" }
+cw-storage-plus = "0.12.1"
+cosmwasm-std = { version = "1.0.0-beta5" }
 schemars = "0.8"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0" }
 
 [dev-dependencies]
-cosmwasm-schema = { version = "1.0.0-beta" }
+cosmwasm-schema = { version = "1.0.0-beta5" }
