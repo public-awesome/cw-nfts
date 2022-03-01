@@ -788,12 +788,7 @@ fn query_by_pages() {
     let owner = String::from("medusa");
 
     for n in 1..=42 {
-        mint(
-            &contract,
-            deps.as_mut(),
-            n.to_string(),
-            owner.clone(),
-        );
+        mint(&contract, deps.as_mut(), n.to_string(), owner.clone());
     }
 
     // ensure num tokens increases
