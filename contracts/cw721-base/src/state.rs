@@ -18,6 +18,7 @@ where
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
+    pub locked: Item<'a, bool>,
 
     pub(crate) _custom_response: PhantomData<C>,
 }
@@ -41,6 +42,7 @@ where
             "num_tokens",
             "operators",
             "tokens",
+            "locked",
             "tokens__owner",
         )
     }
@@ -56,6 +58,7 @@ where
         token_count_key: &'a str,
         operator_key: &'a str,
         tokens_key: &'a str,
+        locked_key: &'a str,
         tokens_owner_key: &'a str,
     ) -> Self {
         let indexes = TokenIndexes {
@@ -67,6 +70,7 @@ where
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
             tokens: IndexedMap::new(tokens_key, indexes),
+            locked: Item::new(locked_key),
             _custom_response: PhantomData,
         }
     }
