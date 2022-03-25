@@ -31,6 +31,7 @@ where
         let info = ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
+            locked: false,
         };
         self.contract_info.save(deps.storage, &info)?;
         let minter = deps.api.addr_validate(&msg.minter)?;
@@ -68,6 +69,7 @@ where
                 token_id,
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
+            ExecuteMsg::Lock {} => self.lock(deps, env, info),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
         }
     }
@@ -242,6 +244,17 @@ where
             .add_attribute("operator", operator))
     }
 
+    fn lock(
+        &self,
+        deps: DepsMut,
+        _env: Env,
+        info: MessageInfo,
+    ) -> Result<Response<C>, ContractError> {
+        self.check_can_lock(deps.as_ref(), &info)?;
+        self.locked.save(deps.storage, &true)?;
+        Ok(Response::new().add_attribute("action", "lock"))
+    }
+
     fn burn(
         &self,
         deps: DepsMut,
@@ -354,6 +367,16 @@ where
                 }
             }
             None => Err(ContractError::Unauthorized {}),
+        }
+    }
+
+    /// returns true ifff the sender is minter
+    pub fn check_can_lock(&self, deps: Deps, info: &MessageInfo) -> Result<bool, ContractError> {
+        let minter = self.minter.load(deps.storage)?;
+        if minter == info.sender {
+            return Ok(true);
+        } else {
+            return Err(ContractError::Unauthorized {});
         }
     }
 

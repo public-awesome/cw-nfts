@@ -84,6 +84,8 @@ where
         operator: String,
     ) -> Result<Response<C>, Self::Err>;
 
+    fn lock(&self, deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response<C>, Self::Err>;
+
     fn burn(
         &self,
         deps: DepsMut,

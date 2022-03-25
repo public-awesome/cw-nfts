@@ -53,6 +53,9 @@ pub enum ExecuteMsg<T> {
     /// Mint a new NFT, can only be called by the contract minter
     Mint(MintMsg<T>),
 
+    /// Lock contract from updating NFT token uri metadata, can only be called by the contract minter
+    Lock {},
+
     /// Burn an NFT the sender has access to
     Burn { token_id: String },
 }

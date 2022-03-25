@@ -55,6 +55,7 @@ fn proper_instantiation() {
         ContractInfoResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
+            locked: false,
         }
     );
 
