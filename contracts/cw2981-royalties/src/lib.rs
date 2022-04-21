@@ -186,12 +186,12 @@ mod tests {
         let token_id = "Enterprise";
         let mint_msg = MintMsg {
             token_id: token_id.to_string(),
-            owner: "JeanLuc".to_string(),
+            owner: "jeanluc".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
-                royalty_payment_address: Some("JeanLuc".to_string()),
+                royalty_payment_address: Some("jeanluc".to_string()),
                 royalty_percentage: Some(10),
                 ..Metadata::default()
             }),
@@ -221,12 +221,12 @@ mod tests {
         let voyager_token_id = "Voyager";
         let second_mint_msg = MintMsg {
             token_id: voyager_token_id.to_string(),
-            owner: "Janeway".to_string(),
+            owner: "janeway".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Voyager".to_string()),
-                royalty_payment_address: Some("Janeway".to_string()),
+                royalty_payment_address: Some("janeway".to_string()),
                 royalty_percentage: Some(4),
                 ..Metadata::default()
             }),
