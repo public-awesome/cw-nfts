@@ -681,9 +681,9 @@ fn query_tokens_by_owner() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter = String::from("Demeter");
+    let demeter = String::from("demeter");
     let token_id2 = "grow2".to_string();
-    let ceres = String::from("Ceres");
+    let ceres = String::from("ceres");
     let token_id3 = "sing".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {
