@@ -53,18 +53,26 @@ to the given `operator`.
 
 ### Queries
 
-`OwnerOf{token_id}` - Returns the owner of the given token,
-as well as anyone with approval on this particular token.
-If the token is unknown, returns an error. Return type is
-`OwnerResponse{owner}`.
+`OwnerOf{token_id, include_expired}` - Returns the owner of the given token,
+as well as anyone with approval on this particular token. If the token is
+unknown, returns an error. Return type is `OwnerOfResponse`. If
+`include_expired` is set, show expired owners in the results, otherwise, ignore
+them.
 
-`Approved{owner, operator}` - Return operator that can access all of the
-owner's tokens. Return type is `ApprovedResponse`.
+`Approval{token_id, spender, include_expired}` - Return operator that can access
+all of the owner's tokens. Return type is `ApprovalResponse`. If
+`include_expired` is set, show expired owners in the results, otherwise, ignore
+them.
 
-`ApprovedForAll{owner, include_expired}` - List all operators that can
-access all of the owner's tokens. Return type is `ApprovedForAllResponse`.
-If `include_expired` is set, show expired owners in the results, otherwise,
-ignore them.
+`Approvals{token_id, include_expired}` - Return approvals that a token has.
+Return type is `ApprovalsResponse`. If `include_expired` is set, show expired
+owners in the results, otherwise, ignore them.
+
+`AllOperators{owner, include_expired, start_after, limit}` - List all
+operators that can access all of the owner's tokens. Return type is
+`OperatorsResponse`. If `include_expired` is set, show expired owners in the
+results, otherwise, ignore them. If `start_after` is set, then it returns the
+first `limit` tokens after the given one.
 
 `NumTokens{}` - Total number of tokens issued
 
