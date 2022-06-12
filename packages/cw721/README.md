@@ -58,6 +58,9 @@ as well as anyone with approval on this particular token.
 If the token is unknown, returns an error. Return type is
 `OwnerResponse{owner}`.
 
+`Approved{owner, operator}` - Return operator that can access all of the
+owner's tokens. Return type is `ApprovedResponse`.
+
 `ApprovedForAll{owner, include_expired}` - List all operators that can
 access all of the owner's tokens. Return type is `ApprovedForAllResponse`.
 If `include_expired` is set, show expired owners in the results, otherwise,
