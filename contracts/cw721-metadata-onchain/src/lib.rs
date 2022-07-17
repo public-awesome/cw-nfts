@@ -2,7 +2,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Empty;
-use cw721::CustomMsg;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
@@ -26,38 +25,11 @@ pub struct Metadata {
     pub youtube_url: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub enum MyQueryMsg {
-    Test,
-}
-
-impl Default for MyQueryMsg {
-    fn default() -> Self {
-        MyQueryMsg::Test
-    }
-}
-
-impl CustomMsg for MyQueryMsg {}
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub enum MyExecuteMsg {
-    Test,
-}
-
-impl Default for MyExecuteMsg {
-    fn default() -> Self {
-        MyExecuteMsg::Test
-    }
-}
-
-impl CustomMsg for MyExecuteMsg {}
-
 pub type Extension = Option<Metadata>;
 
-pub type Cw721MetadataContract<'a> =
-    cw721_base::Cw721Contract<'a, Extension, Empty, MyExecuteMsg, MyQueryMsg>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, MyExecuteMsg>;
-pub type QueryMsg = cw721_base::QueryMsg<MyQueryMsg>;
+pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
+pub type QueryMsg = cw721_base::QueryMsg<Empty>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -87,9 +59,6 @@ pub mod entry {
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
         match msg {
-            ExecuteMsg::Extension { msg } => match msg {
-                MyExecuteMsg::Test => Ok(Response::default()),
-            },
             _ => Cw721MetadataContract::default().execute(deps, env, info, msg),
         }
     }
@@ -97,9 +66,6 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Extension { msg } => match msg {
-                MyQueryMsg::Test => Ok(Binary::default()),
-            },
             _ => Cw721MetadataContract::default().query(deps, env, msg),
         }
     }

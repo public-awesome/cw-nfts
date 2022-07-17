@@ -48,7 +48,7 @@ pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981Q
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
 
-//#[cfg(not(feature = "library"))]
+#[cfg(not(feature = "library"))]
 pub mod entry {
     use super::*;
 
