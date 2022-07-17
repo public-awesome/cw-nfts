@@ -174,9 +174,7 @@ pub fn execute_receive(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{
-        from_binary, to_binary, CosmosMsg, SubMsgExecutionResponse, SubMsgResult
-    };
+    use cosmwasm_std::{from_binary, to_binary, CosmosMsg, SubMsgExecutionResponse, SubMsgResult};
     use prost::Message;
 
     // Type for replies to contract instantiate messes
