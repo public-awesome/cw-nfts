@@ -58,16 +58,12 @@ pub mod entry {
         info: MessageInfo,
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
-        match msg {
-            _ => Cw721MetadataContract::default().execute(deps, env, info, msg),
-        }
+        Cw721MetadataContract::default().execute(deps, env, info, msg)
     }
 
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
-        match msg {
-            _ => Cw721MetadataContract::default().query(deps, env, msg),
-        }
+        Cw721MetadataContract::default().query(deps, env, msg)
     }
 }
 
