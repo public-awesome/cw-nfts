@@ -110,6 +110,7 @@ where
         Ok(Response::new()
             .add_attribute("action", "mint")
             .add_attribute("minter", info.sender)
+            .add_attribute("owner", msg.owner)
             .add_attribute("token_id", msg.token_id))
     }
 }

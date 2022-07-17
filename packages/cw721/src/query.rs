@@ -13,16 +13,24 @@ pub enum Cw721QueryMsg {
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
     },
-
     /// Return operator that can access all of the owner's tokens.
-    /// Return type: `ApprovedResponse`
-    Approved { owner: String, operator: String },
-
-    /// List all operators that can access all of the owner's tokens.
-    /// Return type: `ApprovedForAllResponse`
-    ApprovedForAll {
+    /// Return type: `ApprovalResponse`
+    Approval {
+        token_id: String,
+        spender: String,
+        include_expired: Option<bool>,
+    },
+    /// Return approvals that a token has
+    /// Return type: `ApprovalsResponse`
+    Approvals {
+        token_id: String,
+        include_expired: Option<bool>,
+    },
+    /// List all operators that can access all of the owner's tokens
+    /// Return type: `OperatorsResponse`
+    AllOperators {
         owner: String,
-        /// unset or false will filter out expired approvals, you must set to true to see them
+        /// unset or false will filter out expired items, you must set to true to see them
         include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
