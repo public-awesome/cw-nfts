@@ -242,7 +242,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -346,7 +346,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -412,7 +412,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: 10,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -453,7 +453,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: 1,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -496,7 +496,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -585,7 +585,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -638,7 +638,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: ContractResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgExecutionResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),

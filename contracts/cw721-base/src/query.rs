@@ -65,7 +65,7 @@ where
     ) -> StdResult<OperatorsResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
         let start_addr = maybe_addr(deps.api, start_after)?;
-        let start = start_addr.map(|addr| Bound::exclusive(addr.as_ref()));
+        let start = start_addr.as_ref().map(Bound::exclusive);
 
         let owner_addr = deps.api.addr_validate(&owner)?;
         let res: StdResult<Vec<_>> = self
@@ -150,7 +150,7 @@ where
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-        let start = start_after.map(Bound::exclusive);
+        let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
         let owner_addr = deps.api.addr_validate(&owner)?;
         let tokens: Vec<String> = self
@@ -160,7 +160,6 @@ where
             .prefix(owner_addr)
             .keys(deps.storage, start, None, Order::Ascending)
             .take(limit)
-            .map(|x| x.map(|addr| addr.to_string()))
             .collect::<StdResult<Vec<_>>>()?;
 
         Ok(TokensResponse { tokens })
@@ -173,7 +172,7 @@ where
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-        let start = start_after.map(Bound::exclusive);
+        let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
         let tokens: StdResult<Vec<String>> = self
             .tokens
