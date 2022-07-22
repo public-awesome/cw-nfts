@@ -8,6 +8,7 @@ use cosmwasm_std::{
     SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw20::Cw20ReceiveMsg;
 use cw721_base::{
     helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
     msg::InstantiateMsg as Cw721InstantiateMsg, Extension, MintMsg,
@@ -124,9 +125,11 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Cw20ReceiveMsg { sender, amount } => {
-            execute_receive(deps, info, sender, amount)
-        }
+        ExecuteMsg::Receive(Cw20ReceiveMsg {
+            sender,
+            amount,
+            msg,
+        }) => execute_receive(deps, info, sender, amount, msg),
     }
 }
 
@@ -135,6 +138,7 @@ pub fn execute_receive(
     info: MessageInfo,
     sender: String,
     amount: Uint128,
+    _msg: Binary,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
     if config.cw20_address != info.sender {
@@ -355,10 +359,11 @@ mod tests {
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
 
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -505,10 +510,11 @@ mod tests {
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
 
         // Max mint is 1, so second mint request should fail
@@ -542,10 +548,11 @@ mod tests {
 
         // Test token transfer when nft contract has not been linked
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
 
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
@@ -595,10 +602,11 @@ mod tests {
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
         // Test token transfer from invalid token contract
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info("unauthorized-token", &[]);
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
 
@@ -648,10 +656,11 @@ mod tests {
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
         // Test token transfer from invalid token contract
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(100),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
 
