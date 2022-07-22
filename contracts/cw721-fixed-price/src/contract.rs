@@ -4,14 +4,14 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdResult, SubMsg, Uint128, WasmMsg,
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response, StdResult,
+    SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
 use cw721_base::{
-    msg::ExecuteMsg as Cw721ExecuteMsg, msg::InstantiateMsg as Cw721InstantiateMsg, Extension,
-    MintMsg,
+    helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
+    msg::InstantiateMsg as Cw721InstantiateMsg, Extension, MintMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -164,24 +164,26 @@ pub fn execute_receive(
         extension: config.extension.clone(),
     });
 
-    let callback = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: config.cw20_address.to_string(),
-        msg: to_binary(&mint_msg)?,
-        funds: vec![],
-    });
+    match config.cw721_address.clone() {
+        Some(cw721) => {
+            let callback = Cw721Contract(cw721).call(mint_msg)?;
+            config.unused_token_id += 1;
+            CONFIG.save(deps.storage, &config)?;
 
-    config.unused_token_id += 1;
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new().add_message(callback))
+            Ok(Response::new().add_message(callback))
+        }
+        None => Err(ContractError::Cw721NotLinked {}),
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_binary, to_binary, SubMsgExecutionResponse, SubMsgResult};
+    use cosmwasm_std::{from_binary, to_binary, CosmosMsg, SubMsgExecutionResponse, SubMsgResult};
     use prost::Message;
+
+    const NFT_CONTRACT_ADDR: &str = "nftcontract";
 
     // Type for replies to contract instantiate messes
     #[derive(Clone, PartialEq, Message)]
@@ -261,7 +263,7 @@ mod tests {
             Config {
                 owner: Addr::unchecked("owner"),
                 cw20_address: msg.cw20_address,
-                cw721_address: Some(Addr::unchecked("nftcontract")),
+                cw721_address: Some(Addr::unchecked(NFT_CONTRACT_ADDR)),
                 max_tokens: msg.max_tokens,
                 unit_price: msg.unit_price,
                 name: msg.name,
@@ -339,7 +341,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -377,7 +379,7 @@ mod tests {
             res.messages[0],
             SubMsg {
                 msg: CosmosMsg::Wasm(WasmMsg::Execute {
-                    contract_addr: String::from(MOCK_CONTRACT_ADDR),
+                    contract_addr: NFT_CONTRACT_ADDR.to_string(),
                     msg: to_binary(&mint_msg).unwrap(),
                     funds: vec![],
                 }),
@@ -406,7 +408,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -447,7 +449,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -490,7 +492,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -581,7 +583,7 @@ mod tests {
         // Link nft token contract using reply
 
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -635,7 +637,7 @@ mod tests {
         // Link nft token contract using reply
 
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
