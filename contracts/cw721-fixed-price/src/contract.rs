@@ -160,14 +160,16 @@ pub fn execute_receive(
         extension: config.extension.clone(),
     });
 
-    if let Some(cw721) = config.cw721_address.clone() {
-        let callback = Cw721Contract(cw721).call(mint_msg)?;
-        config.unused_token_id += 1;
-        CONFIG.save(deps.storage, &config)?;
+    match config.cw721_address.clone() {
+        Some(cw721) => {
+            let callback = Cw721Contract(cw721).call(mint_msg)?;
+            config.unused_token_id += 1;
+            CONFIG.save(deps.storage, &config)?;
 
-        return Ok(Response::new().add_message(callback));
+            Ok(Response::new().add_message(callback))
+        }
+        None => Err(ContractError::Cw721NotLinked {}),
     }
-    Err(ContractError::Cw721NotLinked {})
 }
 
 #[cfg(test)]
