@@ -337,6 +337,26 @@ fn approving_revoking() {
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
 
+    // token owner shows in approval query
+    let res = contract
+        .approval(
+            deps.as_ref(),
+            mock_env(),
+            token_id.clone(),
+            String::from("demeter"),
+            false,
+        )
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from("demeter"),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
     // Give random transferring power
     let approve_msg = ExecuteMsg::Approve {
         spender: String::from("random"),
@@ -663,9 +683,9 @@ fn query_tokens_by_owner() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter = String::from("Demeter");
+    let demeter = String::from("demeter");
     let token_id2 = "grow2".to_string();
-    let ceres = String::from("Ceres");
+    let ceres = String::from("ceres");
     let token_id3 = "sing".to_string();
 
     let mint_msg = ExecuteMsg::Mint(MintMsg::<Extension> {

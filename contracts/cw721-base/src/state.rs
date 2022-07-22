@@ -122,7 +122,7 @@ pub struct TokenIndexes<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    pub owner: MultiIndex<'a, Addr, TokenInfo<T>, Addr>,
+    pub owner: MultiIndex<'a, Addr, TokenInfo<T>, String>,
 }
 
 impl<'a, T> IndexList<TokenInfo<T>> for TokenIndexes<'a, T>
