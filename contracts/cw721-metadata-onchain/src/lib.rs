@@ -2,7 +2,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Empty;
+use cw2::set_contract_version;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
+
+// Version info for migration
+const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
 pub struct Trait {
@@ -37,17 +42,19 @@ pub mod entry {
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
-    // This is a simple type to let us handle empty extensions
-
     // This makes a conscious choice on the various generics used by the contract
     #[entry_point]
     pub fn instantiate(
-        deps: DepsMut,
+        mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
-        Cw721MetadataContract::default().instantiate(deps, env, info, msg)
+    ) -> Result<Response, ContractError> {
+        let res = Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)?;
+        // Explicitly set contract name and version, otherwise set to cw721-base info
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
+            .map_err(ContractError::Std)?;
+        Ok(res)
     }
 
     #[entry_point]
