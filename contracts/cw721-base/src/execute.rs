@@ -10,7 +10,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
-// version info for migration info
+// Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 

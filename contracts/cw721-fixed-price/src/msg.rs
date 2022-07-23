@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, Uint128};
+use cw20::Cw20ReceiveMsg;
 use cw721_base::Extension;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -19,7 +20,7 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Cw20ReceiveMsg { sender: String, amount: Uint128 },
+    Receive(Cw20ReceiveMsg),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

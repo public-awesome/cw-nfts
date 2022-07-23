@@ -15,7 +15,7 @@ use crate::msg::{MinterResponse, QueryMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 const DEFAULT_LIMIT: u32 = 10;
-const MAX_LIMIT: u32 = 30;
+const MAX_LIMIT: u32 = 100;
 
 impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
 where

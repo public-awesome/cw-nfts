@@ -167,6 +167,27 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Burn an NFT the sender has access to",
+      "type": "object",
+      "required": [
+        "burn"
+      ],
+      "properties": {
+        "burn": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "token_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {

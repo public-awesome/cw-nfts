@@ -8,9 +8,10 @@ use cosmwasm_std::{
     Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
+use cw20::Cw20ReceiveMsg;
 use cw721_base::{
-    msg::ExecuteMsg as Cw721ExecuteMsg, msg::InstantiateMsg as Cw721InstantiateMsg, Extension,
-    MintMsg,
+    helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
+    msg::InstantiateMsg as Cw721InstantiateMsg, Extension, MintMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -124,9 +125,11 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Cw20ReceiveMsg { sender, amount } => {
-            execute_receive(deps, info, sender, amount)
-        }
+        ExecuteMsg::Receive(Cw20ReceiveMsg {
+            sender,
+            amount,
+            msg,
+        }) => execute_receive(deps, info, sender, amount, msg),
     }
 }
 
@@ -135,6 +138,7 @@ pub fn execute_receive(
     info: MessageInfo,
     sender: String,
     amount: Uint128,
+    _msg: Binary,
 ) -> Result<Response, ContractError> {
     let mut config = CONFIG.load(deps.storage)?;
     if config.cw20_address != info.sender {
@@ -160,24 +164,26 @@ pub fn execute_receive(
         extension: config.extension.clone(),
     });
 
-    let callback = CosmosMsg::Wasm(WasmMsg::Execute {
-        contract_addr: config.cw20_address.to_string(),
-        msg: to_binary(&mint_msg)?,
-        funds: vec![],
-    });
+    match config.cw721_address.clone() {
+        Some(cw721) => {
+            let callback = Cw721Contract(cw721).call(mint_msg)?;
+            config.unused_token_id += 1;
+            CONFIG.save(deps.storage, &config)?;
 
-    config.unused_token_id += 1;
-    CONFIG.save(deps.storage, &config)?;
-
-    Ok(Response::new().add_message(callback))
+            Ok(Response::new().add_message(callback))
+        }
+        None => Err(ContractError::Cw721NotLinked {}),
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_binary, to_binary, SubMsgExecutionResponse, SubMsgResult};
+    use cosmwasm_std::{from_binary, to_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
     use prost::Message;
+
+    const NFT_CONTRACT_ADDR: &str = "nftcontract";
 
     // Type for replies to contract instantiate messes
     #[derive(Clone, PartialEq, Message)]
@@ -242,7 +248,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -257,7 +263,7 @@ mod tests {
             Config {
                 owner: Addr::unchecked("owner"),
                 cw20_address: msg.cw20_address,
-                cw721_address: Some(Addr::unchecked("nftcontract")),
+                cw721_address: Some(Addr::unchecked(NFT_CONTRACT_ADDR)),
                 max_tokens: msg.max_tokens,
                 unit_price: msg.unit_price,
                 name: msg.name,
@@ -335,7 +341,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -346,17 +352,18 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
 
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -372,7 +379,7 @@ mod tests {
             res.messages[0],
             SubMsg {
                 msg: CosmosMsg::Wasm(WasmMsg::Execute {
-                    contract_addr: String::from(MOCK_CONTRACT_ADDR),
+                    contract_addr: NFT_CONTRACT_ADDR.to_string(),
                     msg: to_binary(&mint_msg).unwrap(),
                     funds: vec![],
                 }),
@@ -401,7 +408,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -412,7 +419,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: 10,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -442,7 +449,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -453,7 +460,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: 1,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -485,7 +492,7 @@ mod tests {
         let info = mock_info("owner", &[]);
         instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -496,17 +503,18 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
 
         // Max mint is 1, so second mint request should fail
@@ -540,10 +548,11 @@ mod tests {
 
         // Test token transfer when nft contract has not been linked
 
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
 
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
@@ -574,7 +583,7 @@ mod tests {
         // Link nft token contract using reply
 
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -585,7 +594,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -593,10 +602,11 @@ mod tests {
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
         // Test token transfer from invalid token contract
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(1),
-        };
+            msg: [].into(),
+        });
         let info = mock_info("unauthorized-token", &[]);
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
 
@@ -627,7 +637,7 @@ mod tests {
         // Link nft token contract using reply
 
         let instantiate_reply = MsgInstantiateContractResponse {
-            contract_address: "nftcontract".to_string(),
+            contract_address: NFT_CONTRACT_ADDR.to_string(),
             data: vec![2u8; 32769],
         };
         let mut encoded_instantiate_reply =
@@ -638,7 +648,7 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
-            result: SubMsgResult::Ok(SubMsgExecutionResponse {
+            result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
             }),
@@ -646,10 +656,11 @@ mod tests {
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
 
         // Test token transfer from invalid token contract
-        let msg = ExecuteMsg::Cw20ReceiveMsg {
+        let msg = ExecuteMsg::Receive(Cw20ReceiveMsg {
             sender: String::from("minter"),
             amount: Uint128::new(100),
-        };
+            msg: [].into(),
+        });
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
 
