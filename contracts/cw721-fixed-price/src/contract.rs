@@ -46,8 +46,7 @@ pub fn instantiate(
         unit_price: msg.unit_price,
         max_tokens: msg.max_tokens,
         owner: info.sender,
-        name: msg.name.clone(),
-        symbol: msg.symbol.clone(),
+        collection_uri: msg.collection_uri.clone(),
         token_uri: msg.token_uri.clone(),
         extension: msg.extension.clone(),
         unused_token_id: 0,
@@ -58,9 +57,9 @@ pub fn instantiate(
     let sub_msg: Vec<SubMsg> = vec![SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.token_code_id,
-            msg: to_binary(&Cw721InstantiateMsg {
-                name: msg.name.clone(),
-                symbol: msg.symbol,
+            msg: to_binary(&Cw721InstantiateMsg::<Empty> {
+                collection_uri: msg.collection_uri,
+                metadata: Empty {},
                 minter: env.contract.address.to_string(),
             })?,
             funds: vec![],
@@ -111,8 +110,7 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
         cw721_address: config.cw721_address,
         max_tokens: config.max_tokens,
         unit_price: config.unit_price,
-        name: config.name,
-        symbol: config.symbol,
+        collection_uri: config.collection_uri,
         token_uri: config.token_uri,
         extension: config.extension,
         unused_token_id: config.unused_token_id,
@@ -169,7 +167,8 @@ pub fn execute_receive(
     match config.cw721_address.clone() {
         Some(cw721) => {
             let callback =
-                Cw721Contract::<Empty, Empty>(cw721, PhantomData, PhantomData).call(mint_msg)?;
+                Cw721Contract::<Empty, Empty, Empty>(cw721, PhantomData, PhantomData, PhantomData)
+                    .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
 
@@ -187,6 +186,7 @@ mod tests {
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
+    const CONTRACT_URI: &str = "https://example.com/example.jpg";
 
     // Type for replies to contract instantiate messes
     #[derive(Clone, PartialEq, Message)]
@@ -204,8 +204,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -222,9 +221,9 @@ mod tests {
             vec![SubMsg {
                 msg: WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
-                    msg: to_binary(&Cw721InstantiateMsg {
-                        name: msg.name.clone(),
-                        symbol: msg.symbol.clone(),
+                    msg: to_binary(&Cw721InstantiateMsg::<Empty> {
+                        collection_uri: String::from(CONTRACT_URI),
+                        metadata: Empty {},
                         minter: MOCK_CONTRACT_ADDR.to_string(),
                     })
                     .unwrap(),
@@ -269,8 +268,7 @@ mod tests {
                 cw721_address: Some(Addr::unchecked(NFT_CONTRACT_ADDR)),
                 max_tokens: msg.max_tokens,
                 unit_price: msg.unit_price,
-                name: msg.name,
-                symbol: msg.symbol,
+                collection_uri: String::from(CONTRACT_URI),
                 token_uri: msg.token_uri,
                 extension: None,
                 unused_token_id: 0
@@ -285,8 +283,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(0),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -309,8 +306,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 0,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -333,8 +329,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -400,8 +395,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -441,8 +435,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -484,8 +477,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -538,8 +530,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -572,8 +563,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
@@ -626,8 +616,7 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
-            name: String::from("SYNTH"),
-            symbol: String::from("SYNTH"),
+            collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),

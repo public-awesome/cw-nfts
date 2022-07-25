@@ -31,7 +31,8 @@ pub struct Metadata {
 
 pub type Extension = Option<Metadata>;
 
-pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>;
+pub type Cw721MetadataContract<'a> =
+    cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty, Empty>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Empty>;
 
@@ -48,7 +49,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<Empty>,
     ) -> Result<Response, ContractError> {
         let res = Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)?;
         // Explicitly set contract name and version, otherwise set to cw721-base info
@@ -81,6 +82,7 @@ mod tests {
     use cw721::Cw721Query;
 
     const CREATOR: &str = "creator";
+    const CONTRACT_URI: &str = "https://example.com/example.jpg";
 
     #[test]
     fn use_metadata_extension() {
@@ -88,9 +90,9 @@ mod tests {
         let contract = Cw721MetadataContract::default();
 
         let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
-            name: "SpaceShips".to_string(),
-            symbol: "SPACE".to_string(),
+        let init_msg = InstantiateMsg::<Empty> {
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: Empty {},
             minter: CREATOR.to_string(),
         };
         contract

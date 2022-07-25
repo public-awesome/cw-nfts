@@ -48,7 +48,7 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
+pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Empty, Cw2981QueryMsg>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
 
@@ -64,7 +64,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<Empty>,
     ) -> Result<Response, ContractError> {
         let res = Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)?;
         // Explicitly set contract name and version, otherwise set to cw721-base info
@@ -109,6 +109,7 @@ mod tests {
     use cw721::Cw721Query;
 
     const CREATOR: &str = "creator";
+    const CONTRACT_URI: &str = "https://example.com/example.jpg";
 
     #[test]
     fn use_metadata_extension() {
@@ -116,9 +117,9 @@ mod tests {
         let contract = Cw2981Contract::default();
 
         let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
-            name: "SpaceShips".to_string(),
-            symbol: "SPACE".to_string(),
+        let init_msg = InstantiateMsg::<Empty> {
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: Empty {},
             minter: CREATOR.to_string(),
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -148,9 +149,9 @@ mod tests {
         let _contract = Cw2981Contract::default();
 
         let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
-            name: "SpaceShips".to_string(),
-            symbol: "SPACE".to_string(),
+        let init_msg = InstantiateMsg::<Empty> {
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: Empty {},
             minter: CREATOR.to_string(),
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -189,9 +190,9 @@ mod tests {
         let mut deps = mock_dependencies();
 
         let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
-            name: "SpaceShips".to_string(),
-            symbol: "SPACE".to_string(),
+        let init_msg = InstantiateMsg::<Empty> {
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: Empty {},
             minter: CREATOR.to_string(),
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();

@@ -29,7 +29,7 @@ fn main() {
     export_schema(&schema_for!(ApprovalResponse), &out_dir);
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
-    export_schema(&schema_for!(ContractInfoResponse), &out_dir);
+    export_schema(&schema_for!(ContractInfoResponse<Empty>), &out_dir);
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema_with_title(
         &schema_for!(NftInfoResponse<Extension>),
