@@ -3,12 +3,13 @@ use cosmwasm_std::Binary;
 use cw721::Expiration;
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    /// Name of the NFT contract
-    pub name: String,
-    /// Symbol of the NFT contract
-    pub symbol: String,
-
+pub struct InstantiateMsg<I> {
+    /// Universal resource identifier for this NFT Collection
+    /// Should point to a JSON file that conforms to contract level metadata
+    /// schema: https://docs.opensea.io/docs/contract-level-metadata
+    pub collection_uri: String,
+    /// Metadata extension for custom on-chain metadata
+    pub metadata: I,
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs

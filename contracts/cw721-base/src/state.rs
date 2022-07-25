@@ -3,18 +3,19 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, StdResult, Storage};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 
-use cw721::{ContractInfoResponse, CustomMsg, Cw721, Expiration};
+use cw721::{ContractInfoResponse, Cw721, Cw721Query, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, C, E, Q>
+pub struct Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    I: CustomMsg + DeserializeOwned,
     Q: CustomMsg,
     E: CustomMsg,
 {
-    pub contract_info: Item<'a, ContractInfoResponse>,
+    pub contract_info: Item<'a, ContractInfoResponse<I>>,
     pub minter: Item<'a, Addr>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
@@ -22,23 +23,27 @@ where
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
 
     pub(crate) _custom_response: PhantomData<C>,
+    pub(crate) _custom_instantiate: PhantomData<I>,
     pub(crate) _custom_query: PhantomData<Q>,
     pub(crate) _custom_execute: PhantomData<E>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, C, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
+    Cw721Contract<'a, T, C, I, E, Q>: Cw721Query<T, C>,
 {
 }
 
-impl<T, C, E, Q> Default for Cw721Contract<'static, T, C, E, Q>
+impl<T, C, I, E, Q> Default for Cw721Contract<'static, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
@@ -54,9 +59,10 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
@@ -80,6 +86,7 @@ where
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
             _custom_query: PhantomData,
+            _custom_instantiate: PhantomData,
         }
     }
 

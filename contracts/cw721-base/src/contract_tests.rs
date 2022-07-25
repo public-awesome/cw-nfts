@@ -1,11 +1,15 @@
 #![cfg(test)]
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
+use cosmwasm_std::{
+    from_binary, to_binary, CosmosMsg, CustomMsg, DepsMut, Empty, Response, WasmMsg,
+};
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
     NftInfoResponse, OperatorsResponse, OwnerOfResponse,
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MintMsg, QueryMsg,
@@ -13,13 +17,16 @@ use crate::{
 
 const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
+const CONTRACT_URI: &str = "https://example.com/example.jpg";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty, Empty, Empty> {
+fn setup_contract(
+    deps: DepsMut<'_>,
+) -> Cw721Contract<'static, Extension, Empty, Empty, Empty, Empty> {
     let contract = Cw721Contract::default();
-    let msg = InstantiateMsg {
-        name: CONTRACT_NAME.to_string(),
-        symbol: SYMBOL.to_string(),
+    let msg = InstantiateMsg::<Empty> {
+        collection_uri: String::from(CONTRACT_URI),
+        metadata: Empty {},
         minter: String::from(MINTER),
     };
     let info = mock_info("creator", &[]);
@@ -31,11 +38,10 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty,
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
-
-    let msg = InstantiateMsg {
-        name: CONTRACT_NAME.to_string(),
-        symbol: SYMBOL.to_string(),
+    let contract = Cw721Contract::<Extension, Empty, Empty, Empty, Empty>::default();
+    let msg = InstantiateMsg::<Empty> {
+        collection_uri: String::from(CONTRACT_URI),
+        metadata: Empty {},
         minter: String::from(MINTER),
     };
     let info = mock_info("creator", &[]);
@@ -53,8 +59,8 @@ fn proper_instantiation() {
     assert_eq!(
         info,
         ContractInfoResponse {
-            name: CONTRACT_NAME.to_string(),
-            symbol: SYMBOL.to_string(),
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: Empty {},
         }
     );
 
@@ -64,6 +70,51 @@ fn proper_instantiation() {
     // list the token_ids
     let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
     assert_eq!(0, tokens.tokens.len());
+}
+
+#[test]
+fn custom_contract_info() {
+    let mut deps = mock_dependencies();
+
+    // Define a custom metadata struct
+    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
+    pub struct ERC721Metadata {
+        pub name: String,
+        pub symbol: String,
+    }
+    impl CustomMsg for ERC721Metadata {}
+
+    // Instantiate a contract with custom contract metadata extension
+    let contract = Cw721Contract::<Extension, Empty, ERC721Metadata, Empty, Empty>::default();
+
+    let msg = InstantiateMsg::<ERC721Metadata> {
+        collection_uri: String::from(CONTRACT_URI),
+        metadata: ERC721Metadata {
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
+        },
+        minter: String::from(MINTER),
+    };
+    let info = mock_info("creator", &[]);
+
+    // we can just call .unwrap() to assert this was a success
+    let res = contract
+        .instantiate(deps.as_mut(), mock_env(), info, msg)
+        .unwrap();
+    assert_eq!(0, res.messages.len());
+
+    // it worked, let's query the state
+    let info = contract.contract_info(deps.as_ref()).unwrap();
+    assert_eq!(
+        info,
+        ContractInfoResponse::<ERC721Metadata> {
+            collection_uri: String::from(CONTRACT_URI),
+            metadata: ERC721Metadata {
+                name: CONTRACT_NAME.to_string(),
+                symbol: SYMBOL.to_string(),
+            },
+        }
+    );
 }
 
 #[test]

@@ -1,10 +1,10 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
 use cw2::set_contract_version;
-use cw721::{ContractInfoResponse, CustomMsg, Cw721Execute, Cw721ReceiveMsg, Expiration};
+use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
@@ -14,10 +14,11 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
@@ -26,13 +27,13 @@ where
         deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<I>,
     ) -> StdResult<Response<C>> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        let info = ContractInfoResponse {
-            name: msg.name,
-            symbol: msg.symbol,
+        let info = ContractInfoResponse::<I> {
+            collection_uri: msg.collection_uri,
+            metadata: msg.metadata,
         };
         self.contract_info.save(deps.storage, &info)?;
         let minter = deps.api.addr_validate(&msg.minter)?;
@@ -76,11 +77,11 @@ where
     }
 }
 
-// TODO pull this into some sort of trait extension??
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
@@ -120,10 +121,11 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
@@ -271,10 +273,11 @@ where
 }
 
 // helpers
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {

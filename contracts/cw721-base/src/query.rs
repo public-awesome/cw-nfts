@@ -1,11 +1,13 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdError, StdResult};
+use cosmwasm_std::{
+    to_binary, Addr, Binary, BlockInfo, CustomMsg, Deps, Env, Order, StdError, StdResult,
+};
 
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, CustomMsg,
-    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
+    Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
     TokensResponse,
 };
 use cw_storage_plus::Bound;
@@ -17,14 +19,15 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Query<T, I> for Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<I>> {
         self.contract_info.load(deps.storage)
     }
 
@@ -207,10 +210,11 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    I: CustomMsg + DeserializeOwned,
     E: CustomMsg,
     Q: CustomMsg,
 {

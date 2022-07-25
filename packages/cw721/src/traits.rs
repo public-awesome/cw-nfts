@@ -1,4 +1,3 @@
-use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -7,15 +6,10 @@ use crate::{
     AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
 
-// TODO: move this somewhere else... ideally cosmwasm-std
-pub trait CustomMsg: Clone + std::fmt::Debug + PartialEq + JsonSchema {}
-
-impl CustomMsg for Empty {}
-
-pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T>
+pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
@@ -93,14 +87,15 @@ where
     ) -> Result<Response<C>, Self::Err>;
 }
 
-pub trait Cw721Query<T>
+pub trait Cw721Query<T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
+    I: CustomMsg,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse>;
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<I>>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 
