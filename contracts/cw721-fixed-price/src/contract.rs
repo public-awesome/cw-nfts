@@ -58,7 +58,7 @@ pub fn instantiate(
         msg: WasmMsg::Instantiate {
             code_id: msg.token_code_id,
             msg: to_binary(&Cw721InstantiateMsg::<Empty> {
-                collection_uri: msg.collection_uri,
+                collection_uri: Some(msg.collection_uri),
                 metadata: Empty {},
                 minter: env.contract.address.to_string(),
             })?,
@@ -222,7 +222,7 @@ mod tests {
                 msg: WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
                     msg: to_binary(&Cw721InstantiateMsg::<Empty> {
-                        collection_uri: String::from(CONTRACT_URI),
+                        collection_uri: Some(String::from(CONTRACT_URI)),
                         metadata: Empty {},
                         minter: MOCK_CONTRACT_ADDR.to_string(),
                     })

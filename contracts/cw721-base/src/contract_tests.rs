@@ -25,7 +25,7 @@ fn setup_contract(
 ) -> Cw721Contract<'static, Extension, Empty, Empty, Empty, Empty> {
     let contract = Cw721Contract::default();
     let msg = InstantiateMsg::<Empty> {
-        collection_uri: String::from(CONTRACT_URI),
+        collection_uri: Some(String::from(CONTRACT_URI)),
         metadata: Empty {},
         minter: String::from(MINTER),
     };
@@ -40,7 +40,7 @@ fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<Extension, Empty, Empty, Empty, Empty>::default();
     let msg = InstantiateMsg::<Empty> {
-        collection_uri: String::from(CONTRACT_URI),
+        collection_uri: Some(String::from(CONTRACT_URI)),
         metadata: Empty {},
         minter: String::from(MINTER),
     };
@@ -59,7 +59,7 @@ fn proper_instantiation() {
     assert_eq!(
         info,
         ContractInfoResponse {
-            collection_uri: String::from(CONTRACT_URI),
+            collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: Empty {},
         }
     );
@@ -88,7 +88,7 @@ fn custom_contract_info() {
     let contract = Cw721Contract::<Extension, Empty, ERC721Metadata, Empty, Empty>::default();
 
     let msg = InstantiateMsg::<ERC721Metadata> {
-        collection_uri: String::from(CONTRACT_URI),
+        collection_uri: Some(String::from(CONTRACT_URI)),
         metadata: ERC721Metadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
@@ -108,7 +108,7 @@ fn custom_contract_info() {
     assert_eq!(
         info,
         ContractInfoResponse::<ERC721Metadata> {
-            collection_uri: String::from(CONTRACT_URI),
+            collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: ERC721Metadata {
                 name: CONTRACT_NAME.to_string(),
                 symbol: SYMBOL.to_string(),

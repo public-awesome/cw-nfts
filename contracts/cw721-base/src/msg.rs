@@ -7,7 +7,7 @@ pub struct InstantiateMsg<I> {
     /// Universal resource identifier for this NFT Collection
     /// Should point to a JSON file that conforms to contract level metadata
     /// schema: https://docs.opensea.io/docs/contract-level-metadata
-    pub collection_uri: String,
+    pub collection_uri: Option<String>,
     /// Metadata extension for custom on-chain metadata
     pub metadata: I,
     /// The minter is the only one who can create new NFTs.

@@ -3,16 +3,18 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
+    "collection_uri",
     "cw20_address",
     "max_tokens",
-    "name",
     "owner",
-    "symbol",
     "token_code_id",
     "token_uri",
     "unit_price"
   ],
   "properties": {
+    "collection_uri": {
+      "type": "string"
+    },
     "cw20_address": {
       "$ref": "#/definitions/Addr"
     },
@@ -31,14 +33,8 @@
       "format": "uint32",
       "minimum": 0.0
     },
-    "name": {
-      "type": "string"
-    },
     "owner": {
       "$ref": "#/definitions/Addr"
-    },
-    "symbol": {
-      "type": "string"
     },
     "token_code_id": {
       "type": "integer",

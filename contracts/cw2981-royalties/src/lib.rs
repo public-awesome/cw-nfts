@@ -118,7 +118,7 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = InstantiateMsg::<Empty> {
-            collection_uri: String::from(CONTRACT_URI),
+            collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: Empty {},
             minter: CREATOR.to_string(),
         };
@@ -150,7 +150,7 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = InstantiateMsg::<Empty> {
-            collection_uri: String::from(CONTRACT_URI),
+            collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: Empty {},
             minter: CREATOR.to_string(),
         };
@@ -191,7 +191,7 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = InstantiateMsg::<Empty> {
-            collection_uri: String::from(CONTRACT_URI),
+            collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: Empty {},
             minter: CREATOR.to_string(),
         };
