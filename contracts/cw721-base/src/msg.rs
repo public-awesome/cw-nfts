@@ -4,6 +4,10 @@ use cw721::Expiration;
 
 #[cw_serde]
 pub struct InstantiateMsg<I> {
+    /// Name of the NFT contract
+    pub name: String,
+    /// Part of the OG ERC721 standard even though no one uses it
+    pub symbol: String,
     /// Universal resource identifier for this NFT Collection
     /// Should point to a JSON file that conforms to contract level metadata
     /// schema: https://docs.opensea.io/docs/contract-level-metadata

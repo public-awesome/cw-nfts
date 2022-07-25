@@ -6,7 +6,9 @@
     "collection_uri",
     "cw20_address",
     "max_tokens",
+    "name",
     "owner",
+    "symbol",
     "token_uri",
     "unit_price",
     "unused_token_id"
@@ -43,8 +45,14 @@
       "format": "uint32",
       "minimum": 0.0
     },
+    "name": {
+      "type": "string"
+    },
     "owner": {
       "$ref": "#/definitions/Addr"
+    },
+    "symbol": {
+      "type": "string"
     },
     "token_uri": {
       "type": "string"

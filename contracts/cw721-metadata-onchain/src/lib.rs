@@ -82,7 +82,9 @@ mod tests {
     use cw721::Cw721Query;
 
     const CREATOR: &str = "creator";
+    const CONTRACT_NAME: &str = "Magic Power";
     const CONTRACT_URI: &str = "https://example.com/example.jpg";
+    const SYMBOL: &str = "MGK";
 
     #[test]
     fn use_metadata_extension() {
@@ -91,6 +93,8 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = InstantiateMsg::<Empty> {
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: Some(String::from(CONTRACT_URI)),
             metadata: Empty {},
             minter: CREATOR.to_string(),

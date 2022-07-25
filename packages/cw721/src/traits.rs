@@ -87,15 +87,15 @@ where
     ) -> Result<Response<C>, Self::Err>;
 }
 
-pub trait Cw721Query<T, I>
+pub trait Cw721Query<T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
-    I: CustomMsg,
+    C: CustomMsg,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<I>>;
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<C>>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 

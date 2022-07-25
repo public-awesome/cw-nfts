@@ -32,6 +32,8 @@ where
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         let info = ContractInfoResponse::<I> {
+            name: msg.name,
+            symbol: msg.symbol,
             collection_uri: msg.collection_uri,
             metadata: msg.metadata,
         };

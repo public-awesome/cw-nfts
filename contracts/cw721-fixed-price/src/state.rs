@@ -10,6 +10,8 @@ pub struct Config {
     pub cw721_address: Option<Addr>,
     pub max_tokens: u32,
     pub unit_price: Uint128,
+    pub name: String,
+    pub symbol: String,
     pub collection_uri: String,
     pub token_uri: String,
     pub extension: Extension,

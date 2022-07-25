@@ -46,6 +46,8 @@ pub fn instantiate(
         unit_price: msg.unit_price,
         max_tokens: msg.max_tokens,
         owner: info.sender,
+        name: msg.name.clone(),
+        symbol: msg.symbol.clone(),
         collection_uri: msg.collection_uri.clone(),
         token_uri: msg.token_uri.clone(),
         extension: msg.extension.clone(),
@@ -58,6 +60,8 @@ pub fn instantiate(
         msg: WasmMsg::Instantiate {
             code_id: msg.token_code_id,
             msg: to_binary(&Cw721InstantiateMsg::<Empty> {
+                name: msg.name,
+                symbol: msg.symbol,
                 collection_uri: Some(msg.collection_uri),
                 metadata: Empty {},
                 minter: env.contract.address.to_string(),
@@ -110,6 +114,8 @@ fn query_config(deps: Deps) -> StdResult<ConfigResponse> {
         cw721_address: config.cw721_address,
         max_tokens: config.max_tokens,
         unit_price: config.unit_price,
+        name: config.name,
+        symbol: config.symbol,
         collection_uri: config.collection_uri,
         token_uri: config.token_uri,
         extension: config.extension,
@@ -186,7 +192,9 @@ mod tests {
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
+    const CONTRACT_NAME: &str = "Magic Power";
     const CONTRACT_URI: &str = "https://example.com/example.jpg";
+    const SYMBOL: &str = "MGK";
 
     // Type for replies to contract instantiate messes
     #[derive(Clone, PartialEq, Message)]
@@ -204,6 +212,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -222,6 +232,8 @@ mod tests {
                 msg: WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
                     msg: to_binary(&Cw721InstantiateMsg::<Empty> {
+                        name: CONTRACT_NAME.to_string(),
+                        symbol: SYMBOL.to_string(),
                         collection_uri: Some(String::from(CONTRACT_URI)),
                         metadata: Empty {},
                         minter: MOCK_CONTRACT_ADDR.to_string(),
@@ -268,6 +280,8 @@ mod tests {
                 cw721_address: Some(Addr::unchecked(NFT_CONTRACT_ADDR)),
                 max_tokens: msg.max_tokens,
                 unit_price: msg.unit_price,
+                name: msg.name,
+                symbol: msg.symbol,
                 collection_uri: String::from(CONTRACT_URI),
                 token_uri: msg.token_uri,
                 extension: None,
@@ -283,6 +297,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(0),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -306,6 +322,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 0,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -329,6 +347,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -395,6 +415,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -435,6 +457,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -477,6 +501,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -530,6 +556,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -563,6 +591,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
@@ -616,6 +646,8 @@ mod tests {
             owner: Addr::unchecked("owner"),
             max_tokens: 1,
             unit_price: Uint128::new(1),
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
             collection_uri: String::from(CONTRACT_URI),
             token_code_id: 10u64,
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
