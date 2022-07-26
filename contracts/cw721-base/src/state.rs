@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 
-use cw721::{ContractInfoResponse, Cw721, Cw721Query, Expiration};
+use cw721::{ContractInfoResponse, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 pub struct Cw721Contract<'a, T, C, I, E, Q>
@@ -26,18 +26,6 @@ where
     pub(crate) _custom_instantiate: PhantomData<I>,
     pub(crate) _custom_query: PhantomData<Q>,
     pub(crate) _custom_execute: PhantomData<E>,
-}
-
-// This is a signal, the implementations are in other files
-impl<'a, T, C, I, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, I, E, Q>
-where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
-    Cw721Contract<'a, T, C, I, E, Q>: Cw721Query<T, C>,
-{
 }
 
 impl<T, C, I, E, Q> Default for Cw721Contract<'static, T, C, I, E, Q>
