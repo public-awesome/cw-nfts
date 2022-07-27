@@ -125,8 +125,7 @@ where
     }
 }
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Execute<MintExt, ResponseExt>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt> Cw721Execute<ResponseExt>
     for Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
