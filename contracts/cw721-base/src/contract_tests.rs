@@ -128,6 +128,124 @@ fn custom_contract_info() {
 }
 
 #[test]
+fn custom_query_extension() {
+    let mut deps = mock_dependencies();
+
+    // Define a custom query ext
+    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    pub enum QueryExt {
+        AdditionalQuery {},
+    }
+    impl CustomMsg for QueryExt {}
+
+    // Instantiate a contract with custom query extension
+    let contract = Cw721Contract::<Extension, Empty, Empty, Empty, QueryExt>::default();
+    let msg = InstantiateMsg::<Empty> {
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        collection_uri: Some(String::from(CONTRACT_URI)),
+        metadata: Empty {},
+        minter: String::from(MINTER),
+    };
+    let info = mock_info("creator", &[]);
+    let res = contract.instantiate(deps.as_mut(), mock_env(), info, msg);
+    assert!(res.is_ok());
+
+    // New query returns a default Ok response
+    // This query extension would have to be implemented to return an actual value
+    // See the cw2981-royalties contract for an example of this
+    let query_msg = QueryMsg::Extension {
+        msg: QueryExt::AdditionalQuery {},
+    };
+    let res = contract.query(deps.as_ref(), mock_env(), query_msg);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn custom_execute_extension() {
+    let mut deps = mock_dependencies();
+
+    // Define a custom execute ext
+    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    pub enum ExecuteExt {
+        AdditionalExecute {},
+    }
+    impl CustomMsg for ExecuteExt {}
+
+    // Instantiate a contract with custom execute extension
+    let contract = Cw721Contract::<Extension, Empty, Empty, ExecuteExt, Empty>::default();
+    let msg = InstantiateMsg::<Empty> {
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        collection_uri: Some(String::from(CONTRACT_URI)),
+        metadata: Empty {},
+        minter: String::from(MINTER),
+    };
+    let info = mock_info("creator", &[]);
+    let res = contract.instantiate(deps.as_mut(), mock_env(), info.clone(), msg);
+    assert!(res.is_ok());
+
+    // New execute method returns a default Ok response and does nothing
+    // This execute extension would have to be implemented to update contract state
+    let execute_msg = ExecuteMsg::Extension {
+        msg: ExecuteExt::AdditionalExecute {},
+    };
+    let res = contract.execute(deps.as_mut(), mock_env(), info, execute_msg);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn custom_mint_extension() {
+    let mut deps = mock_dependencies();
+
+    // Define a custom mint ext
+    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    pub struct MintExt {
+        creator: String,
+    }
+    impl CustomMsg for MintExt {}
+
+    // Instantiate a contract with custom mint extension
+    let contract = Cw721Contract::<MintExt, Empty, Empty, Empty, Empty>::default();
+    let msg = InstantiateMsg::<Empty> {
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        collection_uri: Some(String::from(CONTRACT_URI)),
+        metadata: Empty {},
+        minter: String::from(MINTER),
+    };
+    let info = mock_info(MINTER, &[]);
+    let res = contract.instantiate(deps.as_mut(), mock_env(), info.clone(), msg);
+    assert!(res.is_ok());
+
+    // Now let's mint an NFT
+    let token_id = "petrify".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
+    let mint_msg = ExecuteMsg::<MintExt, Empty>::Mint(MintMsg::<MintExt> {
+        token_id: token_id.clone(),
+        owner: String::from("medusa"),
+        token_uri: Some(token_uri.clone()),
+        extension: MintExt {
+            creator: String::from("creeator"),
+        },
+    });
+    let res = contract.execute(deps.as_mut(), mock_env(), info, mint_msg);
+    assert!(res.is_ok());
+
+    // Check that the NFT info query now includes the extension
+    let info = contract.nft_info(deps.as_ref(), token_id).unwrap();
+    assert_eq!(
+        info,
+        NftInfoResponse::<MintExt> {
+            token_uri: Some(token_uri),
+            extension: MintExt {
+                creator: String::from("creeator"),
+            },
+        }
+    );
+}
+
+#[test]
 fn minting() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
