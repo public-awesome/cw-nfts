@@ -84,22 +84,20 @@ fn custom_contract_info() {
 
     // Define a custom metadata struct
     #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
-    pub struct ERC721Metadata {
-        pub name: String,
-        pub symbol: String,
+    pub struct ContractMetadataExt {
+        pub creator: String,
     }
-    impl CustomMsg for ERC721Metadata {}
+    impl CustomMsg for ContractMetadataExt {}
 
     // Instantiate a contract with custom contract metadata extension
-    let contract = Cw721Contract::<Extension, Empty, ERC721Metadata, Empty, Empty>::default();
+    let contract = Cw721Contract::<Extension, Empty, ContractMetadataExt, Empty, Empty>::default();
 
-    let msg = InstantiateMsg::<ERC721Metadata> {
+    let msg = InstantiateMsg::<ContractMetadataExt> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         collection_uri: Some(String::from(CONTRACT_URI)),
-        metadata: ERC721Metadata {
-            name: CONTRACT_NAME.to_string(),
-            symbol: SYMBOL.to_string(),
+        metadata: ContractMetadataExt {
+            creator: String::from(MINTER),
         },
         minter: String::from(MINTER),
     };
@@ -115,13 +113,12 @@ fn custom_contract_info() {
     let info = contract.contract_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
-        ContractInfoResponse::<ERC721Metadata> {
+        ContractInfoResponse::<ContractMetadataExt> {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             collection_uri: Some(String::from(CONTRACT_URI)),
-            metadata: ERC721Metadata {
-                name: CONTRACT_NAME.to_string(),
-                symbol: SYMBOL.to_string(),
+            metadata: ContractMetadataExt {
+                creator: String::from(MINTER)
             },
         }
     );
