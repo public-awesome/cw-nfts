@@ -8,32 +8,33 @@ use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 use cw721::{ContractInfoResponse, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, C, I, E, Q>
+pub struct Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    I: CustomMsg + DeserializeOwned,
-    Q: CustomMsg,
-    E: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    QueryExt: CustomMsg,
+    ExecuteExt: CustomMsg,
 {
-    pub contract_info: Item<'a, ContractInfoResponse<I>>,
+    pub contract_info: Item<'a, ContractInfoResponse<InstantiateExt>>,
     pub minter: Item<'a, Addr>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
+    pub tokens: IndexedMap<'a, &'a str, TokenInfo<MintExt>, TokenIndexes<'a, MintExt>>,
 
-    pub(crate) _custom_response: PhantomData<C>,
-    pub(crate) _custom_instantiate: PhantomData<I>,
-    pub(crate) _custom_query: PhantomData<Q>,
-    pub(crate) _custom_execute: PhantomData<E>,
+    pub(crate) _custom_response: PhantomData<ResponseExt>,
+    pub(crate) _custom_instantiate: PhantomData<InstantiateExt>,
+    pub(crate) _custom_query: PhantomData<QueryExt>,
+    pub(crate) _custom_execute: PhantomData<ExecuteExt>,
 }
 
-impl<T, C, I, E, Q> Default for Cw721Contract<'static, T, C, I, E, Q>
+impl<MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt> Default
+    for Cw721Contract<'static, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     fn default() -> Self {
         Self::new(
@@ -47,12 +48,13 @@ where
     }
 }
 
-impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     fn new(
         contract_key: &'a str,
@@ -96,7 +98,7 @@ where
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TokenInfo<T> {
+pub struct TokenInfo<MintExt> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
@@ -108,7 +110,7 @@ pub struct TokenInfo<T> {
     pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: T,
+    pub extension: MintExt,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -125,23 +127,23 @@ impl Approval {
     }
 }
 
-pub struct TokenIndexes<'a, T>
+pub struct TokenIndexes<'a, MintExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    MintExt: Serialize + DeserializeOwned + Clone,
 {
-    pub owner: MultiIndex<'a, Addr, TokenInfo<T>, String>,
+    pub owner: MultiIndex<'a, Addr, TokenInfo<MintExt>, String>,
 }
 
-impl<'a, T> IndexList<TokenInfo<T>> for TokenIndexes<'a, T>
+impl<'a, MintExt> IndexList<TokenInfo<MintExt>> for TokenIndexes<'a, MintExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    MintExt: Serialize + DeserializeOwned + Clone,
 {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<TokenInfo<T>>> + '_> {
-        let v: Vec<&dyn Index<TokenInfo<T>>> = vec![&self.owner];
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<TokenInfo<MintExt>>> + '_> {
+        let v: Vec<&dyn Index<TokenInfo<MintExt>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }
 }
 
-pub fn token_owner_idx<T>(_pk: &[u8], d: &TokenInfo<T>) -> Addr {
+pub fn token_owner_idx<MintExt>(_pk: &[u8], d: &TokenInfo<MintExt>) -> Addr {
     d.owner.clone()
 }

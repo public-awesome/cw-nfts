@@ -3,7 +3,7 @@ use cosmwasm_std::Binary;
 use cw721::Expiration;
 
 #[cw_serde]
-pub struct InstantiateMsg<I> {
+pub struct InstantiateMsg<InstantiateExt> {
     /// Name of the NFT contract
     pub name: String,
     /// Part of the OG ERC721 standard even though no one uses it
@@ -13,7 +13,7 @@ pub struct InstantiateMsg<I> {
     /// schema: https://docs.opensea.io/docs/contract-level-metadata
     pub collection_uri: Option<String>,
     /// Metadata extension for custom on-chain metadata
-    pub metadata: I,
+    pub metadata: InstantiateExt,
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
@@ -23,8 +23,9 @@ pub struct InstantiateMsg<I> {
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
+
 #[cw_serde]
-pub enum ExecuteMsg<T, E> {
+pub enum ExecuteMsg<MintExt, ExecuteExt> {
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft { recipient: String, token_id: String },
     /// Send is a base message to transfer a token to a contract and trigger an action
@@ -53,17 +54,17 @@ pub enum ExecuteMsg<T, E> {
     RevokeAll { operator: String },
 
     /// Mint a new NFT, can only be called by the contract minter
-    Mint(MintMsg<T>),
+    Mint(MintMsg<MintExt>),
 
     /// Burn an NFT the sender has access to
     Burn { token_id: String },
 
     /// Extension msg
-    Extension { msg: E },
+    Extension { msg: ExecuteExt },
 }
 
 #[cw_serde]
-pub struct MintMsg<T> {
+pub struct MintMsg<MintExt> {
     /// Unique ID of the NFT
     pub token_id: String,
     /// The owner of the newly minter NFT
@@ -73,11 +74,11 @@ pub struct MintMsg<T> {
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
     /// Any custom extension used by this contract
-    pub extension: T,
+    pub extension: MintExt,
 }
 
 #[cw_serde]
-pub enum QueryMsg<Q> {
+pub enum QueryMsg<QueryExt> {
     /// Return the owner of the given token, error if token does not exist
     /// Return type: OwnerOfResponse
     OwnerOf {
@@ -149,7 +150,7 @@ pub enum QueryMsg<Q> {
 
     /// Extension query
     Extension {
-        msg: Q,
+        msg: QueryExt,
     },
 }
 

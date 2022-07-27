@@ -19,15 +19,17 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, C, I, E, Q> Cw721Query<T, I> for Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Query<MintExt, InstantiateExt>
+    for Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<I>> {
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<InstantiateExt>> {
         self.contract_info.load(deps.storage)
     }
 
@@ -36,7 +38,7 @@ where
         Ok(NumTokensResponse { count })
     }
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>> {
+    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<MintExt>> {
         let info = self.tokens.load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
@@ -195,7 +197,7 @@ where
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<AllNftInfoResponse<T>> {
+    ) -> StdResult<AllNftInfoResponse<MintExt>> {
         let info = self.tokens.load(deps.storage, &token_id)?;
         Ok(AllNftInfoResponse {
             access: OwnerOfResponse {
@@ -210,13 +212,14 @@ where
     }
 }
 
-impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
@@ -225,7 +228,7 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<QueryExt>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
@@ -296,9 +299,9 @@ fn parse_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<cw721::Appro
     })
 }
 
-fn humanize_approvals<T>(
+fn humanize_approvals<MintExt>(
     block: &BlockInfo,
-    info: &TokenInfo<T>,
+    info: &TokenInfo<MintExt>,
     include_expired: bool,
 ) -> Vec<cw721::Approval> {
     info.approvals

@@ -14,24 +14,25 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     pub fn instantiate(
         &self,
         deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        msg: InstantiateMsg<I>,
-    ) -> StdResult<Response<C>> {
+        msg: InstantiateMsg<InstantiateExt>,
+    ) -> StdResult<Response<ResponseExt>> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        let info = ContractInfoResponse::<I> {
+        let info = ContractInfoResponse::<InstantiateExt> {
             name: msg.name,
             symbol: msg.symbol,
             collection_uri: msg.collection_uri,
@@ -48,8 +49,8 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E>,
-    ) -> Result<Response<C>, ContractError> {
+        msg: ExecuteMsg<MintExt, ExecuteExt>,
+    ) -> Result<Response<ResponseExt>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
             ExecuteMsg::Approve {
@@ -79,21 +80,22 @@ where
     }
 }
 
-impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     pub fn mint(
         &self,
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
-        msg: MintMsg<T>,
-    ) -> Result<Response<C>, ContractError> {
+        msg: MintMsg<MintExt>,
+    ) -> Result<Response<ResponseExt>, ContractError> {
         let minter = self.minter.load(deps.storage)?;
 
         if info.sender != minter {
@@ -123,13 +125,15 @@ where
     }
 }
 
-impl<'a, T, C, I, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Execute<MintExt, ResponseExt>
+    for Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     type Err = ContractError;
 
@@ -140,7 +144,7 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         self._transfer_nft(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
@@ -158,7 +162,7 @@ where
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         // Transfer token
         self._transfer_nft(deps, &env, &info, &contract, &token_id)?;
 
@@ -185,7 +189,7 @@ where
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, true, expires)?;
 
         Ok(Response::new()
@@ -202,7 +206,7 @@ where
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, false, None)?;
 
         Ok(Response::new()
@@ -219,7 +223,7 @@ where
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         // reject expired data as invalid
         let expires = expires.unwrap_or_default();
         if expires.is_expired(&env.block) {
@@ -243,7 +247,7 @@ where
         _env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         self.operators
             .remove(deps.storage, (&info.sender, &operator_addr));
@@ -260,7 +264,7 @@ where
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ResponseExt>, ContractError> {
         let token = self.tokens.load(deps.storage, &token_id)?;
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
@@ -275,13 +279,14 @@ where
 }
 
 // helpers
-impl<'a, T, C, I, E, Q> Cw721Contract<'a, T, C, I, E, Q>
+impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    I: CustomMsg + DeserializeOwned,
-    E: CustomMsg,
-    Q: CustomMsg,
+    MintExt: Serialize + DeserializeOwned + Clone,
+    ResponseExt: CustomMsg,
+    InstantiateExt: CustomMsg + DeserializeOwned,
+    ExecuteExt: CustomMsg,
+    QueryExt: CustomMsg,
 {
     pub fn _transfer_nft(
         &self,
@@ -290,7 +295,7 @@ where
         info: &MessageInfo,
         recipient: &str,
         token_id: &str,
-    ) -> Result<TokenInfo<T>, ContractError> {
+    ) -> Result<TokenInfo<MintExt>, ContractError> {
         let mut token = self.tokens.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_send(deps.as_ref(), env, info, &token)?;
@@ -312,7 +317,7 @@ where
         // if add == false, remove. if add == true, remove then set with this expiration
         add: bool,
         expires: Option<Expiration>,
-    ) -> Result<TokenInfo<T>, ContractError> {
+    ) -> Result<TokenInfo<MintExt>, ContractError> {
         let mut token = self.tokens.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -350,7 +355,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        token: &TokenInfo<MintExt>,
     ) -> Result<(), ContractError> {
         // owner can approve
         if token.owner == info.sender {
@@ -378,7 +383,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        token: &TokenInfo<MintExt>,
     ) -> Result<(), ContractError> {
         // owner can send
         if token.owner == info.sender {
