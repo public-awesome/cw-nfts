@@ -1,19 +1,12 @@
 # CW721 Spec: Non Fungible Tokens
 
-CW721 is a specification for non-fungible tokens based on CosmWasm.
-The name and design is based on Ethereum's ERC721 standard,
-with some enhancements. The types in here can be imported by 
-contracts that wish to implement this spec, or by contracts that call 
-to any standard cw721 contract.
+CW721 is a specification for non-fungible tokens based on CosmWasm. The name and design is based on Ethereum's ERC721 standard, with some enhancements. The types in here can be imported by contracts that wish to implement this spec, or by contracts that call to any standard cw721 contract.
 
-The specification is split into multiple sections, a contract may only
-implement some of this functionality, but must implement the base.
+The specification is split into multiple sections, a contract may only implement some of this functionality, but must implement the base.
 
 ## Base
 
-This handles ownership, transfers, and allowances. These must be supported
-as is by all CW721 contracts. Note that all tokens must have an owner, 
-as well as an ID. The ID is an arbitrary string, unique within the contract.
+This handles ownership, transfers, and allowances. These must be supported as is by all CW721 contracts. Note that all tokens must have an owner, as well as an ID. The ID is an arbitrary string, unique within the contract.
 
 ### Messages
 
@@ -50,6 +43,8 @@ tokens and applies to any future token that the owner receives as well.
 
 `RevokeAll{operator}` - Revoke a previous `ApproveAll` permission granted
 to the given `operator`.
+
+`Burn{token_id}` - Destroys the NFT, only callable by the owner.
 
 ### Queries
 
@@ -99,7 +94,7 @@ for.
 ### Queries
 
 `ContractInfo{}` - This returns top-level metadata about the contract.
-Namely, `name` and `symbol`.
+Namely, `name`, `symbol`, `contract_uri`, and an optional `metadata` extension.
 
 `NftInfo{token_id}` - This returns metadata about one particular token.
 The return value is based on *ERC721 Metadata JSON Schema*, but directly

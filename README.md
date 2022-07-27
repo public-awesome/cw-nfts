@@ -5,8 +5,8 @@ in the CosmWasm ecosystem. `cw721` and `cw721-base` were moved from
 [`cw-plus`](https://github.com/CosmWasm/cw-plus) to start this repo, but it shall evolve
 as driven by the community's needs.
 
-Please feel free to modify `cw721-base` as you need to support these projects and add many extensions
-and additional standards (like [cw-2981](https://github.com/CosmWasm/cw-plus/pull/414)) to meet
+Please feel free to modify [cw721-base](/contracts/cw721-base) as you need to support these projects and add many extensions
+and additional standards (like [cw2981-royalties](/contracts/cw2981-royalties) to meet
 the demands of the various NFT projects springing forth.
 
 ## Maintainers

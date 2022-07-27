@@ -92,9 +92,6 @@ where
     MintExt: Serialize + DeserializeOwned + Clone,
     InstantiateExt: CustomMsg,
 {
-    // TODO: use custom error?
-    // How to handle the two derived error types?
-
     fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<InstantiateExt>>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
