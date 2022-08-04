@@ -1,7 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdError, StdResult, CustomMsg};
+use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdError, StdResult, CustomMsg, CustomQuery};
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
@@ -17,23 +17,24 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Query<T, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
+    fn contract_info(&self, deps: Deps<Q>) -> StdResult<ContractInfoResponse> {
         self.contract_info.load(deps.storage)
     }
 
-    fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse> {
+    fn num_tokens(&self, deps: Deps<Q>) -> StdResult<NumTokensResponse> {
         let count = self.token_count(deps.storage)?;
         Ok(NumTokensResponse { count })
     }
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>> {
+    fn nft_info(&self, deps: Deps<Q>, token_id: String) -> StdResult<NftInfoResponse<T>> {
         let info = self.tokens.load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
@@ -43,7 +44,7 @@ where
 
     fn owner_of(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -58,7 +59,7 @@ where
     /// operators returns all operators owner given access to
     fn operators(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         owner: String,
         include_expired: bool,
@@ -85,7 +86,7 @@ where
 
     fn approval(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         spender: String,
@@ -125,7 +126,7 @@ where
     /// approvals returns all approvals owner given access to
     fn approvals(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -146,7 +147,7 @@ where
 
     fn tokens(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -169,7 +170,7 @@ where
 
     fn all_tokens(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
@@ -188,7 +189,7 @@ where
 
     fn all_nft_info(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -207,21 +208,22 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
-    pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
+    pub fn minter(&self, deps: Deps<Q>) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
         Ok(MinterResponse {
             minter: minter_addr.to_string(),
         })
     }
 
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps<Q>, env: Env, msg: QueryMsg<E2>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),

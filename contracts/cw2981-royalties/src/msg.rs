@@ -1,6 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Uint128;
-use cw721::CustomMsg;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub enum Cw2981QueryMsg {
@@ -29,8 +30,6 @@ impl Default for Cw2981QueryMsg {
         Cw2981QueryMsg::CheckRoyalties {}
     }
 }
-
-impl CustomMsg for Cw2981QueryMsg {}
 
 #[cw_serde]
 pub struct RoyaltiesInfoResponse {

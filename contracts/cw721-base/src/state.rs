@@ -3,16 +3,17 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, StdResult, Storage, CustomMsg};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, StdResult, Storage};
 
 use cw721::{ContractInfoResponse, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, C, E, Q>
+pub struct Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
-    Q: CustomMsg,
-    E: CustomMsg,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
+    Q: CustomQuery,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
     pub minter: Item<'a, Addr>,
@@ -23,24 +24,27 @@ where
 
     pub(crate) _custom_response: PhantomData<C>,
     pub(crate) _custom_query: PhantomData<Q>,
-    pub(crate) _custom_execute: PhantomData<E>,
+    pub(crate) _custom_execute: PhantomData<E1>,
+    pub(crate) _custom_execute_query: PhantomData<E2>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, C, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721<T, C, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
 }
 
-impl<T, C, E, Q> Default for Cw721Contract<'static, T, C, E, Q>
+impl<T, E1, E2, C, Q> Default for Cw721Contract<'static, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E: CustomMsg,
-    Q: CustomMsg,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
+    Q: CustomQuery,
 {
     fn default() -> Self {
         Self::new(
@@ -54,11 +58,12 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E: CustomMsg,
-    Q: CustomMsg,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
+    Q: CustomQuery,
 {
     fn new(
         contract_key: &'a str,
@@ -79,6 +84,7 @@ where
             tokens: IndexedMap::new(tokens_key, indexes),
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
+            _custom_execute_query: PhantomData,
             _custom_query: PhantomData,
         }
     }
@@ -100,7 +106,7 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct TokenInfo<T> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
@@ -116,7 +122,7 @@ pub struct TokenInfo<T> {
     pub extension: T,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct Approval {
     /// Account that can transfer/send the token
     pub spender: Addr,

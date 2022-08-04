@@ -6,26 +6,28 @@ use crate::{
     AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CustomMsg};
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CustomMsg, CustomQuery};
 use cw_utils::Expiration;
 
-pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T>
+pub trait Cw721<T, C, Q>: Cw721Execute<T, C, Q> + Cw721Query<T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    Q: CustomQuery,
 {
 }
 
-pub trait Cw721Execute<T, C>
+pub trait Cw721Execute<T, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
+    Q: CustomQuery,
 {
     type Err: ToString;
 
     fn transfer_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         recipient: String,
@@ -34,7 +36,7 @@ where
 
     fn send_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         contract: String,
@@ -44,7 +46,7 @@ where
 
     fn approve(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         spender: String,
@@ -54,7 +56,7 @@ where
 
     fn revoke(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         spender: String,
@@ -63,7 +65,7 @@ where
 
     fn approve_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         operator: String,
@@ -72,7 +74,7 @@ where
 
     fn revoke_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         operator: String,
@@ -80,29 +82,30 @@ where
 
     fn burn(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response<C>, Self::Err>;
 }
 
-pub trait Cw721Query<T>
+pub trait Cw721Query<T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomQuery,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse>;
+    fn contract_info(&self,deps: Deps<Q>) -> StdResult<ContractInfoResponse>;
 
-    fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
+    fn num_tokens(&self,deps: Deps<Q>) -> StdResult<NumTokensResponse>;
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>>;
+    fn nft_info(&self, deps: Deps<Q>, token_id: String) -> StdResult<NftInfoResponse<T>>;
 
     fn owner_of(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -110,7 +113,7 @@ where
 
     fn operators(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         owner: String,
         include_expired: bool,
@@ -120,7 +123,7 @@ where
 
     fn approval(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         spender: String,
@@ -129,7 +132,7 @@ where
 
     fn approvals(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -137,7 +140,7 @@ where
 
     fn tokens(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -145,14 +148,14 @@ where
 
     fn all_tokens(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse>;
 
     fn all_nft_info(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: Env,
         token_id: String,
         include_expired: bool,

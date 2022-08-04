@@ -1,7 +1,9 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CustomMsg};
+use cosmwasm_std::{
+    Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 
 use cw2::set_contract_version;
 use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
@@ -14,16 +16,17 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
     pub fn instantiate(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         _env: Env,
         _info: MessageInfo,
         msg: InstantiateMsg,
@@ -42,10 +45,10 @@ where
 
     pub fn execute(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E>,
+        msg: ExecuteMsg<T, E1>,
     ) -> Result<Response<C>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
@@ -77,16 +80,17 @@ where
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
     pub fn mint(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         _env: Env,
         info: MessageInfo,
         msg: MintMsg<T>,
@@ -120,18 +124,19 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Execute<T, C, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
     type Err = ContractError;
 
     fn transfer_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         recipient: String,
@@ -148,7 +153,7 @@ where
 
     fn send_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         contract: String,
@@ -175,7 +180,7 @@ where
 
     fn approve(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         spender: String,
@@ -193,7 +198,7 @@ where
 
     fn revoke(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         spender: String,
@@ -210,7 +215,7 @@ where
 
     fn approve_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         operator: String,
@@ -235,7 +240,7 @@ where
 
     fn revoke_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         _env: Env,
         info: MessageInfo,
         operator: String,
@@ -252,7 +257,7 @@ where
 
     fn burn(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: Env,
         info: MessageInfo,
         token_id: String,
@@ -271,16 +276,17 @@ where
 }
 
 // helpers
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E1: DeserializeOwned,
+    E2: DeserializeOwned,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    Q: CustomQuery,
 {
     pub fn _transfer_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: &Env,
         info: &MessageInfo,
         recipient: &str,
@@ -299,7 +305,7 @@ where
     #[allow(clippy::too_many_arguments)]
     pub fn _update_approvals(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<Q>,
         env: &Env,
         info: &MessageInfo,
         spender: &str,
@@ -342,7 +348,7 @@ where
     /// returns true iff the sender can execute approve or reject on the contract
     pub fn check_can_approve(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: &Env,
         info: &MessageInfo,
         token: &TokenInfo<T>,
@@ -370,7 +376,7 @@ where
     /// returns true iff the sender can transfer ownership of the token
     pub fn check_can_send(
         &self,
-        deps: Deps,
+        deps: Deps<Q>,
         env: &Env,
         info: &MessageInfo,
         token: &TokenInfo<T>,
