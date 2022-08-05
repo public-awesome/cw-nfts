@@ -11,8 +11,6 @@ use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 pub struct Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
     Q: CustomQuery,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
@@ -61,8 +59,6 @@ where
 impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
     Q: CustomQuery,
 {
     fn new(

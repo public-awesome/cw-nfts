@@ -85,7 +85,6 @@ where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
     Q: CustomQuery,
 {
     pub fn mint(
