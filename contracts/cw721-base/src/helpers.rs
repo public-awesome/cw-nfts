@@ -14,19 +14,32 @@ use serde::Serialize;
 use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
-pub struct Cw721Contract<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned>(
+pub struct Cw721Contract<
+    E1: Serialize + DeserializeOwned,
+    E2: Serialize + DeserializeOwned,
+    C: CustomMsg,
+    Q: CustomQuery,
+>(
     pub Addr,
     pub PhantomData<E1>,
     pub PhantomData<E2>,
+    pub PhantomData<C>,
+    pub PhantomData<Q>,
 );
 
 #[allow(dead_code)]
-impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Contract<E1, E2> {
+impl<E1, E2, C, Q> Cw721Contract<E1, E2, C, Q>
+where
+    E1: Serialize + DeserializeOwned,
+    E2: Serialize + DeserializeOwned,
+    C: CustomMsg,
+    Q: CustomQuery,
+{
     pub fn addr(&self) -> Addr {
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E1>) -> StdResult<CosmosMsg> {
+    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E1>) -> StdResult<CosmosMsg<C>> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -38,7 +51,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
 
     pub fn query<T: DeserializeOwned>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         req: QueryMsg<E2>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
@@ -53,7 +66,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
 
     pub fn owner_of<T: Into<String>>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         token_id: T,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
@@ -66,7 +79,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
 
     pub fn approval<T: Into<String>>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         token_id: T,
         spender: T,
         include_expired: Option<bool>,
@@ -82,7 +95,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
 
     pub fn approvals<T: Into<String>>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         token_id: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalsResponse> {
@@ -96,7 +109,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
 
     pub fn all_operators<T: Into<String>>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         owner: T,
         include_expired: bool,
         start_after: Option<String>,
@@ -112,14 +125,14 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
         Ok(res.operators)
     }
 
-    pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
+    pub fn num_tokens(&self, querier: &QuerierWrapper<Q>) -> StdResult<u64> {
         let req = QueryMsg::NumTokens {};
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
     }
 
     /// With metadata extension
-    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<ContractInfoResponse> {
+    pub fn contract_info(&self, querier: &QuerierWrapper<Q>) -> StdResult<ContractInfoResponse> {
         let req = QueryMsg::ContractInfo {};
         self.query(querier, req)
     }
@@ -127,7 +140,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
     /// With metadata extension
     pub fn nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         token_id: T,
     ) -> StdResult<NftInfoResponse<U>> {
         let req = QueryMsg::NftInfo {
@@ -139,7 +152,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
     /// With metadata extension
     pub fn all_nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         token_id: T,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<U>> {
@@ -153,7 +166,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
     /// With enumerable extension
     pub fn tokens<T: Into<String>>(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         owner: T,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -169,7 +182,7 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
     /// With enumerable extension
     pub fn all_tokens(
         &self,
-        querier: &QuerierWrapper,
+        querier: &QuerierWrapper<Q>,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
@@ -178,12 +191,12 @@ impl<E1: Serialize + DeserializeOwned, E2: Serialize + DeserializeOwned> Cw721Co
     }
 
     /// returns true if the contract supports the metadata extension
-    pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
+    pub fn has_metadata(&self, querier: &QuerierWrapper<Q>) -> bool {
         self.contract_info(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension
-    pub fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
+    pub fn has_enumerable(&self, querier: &QuerierWrapper<Q>) -> bool {
         self.tokens(querier, self.addr(), None, Some(1)).is_ok()
     }
 }
