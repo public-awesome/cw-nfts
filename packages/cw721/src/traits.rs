@@ -6,7 +6,9 @@ use crate::{
     AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, CustomMsg, CustomQuery};
+use cosmwasm_std::{
+    Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw_utils::Expiration;
 
 pub trait Cw721<T, C, Q>: Cw721Execute<T, C, Q> + Cw721Query<T, Q>
@@ -97,9 +99,9 @@ where
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self,deps: Deps<Q>) -> StdResult<ContractInfoResponse>;
+    fn contract_info(&self, deps: Deps<Q>) -> StdResult<ContractInfoResponse>;
 
-    fn num_tokens(&self,deps: Deps<Q>) -> StdResult<NumTokensResponse>;
+    fn num_tokens(&self, deps: Deps<Q>) -> StdResult<NumTokensResponse>;
 
     fn nft_info(&self, deps: Deps<Q>, token_id: String) -> StdResult<NftInfoResponse<T>>;
 
