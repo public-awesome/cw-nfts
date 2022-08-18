@@ -55,7 +55,7 @@ jobs:
             - target
           key: cargocache-cw1155-base-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
 
-contract_cw1155_metadata_onchain:
+  contract_cw1155_metadata_onchain:
     docker:
       - image: rust:1.58.1
     working_directory: ~/project/contracts/cw1155-metadata-onchain
