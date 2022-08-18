@@ -338,6 +338,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw1155-metadata-onchain"
+version = "0.13.4"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw1155",
+ "cw1155-base",
+ "cw2",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw2"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
