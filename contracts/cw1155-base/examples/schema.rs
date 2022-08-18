@@ -30,6 +30,6 @@ fn main() {
     export_schema_with_title(
         &schema_for!(TokenInfoResponse<Extension>),
         &out_dir,
-        "NftInfoResponse",
+        "TokenInfoResponse",
     );
 }
