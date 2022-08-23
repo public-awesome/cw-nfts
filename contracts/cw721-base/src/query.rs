@@ -20,7 +20,8 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Query<T, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Query<T, ModuleQuery>
+    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,

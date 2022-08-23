@@ -3,13 +3,19 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, StdResult, Storage, Empty};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, Empty, StdResult, Storage};
 
 use cw721::{ContractInfoResponse, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T = Empty, E1 = Empty, E2 = Empty, ModuleMsg = Empty, ModuleQuery = Empty>
-where
+pub struct Cw721Contract<
+    'a,
+    T = Empty,
+    E1 = Empty,
+    E2 = Empty,
+    ModuleMsg = Empty,
+    ModuleQuery = Empty,
+> where
     T: Serialize + DeserializeOwned + Clone,
     ModuleQuery: CustomQuery,
 {
@@ -27,7 +33,8 @@ where
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery>
+    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
@@ -37,7 +44,8 @@ where
 {
 }
 
-impl<T, E1, E2, ModuleMsg, ModuleQuery> Default for Cw721Contract<'static, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<T, E1, E2, ModuleMsg, ModuleQuery> Default
+    for Cw721Contract<'static, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,

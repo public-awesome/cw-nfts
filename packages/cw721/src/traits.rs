@@ -11,7 +11,8 @@ use cosmwasm_std::{
 };
 use cw_utils::Expiration;
 
-pub trait Cw721<T, ModuleMsg, ModuleQuery>: Cw721Execute<T, ModuleMsg, ModuleQuery> + Cw721Query<T, ModuleQuery>
+pub trait Cw721<T, ModuleMsg, ModuleQuery>:
+    Cw721Execute<T, ModuleMsg, ModuleQuery> + Cw721Query<T, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ModuleMsg: CustomMsg,

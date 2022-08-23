@@ -123,7 +123,8 @@ where
     }
 }
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Execute<T, ModuleMsg, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Execute<T, ModuleMsg, ModuleQuery>
+    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,

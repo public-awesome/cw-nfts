@@ -133,7 +133,10 @@ where
     }
 
     /// With metadata extension
-    pub fn contract_info(&self, querier: &QuerierWrapper<ModuleQuery>) -> StdResult<ContractInfoResponse> {
+    pub fn contract_info(
+        &self,
+        querier: &QuerierWrapper<ModuleQuery>,
+    ) -> StdResult<ContractInfoResponse> {
         let req = QueryMsg::ContractInfo {};
         self.query(querier, req)
     }
