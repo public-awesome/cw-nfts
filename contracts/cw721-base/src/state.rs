@@ -3,15 +3,15 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, StdResult, Storage};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, StdResult, Storage, Empty};
 
 use cw721::{ContractInfoResponse, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, E1, E2, C, Q>
+pub struct Cw721Contract<'a, T = Empty, E1 = Empty, E2 = Empty, ModuleMsg = Empty, ModuleQuery = Empty>
 where
     T: Serialize + DeserializeOwned + Clone,
-    Q: CustomQuery,
+    ModuleQuery: CustomQuery,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
     pub minter: Item<'a, Addr>,
@@ -20,29 +20,29 @@ where
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
 
-    pub(crate) _custom_response: PhantomData<C>,
-    pub(crate) _custom_query: PhantomData<Q>,
+    pub(crate) _custom_response: PhantomData<ModuleMsg>,
+    pub(crate) _custom_query: PhantomData<ModuleQuery>,
     pub(crate) _custom_execute: PhantomData<E1>,
     pub(crate) _custom_execute_query: PhantomData<E2>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, E1, E2, C, Q> Cw721<T, C, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
 }
 
-impl<T, E1, E2, C, Q> Default for Cw721Contract<'static, T, E1, E2, C, Q>
+impl<T, E1, E2, ModuleMsg, ModuleQuery> Default for Cw721Contract<'static, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    Q: CustomQuery,
+    ModuleQuery: CustomQuery,
 {
     fn default() -> Self {
         Self::new(
@@ -56,10 +56,10 @@ where
     }
 }
 
-impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    Q: CustomQuery,
+    ModuleQuery: CustomQuery,
 {
     fn new(
         contract_key: &'a str,

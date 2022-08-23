@@ -16,21 +16,21 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     pub fn instantiate(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         _env: Env,
         _info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response<C>> {
+    ) -> StdResult<Response<ModuleMsg>> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         let info = ContractInfoResponse {
@@ -45,11 +45,11 @@ where
 
     pub fn execute(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         msg: ExecuteMsg<T, E1>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
             ExecuteMsg::Approve {
@@ -80,20 +80,20 @@ where
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    Q: CustomQuery,
+    ModuleQuery: CustomQuery,
 {
     pub fn mint(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         _env: Env,
         info: MessageInfo,
         msg: MintMsg<T>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         let minter = self.minter.load(deps.storage)?;
 
         if info.sender != minter {
@@ -123,24 +123,24 @@ where
     }
 }
 
-impl<'a, T, E1, E2, C, Q> Cw721Execute<T, C, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Execute<T, ModuleMsg, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     type Err = ContractError;
 
     fn transfer_nft(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         self._transfer_nft(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
@@ -152,13 +152,13 @@ where
 
     fn send_nft(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         // Transfer token
         self._transfer_nft(deps, &env, &info, &contract, &token_id)?;
 
@@ -179,13 +179,13 @@ where
 
     fn approve(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, true, expires)?;
 
         Ok(Response::new()
@@ -197,12 +197,12 @@ where
 
     fn revoke(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, false, None)?;
 
         Ok(Response::new()
@@ -214,12 +214,12 @@ where
 
     fn approve_all(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         // reject expired data as invalid
         let expires = expires.unwrap_or_default();
         if expires.is_expired(&env.block) {
@@ -239,11 +239,11 @@ where
 
     fn revoke_all(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         _env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         self.operators
             .remove(deps.storage, (&info.sender, &operator_addr));
@@ -256,11 +256,11 @@ where
 
     fn burn(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<ModuleMsg>, ContractError> {
         let token = self.tokens.load(deps.storage, &token_id)?;
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
@@ -275,17 +275,17 @@ where
 }
 
 // helpers
-impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     pub fn _transfer_nft(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: &Env,
         info: &MessageInfo,
         recipient: &str,
@@ -304,7 +304,7 @@ where
     #[allow(clippy::too_many_arguments)]
     pub fn _update_approvals(
         &self,
-        deps: DepsMut<Q>,
+        deps: DepsMut<ModuleQuery>,
         env: &Env,
         info: &MessageInfo,
         spender: &str,
@@ -347,7 +347,7 @@ where
     /// returns true iff the sender can execute approve or reject on the contract
     pub fn check_can_approve(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: &Env,
         info: &MessageInfo,
         token: &TokenInfo<T>,
@@ -375,7 +375,7 @@ where
     /// returns true iff the sender can transfer ownership of the token
     pub fn check_can_send(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: &Env,
         info: &MessageInfo,
         token: &TokenInfo<T>,

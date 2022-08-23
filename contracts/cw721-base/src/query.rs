@@ -20,24 +20,24 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, E1, E2, C, Q> Cw721Query<T, Q> for Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Query<T, ModuleQuery> for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
-    fn contract_info(&self, deps: Deps<Q>) -> StdResult<ContractInfoResponse> {
+    fn contract_info(&self, deps: Deps<ModuleQuery>) -> StdResult<ContractInfoResponse> {
         self.contract_info.load(deps.storage)
     }
 
-    fn num_tokens(&self, deps: Deps<Q>) -> StdResult<NumTokensResponse> {
+    fn num_tokens(&self, deps: Deps<ModuleQuery>) -> StdResult<NumTokensResponse> {
         let count = self.token_count(deps.storage)?;
         Ok(NumTokensResponse { count })
     }
 
-    fn nft_info(&self, deps: Deps<Q>, token_id: String) -> StdResult<NftInfoResponse<T>> {
+    fn nft_info(&self, deps: Deps<ModuleQuery>, token_id: String) -> StdResult<NftInfoResponse<T>> {
         let info = self.tokens.load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
@@ -47,7 +47,7 @@ where
 
     fn owner_of(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -62,7 +62,7 @@ where
     /// operators returns all operators owner given access to
     fn operators(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: Env,
         owner: String,
         include_expired: bool,
@@ -89,7 +89,7 @@ where
 
     fn approval(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         spender: String,
@@ -129,7 +129,7 @@ where
     /// approvals returns all approvals owner given access to
     fn approvals(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -150,7 +150,7 @@ where
 
     fn tokens(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -173,7 +173,7 @@ where
 
     fn all_tokens(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
@@ -192,7 +192,7 @@ where
 
     fn all_nft_info(
         &self,
-        deps: Deps<Q>,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -211,22 +211,22 @@ where
     }
 }
 
-impl<'a, T, E1, E2, C, Q> Cw721Contract<'a, T, E1, E2, C, Q>
+impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     E1: DeserializeOwned,
     E2: DeserializeOwned,
-    C: CustomMsg,
-    Q: CustomQuery,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
-    pub fn minter(&self, deps: Deps<Q>) -> StdResult<MinterResponse> {
+    pub fn minter(&self, deps: Deps<ModuleQuery>) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
         Ok(MinterResponse {
             minter: minter_addr.to_string(),
         })
     }
 
-    pub fn query(&self, deps: Deps<Q>, env: Env, msg: QueryMsg<E2>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps<ModuleQuery>, env: Env, msg: QueryMsg<E2>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
