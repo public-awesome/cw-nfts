@@ -1,10 +1,7 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+use cosmwasm_schema::cw_serde;
 use cw_utils::Expiration;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum Cw721QueryMsg {
     /// Return the owner of the given token, error if token does not exist
     /// Return type: OwnerOfResponse
@@ -71,7 +68,7 @@ pub enum Cw721QueryMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct OwnerOfResponse {
     /// Owner of the token
     pub owner: String,
@@ -79,7 +76,7 @@ pub struct OwnerOfResponse {
     pub approvals: Vec<Approval>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct Approval {
     /// Account that can transfer/send the token
     pub spender: String,
@@ -87,33 +84,33 @@ pub struct Approval {
     pub expires: Expiration,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct ApprovalResponse {
     pub approval: Approval,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct ApprovalsResponse {
     pub approvals: Vec<Approval>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct OperatorsResponse {
     pub operators: Vec<Approval>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct NumTokensResponse {
     pub count: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct ContractInfoResponse {
     pub name: String,
     pub symbol: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct NftInfoResponse<T> {
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
@@ -123,7 +120,7 @@ pub struct NftInfoResponse<T> {
     pub extension: T,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct AllNftInfoResponse<T> {
     /// Who can transfer the token
     pub access: OwnerOfResponse,
@@ -131,7 +128,7 @@ pub struct AllNftInfoResponse<T> {
     pub info: NftInfoResponse<T>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct TokensResponse {
     /// Contains all token_ids in lexicographical ordering
     /// If there are more than `limit`, use `start_from` in future queries

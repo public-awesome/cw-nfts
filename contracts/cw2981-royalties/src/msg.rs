@@ -1,10 +1,8 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Uint128;
 use cw721::CustomMsg;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum Cw2981QueryMsg {
     /// Should be called on sale to see if royalties are owed
     /// by the marketplace selling the NFT, if CheckRoyalties
@@ -34,7 +32,7 @@ impl Default for Cw2981QueryMsg {
 
 impl CustomMsg for Cw2981QueryMsg {}
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct RoyaltiesInfoResponse {
     pub address: String,
     // Note that this must be the same denom as that passed in to RoyaltyInfo
@@ -44,7 +42,7 @@ pub struct RoyaltiesInfoResponse {
 
 /// Shows if the contract implements royalties
 /// if royalty_payments is true, marketplaces should pay them
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct CheckRoyaltiesResponse {
     pub royalty_payments: bool,
 }

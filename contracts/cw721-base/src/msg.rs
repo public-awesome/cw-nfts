@@ -1,10 +1,8 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
 use cw721::Expiration;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     /// Name of the NFT contract
     pub name: String,
@@ -20,8 +18,7 @@ pub struct InstantiateMsg {
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg<T, E> {
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft { recipient: String, token_id: String },
@@ -60,7 +57,7 @@ pub enum ExecuteMsg<T, E> {
     Extension { msg: E },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct MintMsg<T> {
     /// Unique ID of the NFT
     pub token_id: String,
@@ -74,8 +71,7 @@ pub struct MintMsg<T> {
     pub extension: T,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum QueryMsg<Q> {
     /// Return the owner of the given token, error if token does not exist
     /// Return type: OwnerOfResponse
@@ -153,7 +149,7 @@ pub enum QueryMsg<Q> {
 }
 
 /// Shows who can mint these tokens
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct MinterResponse {
     pub minter: String,
 }

@@ -1,6 +1,4 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
 use cw2::set_contract_version;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
@@ -9,7 +7,7 @@ pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
 const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
+#[cw_serde]
 pub struct Trait {
     pub display_type: Option<String>,
     pub trait_type: String,
@@ -17,7 +15,8 @@ pub struct Trait {
 }
 
 // see: https://docs.opensea.io/docs/metadata-standards
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
+#[cw_serde]
+#[derive(Default)]
 pub struct Metadata {
     pub image: Option<String>,
     pub image_data: Option<String>,

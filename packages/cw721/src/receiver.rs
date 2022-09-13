@@ -1,11 +1,10 @@
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Binary, CosmosMsg, StdResult, WasmMsg};
 
 /// Cw721ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct Cw721ReceiveMsg {
     pub sender: String,
     pub token_id: String,
@@ -36,8 +35,7 @@ impl Cw721ReceiveMsg {
 
 /// This is just a helper to properly serialize the above message.
 /// The actual receiver should include this variant in the larger ExecuteMsg enum
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 enum ReceiverExecuteMsg {
     ReceiveNft(Cw721ReceiveMsg),
 }
