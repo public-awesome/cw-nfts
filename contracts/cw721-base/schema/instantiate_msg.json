@@ -20,5 +20,6 @@
       "description": "Symbol of the NFT contract",
       "type": "string"
     }
-  }
+  },
+  "additionalProperties": false
 }
