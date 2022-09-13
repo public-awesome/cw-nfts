@@ -13,8 +13,8 @@ homepage = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
 
 [dependencies]
-cosmwasm-schema = "1.1"
-cosmwasm-std = "1.1"
-cw-utils = "0.14"
-schemars = "0.8"
-serde = { version = "1.0", default-features = false, features = ["derive"] }
+cosmwasm-schema = "1.1.0"
+cosmwasm-std = "1.1.0"
+cw-utils = "0.14.0"
+schemars = "0.8.10"
+serde = { version = "1.0.140", default-features = false, features = ["derive"] }
