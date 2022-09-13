@@ -2,7 +2,7 @@
 name = "cw721-fixed-price"
 version = "0.14.0"
 authors = ["Vernon Johnson <vtj2105@columbia.edu>"]
-edition = "2018"
+edition = "2021"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.

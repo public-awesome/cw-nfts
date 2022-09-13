@@ -5,7 +5,7 @@ authors = [
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-edition = "2018"
+edition = "2021"
 description = "Basic implementation cw721 NFTs"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-nfts"

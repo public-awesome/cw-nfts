@@ -2,7 +2,7 @@
 name = "cw2981-royalties"
 version = "0.14.0"
 authors = ["Alex Lynham <alex@lynh.am>"]
-edition = "2018"
+edition = "2021"
 description = "Basic implementation of royalties for cw721 NFTs with token level royalties"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-nfts"

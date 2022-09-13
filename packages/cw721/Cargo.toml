@@ -5,7 +5,7 @@ authors = [
     "Ethan Frey <ethanfrey@users.noreply.github.com>",
     "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-edition = "2018"
+edition = "2021"
 description = "Definition and types for the CosmWasm-721 NFT interface"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-nfts"
