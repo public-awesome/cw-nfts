@@ -22,6 +22,7 @@
       ]
     }
   },
+  "additionalProperties": false,
   "definitions": {
     "Metadata": {
       "type": "object",
@@ -83,7 +84,8 @@
             "null"
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "Trait": {
       "type": "object",
@@ -104,7 +106,8 @@
         "value": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }

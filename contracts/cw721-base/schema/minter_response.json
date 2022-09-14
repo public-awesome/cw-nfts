@@ -10,5 +10,6 @@
     "minter": {
       "type": "string"
     }
-  }
+  },
+  "additionalProperties": false
 }

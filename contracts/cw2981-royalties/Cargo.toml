@@ -1,8 +1,8 @@
 [package]
 name = "cw2981-royalties"
-version = "0.13.4"
+version = "0.14.0"
 authors = ["Alex Lynham <alex@lynh.am>"]
-edition = "2018"
+edition = "2021"
 description = "Basic implementation of royalties for cw721 NFTs with token level royalties"
 license = "Apache-2.0"
 repository = "https://github.com/CosmWasm/cw-nfts"
@@ -25,15 +25,10 @@ backtraces = ["cosmwasm-std/backtraces"]
 library = []
 
 [dependencies]
-cw2 = "0.13.4"
-cw721 = { path = "../../packages/cw721", version = "0.13.4" }
-cw721-base = { path = "../cw721-base", version = "0.13.4", features = [
-  "library",
-] }
-cosmwasm-std = { version = "1.0.0" }
+cosmwasm-schema = "1.1.0"
+cosmwasm-std = "1.1.0"
+cw2 = "0.14.0"
+cw721 = { path = "../../packages/cw721" }
+cw721-base = { path = "../cw721-base", features = ["library"] }
 schemars = "0.8.10"
 serde = { version = "1.0.140", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.31" }
-
-[dev-dependencies]
-cosmwasm-schema = { version = "1.0.0" }

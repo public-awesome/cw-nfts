@@ -9,7 +9,8 @@
       ],
       "properties": {
         "get_config": {
-          "type": "object"
+          "type": "object",
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

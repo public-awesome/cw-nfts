@@ -13,5 +13,6 @@
     "symbol": {
       "type": "string"
     }
-  }
+  },
+  "additionalProperties": false
 }

@@ -10,5 +10,6 @@
     "royalty_payments": {
       "type": "boolean"
     }
-  }
+  },
+  "additionalProperties": false
 }
