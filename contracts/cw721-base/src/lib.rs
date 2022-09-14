@@ -1,13 +1,13 @@
-mod contract_tests;
 mod error;
 mod execute;
 pub mod helpers;
 pub mod msg;
 mod query;
 pub mod state;
+mod tests;
 
 pub use crate::error::ContractError;
-pub use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
+pub use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg, MinterResponse, QueryMsg};
 pub use crate::state::Cw721Contract;
 use cosmwasm_std::Empty;
 
@@ -15,6 +15,8 @@ use cosmwasm_std::Empty;
 pub type Extension = Option<Empty>;
 
 pub mod entry {
+    use crate::msg::MigrateMsg;
+
     use super::*;
 
     #[cfg(not(feature = "library"))]
@@ -48,5 +50,15 @@ pub mod entry {
     pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> StdResult<Binary> {
         let contract = Cw721Contract::<Extension, Empty, Empty, Empty, Empty>::default();
         contract.query(deps, env, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: MigrateMsg<Empty>,
+    ) -> Result<Response, ContractError> {
+        let contract = Cw721Contract::<Extension, Empty, Empty, Empty, Empty>::default();
+        contract.migrate(deps, env, msg)
     }
 }

@@ -1,19 +1,38 @@
 #![cfg(test)]
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{
-    from_binary, to_binary, CosmosMsg, CustomMsg, DepsMut, Empty, Response, WasmMsg,
+    from_binary, to_binary, Addr, CosmosMsg, CustomMsg, DepsMut, Empty, Response, WasmMsg,
 };
-
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
     NftInfoResponse, OperatorsResponse, OwnerOfResponse,
 };
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
 use crate::{
-    ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MintMsg, QueryMsg,
+    ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MigrateMsg, MintMsg,
+    QueryMsg,
 };
+
+fn cw721_base_v0132_contract_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        cw721_base_v0132_contract::entry::execute,
+        cw721_base_v0132_contract::entry::instantiate,
+        cw721_base_v0132_contract::entry::query,
+    );
+    Box::new(contract)
+}
+
+fn cw721_base_contract() -> Box<dyn Contract<Empty>> {
+    let contract = ContractWrapper::new(
+        crate::entry::execute,
+        crate::entry::instantiate,
+        crate::entry::query,
+    )
+    .with_migrate(crate::entry::migrate);
+    Box::new(contract)
+}
 
 const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
@@ -83,7 +102,7 @@ fn custom_contract_info() {
     let mut deps = mock_dependencies();
 
     // Define a custom metadata struct
-    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
+    #[cw_serde]
     pub struct ContractMetadataExt {
         pub creator: String,
     }
@@ -129,7 +148,7 @@ fn custom_query_extension() {
     let mut deps = mock_dependencies();
 
     // Define a custom query ext
-    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    #[cw_serde]
     pub enum QueryExt {
         AdditionalQuery {},
     }
@@ -163,7 +182,7 @@ fn custom_execute_extension() {
     let mut deps = mock_dependencies();
 
     // Define a custom execute ext
-    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    #[cw_serde]
     pub enum ExecuteExt {
         AdditionalExecute {},
     }
@@ -196,7 +215,7 @@ fn custom_mint_extension() {
     let mut deps = mock_dependencies();
 
     // Define a custom mint ext
-    #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+    #[cw_serde]
     pub struct MintExt {
         creator: String,
     }
@@ -924,4 +943,47 @@ fn query_tokens_by_owner() {
         .tokens(deps.as_ref(), demeter, Some(by_demeter[0].clone()), Some(3))
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
+}
+
+#[test]
+fn test_migrate_from_v0132() {
+    const CREATOR: &str = "creator";
+
+    let mut app = App::default();
+    let v0132_code_id = app.store_code(cw721_base_v0132_contract_contract());
+
+    // Instantiate old NFT contract
+    let v0132_addr = app
+        .instantiate_contract(
+            v0132_code_id,
+            Addr::unchecked(CREATOR),
+            &cw721_base_v0132_contract::msg::InstantiateMsg {
+                name: "Test".to_string(),
+                symbol: "TEST".to_string(),
+                minter: CREATOR.to_string(),
+            },
+            &[],
+            "Old cw721-base",
+            Some(CREATOR.to_string()),
+        )
+        .unwrap();
+
+    let cw721_base_code_id = app.store_code(cw721_base_contract());
+
+    // Now we can migrate!
+    app.execute(
+        Addr::unchecked(CREATOR),
+        CosmosMsg::Wasm(WasmMsg::Migrate {
+            contract_addr: v0132_addr.to_string(),
+            new_code_id: cw721_base_code_id,
+            msg: to_binary(&MigrateMsg::<Empty> {
+                name: "Test".to_string(),
+                symbol: "TEST".to_string(),
+                collection_uri: Some("https://ipfs.io/hash".to_string()),
+                metadata: Empty {},
+            })
+            .unwrap(),
+        }),
+    )
+    .unwrap();
 }

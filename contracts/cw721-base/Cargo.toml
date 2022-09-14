@@ -37,3 +37,7 @@ cw-storage-plus = "0.15.0"
 schemars = "0.8.10"
 serde = { version = "1.0.140", default-features = false, features = ["derive"] }
 thiserror = "1.0.31"
+
+[dev-dependencies]
+cw-multi-test = "0.14.0"
+cw721-base-v0132-contract = { package = "cw721-base", version = "0.13.2", git = "https://github.com/cosmwasm/cw-nfts", tag = "v0.13.2" }

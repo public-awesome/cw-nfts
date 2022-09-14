@@ -37,3 +37,7 @@ cw721-base = { path = "../cw721-base", version = "0.15.0", features = [
 ] }
 schemars = "0.8.10"
 serde = { version = "1.0.140", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+cw-multi-test = "0.14.0"
+cw721-metadata-onchain-v0134-contract = { package = "cw721-metadata-onchain", version = "0.13.4", git = "https://github.com/cosmwasm/cw-nfts", tag = "v0.13.4" }

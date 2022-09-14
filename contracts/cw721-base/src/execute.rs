@@ -1,13 +1,11 @@
+use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cw2::set_contract_version;
+use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-
-use cw2::set_contract_version;
-use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
-
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MintMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 // Version info for migration
@@ -77,6 +75,29 @@ where
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
+    }
+
+    pub fn migrate(
+        &self,
+        deps: DepsMut,
+        _env: Env,
+        msg: MigrateMsg<InstantiateExt>,
+    ) -> Result<Response<ResponseExt>, ContractError> {
+        // Set contract to version to latest
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        // Save updated config
+        self.contract_info.save(
+            deps.storage,
+            &ContractInfoResponse::<InstantiateExt> {
+                name: msg.name,
+                symbol: msg.symbol,
+                collection_uri: msg.collection_uri,
+                metadata: msg.metadata,
+            },
+        )?;
+
+        Ok(Response::default())
     }
 }
 

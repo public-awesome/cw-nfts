@@ -3,13 +3,12 @@ pub mod query;
 
 pub use query::{check_royalties, query_royalties_info};
 
+use crate::msg::Cw2981QueryMsg;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Empty};
 use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
-pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
-
-use crate::msg::Cw2981QueryMsg;
+pub use cw721_base::{ContractError, InstantiateMsg, MigrateMsg, MintMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
@@ -96,17 +95,44 @@ pub mod entry {
             _ => Cw2981Contract::default().query(deps, env, msg),
         }
     }
+
+    #[entry_point]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: MigrateMsg<Empty>,
+    ) -> Result<Response, ContractError> {
+        Cw2981Contract::default().migrate(deps, env, msg)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
-
-    use cosmwasm_std::{from_binary, Uint128};
-
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{from_binary, Addr, CosmosMsg, Uint128, WasmMsg};
     use cw721::Cw721Query;
+    use cw_multi_test::{App, Contract, ContractWrapper, Executor};
+
+    fn cw2981_royalties_v0134_contract_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(
+            cw2981_royalties_v0134_contract::entry::execute,
+            cw2981_royalties_v0134_contract::entry::instantiate,
+            cw2981_royalties_v0134_contract::entry::query,
+        );
+        Box::new(contract)
+    }
+
+    fn cw721_base_contract() -> Box<dyn Contract<Empty>> {
+        let contract = ContractWrapper::new(
+            crate::entry::execute,
+            crate::entry::instantiate,
+            crate::entry::query,
+        )
+        .with_migrate(crate::entry::migrate);
+        Box::new(contract)
+    }
 
     const CREATOR: &str = "creator";
     const CONTRACT_NAME: &str = "Magic Power";
@@ -272,5 +298,48 @@ mod tests {
         )
         .unwrap();
         assert_eq!(res, voyager_expected);
+    }
+
+    #[test]
+    fn test_migrate_from_v0134() {
+        const CREATOR: &str = "creator";
+
+        let mut app = App::default();
+        let v0134_code_id = app.store_code(cw2981_royalties_v0134_contract_contract());
+
+        // Instantiate old NFT contract
+        let v0134_addr = app
+            .instantiate_contract(
+                v0134_code_id,
+                Addr::unchecked(CREATOR),
+                &cw2981_royalties_v0134_contract::InstantiateMsg {
+                    name: "Test".to_string(),
+                    symbol: "TEST".to_string(),
+                    minter: CREATOR.to_string(),
+                },
+                &[],
+                "Old cw721-base",
+                Some(CREATOR.to_string()),
+            )
+            .unwrap();
+
+        let cw721_base_code_id = app.store_code(cw721_base_contract());
+
+        // Now we can migrate!
+        app.execute(
+            Addr::unchecked(CREATOR),
+            CosmosMsg::Wasm(WasmMsg::Migrate {
+                contract_addr: v0134_addr.to_string(),
+                new_code_id: cw721_base_code_id,
+                msg: to_binary(&MigrateMsg::<Empty> {
+                    name: "Test".to_string(),
+                    symbol: "TEST".to_string(),
+                    collection_uri: Some("https://ipfs.io/hash".to_string()),
+                    metadata: Empty {},
+                })
+                .unwrap(),
+            }),
+        )
+        .unwrap();
     }
 }
