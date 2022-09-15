@@ -1,6 +1,6 @@
 [package]
 name = "cw721"
-version = "0.14.0"
+version = "0.15.0"
 authors = [
     "Ethan Frey <ethanfrey@users.noreply.github.com>",
     "Orkun Külçe <orkun@deuslabs.fi>",
@@ -15,6 +15,6 @@ documentation = "https://docs.cosmwasm.com"
 [dependencies]
 cosmwasm-schema = "1.1.0"
 cosmwasm-std = "1.1.0"
-cw-utils = "0.14.0"
+cw-utils = "0.15.0"
 schemars = "0.8.10"
 serde = { version = "1.0.140", default-features = false, features = ["derive"] }
