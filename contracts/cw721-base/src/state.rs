@@ -147,6 +147,6 @@ where
     }
 }
 
-pub fn token_owner_idx<T>(d: &TokenInfo<T>) -> Addr {
+pub fn token_owner_idx<T>(_pk: &[u8], d: &TokenInfo<T>) -> Addr {
     d.owner.clone()
 }
