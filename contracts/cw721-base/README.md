@@ -33,7 +33,7 @@ If provided, it is expected that the _token_uri_ points to a JSON file following
 ## Extending this contract
 This contract is meant to be used as a base contract for implementing custom NFT contracts conforming to the `cw721` interface. Some examples extending this contract are included in this repo, including [cw721-metadata-onchain](../cw721-metadata-onchain) and [cw2981-royalties](../cw2981-royalties).
 
-There are four main types of extension:
+There are four main types of extensions:
 * `MintExt`: Add custom onchain metadata to NFTs, NFT Info queries will return this metadata, and you will be able to use it in custom smart contract logic.
 * `InstantiateExt`: Add custom onchain collection metadata, the ContractInfo query will return with the info set here.
 * `ExecuteExt`: For defining custom smart contract methods for your NFT that are in addition to the cw721 spec.
