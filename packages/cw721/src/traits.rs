@@ -9,7 +9,7 @@ use crate::{
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
 
-pub trait Cw721<MintExt, ResponseExt, InstantiateExt>:
+pub trait Cw721<MintExt, ResponseExt, CollectionMetadataExt>:
     Cw721Execute<ResponseExt> + Cw721Query<MintExt, ResponseExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
@@ -87,12 +87,12 @@ where
     ) -> Result<Response<ResponseExt>, Self::Err>;
 }
 
-pub trait Cw721Query<MintExt, InstantiateExt>
+pub trait Cw721Query<MintExt, CollectionMetadataExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
-    InstantiateExt: CustomMsg,
+    CollectionMetadataExt: CustomMsg,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<InstantiateExt>>;
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<CollectionMetadataExt>>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 

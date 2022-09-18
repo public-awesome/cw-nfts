@@ -12,12 +12,12 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
@@ -26,11 +26,11 @@ where
         deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        msg: InstantiateMsg<InstantiateExt>,
+        msg: InstantiateMsg<CollectionMetadataExt>,
     ) -> StdResult<Response<ResponseExt>> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        let info = ContractInfoResponse::<InstantiateExt> {
+        let info = ContractInfoResponse::<CollectionMetadataExt> {
             name: msg.name,
             symbol: msg.symbol,
             collection_uri: msg.collection_uri,
@@ -81,7 +81,7 @@ where
         &self,
         deps: DepsMut,
         _env: Env,
-        msg: MigrateMsg<InstantiateExt>,
+        msg: MigrateMsg<CollectionMetadataExt>,
     ) -> Result<Response<ResponseExt>, ContractError> {
         // Set contract to version to latest
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -89,7 +89,7 @@ where
         // Save updated config
         self.contract_info.save(
             deps.storage,
-            &ContractInfoResponse::<InstantiateExt> {
+            &ContractInfoResponse::<CollectionMetadataExt> {
                 name: msg.name,
                 symbol: msg.symbol,
                 collection_uri: msg.collection_uri,
@@ -101,12 +101,12 @@ where
     }
 }
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
@@ -146,12 +146,13 @@ where
     }
 }
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt> Cw721Execute<ResponseExt>
-    for Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Execute<ResponseExt>
+    for Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
@@ -299,12 +300,12 @@ where
 }
 
 // helpers
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {

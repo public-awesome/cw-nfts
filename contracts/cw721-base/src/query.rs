@@ -19,17 +19,17 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Query<MintExt, InstantiateExt>
-    for Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Query<MintExt, CollectionMetadataExt>
+    for Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<InstantiateExt>> {
+    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse<CollectionMetadataExt>> {
         self.contract_info.load(deps.storage)
     }
 
@@ -212,12 +212,12 @@ where
     }
 }
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
     ResponseExt: CustomMsg,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {

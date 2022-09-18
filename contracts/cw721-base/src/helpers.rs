@@ -14,16 +14,23 @@ use serde::Serialize;
 use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
-pub struct Cw721Contract<QueryExt: CustomMsg, ExecuteExt: CustomMsg, InstantiateExt: CustomMsg>(
+pub struct Cw721Contract<
+    QueryExt: CustomMsg,
+    ExecuteExt: CustomMsg,
+    CollectionMetadataExt: CustomMsg,
+>(
     pub Addr,
     pub PhantomData<QueryExt>,
     pub PhantomData<ExecuteExt>,
-    pub PhantomData<InstantiateExt>,
+    pub PhantomData<CollectionMetadataExt>,
 );
 
 #[allow(dead_code)]
-impl<QueryExt: CustomMsg, ExecuteExt: CustomMsg, InstantiateExt: CustomMsg + DeserializeOwned>
-    Cw721Contract<QueryExt, ExecuteExt, InstantiateExt>
+impl<
+        QueryExt: CustomMsg,
+        ExecuteExt: CustomMsg,
+        CollectionMetadataExt: CustomMsg + DeserializeOwned,
+    > Cw721Contract<QueryExt, ExecuteExt, CollectionMetadataExt>
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -125,7 +132,7 @@ impl<QueryExt: CustomMsg, ExecuteExt: CustomMsg, InstantiateExt: CustomMsg + Des
     pub fn contract_info(
         &self,
         querier: &QuerierWrapper,
-    ) -> StdResult<ContractInfoResponse<InstantiateExt>> {
+    ) -> StdResult<ContractInfoResponse<CollectionMetadataExt>> {
         let req = QueryMsg::ContractInfo {};
         self.query(querier, req)
     }

@@ -3,7 +3,7 @@ use cosmwasm_std::Binary;
 use cw721::Expiration;
 
 #[cw_serde]
-pub struct InstantiateMsg<InstantiateExt> {
+pub struct InstantiateMsg<CollectionMetadataExt> {
     /// Name of the NFT contract
     pub name: String,
     /// Part of the OG ERC721 standard even though no one uses it
@@ -13,7 +13,7 @@ pub struct InstantiateMsg<InstantiateExt> {
     /// schema: https://docs.opensea.io/docs/contract-level-metadata
     pub collection_uri: Option<String>,
     /// Metadata extension for custom on-chain metadata
-    pub metadata: InstantiateExt,
+    pub metadata: CollectionMetadataExt,
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
@@ -155,7 +155,7 @@ pub enum QueryMsg<QueryExt> {
 }
 
 #[cw_serde]
-pub struct MigrateMsg<InstantiateExt> {
+pub struct MigrateMsg<CollectionMetadataExt> {
     /// Name of the NFT contract
     pub name: String,
     /// Part of the OG ERC721 standard even though no one uses it
@@ -165,7 +165,7 @@ pub struct MigrateMsg<InstantiateExt> {
     /// schema: https://docs.opensea.io/docs/contract-level-metadata
     pub collection_uri: Option<String>,
     /// Metadata extension for custom on-chain metadata
-    pub metadata: InstantiateExt,
+    pub metadata: CollectionMetadataExt,
 }
 
 /// Shows who can mint these tokens

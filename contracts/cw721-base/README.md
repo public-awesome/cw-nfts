@@ -35,7 +35,7 @@ This contract is meant to be used as a base contract for implementing custom NFT
 
 There are four main types of extensions:
 * `MintExt`: Add custom onchain metadata to NFTs, NFT Info queries will return this metadata, and you will be able to use it in custom smart contract logic.
-* `InstantiateExt`: Add custom onchain collection metadata, the ContractInfo query will return with the info set here.
+* `CollectionMetadataExt`: Add custom onchain collection metadata, the ContractInfo query will return with the info set here.
 * `ExecuteExt`: For defining custom smart contract methods for your NFT that are in addition to the cw721 spec.
 * `QueryExt`: For defining custom queries.
 
@@ -63,10 +63,10 @@ impl CustomMsg for MintExt {}
 
 // Define custom contract metadata, the ContractInfo query will return with the info set here
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
-pub struct InstantiateExt {
+pub struct CollectionMetadataExt {
     pub creator: String,
 }
-impl CustomMsg for InstantiateExt {}
+impl CustomMsg for CollectionMetadataExt {}
 
 // Define a custom query ext
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -90,7 +90,7 @@ impl CustomMsg for ExecuteExt {}
 
 // Put it all together!
 pub type CustomCw721<'a> =
-    Cw721Contract<'a, MintExt, Empty, InstantiateExt, ExecuteExt, QueryExt>;
+    Cw721Contract<'a, MintExt, Empty, CollectionMetadataExt, ExecuteExt, QueryExt>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -104,7 +104,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<InstantiateExt>,
+        msg: InstantiateMsg<CollectionMetadataExt>,
     ) -> Result<Response, ContractError> {
         // Call the instantiate on our base cw721 with our custom extensions
         let res = CustomCw721::default().instantiate(deps.branch(), env, info, msg)?;

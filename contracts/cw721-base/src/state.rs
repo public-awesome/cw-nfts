@@ -8,14 +8,14 @@ use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 use cw721::{ContractInfoResponse, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+pub struct Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     QueryExt: CustomMsg,
     ExecuteExt: CustomMsg,
 {
-    pub contract_info: Item<'a, ContractInfoResponse<InstantiateExt>>,
+    pub contract_info: Item<'a, ContractInfoResponse<CollectionMetadataExt>>,
     pub minter: Item<'a, Addr>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
@@ -23,16 +23,16 @@ where
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<MintExt>, TokenIndexes<'a, MintExt>>,
 
     pub(crate) _custom_response: PhantomData<ResponseExt>,
-    pub(crate) _custom_instantiate: PhantomData<InstantiateExt>,
+    pub(crate) _custom_instantiate: PhantomData<CollectionMetadataExt>,
     pub(crate) _custom_query: PhantomData<QueryExt>,
     pub(crate) _custom_execute: PhantomData<ExecuteExt>,
 }
 
-impl<MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt> Default
-    for Cw721Contract<'static, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt> Default
+    for Cw721Contract<'static, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
@@ -48,11 +48,11 @@ where
     }
 }
 
-impl<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
-    Cw721Contract<'a, MintExt, ResponseExt, InstantiateExt, ExecuteExt, QueryExt>
+impl<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
+    Cw721Contract<'a, MintExt, ResponseExt, CollectionMetadataExt, ExecuteExt, QueryExt>
 where
     MintExt: Serialize + DeserializeOwned + Clone,
-    InstantiateExt: CustomMsg + DeserializeOwned,
+    CollectionMetadataExt: CustomMsg + DeserializeOwned,
     ExecuteExt: CustomMsg,
     QueryExt: CustomMsg,
 {
