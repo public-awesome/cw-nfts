@@ -39,13 +39,13 @@ There are four main types of extensions:
 * `ExecuteExt`: For defining custom smart contract methods for your NFT that are in addition to the cw721 spec.
 * `QueryExt`: For defining custom queries.
 
+Each extension needs to implement the [CustomMsg trait](https://docs.rs/cosmwasm-std/1.1.1/cosmwasm_std/trait.CustomMsg.html), see the example below.
+
 Here is a complete example using all four extensions:
 
 ```rust
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{CustomMsg, Empty};
-use cw2::set_contract_version;
 pub use cw721_base::{
     ContractError, Cw721Contract, ExecuteMsg, InstantiateMsg, MintMsg, MinterResponse, QueryMsg,
 };
@@ -55,34 +55,34 @@ const CONTRACT_NAME: &str = "crates.io:cw721-example";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // MintExt allows for adding custom on-chain metadata to your NFTs
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct MintExt {
     creator: String,
 }
 impl CustomMsg for MintExt {}
 
 // Define custom contract metadata, the ContractInfo query will return with the info set here
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug, Default)]
+#[cw_serde]
 pub struct CollectionMetadataExt {
     pub creator: String,
 }
 impl CustomMsg for CollectionMetadataExt {}
 
 // Define a custom query ext
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub enum QueryExt {
     AdditionalQuery {},
 }
 impl CustomMsg for QueryExt {}
 
 // Define a custom query response
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct AdditionalQueryResponse {
     message: String,
 }
 
 // Define a custom execute extension. Allows for creating new contract methods
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub enum ExecuteExt {
     AdditionalExecute {},
 }
@@ -98,6 +98,7 @@ pub mod entry {
 
     use cosmwasm_std::{entry_point, to_binary};
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cw2::set_contract_version;
 
     #[entry_point]
     pub fn instantiate(
