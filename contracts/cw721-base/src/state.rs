@@ -110,7 +110,7 @@ where
     }
 }
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TokenInfo<T> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
@@ -126,7 +126,7 @@ pub struct TokenInfo<T> {
     pub extension: T,
 }
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Approval {
     /// Account that can transfer/send the token
     pub spender: Addr,

@@ -1,7 +1,5 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Uint128;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub enum Cw2981QueryMsg {
