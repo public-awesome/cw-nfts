@@ -14,6 +14,9 @@ integration-test: deploy-local optimize
 	RUST_LOG=info CONFIG={{orc_config}} cargo integration-test
 
 deploy-local:
+	# Need to make these so they are not created with the docker user
+	# as the owner.
+	mkdir -p artifacts target
 	docker kill cosmwasm || true
 	docker volume rm -f junod_data
 	docker run --rm -d --name cosmwasm \
