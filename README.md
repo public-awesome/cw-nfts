@@ -1,18 +1,20 @@
 # CosmWasm NFTS
 
-This repo is the official repository to work on all NFT standard and examples
-in the CosmWasm ecosystem. `cw721` and `cw721-base` were moved from
-[`cw-plus`](https://github.com/CosmWasm/cw-plus) to start this repo, but it shall evolve
-as driven by the community's needs.
+This repo is the official repository to work on all NFT standard and
+examples in the CosmWasm ecosystem. `cw721` and `cw721-base` were
+moved from [`cw-plus`](https://github.com/CosmWasm/cw-plus) to start
+this repo, but it shall evolve as driven by the community's needs.
 
-Please feel free to modify `cw721-base` as you need to support these projects and add many extensions
-and additional standards (like [cw-2981](https://github.com/CosmWasm/cw-plus/pull/414)) to meet
-the demands of the various NFT projects springing forth.
+Please feel free to modify `cw721-base` as you need to support these
+projects and add many extensions and additional standards (like
+[cw-2981](https://github.com/CosmWasm/cw-plus/pull/414)) to meet the
+demands of the various NFT projects springing forth.
 
 ## Maintainers
 
-This repo is not maintained directly by Confio (although we can provide some code reviews and support),
-but rather by 4 highly active community members working on NFT projects of their own:
+This repo is not maintained directly by Confio (although we can
+provide some code reviews and support), but rather by highly active
+community members working on NFT projects of their own:
 
 * [alwin-peng](https://github.com/alwin-peng)
 * [ben2x4](https://github.com/ben2x4)
@@ -26,9 +28,38 @@ but rather by 4 highly active community members working on NFT projects of their
 
 ## Contributing
 
-If you are working on an NFT project as well and wish to give input, please raise issues and/or PRs.
-Additional maintainers can be added if they show commitment to the project.
+If you are working on an NFT project as well and wish to give input,
+please raise issues and/or PRs.  Additional maintainers can be added
+if they show commitment to the project.
 
-You can also join the `#nfts` channel on [CosmWasm Discord](https://docs.cosmwasm.com/chat)
-for more interactive discussion on these themes.
+You can also join the `#nfts` channel on [CosmWasm
+Discord](https://docs.cosmwasm.com/chat) for more interactive
+discussion on these themes.
+
+## Development
+
+This repository uses [`just`](https://github.com/casey/just) for
+orchestrating commands. To install, run `cargo install just`. Before
+submitting a PR, update the schema files by running:
+
+```
+just schema
+```
+
+To pass CI, your changes will need to pass the following checks:
+
+```
+just build
+just test
+just lint
+just integration-test
+```
+
+To track gas usage over time and run some tests against a real chain
+we use [de-husk](https://github.com/de-husk)'s
+[cosm-orc](https://github.com/de-husk/cosm-orc) library. To add a
+test, edit or create a file in `ci/integration-tests/src/tests`. Any
+test written in that way will be included in gas measurements. A
+significant deviation in gas usage between two changes for a test will
+cause a comment to be added to the relevant PR.
 

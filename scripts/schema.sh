@@ -6,3 +6,6 @@ do
   eval $CMD
   cd "$START_DIR"
 done
+
+# Also generate schema for cw721 package.
+cd packages/cw721 && cargo schema

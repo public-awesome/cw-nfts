@@ -10,6 +10,9 @@ test:
 lint:
 	cargo +nightly clippy --all-targets -- -D warnings
 
+schema:
+	./scripts/schema.sh
+
 integration-test: deploy-local optimize
 	RUST_LOG=info CONFIG={{orc_config}} cargo integration-test
 
