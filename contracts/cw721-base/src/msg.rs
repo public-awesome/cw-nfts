@@ -1,6 +1,8 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Binary;
+use cosmwasm_std::{Binary, Decimal};
 use cw721::Expiration;
+
+use crate::state::{CreatorInfo, MasterEditionInfo};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -13,6 +15,8 @@ pub struct InstantiateMsg {
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: String,
+
+    pub uri: Option<String>,
 }
 
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
@@ -69,6 +73,14 @@ pub struct MintMsg<T> {
     pub token_uri: Option<String>,
     /// Any custom extension used by this contract
     pub extension: T,
+
+    pub seller_fee: Decimal,
+
+    pub primary_sale_happened: bool,
+
+    pub creators_info: Vec<CreatorInfo>,
+
+    pub master_edition_info: MasterEditionInfo,
 }
 
 #[cw_serde]

@@ -33,6 +33,7 @@ where
         let info = ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
+            uri: msg.uri,
         };
         self.contract_info.save(deps.storage, &info)?;
         let minter = deps.api.addr_validate(&msg.minter)?;
@@ -103,6 +104,9 @@ where
             approvals: vec![],
             token_uri: msg.token_uri,
             extension: msg.extension,
+            creators: msg.creators_info, // TODO: iterate
+            master_edition_info: todo!(),
+            primary_sale_happened: false,
         };
         self.tokens
             .update(deps.storage, &msg.token_id, |old| match old {

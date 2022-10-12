@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, StdResult, Storage};
+use cosmwasm_std::{Addr, BlockInfo, StdResult, Storage, Decimal, Uint128};
 
 use cw721::{ContractInfoResponse, CustomMsg, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
@@ -101,6 +101,21 @@ where
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct CreatorInfo {
+    pub address: String,
+
+    pub verified: bool,
+
+    pub share: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MasterEditionInfo {
+    pub supply: Uint128,
+    pub max_supply: Uint128,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TokenInfo<T> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
@@ -111,6 +126,17 @@ pub struct TokenInfo<T> {
     /// Should point to a JSON file that conforms to the ERC721
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
+
+    // Royalty that goes to creators in secondary sales
+    pub seller_fee: Decimal,
+
+    // Immutable, once flipped, all sales of this metadata are considered secondary.
+    pub primary_sale_happened: bool,
+
+    // Creator list
+    pub creators: Vec<CreatorInfo>,
+
+    pub master_edition_info: MasterEditionInfo,
 
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: T,
