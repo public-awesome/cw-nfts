@@ -1,13 +1,13 @@
 [package]
-name = "cw2981-royalties"
-version = "0.15.0"
-authors = ["Alex Lynham <alex@lynh.am>"]
-edition = "2021"
-description = "Basic implementation of royalties for cw721 NFTs with token level royalties"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+name          = "cw2981-royalties"
+description   = "Basic implementation of royalties for cw721 NFTs with token level royalties"
+authors       = ["Alex Lynham <alex@lynh.am>"]
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -25,12 +25,10 @@ backtraces = ["cosmwasm-std/backtraces"]
 library = []
 
 [dependencies]
-cosmwasm-schema = "1.1.0"
-cosmwasm-std = "1.1.0"
-cw2 = "0.15.0"
-cw721 = { path = "../../packages/cw721", version = "0.15.0" }
-cw721-base = { path = "../cw721-base", version = "0.15.0", features = [
-  "library",
-] }
-schemars = "0.8.10"
-serde = { version = "1.0.140", default-features = false, features = ["derive"] }
+cosmwasm-schema = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw2             = { workspace = true }
+cw721           = { workspace = true }
+cw721-base      = { workspace = true, features = ["library"] }
+schemars        = { workspace = true }
+serde           = { workspace = true }
