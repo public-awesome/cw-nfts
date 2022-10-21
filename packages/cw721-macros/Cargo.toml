@@ -16,14 +16,14 @@ documentation = "https://docs.cosmwasm.com"
 proc-macro = true
 
 [dependencies]
-cosmwasm-std = "1.1.0"
-cw-utils = "0.15.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
+cosmwasm-std = "1.1.0"
 cosmwasm-schema = "1.1.0"
 cw721 = { path = "../cw721" }
+cw-utils = "0.15.0"
 schemars = "0.8.10"
 serde = { version = "1.0.140", default-features = false, features = ["derive"] }

@@ -267,6 +267,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-utils",
+ "cw721-macros",
  "schemars",
  "serde",
 ]
