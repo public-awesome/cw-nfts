@@ -91,7 +91,7 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Admin {} => to_binary(&admin(deps, env)?),
+            QueryMsg::Admin {} => to_binary(&admin(deps)?),
             _ => _query(deps, env, msg.into()),
         }
     }

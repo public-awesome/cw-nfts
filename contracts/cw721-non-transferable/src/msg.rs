@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Empty};
+use cosmwasm_std::Empty;
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 
 #[cw_serde]
@@ -92,6 +92,6 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty> {
 }
 
 #[cw_serde]
-pub struct GetAdminResponse {
-    pub admin: Option<Addr>,
+pub struct AdminResponse {
+    pub admin: Option<String>,
 }

@@ -1,10 +1,9 @@
-use crate::{msg::GetAdminResponse, state::CONFIG};
-use cosmwasm_std::{Deps, Env, StdResult};
+use crate::{msg::AdminResponse, state::CONFIG};
+use cosmwasm_std::{Deps, StdResult};
 
-pub fn admin(deps: Deps, _env: Env) -> StdResult<GetAdminResponse> {
+pub fn admin(deps: Deps) -> StdResult<AdminResponse> {
     let config = CONFIG.load(deps.storage)?;
-
-    Ok(GetAdminResponse {
-        admin: config.admin,
+    Ok(AdminResponse {
+        admin: config.admin.map(|admin| admin.to_string()),
     })
 }
