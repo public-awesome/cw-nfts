@@ -17,12 +17,10 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Query<T> for Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
         self.contract_info.load(deps.storage)
@@ -207,12 +205,10 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
