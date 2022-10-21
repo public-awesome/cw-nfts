@@ -9,8 +9,6 @@ use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
 pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
 
-use crate::msg::Cw2981QueryMsg;
-
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -48,9 +46,9 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
-pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
+pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
+pub use msg::QueryMsg;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -86,14 +84,12 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Extension { msg } => match msg {
-                Cw2981QueryMsg::RoyaltyInfo {
-                    token_id,
-                    sale_price,
-                } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
-                Cw2981QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
-            },
-            _ => Cw2981Contract::default().query(deps, env, msg),
+            QueryMsg::RoyaltyInfo {
+                token_id,
+                sale_price,
+            } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
+            QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
+            _ => Cw2981Contract::default().query(deps, env, msg.try_into()?),
         }
     }
 }
@@ -176,9 +172,7 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::CheckRoyalties {},
-        };
+        let query_msg = QueryMsg::CheckRoyalties {};
         let query_res: CheckRoyaltiesResponse =
             from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
@@ -221,11 +215,9 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::RoyaltyInfo {
-                token_id: token_id.to_string(),
-                sale_price: Uint128::new(100),
-            },
+        let query_msg = QueryMsg::RoyaltyInfo {
+            token_id: token_id.to_string(),
+            sale_price: Uint128::new(100),
         };
         let query_res: RoyaltiesInfoResponse =
             from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();

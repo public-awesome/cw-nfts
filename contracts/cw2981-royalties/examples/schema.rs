@@ -2,15 +2,15 @@ use std::env::current_dir;
 use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
-use cosmwasm_std::Empty;
 
 use cw721::{
     AllNftInfoResponse, ContractInfoResponse, NftInfoResponse, NumTokensResponse,
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cw721_base::{ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg};
+use cw721_base::{ExecuteMsg, Extension, InstantiateMsg, MinterResponse};
 
-use cw2981_royalties::msg::{CheckRoyaltiesResponse, Cw2981QueryMsg, RoyaltiesInfoResponse};
+use cw2981_royalties::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
+use cw2981_royalties::QueryMsg;
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -19,12 +19,8 @@ fn main() {
     remove_schemas(&out_dir).unwrap();
 
     export_schema(&schema_for!(InstantiateMsg), &out_dir);
-    export_schema_with_title(
-        &schema_for!(ExecuteMsg<Extension, Empty>),
-        &out_dir,
-        "ExecuteMsg",
-    );
-    export_schema(&schema_for!(QueryMsg<Cw2981QueryMsg>), &out_dir);
+    export_schema_with_title(&schema_for!(ExecuteMsg<Extension>), &out_dir, "ExecuteMsg");
+    export_schema(&schema_for!(QueryMsg), &out_dir);
     export_schema_with_title(
         &schema_for!(AllNftInfoResponse<Extension>),
         &out_dir,
@@ -41,7 +37,6 @@ fn main() {
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);
-    export_schema(&schema_for!(Cw2981QueryMsg), &out_dir);
     export_schema(&schema_for!(RoyaltiesInfoResponse), &out_dir);
     export_schema(&schema_for!(CheckRoyaltiesResponse), &out_dir);
 }

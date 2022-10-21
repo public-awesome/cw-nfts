@@ -1,9 +1,13 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Uint128;
-use cw721::CustomMsg;
+use std::convert::TryFrom;
 
+use cosmwasm_schema::cw_serde;
+use cosmwasm_std::{StdError, Uint128};
+use cw721::cw721_query;
+use cw721_base::QueryMsg as Cw721QueryMsg;
+
+#[cw721_query]
 #[cw_serde]
-pub enum Cw2981QueryMsg {
+pub enum QueryMsg {
     /// Should be called on sale to see if royalties are owed
     /// by the marketplace selling the NFT, if CheckRoyalties
     /// returns true
@@ -24,13 +28,77 @@ pub enum Cw2981QueryMsg {
     CheckRoyalties {},
 }
 
-impl Default for Cw2981QueryMsg {
-    fn default() -> Self {
-        Cw2981QueryMsg::CheckRoyalties {}
+// TODO: perhaps this trait can be implemented by a macro
+impl TryFrom<QueryMsg> for Cw721QueryMsg {
+    type Error = StdError;
+
+    fn try_from(msg: QueryMsg) -> Result<Self, Self::Error> {
+        match msg {
+            QueryMsg::OwnerOf {
+                token_id,
+                include_expired,
+            } => Ok(Cw721QueryMsg::OwnerOf {
+                token_id,
+                include_expired,
+            }),
+            QueryMsg::Approval {
+                token_id,
+                spender,
+                include_expired,
+            } => Ok(Cw721QueryMsg::Approval {
+                token_id,
+                spender,
+                include_expired,
+            }),
+            QueryMsg::Approvals {
+                token_id,
+                include_expired,
+            } => Ok(Cw721QueryMsg::Approvals {
+                token_id,
+                include_expired,
+            }),
+            QueryMsg::AllOperators {
+                owner,
+                include_expired,
+                start_after,
+                limit,
+            } => Ok(Cw721QueryMsg::AllOperators {
+                owner,
+                include_expired,
+                start_after,
+                limit,
+            }),
+            QueryMsg::NumTokens {} => Ok(Cw721QueryMsg::NumTokens {}),
+            QueryMsg::ContractInfo {} => Ok(Cw721QueryMsg::ContractInfo {}),
+            QueryMsg::NftInfo { token_id } => Ok(Cw721QueryMsg::NftInfo { token_id }),
+            QueryMsg::AllNftInfo {
+                token_id,
+                include_expired,
+            } => Ok(Cw721QueryMsg::AllNftInfo {
+                token_id,
+                include_expired,
+            }),
+            QueryMsg::Tokens {
+                owner,
+                start_after,
+                limit,
+            } => Ok(Cw721QueryMsg::Tokens {
+                owner,
+                start_after,
+                limit,
+            }),
+            QueryMsg::AllTokens { start_after, limit } => {
+                Ok(Cw721QueryMsg::AllTokens { start_after, limit })
+            }
+            QueryMsg::RoyaltyInfo { .. } => Err(StdError::generic_err(
+                "cannot cast `QueryMsg::RoyaltyInfo` in `cw721_base::QueryMsg`",
+            )),
+            QueryMsg::CheckRoyalties {} => Err(StdError::generic_err(
+                "cannot cast `QueryMsg::CheckRoyalties` in `cw721_base::QueryMsg`",
+            )),
+        }
     }
 }
-
-impl CustomMsg for Cw2981QueryMsg {}
 
 #[cw_serde]
 pub struct RoyaltiesInfoResponse {
