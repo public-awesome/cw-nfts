@@ -45,7 +45,7 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E>,
+        msg: ExecuteMsg<T>,
     ) -> Result<Response<C>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
@@ -71,7 +71,6 @@ where
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
-            ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
     }
 }

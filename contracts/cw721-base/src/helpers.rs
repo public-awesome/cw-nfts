@@ -26,7 +26,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E>) -> StdResult<CosmosMsg> {
+    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T>) -> StdResult<CosmosMsg> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -39,7 +39,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: QueryMsg<Q>,
+        req: QueryMsg,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),

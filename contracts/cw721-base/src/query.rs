@@ -221,7 +221,7 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
@@ -280,7 +280,6 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
-            QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }
 }

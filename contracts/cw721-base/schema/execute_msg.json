@@ -4,7 +4,20 @@
   "description": "This is like Cw721ExecuteMsg but we add a Mint command for an owner to make this stand-alone. You will likely want to remove mint and use other control logic in any contract that inherits this.",
   "oneOf": [
     {
-      "description": "Transfer is a base message to move a token to another account without triggering actions",
+      "description": "Mint a new NFT, can only be called by the contract minter",
+      "type": "object",
+      "required": [
+        "mint"
+      ],
+      "properties": {
+        "mint": {
+          "$ref": "#/definitions/MintMsg_for_Nullable_Empty"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Transfer is a base message to move a token to another account without triggering actions.",
       "type": "object",
       "required": [
         "transfer_nft"
@@ -60,7 +73,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit.",
       "type": "object",
       "required": [
         "approve"
@@ -96,33 +109,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Remove previously granted Approval",
-      "type": "object",
-      "required": [
-        "revoke"
-      ],
-      "properties": {
-        "revoke": {
-          "type": "object",
-          "required": [
-            "spender",
-            "token_id"
-          ],
-          "properties": {
-            "spender": {
-              "type": "string"
-            },
-            "token_id": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit.",
       "type": "object",
       "required": [
         "approve_all"
@@ -154,6 +141,32 @@
       "additionalProperties": false
     },
     {
+      "description": "Remove previously granted Approval",
+      "type": "object",
+      "required": [
+        "revoke"
+      ],
+      "properties": {
+        "revoke": {
+          "type": "object",
+          "required": [
+            "spender",
+            "token_id"
+          ],
+          "properties": {
+            "spender": {
+              "type": "string"
+            },
+            "token_id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Remove previously granted ApproveAll permission",
       "type": "object",
       "required": [
@@ -176,19 +189,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Mint a new NFT, can only be called by the contract minter",
-      "type": "object",
-      "required": [
-        "mint"
-      ],
-      "properties": {
-        "mint": {
-          "$ref": "#/definitions/MintMsg_for_Nullable_Empty"
-        }
-      },
-      "additionalProperties": false
-    },
-    {
       "description": "Burn an NFT the sender has access to",
       "type": "object",
       "required": [
@@ -203,28 +203,6 @@
           "properties": {
             "token_id": {
               "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "Extension msg",
-      "type": "object",
-      "required": [
-        "extension"
-      ],
-      "properties": {
-        "extension": {
-          "type": "object",
-          "required": [
-            "msg"
-          ],
-          "properties": {
-            "msg": {
-              "$ref": "#/definitions/Empty"
             }
           },
           "additionalProperties": false

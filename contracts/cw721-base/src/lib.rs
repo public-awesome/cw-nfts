@@ -38,14 +38,14 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<Extension, Empty>,
+        msg: ExecuteMsg<Extension>,
     ) -> Result<Response, ContractError> {
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
         tract.execute(deps, env, info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
         tract.query(deps, env, msg)
     }
