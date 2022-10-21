@@ -3,7 +3,7 @@
   "title": "Cw721ExecuteMsg",
   "oneOf": [
     {
-      "description": "Transfer is a base message to move a token to another account without triggering actions",
+      "description": "Transfer is a base message to move a token to another account without triggering actions.",
       "type": "object",
       "required": [
         "transfer_nft"
@@ -59,7 +59,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "description": "Allows operator to transfer / send the token from the owner's account. If expiration is set, then this allowance has a time/height limit.",
       "type": "object",
       "required": [
         "approve"
@@ -95,33 +95,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Remove previously granted Approval",
-      "type": "object",
-      "required": [
-        "revoke"
-      ],
-      "properties": {
-        "revoke": {
-          "type": "object",
-          "required": [
-            "spender",
-            "token_id"
-          ],
-          "properties": {
-            "spender": {
-              "type": "string"
-            },
-            "token_id": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit",
+      "description": "Allows operator to transfer / send any token from the owner's account. If expiration is set, then this allowance has a time/height limit.",
       "type": "object",
       "required": [
         "approve_all"
@@ -144,6 +118,32 @@
               ]
             },
             "operator": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Remove previously granted Approval",
+      "type": "object",
+      "required": [
+        "revoke"
+      ],
+      "properties": {
+        "revoke": {
+          "type": "object",
+          "required": [
+            "spender",
+            "token_id"
+          ],
+          "properties": {
+            "spender": {
+              "type": "string"
+            },
+            "token_id": {
               "type": "string"
             }
           },
