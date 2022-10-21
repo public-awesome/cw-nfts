@@ -3,6 +3,7 @@ mod query;
 mod receiver;
 mod traits;
 
+pub use cw721_macros::{cw721_execute, cw721_query};
 pub use cw_utils::Expiration;
 
 pub use crate::msg::Cw721ExecuteMsg;
