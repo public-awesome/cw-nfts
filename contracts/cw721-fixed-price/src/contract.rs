@@ -159,7 +159,7 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint(MintMsg::<Extension> {
+    let mint_msg = Cw721ExecuteMsg::<Extension>::Mint(MintMsg::<Extension> {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
@@ -371,7 +371,7 @@ mod tests {
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint(MintMsg::<Extension> {
+        let mint_msg = Cw721ExecuteMsg::<Extension>::Mint(MintMsg::<Extension> {
             token_id: String::from("0"),
             owner: String::from("minter"),
             token_uri: Some(String::from("https://ipfs.io/ipfs/Q")),
