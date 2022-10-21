@@ -305,6 +305,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw721-macros"
+version = "0.15.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-utils",
+ "cw721",
+ "proc-macro2",
+ "quote",
+ "schemars",
+ "serde",
+ "syn",
+]
+
+[[package]]
 name = "cw721-metadata-onchain"
 version = "0.15.0"
 dependencies = [

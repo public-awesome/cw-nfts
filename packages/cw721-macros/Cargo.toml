@@ -1,0 +1,29 @@
+[package]
+name = "cw721-macros"
+version = "0.15.0"
+authors = [
+  "Larry Engineer <gm@larry.engineer>",
+  "ekez <ekez@withoutdoing.com>",
+]
+edition = "2021"
+description = "Macro for deriving the the CosmWasm-721 NFT interface"
+license = "Apache-2.0"
+repository = "https://github.com/CosmWasm/cw-nfts"
+homepage = "https://cosmwasm.com"
+documentation = "https://docs.cosmwasm.com"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+cosmwasm-std = "1.1.0"
+cw-utils = "0.15.0"
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+cosmwasm-schema = "1.1.0"
+cw721 = { path = "../cw721" }
+schemars = "0.8.10"
+serde = { version = "1.0.140", default-features = false, features = ["derive"] }
