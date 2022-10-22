@@ -55,8 +55,7 @@ pub mod entry {
             cw721_base_instantiate_msg,
         )?;
 
-        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(ContractError::Std)?;
+        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         Ok(Response::default()
             .add_attribute("contract_name", CONTRACT_NAME)
