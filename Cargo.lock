@@ -304,6 +304,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw721-non-transferable"
+version = "0.15.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "cw721",
+ "cw721-base",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "der"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
