@@ -1,12 +1,9 @@
-use std::marker::PhantomData;
-
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{
-    to_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
-};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery};
 use cw721::{
     AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
-    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    TokensResponse,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -14,19 +11,15 @@ use serde::Serialize;
 use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
-pub struct Cw721Contract<Q: CustomMsg, E: CustomMsg>(
-    pub Addr,
-    pub PhantomData<Q>,
-    pub PhantomData<E>,
-);
+pub struct Cw721Contract(pub Addr);
 
 #[allow(dead_code)]
-impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
+impl Cw721Contract {
     pub fn addr(&self) -> Addr {
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E>) -> StdResult<CosmosMsg> {
+    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T>) -> StdResult<CosmosMsg> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -39,7 +32,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: QueryMsg<Q>,
+        req: QueryMsg,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -57,10 +50,10 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         token_id: T,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let req = QueryMsg::OwnerOf {
+        let req = QueryMsg::Parent(Cw721QueryMsg::OwnerOf {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
-        };
+        });
         self.query(querier, req)
     }
 
@@ -71,11 +64,11 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         spender: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalResponse> {
-        let req = QueryMsg::Approval {
+        let req = QueryMsg::Parent(Cw721QueryMsg::Approval {
             token_id: token_id.into(),
             spender: spender.into(),
             include_expired,
-        };
+        });
         let res: ApprovalResponse = self.query(querier, req)?;
         Ok(res)
     }
@@ -86,10 +79,10 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         token_id: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalsResponse> {
-        let req = QueryMsg::Approvals {
+        let req = QueryMsg::Parent(Cw721QueryMsg::Approvals {
             token_id: token_id.into(),
             include_expired,
-        };
+        });
         let res: ApprovalsResponse = self.query(querier, req)?;
         Ok(res)
     }
@@ -102,25 +95,25 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
-        let req = QueryMsg::AllOperators {
+        let req = QueryMsg::Parent(Cw721QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,
             limit,
-        };
+        });
         let res: OperatorsResponse = self.query(querier, req)?;
         Ok(res.operators)
     }
 
     pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
-        let req = QueryMsg::NumTokens {};
+        let req = QueryMsg::Parent(Cw721QueryMsg::NumTokens {});
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
     }
 
     /// With metadata extension
     pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<ContractInfoResponse> {
-        let req = QueryMsg::ContractInfo {};
+        let req = QueryMsg::Parent(Cw721QueryMsg::ContractInfo {});
         self.query(querier, req)
     }
 
@@ -130,9 +123,9 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         querier: &QuerierWrapper,
         token_id: T,
     ) -> StdResult<NftInfoResponse<U>> {
-        let req = QueryMsg::NftInfo {
+        let req = QueryMsg::Parent(Cw721QueryMsg::NftInfo {
             token_id: token_id.into(),
-        };
+        });
         self.query(querier, req)
     }
 
@@ -143,10 +136,10 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         token_id: T,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<U>> {
-        let req = QueryMsg::AllNftInfo {
+        let req = QueryMsg::Parent(Cw721QueryMsg::AllNftInfo {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
-        };
+        });
         self.query(querier, req)
     }
 
@@ -158,11 +151,11 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::Tokens {
+        let req = QueryMsg::Parent(Cw721QueryMsg::Tokens {
             owner: owner.into(),
             start_after,
             limit,
-        };
+        });
         self.query(querier, req)
     }
 
@@ -173,7 +166,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::AllTokens { start_after, limit };
+        let req = QueryMsg::Parent(Cw721QueryMsg::AllTokens { start_after, limit });
         self.query(querier, req)
     }
 

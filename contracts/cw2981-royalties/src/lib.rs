@@ -7,9 +7,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Empty};
 use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
-pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
-
-use crate::msg::Cw2981QueryMsg;
+pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
@@ -48,16 +46,15 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
-pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
+pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
+pub use msg::QueryMsg;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
     use super::*;
 
-    use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
     #[entry_point]
     pub fn instantiate(
@@ -86,14 +83,14 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Extension { msg } => match msg {
-                Cw2981QueryMsg::RoyaltyInfo {
-                    token_id,
-                    sale_price,
-                } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
-                Cw2981QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
-            },
-            _ => Cw2981Contract::default().query(deps, env, msg),
+            QueryMsg::Parent(cw721_base_msg) => {
+                Cw2981Contract::default().query(deps, env, cw721_base_msg)
+            }
+            QueryMsg::RoyaltyInfo {
+                token_id,
+                sale_price,
+            } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
+            QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
         }
     }
 }
@@ -124,22 +121,23 @@ mod tests {
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension = Some(Metadata {
+            description: Some("Spaceship with Warp Drive".into()),
+            name: Some("Starship USS Enterprise".to_string()),
+            ..Metadata::default()
+        });
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
-            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
-                description: Some("Spaceship with Warp Drive".into()),
-                name: Some("Starship USS Enterprise".to_string()),
-                ..Metadata::default()
-            }),
+            token_uri: token_uri.clone(),
+            extension: extension.clone(),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
         entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
 
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
-        assert_eq!(res.token_uri, mint_msg.token_uri);
-        assert_eq!(res.extension, mint_msg.extension);
+        assert_eq!(res.token_uri, token_uri);
+        assert_eq!(res.extension, extension);
     }
 
     #[test]
@@ -156,7 +154,7 @@ mod tests {
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
@@ -166,7 +164,6 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg);
         entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
 
         let expected = CheckRoyaltiesResponse {
@@ -176,9 +173,7 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::CheckRoyalties {},
-        };
+        let query_msg = QueryMsg::CheckRoyalties {};
         let query_res: CheckRoyaltiesResponse =
             from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
@@ -197,9 +192,10 @@ mod tests {
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let owner = "jeanluc";
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "jeanluc".to_string(),
+            owner: owner.to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
@@ -209,11 +205,10 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
         entry::execute(deps.as_mut(), mock_env(), info.clone(), exec_msg).unwrap();
 
         let expected = RoyaltiesInfoResponse {
-            address: mint_msg.owner,
+            address: owner.to_string(),
             royalty_amount: Uint128::new(10),
         };
         let res =
@@ -221,11 +216,9 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::RoyaltyInfo {
-                token_id: token_id.to_string(),
-                sale_price: Uint128::new(100),
-            },
+        let query_msg = QueryMsg::RoyaltyInfo {
+            token_id: token_id.to_string(),
+            sale_price: Uint128::new(100),
         };
         let query_res: RoyaltiesInfoResponse =
             from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
@@ -234,9 +227,10 @@ mod tests {
         // check for rounding down
         // which is the default behaviour
         let voyager_token_id = "Voyager";
-        let second_mint_msg = MintMsg {
+        let owner = "janeway";
+        let voyager_exec_msg = ExecuteMsg::Mint {
             token_id: voyager_token_id.to_string(),
-            owner: "janeway".to_string(),
+            owner: owner.to_string(),
             token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
@@ -246,13 +240,12 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let voyager_exec_msg = ExecuteMsg::Mint(second_mint_msg.clone());
         entry::execute(deps.as_mut(), mock_env(), info, voyager_exec_msg).unwrap();
 
         // 43 x 0.04 (i.e., 4%) should be 1.72
         // we expect this to be rounded down to 1
         let voyager_expected = RoyaltiesInfoResponse {
-            address: second_mint_msg.owner,
+            address: owner.to_string(),
             royalty_amount: Uint128::new(1),
         };
 

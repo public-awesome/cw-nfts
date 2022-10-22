@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
 use cw2::set_contract_version;
-pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
+pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
@@ -31,9 +31,9 @@ pub struct Metadata {
 
 pub type Extension = Option<Metadata>;
 
-pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
-pub type QueryMsg = cw721_base::QueryMsg<Empty>;
+pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension>;
+pub type QueryMsg = cw721_base::QueryMsg;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -98,23 +98,24 @@ mod tests {
             .unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension = Some(Metadata {
+            description: Some("Spaceship with Warp Drive".into()),
+            name: Some("Starship USS Enterprise".to_string()),
+            ..Metadata::default()
+        });
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
-            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
-                description: Some("Spaceship with Warp Drive".into()),
-                name: Some("Starship USS Enterprise".to_string()),
-                ..Metadata::default()
-            }),
+            token_uri: token_uri.clone(),
+            extension: extension.clone(),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
         contract
-            .execute(deps.as_mut(), mock_env(), info, exec_msg)
+            .execute(deps.as_mut(), mock_env(), info, exec_msg.clone())
             .unwrap();
 
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
-        assert_eq!(res.token_uri, mint_msg.token_uri);
-        assert_eq!(res.extension, mint_msg.extension);
+        assert_eq!(res.token_uri, token_uri);
+        assert_eq!(res.extension, extension);
     }
 }

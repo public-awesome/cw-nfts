@@ -5,8 +5,8 @@ use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdErro
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, CustomMsg,
-    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    Cw721Query, Cw721QueryMsg, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
@@ -17,12 +17,10 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Query<T> for Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
         self.contract_info.load(deps.storage)
@@ -207,12 +205,10 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
         let minter_addr = self.minter.load(deps.storage)?;
@@ -221,66 +217,73 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
+            QueryMsg::Parent(cw721_msg) => match cw721_msg {
+                Cw721QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
+                Cw721QueryMsg::NftInfo { token_id } => to_binary(&self.nft_info(deps, token_id)?),
+                Cw721QueryMsg::OwnerOf {
+                    token_id,
+                    include_expired,
+                } => to_binary(&self.owner_of(
+                    deps,
+                    env,
+                    token_id,
+                    include_expired.unwrap_or(false),
+                )?),
+                Cw721QueryMsg::AllNftInfo {
+                    token_id,
+                    include_expired,
+                } => to_binary(&self.all_nft_info(
+                    deps,
+                    env,
+                    token_id,
+                    include_expired.unwrap_or(false),
+                )?),
+                Cw721QueryMsg::AllOperators {
+                    owner,
+                    include_expired,
+                    start_after,
+                    limit,
+                } => to_binary(&self.operators(
+                    deps,
+                    env,
+                    owner,
+                    include_expired.unwrap_or(false),
+                    start_after,
+                    limit,
+                )?),
+                Cw721QueryMsg::NumTokens {} => to_binary(&self.num_tokens(deps)?),
+                Cw721QueryMsg::Tokens {
+                    owner,
+                    start_after,
+                    limit,
+                } => to_binary(&self.tokens(deps, owner, start_after, limit)?),
+                Cw721QueryMsg::AllTokens { start_after, limit } => {
+                    to_binary(&self.all_tokens(deps, start_after, limit)?)
+                }
+                Cw721QueryMsg::Approval {
+                    token_id,
+                    spender,
+                    include_expired,
+                } => to_binary(&self.approval(
+                    deps,
+                    env,
+                    token_id,
+                    spender,
+                    include_expired.unwrap_or(false),
+                )?),
+                Cw721QueryMsg::Approvals {
+                    token_id,
+                    include_expired,
+                } => to_binary(&self.approvals(
+                    deps,
+                    env,
+                    token_id,
+                    include_expired.unwrap_or(false),
+                )?),
+            },
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
-            QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
-            QueryMsg::NftInfo { token_id } => to_binary(&self.nft_info(deps, token_id)?),
-            QueryMsg::OwnerOf {
-                token_id,
-                include_expired,
-            } => {
-                to_binary(&self.owner_of(deps, env, token_id, include_expired.unwrap_or(false))?)
-            }
-            QueryMsg::AllNftInfo {
-                token_id,
-                include_expired,
-            } => to_binary(&self.all_nft_info(
-                deps,
-                env,
-                token_id,
-                include_expired.unwrap_or(false),
-            )?),
-            QueryMsg::AllOperators {
-                owner,
-                include_expired,
-                start_after,
-                limit,
-            } => to_binary(&self.operators(
-                deps,
-                env,
-                owner,
-                include_expired.unwrap_or(false),
-                start_after,
-                limit,
-            )?),
-            QueryMsg::NumTokens {} => to_binary(&self.num_tokens(deps)?),
-            QueryMsg::Tokens {
-                owner,
-                start_after,
-                limit,
-            } => to_binary(&self.tokens(deps, owner, start_after, limit)?),
-            QueryMsg::AllTokens { start_after, limit } => {
-                to_binary(&self.all_tokens(deps, start_after, limit)?)
-            }
-            QueryMsg::Approval {
-                token_id,
-                spender,
-                include_expired,
-            } => to_binary(&self.approval(
-                deps,
-                env,
-                token_id,
-                spender,
-                include_expired.unwrap_or(false),
-            )?),
-            QueryMsg::Approvals {
-                token_id,
-                include_expired,
-            } => {
-                to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
-            }
-            QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }
 }

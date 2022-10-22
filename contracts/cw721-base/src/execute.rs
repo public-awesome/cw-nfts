@@ -4,22 +4,22 @@ use serde::Serialize;
 use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
 use cw2::set_contract_version;
-use cw721::{ContractInfoResponse, CustomMsg, Cw721Execute, Cw721ReceiveMsg, Expiration};
+use cw721::{
+    ContractInfoResponse, CustomMsg, Cw721Execute, Cw721ExecuteMsg, Cw721ReceiveMsg, Expiration,
+};
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     pub fn instantiate(
         &self,
@@ -45,51 +45,61 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E>,
+        msg: ExecuteMsg<T>,
     ) -> Result<Response<C>, ContractError> {
         match msg {
-            ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
-            ExecuteMsg::Approve {
-                spender,
+            ExecuteMsg::Parent(cw721_msg) => match cw721_msg {
+                Cw721ExecuteMsg::Approve {
+                    spender,
+                    token_id,
+                    expires,
+                } => self.approve(deps, env, info, spender, token_id, expires),
+                Cw721ExecuteMsg::Revoke { spender, token_id } => {
+                    self.revoke(deps, env, info, spender, token_id)
+                }
+                Cw721ExecuteMsg::ApproveAll { operator, expires } => {
+                    self.approve_all(deps, env, info, operator, expires)
+                }
+                Cw721ExecuteMsg::RevokeAll { operator } => {
+                    self.revoke_all(deps, env, info, operator)
+                }
+                Cw721ExecuteMsg::TransferNft {
+                    recipient,
+                    token_id,
+                } => self.transfer_nft(deps, env, info, recipient, token_id),
+                Cw721ExecuteMsg::SendNft {
+                    contract,
+                    token_id,
+                    msg,
+                } => self.send_nft(deps, env, info, contract, token_id, msg),
+                Cw721ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
+            },
+            ExecuteMsg::Mint {
                 token_id,
-                expires,
-            } => self.approve(deps, env, info, spender, token_id, expires),
-            ExecuteMsg::Revoke { spender, token_id } => {
-                self.revoke(deps, env, info, spender, token_id)
-            }
-            ExecuteMsg::ApproveAll { operator, expires } => {
-                self.approve_all(deps, env, info, operator, expires)
-            }
-            ExecuteMsg::RevokeAll { operator } => self.revoke_all(deps, env, info, operator),
-            ExecuteMsg::TransferNft {
-                recipient,
-                token_id,
-            } => self.transfer_nft(deps, env, info, recipient, token_id),
-            ExecuteMsg::SendNft {
-                contract,
-                token_id,
-                msg,
-            } => self.send_nft(deps, env, info, contract, token_id, msg),
-            ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
-            ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
+                owner,
+                token_uri,
+                extension,
+            } => self.mint(deps, env, info, token_id, owner, token_uri, extension),
         }
     }
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
+    #[allow(clippy::too_many_arguments)]
     pub fn mint(
         &self,
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
-        msg: MintMsg<T>,
+        token_id: String,
+        owner: String,
+        token_uri: Option<String>,
+        extension: T,
     ) -> Result<Response<C>, ContractError> {
         let minter = self.minter.load(deps.storage)?;
 
@@ -99,13 +109,13 @@ where
 
         // create the token
         let token = TokenInfo {
-            owner: deps.api.addr_validate(&msg.owner)?,
+            owner: deps.api.addr_validate(&owner)?,
             approvals: vec![],
-            token_uri: msg.token_uri,
-            extension: msg.extension,
+            token_uri,
+            extension,
         };
         self.tokens
-            .update(deps.storage, &msg.token_id, |old| match old {
+            .update(deps.storage, &token_id, |old| match old {
                 Some(_) => Err(ContractError::Claimed {}),
                 None => Ok(token),
             })?;
@@ -115,17 +125,15 @@ where
         Ok(Response::new()
             .add_attribute("action", "mint")
             .add_attribute("minter", info.sender)
-            .add_attribute("owner", msg.owner)
-            .add_attribute("token_id", msg.token_id))
+            .add_attribute("owner", owner)
+            .add_attribute("token_id", token_id))
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Execute<T, C> for Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     type Err = ContractError;
 
@@ -271,12 +279,10 @@ where
 }
 
 // helpers
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
     C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
 {
     pub fn _transfer_nft(
         &self,

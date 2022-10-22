@@ -1,9 +1,11 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Uint128;
-use cw721::CustomMsg;
 
 #[cw_serde]
-pub enum Cw2981QueryMsg {
+#[serde(untagged)]
+pub enum QueryMsg {
+    Parent(cw721_base::QueryMsg),
+
     /// Should be called on sale to see if royalties are owed
     /// by the marketplace selling the NFT, if CheckRoyalties
     /// returns true
@@ -16,6 +18,7 @@ pub enum Cw2981QueryMsg {
         // as CW20 is just mapping of addr -> balance
         sale_price: Uint128,
     },
+
     /// Called against contract to determine if this NFT
     /// implements royalties. Should return a boolean as part of
     /// CheckRoyaltiesResponse - default can simply be true
@@ -23,14 +26,6 @@ pub enum Cw2981QueryMsg {
     /// (i.e. always check on sale)
     CheckRoyalties {},
 }
-
-impl Default for Cw2981QueryMsg {
-    fn default() -> Self {
-        Cw2981QueryMsg::CheckRoyalties {}
-    }
-}
-
-impl CustomMsg for Cw2981QueryMsg {}
 
 #[cw_serde]
 pub struct RoyaltiesInfoResponse {
