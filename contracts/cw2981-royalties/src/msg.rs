@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Uint128;
-use cw721::CustomMsg;
+use cosmwasm_std::{CustomMsg, Uint128};
 
 #[cw_serde]
 pub enum Cw2981QueryMsg {
