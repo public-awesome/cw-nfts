@@ -1,5 +1,6 @@
 [workspace]
-members = ["packages/*", "contracts/*"]
+members = ["packages/*", "contracts/*", "ci/*"]
+exclude = ["ci/configs/"]
 
 [profile.release.package.cw721-base]
 codegen-units = 1

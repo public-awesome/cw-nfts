@@ -2,3 +2,4 @@
 wasm = "build --release --target wasm32-unknown-unknown"
 wasm-debug = "build --target wasm32-unknown-unknown"
 unit-test = "test --lib"
+integration-test = "test --package integration-tests -- --ignored --test-threads 1"
