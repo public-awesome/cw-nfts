@@ -16,7 +16,7 @@ fn execute_transfer_nft(chain: &mut Chain) {
         minter: user_addr.clone(),
     };
 
-    let res = chain
+    chain
         .orc
         .instantiate(
             "cw721_base",
@@ -26,12 +26,6 @@ fn execute_transfer_nft(chain: &mut Chain) {
             Some(user_addr.clone()),
             vec![],
         )
-        .unwrap();
-
-    chain
-        .orc
-        .contract_map
-        .add_address("cw721_base", res.address)
         .unwrap();
 
     chain
