@@ -61,20 +61,21 @@ fn test_accounts() -> HashMap<String, SigningAccount> {
     let bytes = fs::read("../configs/test_accounts.json").unwrap();
     let accounts: Vec<Account> = serde_json::from_slice(&bytes).unwrap();
 
-    let mut account_map = HashMap::new();
-    for account in accounts {
-        account_map.insert(
-            account.name.clone(),
-            SigningAccount {
-                account: account.clone(),
-                key: SigningKey {
-                    name: account.name,
-                    key: Key::Mnemonic(account.mnemonic),
+    accounts
+        .into_iter()
+        .map(|account| {
+            (
+                account.name.clone(),
+                SigningAccount {
+                    account: account.clone(),
+                    key: SigningKey {
+                        name: account.name,
+                        key: Key::Mnemonic(account.mnemonic),
+                    },
                 },
-            },
-        );
-    }
-    account_map
+            )
+        })
+        .collect::<HashMap<String, SigningAccount>>()
 }
 
 // global_setup() runs once before all of the tests
