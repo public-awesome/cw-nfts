@@ -1,23 +1,17 @@
 [package]
-name = "cw721-base"
-version = "0.15.0"
-authors = [
+name          = "cw721-base"
+description   = "Basic implementation cw721 NFTs"
+authors       = [
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-edition = "2021"
-description = "Basic implementation cw721 NFTs"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
-exclude = [
-  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
-  "artifacts/*",
-]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -28,12 +22,12 @@ backtraces = ["cosmwasm-std/backtraces"]
 library = []
 
 [dependencies]
-cosmwasm-schema = "1.1.0"
-cosmwasm-std = "1.1.0"
-cw-utils = "0.15.0"
-cw2 = "0.15.0"
-cw721 = { path = "../../packages/cw721", version = "0.15.0" }
-cw-storage-plus = "0.15.0"
-schemars = "0.8.10"
-serde = { version = "1.0.140", default-features = false, features = ["derive"] }
-thiserror = "1.0.31"
+cosmwasm-schema = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw-utils        = { workspace = true }
+cw2             = { workspace = true }
+cw721           = { workspace = true }
+cw-storage-plus = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+thiserror       = { workspace = true }

@@ -248,19 +248,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw3"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "961f6959e04de1bc61f4fc3f333bc039998e2aedeab4aa79ba48239cf2d3edfa"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-utils",
- "schemars",
- "serde",
-]
-
-[[package]]
 name = "cw721"
 version = "0.15.0"
 dependencies = [
@@ -296,7 +283,6 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw20",
- "cw3",
  "cw721-base",
  "prost",
  "schemars",
@@ -507,9 +493,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.10.4"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8bf247779e67a9082a4790b45e71ac7cfd1321331a5c856a74a9faebdab78d0"
+checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
 dependencies = [
  "either",
 ]
