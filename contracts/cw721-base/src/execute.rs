@@ -1,10 +1,10 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
 use cw2::set_contract_version;
-use cw721::{ContractInfoResponse, CustomMsg, Cw721Execute, Cw721ReceiveMsg, Expiration};
+use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
@@ -314,11 +314,7 @@ where
 
         // update the approval list (remove any for the same spender before adding)
         let spender_addr = deps.api.addr_validate(spender)?;
-        token.approvals = token
-            .approvals
-            .into_iter()
-            .filter(|apr| apr.spender != spender_addr)
-            .collect();
+        token.approvals.retain(|apr| apr.spender != spender_addr);
 
         // only difference between approve and revoke
         if add {
