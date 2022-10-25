@@ -1,0 +1,77 @@
+[config]
+# Set this to `false` to run the tasks at workspace root directory and not on the members
+default_to_workspace = false
+# Set this to `true` to avoid clashes with core commands (e.g. `cargo make publish` vs `cargo publish`)
+skip_core_tasks = true
+
+[tasks.fmt]
+command = "cargo"
+args = ["fmt", "--all", "--check"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--locked"]
+
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "--tests", "--", "-D", "warnings"]
+
+[tasks.build]
+command = "cargo"
+args = [
+  "build",
+  "--release",
+  "--locked",
+  "--target", "wasm32-unknown-unknown",
+]
+
+[tasks.optimize]
+script = """
+if [[ $(arch) == "arm64" ]]; then
+  image="cosmwasm/workspace-optimizer-arm64"
+else
+  image="cosmwasm/workspace-optimizer"
+fi
+
+docker run --rm -v "$(pwd)":/code \
+  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  ${image}:0.12.9
+"""
+
+[tasks.schema]
+script = """
+for d in packages/*; do
+  if [ -d "$d" ]; then
+    cd $d
+    cargo schema
+    cd ../..
+  fi
+done
+
+for d in contracts/*; do
+  if [ -d "$d" ]; then
+    cd $d
+    cargo schema
+    cd ../..
+  fi
+done
+"""
+
+[tasks.publish]
+script = """
+crates=(
+  cw721
+  cw721-base
+  cw721-fixed-price
+  cw721-metadata-onchain
+  cw721-non-transferable
+  cw2981-royalties
+)
+
+for crate in $crates; do
+  cargo publish -p $crate
+  echo "Sleeping before publishing the next crate..."
+  sleep 30
+done
+"""
