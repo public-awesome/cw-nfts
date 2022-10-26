@@ -1,3 +1,5 @@
+use schemars::JsonSchema;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::Expiration;
@@ -73,7 +75,10 @@ pub struct MintMsg<T> {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg<Q> {
+pub enum QueryMsg<Q>
+where
+    Q: JsonSchema,
+{
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::OwnerOfResponse)]
     OwnerOf {
@@ -113,12 +118,12 @@ pub enum QueryMsg<Q> {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(cw721::NftInfoResponse)]
+    #[returns(cw721::NftInfoResponse<Q>)]
     NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(cw721::AllNftInfoResponse)]
+    #[returns(cw721::AllNftInfoResponse<Q>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
