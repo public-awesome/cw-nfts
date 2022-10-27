@@ -1,5 +1,4 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Binary;
 
 #[cw_serde]
 pub struct MsgSignDataValue {
@@ -35,6 +34,6 @@ pub struct ADR36SignDoc {
 #[cw_serde]
 pub struct PermitSignature {
     pub hrp: String,
-    pub pub_key: Binary,
-    pub signature: Binary,
+    pub pub_key: String,
+    pub signature: String,
 }

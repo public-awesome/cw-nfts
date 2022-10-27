@@ -17,6 +17,7 @@ use std::{str, env};
 pub mod error;
 pub mod msg;
 pub mod state;
+pub mod test;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw4973";
@@ -186,9 +187,9 @@ pub mod entry {
     }
 
     // _get_bech32_address function is used to get the bech32 address from the public key and hrp
-    fn _get_bech32_address(hrp: &str, pubkey: &Binary) -> Result<String, ContractError> {
+    fn _get_bech32_address(hrp: &str, pubkey: &[u8]) -> Result<String, ContractError> {
         // get the hash of the pubkey bytes
-        let pk_hash = Sha256::digest(&pubkey.0);
+        let pk_hash = Sha256::digest(&pubkey);
 
         // Insert the hash result in the ripdemd hash function
         let mut rip_hasher = Ripemd160::default();
@@ -228,7 +229,7 @@ pub mod entry {
         let pubkey = signature.pub_key.clone();
 
         // verify the signature using the hash and the public key
-        let is_verified = deps.api.secp256k1_verify(&hash, &sig, &pubkey);
+        let is_verified = deps.api.secp256k1_verify(&hash, sig.as_bytes(), pubkey.as_bytes());
         match is_verified {
             Ok(_) => {
                 // If the signature is verified then we must check the address of public key is equal to passive address
@@ -236,7 +237,7 @@ pub mod entry {
                 let hrp = signature.hrp.clone();
 
                 // get the address of signer from the public key using get_bech32_address function
-                let signer_address = _get_bech32_address(&hrp, &pubkey).unwrap();
+                let signer_address = _get_bech32_address(&hrp, pubkey.as_bytes()).unwrap();
 
                 // check if the recovered address is same as the 'to' address, then return empty string
                 if signer_address != *passive {

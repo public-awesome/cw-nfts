@@ -5,7 +5,6 @@ use crate::state::PermitSignature;
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: Option<String>,
     pub name: String,
     pub symbol: String,
     pub minter: String,
@@ -13,7 +12,6 @@ pub struct InstantiateMsg {
 
 #[cw_serde]
 pub enum QueryMsg {
-    Admin {},
     OwnerOf {
         token_id: String,
         include_expired: Option<bool>,
