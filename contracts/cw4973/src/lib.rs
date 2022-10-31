@@ -13,6 +13,7 @@ use sha2::{Digest, Sha256};
 use bech32::{ToBase32, Variant::Bech32};
 use ripemd::{Ripemd160};
 use std::{str, env};
+use base64;
 
 pub mod error;
 pub mod msg;
@@ -228,8 +229,11 @@ pub mod entry {
         // get the public key from the signature
         let pubkey = signature.pub_key.clone();
 
+        // decode the public key
+        let pubkey_bytes = base64::decode(pubkey).unwrap();
+
         // verify the signature using the hash and the public key
-        let is_verified = deps.api.secp256k1_verify(&hash, sig.as_bytes(), pubkey.as_bytes());
+        let is_verified = deps.api.secp256k1_verify(&hash, sig.as_bytes(), pubkey_bytes.as_slice());
         match is_verified {
             Ok(_) => {
                 // If the signature is verified then we must check the address of public key is equal to passive address
@@ -237,7 +241,7 @@ pub mod entry {
                 let hrp = signature.hrp.clone();
 
                 // get the address of signer from the public key using get_bech32_address function
-                let signer_address = _get_bech32_address(&hrp, pubkey.as_bytes()).unwrap();
+                let signer_address = _get_bech32_address(&hrp, pubkey_bytes.as_slice()).unwrap();
 
                 // check if the recovered address is same as the 'to' address, then return empty string
                 if signer_address != *passive {
