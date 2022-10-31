@@ -1,8 +1,12 @@
 use cosmwasm_std::StdError;
 use thiserror::Error;
+pub use cw721_base::ContractError as Cw721ContractError;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
+    #[error("{0}")]
+    Cw721ContractError(Cw721ContractError),
+    
     #[error("{0}")]
     Std(#[from] StdError),
 

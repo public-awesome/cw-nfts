@@ -45,3 +45,7 @@ mnemonic = 'index light average senior silent limit usual local involve delay up
 
 [accounts.test10]
 mnemonic = 'prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder'
+
+[wasm]
+contract_dir = 'contracts'
+optimizer_version = '0.12.9'

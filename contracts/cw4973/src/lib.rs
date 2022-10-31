@@ -110,13 +110,7 @@ pub mod entry {
         };
         
         // execute the mint message
-        _min(deps, env, info, mint_msg).ok();
-
-        // return the response of mint function
-        Ok(Response::new()
-            .add_attribute("action", "mint")
-            .add_attribute("nft_id", nft_id)
-            .add_attribute("owner", to))
+        _mint(deps, env, info, mint_msg)
     }
 
     // execute_take function is used to take a nft from another address
@@ -158,14 +152,7 @@ pub mod entry {
         };
         
         // execute the mint message
-        _min(deps, env, info, mint_msg).ok();
-
-        // return the response of mint function
-        Ok(Response::new()
-            .add_attribute("action", "mint")
-            .add_attribute("nft_id", nft_id)
-            .add_attribute("owner", owner))
-
+        _mint(deps, env, info, mint_msg)
     }
 
     // execute_unequip is a function that allows the owner of a nft to unequip it by set the equiped field to false
@@ -224,7 +211,7 @@ pub mod entry {
         let hash = _get_hash(&active, &passive, &uri, &chain_id);
 
         // get the signature value from the signature
-        let sig = signature.signature.clone();
+        let sig = base64::decode(signature.signature.clone()).unwrap();
         
         // get the public key from the signature
         let pubkey = signature.pub_key.clone();
@@ -233,7 +220,7 @@ pub mod entry {
         let pubkey_bytes = base64::decode(pubkey).unwrap();
 
         // verify the signature using the hash and the public key
-        let is_verified = deps.api.secp256k1_verify(&hash, sig.as_bytes(), pubkey_bytes.as_slice());
+        let is_verified = deps.api.secp256k1_verify(&hash, &sig, &pubkey_bytes);
         match is_verified {
             Ok(_) => {
                 // If the signature is verified then we must check the address of public key is equal to passive address
@@ -247,11 +234,8 @@ pub mod entry {
                 if signer_address != *passive {
                     return "".to_string();
                 } else {
-                    // the id of the nft is the hash of hash value using sha256
-                    let nft_id = Sha256::digest(&hash);
-
-                    // return the nft id as string
-                    return str::from_utf8(nft_id.as_slice()).unwrap().to_string();
+                    // return hex encoded hash
+                    return hex::encode(hash);
                 }
             }
             Err(_) => {
@@ -284,12 +268,12 @@ pub mod entry {
     }
 
     // rewrite mint function of cw721 base to ignore minter checking
-    fn _min(
+    fn _mint(
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
         msg: MintMsg<Extension>,
-    ) -> Result<Response, Cw721ContractError> {
+    ) -> Result<Response, ContractError> {
         // create the token
         let token = TokenInfo {
             owner: deps.api.addr_validate(&msg.owner)?,
@@ -301,7 +285,8 @@ pub mod entry {
         // update tokens list of contract
         Cw4973Contract::default().tokens
             .update(deps.storage, &msg.token_id, |old| match old {
-                Some(_) => Err(Cw721ContractError::Claimed {}),
+                // returm cw721contracterror enum
+                Some(_) => Err(ContractError::Cw721ContractError(Cw721ContractError::Claimed {})),
                 None => Ok(token),
             })?;
 
