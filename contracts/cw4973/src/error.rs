@@ -33,4 +33,7 @@ pub enum ContractError {
 
     #[error("invalid sender address")]
     From(),
+
+    #[error("invalid signature address")]
+    InvalidSignature,
 }

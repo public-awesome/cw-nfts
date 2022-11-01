@@ -21,7 +21,7 @@ async function store() {
 
     const client = await SigningCosmWasmClient.connectWithSigner(chainConfig.rpcEndpoint, deployerWallet);
     const gasPrice = GasPrice.fromString(`0.025${chainConfig.denom}`);
-    const uploadFee = calculateFee(2000000, gasPrice);
+    const uploadFee = calculateFee(2500000, gasPrice);
     const account = (await deployerWallet.getAccounts())[0];
 
     const cw4973 = fs.readFileSync(`${__dirname}/../target/wasm32-unknown-unknown/release/cw4973.wasm`);
