@@ -36,6 +36,17 @@ async function unequip(_contract, _tokenId) {
     const infor1 = await testerClient.queryContractSmart(_contract, QueryTokenInfoMsg);
     console.log("infor1: ", infor1);
 
+    // define the owner of NFT message using id of nft
+    const QueryOwnerMsg = {
+        owner_of: {
+            token_id: _tokenId,
+        },
+    };
+
+    // check the ownership of NFT
+    const owner = await testerClient.queryContractSmart(_contract, QueryOwnerMsg);
+    console.log("owner: ", owner);
+
     // define the unequip message using id of nft
     const ExecuteUnequipMsg = {
         unequip: {
