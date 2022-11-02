@@ -5,11 +5,6 @@ Cw4973 is implemented based on the description of [EIP-4973](https://eips.ethere
 ## Maintainers
 
 This contract source code is provided by [Aura project](https://aura.network/) and supported directly by:
-* [Long Nguyen](https://github.com/eledra89)
-* [Hoàng Thành](https://github.com/hoangthanh212)
-* [hoanm](https://github.com/hoanm)
-* [Thiện](https://github.com/ThienLK1)
-* [Vu Ngoc Quang](https://github.com/peara)
 
 ## Contributing
 
