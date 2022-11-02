@@ -145,10 +145,9 @@ const Testnet = {
     broadcastPollIntervalMs: 1000
 };
 
-let defaultChain = euphoria;
+let defaultChain = Testnet;
 
-defaultChain.deployer_mnemonic = process.env.DEPLOYER_MNEMONIC || '';
-defaultChain.tester_mnemonic = process.env.TESTER_MNEMONIC || '';
+defaultChain.deployer_mnemonic = process.env.MNEMONIC;
 
 module.exports = {
     Testnet
