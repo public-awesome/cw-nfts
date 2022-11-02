@@ -94,6 +94,11 @@ fn execute_give(
     uri: String,
     signature: PermitSignature,
 ) -> Result<Response, ContractError> {
+    // cannot give to yourself
+    if info.sender.to_string() == to {
+        return Err(ContractError::CannotGiveToSelf {});
+    }
+
     // Cannot execute this function if the sender is not the minter get from cw721 contract
     let minter = Cw4973Contract::default().minter.load(deps.storage)?;
     if minter != info.sender {
@@ -125,6 +130,11 @@ pub fn execute_take(
     uri: String,
     signature: PermitSignature,
 ) -> Result<Response, ContractError> {
+    // cannot take from yourself
+    if info.sender.to_string() == from {
+        return Err(ContractError::CannotTakeFromSelf {});
+    }
+
     // check 'from' is a valid human's address
     let from_addr = deps.api.addr_validate(&from)?;
 

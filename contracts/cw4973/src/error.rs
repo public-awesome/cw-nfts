@@ -13,6 +13,12 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Cannot give to yourself")]
+    CannotGiveToSelf{},
+
+    #[error("Cannot take from yourself")]
+    CannotTakeFromSelf{},
+
     #[error("Caller is not minter")]
     NotMinter {},
 

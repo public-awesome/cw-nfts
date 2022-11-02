@@ -14,26 +14,6 @@ function createMessageToSign(chainID, active, passive, uri) {
     // create message to sign based on concating AGREEMENT, signer, receiver, and uri
     const message = AGREEMENT + active + passive + uri;
 
-    // const messageToSign = {
-    //     "chain_id": chainID,
-    //     "account_number": "0",
-    //     "sequence": "0",
-    //     "fee": {
-    //         "gas": "0",
-    //         "amount": []
-    //     },
-    //     "msgs": [
-    //         {
-    //             "type": "sign/MsgSignData",
-    //             "value": {
-    //                 "signer": passive,
-    //                 "data": message
-    //             }
-    //         }
-    //     ],
-    //     "memo": ""
-    // };
-
     const mess = {
         type: "sign/MsgSignData",
         value: {
@@ -69,17 +49,10 @@ async function getPermitSignatureAmino(messageToSign) {
 
     // sign message
     const signedDoc = await deployerWallet.signAmino(adminAccount.address, messageToSign);
-    console.log(signedDoc);
+    console.log("signedDoc:", signedDoc);
     
     // convert signature from base64 string to Uint8Array
     const signatureUint8Array = Buffer.from(signedDoc.signature.signature, 'base64');
-
-    // convert signature from base64 string to Uint8Array
-    // const signatureUint8Array = Buffer.from(signature.signature.signature, 'base64');
-
-    // console.log(signatureUint8Array);
-    // const bytes = new Uint8Array(b);
-    // console.log(bytes);
 
     // const signatureBase64 = amino.encodeSecp256k1Signature(signature.signature.pub_key.value, signatureUint8Array);
     const decodedSignature = amino.decodeSignature(signedDoc.signature);
