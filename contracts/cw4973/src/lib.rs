@@ -228,6 +228,12 @@ fn _safe_check_agreement(
 
     // verify the signature using the hash and the public key
     let is_verified = deps.api.secp256k1_verify(&hash, &sig, &pubkey_bytes);
+    println!("is_verified: {:?}", &is_verified);
+    println!("hash: {:?}", &hash);
+    println!("sig: {:?}", &sig);
+    println!("pubkey_bytes: {:?}", &pubkey_bytes);
+    assert!(false);
+
     match is_verified {
         Ok(_) => {
             // If the signature is verified then we must check the address of public key is equal to passive address
