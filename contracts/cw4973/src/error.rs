@@ -11,35 +11,41 @@ pub enum ContractError {
     Std(#[from] StdError),
 
     #[error("Unauthorized")]
-    Unauthorized {},
+    Unauthorized,
 
     #[error("Cannot give to yourself")]
-    CannotGiveToSelf{},
+    CannotGiveToSelf,
 
     #[error("Cannot take from yourself")]
-    CannotTakeFromSelf{},
+    CannotTakeFromSelf,
 
     #[error("Caller is not minter")]
-    NotMinter {},
+    NotMinter,
 
     #[error("NFT is already unequipped")]
-    NftAlreadyUnequipped {},
+    NftAlreadyUnequipped,
 
     #[error("NFT is already equipped")]
-    NftAlreadyEquipped {},
+    NftAlreadyEquipped,
 
     #[error("NFT is already unadmitted")]
-    NftAlreadyUnadmitted {},
+    NftAlreadyUnadmitted,
 
-    #[error("invalid human readable path {0}")]
+    #[error("Invalid human readable path {0}")]
     Hrp(String),
 
-    #[error("invalid receiver address")]
-    To(),
+    #[error("Invalid receiver address")]
+    To,
 
-    #[error("invalid sender address")]
-    From(),
+    #[error("Invalid sender address")]
+    From,
 
-    #[error("invalid signature address")]
+    #[error("Invalid signature")]
     InvalidSignature,
+
+    #[error("Invalid signer")]
+    InvalidSigner,
+
+    #[error("Cannot verify signature")]
+    CannotVerifySignature,
 }

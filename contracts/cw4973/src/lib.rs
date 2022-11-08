@@ -18,6 +18,7 @@ use base64;
 pub mod error;
 pub mod msg;
 pub mod state;
+pub mod test;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw4973";
@@ -96,13 +97,13 @@ fn execute_give(
 ) -> Result<Response, ContractError> {
     // cannot give to yourself
     if info.sender.to_string() == to {
-        return Err(ContractError::CannotGiveToSelf {});
+        return Err(ContractError::CannotGiveToSelf);
     }
 
     // Cannot execute this function if the sender is not the minter get from cw721 contract
     let minter = Cw4973Contract::default().minter.load(deps.storage)?;
     if minter != info.sender {
-        return Err(ContractError::Unauthorized {});
+        return Err(ContractError::Unauthorized);
     }
 
     // get the nft id using _safeCheckAgreement function
@@ -132,7 +133,7 @@ pub fn execute_take(
 ) -> Result<Response, ContractError> {
     // cannot take from yourself
     if info.sender.to_string() == from {
-        return Err(ContractError::CannotTakeFromSelf {});
+        return Err(ContractError::CannotTakeFromSelf);
     }
 
     // check 'from' is a valid human's address
@@ -141,7 +142,7 @@ pub fn execute_take(
     // Cannot take NFT from a user who is not the minter
     let minter = Cw4973Contract::default().minter.load(deps.storage)?;
     if from_addr != minter {
-        return Err(ContractError::Unauthorized {});
+        return Err(ContractError::Unauthorized);
     }
 
     // get address of the owner of the nft from info.sender
@@ -228,14 +229,9 @@ fn _safe_check_agreement(
 
     // verify the signature using the hash and the public key
     let is_verified = deps.api.secp256k1_verify(&hash, &sig, &pubkey_bytes);
-    println!("is_verified: {:?}", &is_verified);
-    println!("hash: {:?}", &hash);
-    println!("sig: {:?}", &sig);
-    println!("pubkey_bytes: {:?}", &pubkey_bytes);
-    assert!(false);
 
     match is_verified {
-        Ok(_) => {
+        Ok(true) => {
             // If the signature is verified then we must check the address of public key is equal to passive address
             // get hrp from the signature
             let hrp = signature.hrp.clone();
@@ -245,12 +241,13 @@ fn _safe_check_agreement(
 
             // check if the recovered address is same as the 'to' address, then return empty string
             if signer_address != *passive {
-                return Err(ContractError::InvalidSignature);
+                return Err(ContractError::InvalidSigner);
             } else {
                 // return hex encoded hash
                 return Ok(hex::encode(hash));
             }
-        }
+        },
+        Ok(false) => Err(ContractError::InvalidSignature),
         Err(_) => {
             // if the signature is not verified then return empty string
             return Err(ContractError::InvalidSignature);
@@ -269,10 +266,7 @@ fn _get_hash(
     let big_string = format!("{}{}{}{}", AGREEMENT_STRING, active, passive, uri);
 
     // get the signing document
-    let sign_doc = _get_sign_doc(passive, &big_string, chain_id);
-
-    // convert the signDoc to json
-    let sign_doc_json = serde_json::to_string(&sign_doc).unwrap();
+    let sign_doc_json = _get_sign_doc(passive, &big_string, chain_id);
 
     let hash = Sha256::digest(sign_doc_json.as_bytes());
     
@@ -299,7 +293,7 @@ fn _mint(
     Cw4973Contract::default().tokens
         .update(deps.storage, &msg.token_id, |old| match old {
             // returm cw721contracterror enum
-            Some(_) => Err(ContractError::Cw721ContractError(Cw721ContractError::Claimed {})),
+            Some(_) => Err(ContractError::Cw721ContractError(Cw721ContractError::Claimed{ })),
             None => Ok(token),
         })?;
 
@@ -323,25 +317,27 @@ fn _get_sign_doc(
     signer: &String,
     message: &String,
     chain_id: &String,
-) -> ADR36SignDoc {
+) -> String {
     // create signable structure
     let doc = ADR36SignDoc {
-        chain_id: chain_id.to_string(),
         account_number: "0".to_string(),
-        sequence: "0".to_string(),
+        chain_id: chain_id.to_string(),
         fee: Fee {
-            gas: "0".to_string(),
             amount: [].to_vec(),
+            gas: "0".to_string(),
         },
-        msgs: [MsgSignData {
+        memo: "".to_string(),
+        msgs: MsgSignData {
             r#type: "sign/MsgSignData".to_string(),
             value: MsgSignDataValue {
+                data: message.to_string(),
                 signer: signer.to_string(),
-                data: message.to_string().into_bytes(),
             },
-        }].to_vec(),
-        memo: "".to_string()
+        },
+        sequence: "0".to_string()
     };
 
-    doc
+    // convert the signable structure to string
+    let doc_json = serde_json::to_string(&doc).unwrap();
+    doc_json
 }

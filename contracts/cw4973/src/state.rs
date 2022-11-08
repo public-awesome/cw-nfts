@@ -2,8 +2,8 @@ use cosmwasm_schema::cw_serde;
 
 #[cw_serde]
 pub struct MsgSignDataValue {
+    pub data: String,
     pub signer: String,
-    pub data: Vec<u8>,
 }
 
 // MsgSignData based on ADR 036 of cosmos sdk
@@ -16,19 +16,20 @@ pub struct MsgSignData {
 
 #[cw_serde]
 pub struct Fee {
-    pub gas: String,
     pub amount: Vec<u8>,
+    pub gas: String,
 }
 
+// TODO: the order of these fields is VERY IMPORTANT, DO NOT CHANGE IT
 // ADR 36 SignDoc based on cosmos sdk
 #[cw_serde]
 pub struct ADR36SignDoc {
-    pub chain_id: String,
     pub account_number: String,
-    pub sequence: String,
+    pub chain_id: String,
     pub fee: Fee,
-    pub msgs: Vec<MsgSignData>,
     pub memo: String,
+    pub msgs: MsgSignData,
+    pub sequence: String,
 }
 
 #[cw_serde]
