@@ -173,13 +173,21 @@ pub fn execute_unequip(
     // create execute message to burn the nft using the nft_id and ExecuteMsg::Burn of cw721-base
     let burn_msg = Cw721BaseExecuteMsg::Burn { token_id: token_id.clone() };
     // burn the nft with the given id
-    Cw4973Contract::default().execute(deps, _env, info.clone(), burn_msg).ok();
-
-    // return response
-    Ok(Response::new()
-        .add_attribute("action", "unequip")
-        .add_attribute("token_id", token_id)
-        .add_attribute("owner", info.sender))
+    match Cw4973Contract::default().execute(deps, _env, info.clone(), burn_msg) {
+        Ok(_) => {
+            // return response
+            Ok(Response::new()
+            .add_attribute("action", "unequip")
+            .add_attribute("token_id", token_id)
+            .add_attribute("owner", info.sender))
+        }
+        Err(e) => {
+            match e {
+                Cw721ContractError::Unauthorized{} => Err(ContractError::Unauthorized),
+                _ => Err(ContractError::CannotUnequipNFT),
+            }
+        }
+    }
 }
 
 // _get_bech32_address function is used to get the bech32 address from the public key and hrp

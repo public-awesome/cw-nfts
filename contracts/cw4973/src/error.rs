@@ -48,4 +48,7 @@ pub enum ContractError {
 
     #[error("Cannot verify signature")]
     CannotVerifySignature,
+
+    #[error("Cannot unequip NFT")]
+    CannotUnequipNFT,
 }

@@ -1,11 +1,11 @@
 #![cfg(test)]
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, DepsMut, };
+use cw721_base::Extension;
 
-use crate::{Cw4973Contract, ExecuteMsg, PermitSignature, entry, ContractError};
-use cw721_base::msg::{QueryMsg, InstantiateMsg as Cw721InstantiateMsg};
-use cw721::ContractInfoResponse;
-
+use crate::{Cw4973Contract, ExecuteMsg, PermitSignature, entry, ContractError, QueryMsg,};
+use cw721_base::msg::{InstantiateMsg as Cw721InstantiateMsg,};
+use cw721::{ContractInfoResponse, NftInfoResponse, OwnerOfResponse};
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
@@ -26,6 +26,12 @@ const SIGNATURE_TAKE_FAKE: &str = "a3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyL
 
 const SIGNATURE_GIVE: &str = "yTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
 const SIGNATURE_GIVE_FAKE: &str = "zTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
+
+const NFT_ID_GIVE: &str = "ef98a5428d4b9dc6c04cdc09d19a91eeb81b0ae8ac91efaf45667ea052845778";
+// const NFT_ID_TAKE: &str = "4de3e5ac29201342a00aa2beb720a6a0e8bf56ee7e31b09b0e0ffbe3da77033a";
+
+const NFT_ID_GIVE_FAKE: &str = "ef98a5428d4b9dc6c04cdc09d19a91eeb81b0ae8ac91efaf45667ea052845779";
+// const NFT_ID_TAKE_FAKE: &str = "4de3e5ac29201342a00aa2beb720a6a0e8bf56ee7e31b09b0e0ffbe3da77033b";
 
 // function to change value of mock values
 fn my_mock_env(chain_id: &str) -> cosmwasm_std::Env {
@@ -422,7 +428,6 @@ fn cannot_give_nft_because_hrp_incorrect() {
     let info = mock_info(MINTER_ADDRESS, &[]);
     let res = entry::execute(deps.as_mut(), env, info, give_msg);
 
-    // check if error is returned\
     assert!(matches!(res, Err(ContractError::InvalidSigner)));
 }
 
@@ -459,3 +464,224 @@ fn give_nft() {
     assert_eq!(0, res.messages.len());
 }
 
+#[test]
+fn cannot_unequip_because_nft_id_invalid() {
+    // get mock dependencies
+    let mut deps = mock_dependencies();
+
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    // setup contract
+    let _contract: Cw4973Contract = setup_contract(deps.as_mut());
+
+    // we must give an nft first
+    // create permitSignature
+    let permit_signature = PermitSignature {
+        hrp: "aura".to_string(),
+        pub_key: MINTER_PUBKEY.to_string(),
+        signature: SIGNATURE_GIVE.to_string(),
+    };
+
+    // prepare take msg from minter address, uri and signature
+    let give_msg = ExecuteMsg::Give {
+        to: TESTER_ADDRESS.to_string(),
+        uri: URI.to_string(),
+        signature: permit_signature
+    };
+
+    // call give function
+    let info = mock_info(MINTER_ADDRESS, &[]);
+    let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
+    
+    // get info of nft
+    // prepare query msg
+    let query_msg_info = QueryMsg::NftInfo {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_info_res = entry::query(deps.as_ref(), env, query_msg_info).unwrap();
+    // check response
+    let nft_info: NftInfoResponse<Extension> = from_binary(&nft_info_res).unwrap();
+    assert_eq!(nft_info.token_uri.unwrap(), URI.to_string());
+
+    // get owner of nft
+    // prepare query msg
+    let query_msg_owner = QueryMsg::OwnerOf {
+        token_id: NFT_ID_GIVE.to_string(),
+        include_expired: None,
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_owner_res = entry::query(deps.as_ref(), env, query_msg_owner).unwrap();
+    // check response
+    let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
+    assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
+
+    
+    // prepare unequip msg from nft id
+    let unequip_msg = ExecuteMsg::Unequip {
+        token_id: NFT_ID_GIVE_FAKE.to_string(),
+    };
+
+    // call unequip function
+    let info = mock_info(TESTER_ADDRESS, &[]);
+    let env = my_mock_env(CHAIN_ID);
+    let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
+
+    println!("unequip_res: {:?}", unequip_res);
+    assert!(matches!(unequip_res, Err(ContractError::CannotUnequipNFT)));
+}
+
+#[test]
+fn cannot_unequip_because_user_not_own_nft() {
+    // get mock dependencies
+    let mut deps = mock_dependencies();
+
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    // setup contract
+    let _contract: Cw4973Contract = setup_contract(deps.as_mut());
+
+    // we must give an nft first
+    // create permitSignature
+    let permit_signature = PermitSignature {
+        hrp: "aura".to_string(),
+        pub_key: MINTER_PUBKEY.to_string(),
+        signature: SIGNATURE_GIVE.to_string(),
+    };
+
+    // prepare take msg from minter address, uri and signature
+    let give_msg = ExecuteMsg::Give {
+        to: TESTER_ADDRESS.to_string(),
+        uri: URI.to_string(),
+        signature: permit_signature
+    };
+
+    // call give function
+    let info = mock_info(MINTER_ADDRESS, &[]);
+    let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
+    
+    // get info of nft
+    // prepare query msg
+    let query_msg_info = QueryMsg::NftInfo {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_info_res = entry::query(deps.as_ref(), env, query_msg_info).unwrap();
+    // check response
+    let nft_info: NftInfoResponse<Extension> = from_binary(&nft_info_res).unwrap();
+    assert_eq!(nft_info.token_uri.unwrap(), URI.to_string());
+
+    // get owner of nft
+    // prepare query msg
+    let query_msg_owner = QueryMsg::OwnerOf {
+        token_id: NFT_ID_GIVE.to_string(),
+        include_expired: None,
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_owner_res = entry::query(deps.as_ref(), env, query_msg_owner).unwrap();
+    // check response
+    let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
+    assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
+
+    
+    // prepare unequip msg from nft id
+    let unequip_msg = ExecuteMsg::Unequip {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+
+    // call unequip function
+    let info = mock_info(MINTER_ADDRESS, &[]);
+    let env = my_mock_env(CHAIN_ID);
+    let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
+
+    assert!(matches!(unequip_res, Err(ContractError::Unauthorized)));
+}
+
+// unequip a nft
+#[test]
+fn unequip_nft() {
+    // get mock dependencies
+    let mut deps = mock_dependencies();
+
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    // setup contract
+    let _contract: Cw4973Contract = setup_contract(deps.as_mut());
+
+    // we must give an nft first
+    // create permitSignature
+    let permit_signature = PermitSignature {
+        hrp: "aura".to_string(),
+        pub_key: MINTER_PUBKEY.to_string(),
+        signature: SIGNATURE_GIVE.to_string(),
+    };
+
+    // prepare take msg from minter address, uri and signature
+    let give_msg = ExecuteMsg::Give {
+        to: TESTER_ADDRESS.to_string(),
+        uri: URI.to_string(),
+        signature: permit_signature
+    };
+
+    // call give function
+    let info = mock_info(MINTER_ADDRESS, &[]);
+    let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
+    
+    // get info of nft
+    // prepare query msg
+    let query_msg_info = QueryMsg::NftInfo {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_info_res = entry::query(deps.as_ref(), env, query_msg_info).unwrap();
+    // check response
+    let nft_info: NftInfoResponse<Extension> = from_binary(&nft_info_res).unwrap();
+    assert_eq!(nft_info.token_uri.unwrap(), URI.to_string());
+
+    // get owner of nft
+    // prepare query msg
+    let query_msg_owner = QueryMsg::OwnerOf {
+        token_id: NFT_ID_GIVE.to_string(),
+        include_expired: None,
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_owner_res = entry::query(deps.as_ref(), env, query_msg_owner).unwrap();
+    // check response
+    let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
+    assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
+
+    
+    // prepare unequip msg from nft id
+    let unequip_msg = ExecuteMsg::Unequip {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+
+    // call unequip function
+    let info = mock_info(TESTER_ADDRESS, &[]);
+    let env = my_mock_env(CHAIN_ID);
+    let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg).unwrap();
+
+    assert_eq!(0, unequip_res.messages.len());
+
+    // get info of nft
+    // prepare query msg
+    let query_msg_info = QueryMsg::NftInfo {
+        token_id: NFT_ID_GIVE.to_string(),
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_info_res = entry::query(deps.as_ref(), env, query_msg_info);
+    assert!(matches!(nft_info_res, Err(_)));    // `Err` value: NotFound
+
+    // get owner of nft
+    // prepare query msg
+    let query_msg_owner = QueryMsg::OwnerOf {
+        token_id: NFT_ID_GIVE.to_string(),
+        include_expired: None,
+    };
+    let env = my_mock_env(CHAIN_ID);
+    let nft_owner_res = entry::query(deps.as_ref(), env, query_msg_owner);
+    assert!(matches!(nft_owner_res, Err(_)));    // `Err` value: NotFound
+}
