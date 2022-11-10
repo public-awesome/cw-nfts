@@ -1,4 +1,6 @@
 use cosmwasm_schema::cw_serde;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[cw_serde]
 pub struct MsgSignDataValue {
@@ -32,7 +34,7 @@ pub struct ADR36SignDoc {
     pub sequence: String,
 }
 
-#[cw_serde]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PermitSignature {
     pub hrp: String,
     pub pub_key: String,

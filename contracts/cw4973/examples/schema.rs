@@ -3,7 +3,7 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
 
-use cw4973::{Extension, InstantiateMsg, MinterResponse, QueryMsg};
+use cw4973::{Extension, MinterResponse, QueryMsg};
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721ExecuteMsg,
     NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
@@ -15,7 +15,6 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
-    export_schema(&schema_for!(InstantiateMsg), &out_dir);
     export_schema_with_title(&schema_for!(Cw721ExecuteMsg), &out_dir, "Cw721ExecuteMsg");
     export_schema(&schema_for!(QueryMsg), &out_dir);
     export_schema_with_title(

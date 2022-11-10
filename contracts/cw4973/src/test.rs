@@ -64,7 +64,18 @@ fn setup_contract<'a>(deps: DepsMut<'_>) -> Cw4973Contract<'a> {
 fn proper_initialization() {
     let mut deps = mock_dependencies();
 
-    let contract = setup_contract(deps.as_mut());
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    let contract = Cw4973Contract::default();
+    let msg = InstantiateMsg {
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        minter: String::from(MINTER_ADDRESS),
+    };
+    let info = mock_info("creator", &[]);
+    let res = entry::instantiate(deps.as_mut(), env, info, msg).unwrap();
+    assert_eq!(0, res.messages.len());
 
     // it worked, let's query the state
     let res = contract
@@ -339,7 +350,7 @@ fn cannot_take_nft_twice() {
 
     // call take function
     let info = mock_info(TESTER_ADDRESS, &[]);
-    let res = entry::execute(deps.as_mut(), env.clone(), info, take_msg.clone());
+    let res = entry::execute(deps.as_mut(), env, info, take_msg);
 
     println!("res: {:?}", res);
 
