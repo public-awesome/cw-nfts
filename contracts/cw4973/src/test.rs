@@ -1,11 +1,11 @@
 #![cfg(test)]
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, DepsMut, };
+use cosmwasm_std::{from_binary, DepsMut};
 use cw721_base::Extension;
 
-use crate::{Cw4973Contract, ExecuteMsg, PermitSignature, entry, ContractError, QueryMsg,};
-use cw721_base::msg::{InstantiateMsg as Cw721InstantiateMsg,};
+use crate::{entry, ContractError, Cw4973Contract, ExecuteMsg, PermitSignature, QueryMsg};
 use cw721::{ContractInfoResponse, NftInfoResponse, OwnerOfResponse};
+use cw721_base::msg::InstantiateMsg as Cw721InstantiateMsg;
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
@@ -14,18 +14,21 @@ const MINTER_PUBKEY: &str = "A/TyvFSR0UDXmfN6EWGVqMClEaSWSTWwVEzhbl8SSfi+";
 const TESTER_ADDRESS: &str = "aura1fqj2redmssckrdeekhkcvd2kzp9f4nks4fctrt";
 const TESTER_PUBKEY: &str = "A9EkWupSnnFmIIEWG7WtMc0Af/9oEuEeSRTKF/bJrCfh";
 
-
 const CHAIN_ID: &str = "euphoria-1";
 const CHAIN_ID_FAKE: &str = "euphoria-2";
 
 const URI: &str = "https://yellow-bizarre-puma-439.mypinata.cloud/ipfs/QmcCTHB3UFak5RY4qedSbiR7Raj1odPWsU1pTyddtxfSxH/8555";
 // const URI_FAKE: &str = "https://yellow-bizarre-puma-439.mypinata.cloud/ipfs/QmcCTHB3UFak5RY4qedSbiR7Raj1odPWsU1pTyddtxfSxH/8557";
 
-const SIGNATURE_TAKE: &str = "s3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
-const SIGNATURE_TAKE_FAKE: &str = "a3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
+const SIGNATURE_TAKE: &str =
+    "s3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
+const SIGNATURE_TAKE_FAKE: &str =
+    "a3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
 
-const SIGNATURE_GIVE: &str = "yTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
-const SIGNATURE_GIVE_FAKE: &str = "zTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
+const SIGNATURE_GIVE: &str =
+    "yTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
+const SIGNATURE_GIVE_FAKE: &str =
+    "zTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
 
 const NFT_ID_GIVE: &str = "ef98a5428d4b9dc6c04cdc09d19a91eeb81b0ae8ac91efaf45667ea052845778";
 // const NFT_ID_TAKE: &str = "4de3e5ac29201342a00aa2beb720a6a0e8bf56ee7e31b09b0e0ffbe3da77033a";
@@ -40,7 +43,6 @@ fn my_mock_env(chain_id: &str) -> cosmwasm_std::Env {
     env.block.chain_id = chain_id.to_string();
     env
 }
-
 
 fn setup_contract<'a>(deps: DepsMut<'_>) -> Cw4973Contract<'a> {
     let contract = Cw4973Contract::default();
@@ -62,7 +64,9 @@ fn proper_initialization() {
     let contract = setup_contract(deps.as_mut());
 
     // it worked, let's query the state
-    let res = contract.query(deps.as_ref(), mock_env(), QueryMsg::ContractInfo {}).unwrap();
+    let res = contract
+        .query(deps.as_ref(), mock_env(), QueryMsg::ContractInfo {})
+        .unwrap();
     let value: ContractInfoResponse = from_binary(&res).unwrap();
     assert_eq!(value.name, CONTRACT_NAME);
     assert_eq!(value.symbol, SYMBOL);
@@ -90,7 +94,7 @@ fn cannot_take_nft_because_not_from_minter() {
     let take_msg = ExecuteMsg::Take {
         from: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -123,7 +127,7 @@ fn cannot_take_nft_when_change_chain_id() {
     let take_msg = ExecuteMsg::Take {
         from: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -133,7 +137,6 @@ fn cannot_take_nft_when_change_chain_id() {
     // check if error is returned\
     assert!(matches!(res, Err(ContractError::InvalidSignature)));
 }
-
 
 #[test]
 fn cannot_take_nft_from_himself() {
@@ -157,7 +160,7 @@ fn cannot_take_nft_from_himself() {
     let take_msg = ExecuteMsg::Take {
         from: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -190,7 +193,7 @@ fn cannot_take_nft_because_signature_invalid() {
     let take_msg = ExecuteMsg::Take {
         from: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -223,7 +226,7 @@ fn cannot_take_nft_because_hrp_incorrect() {
     let take_msg = ExecuteMsg::Take {
         from: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -257,7 +260,7 @@ fn take_nft() {
     let take_msg = ExecuteMsg::Take {
         from: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -289,7 +292,7 @@ fn cannot_give_nft_because_sender_not_minter() {
     let give_msg = ExecuteMsg::Give {
         to: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -322,7 +325,7 @@ fn cannot_give_nft_when_change_chain_id() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -355,7 +358,7 @@ fn cannot_give_nft_for_himself() {
     let give_msg = ExecuteMsg::Give {
         to: MINTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -388,7 +391,7 @@ fn cannot_give_nft_because_signature_invalid() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -421,7 +424,7 @@ fn cannot_give_nft_because_hrp_incorrect() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -454,7 +457,7 @@ fn give_nft() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call take function
@@ -487,13 +490,13 @@ fn cannot_unequip_because_nft_id_invalid() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call give function
     let info = mock_info(MINTER_ADDRESS, &[]);
     let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
-    
+
     // get info of nft
     // prepare query msg
     let query_msg_info = QueryMsg::NftInfo {
@@ -517,7 +520,6 @@ fn cannot_unequip_because_nft_id_invalid() {
     let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
     assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
 
-    
     // prepare unequip msg from nft id
     let unequip_msg = ExecuteMsg::Unequip {
         token_id: NFT_ID_GIVE_FAKE.to_string(),
@@ -555,13 +557,13 @@ fn cannot_unequip_because_user_not_own_nft() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call give function
     let info = mock_info(MINTER_ADDRESS, &[]);
     let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
-    
+
     // get info of nft
     // prepare query msg
     let query_msg_info = QueryMsg::NftInfo {
@@ -585,7 +587,6 @@ fn cannot_unequip_because_user_not_own_nft() {
     let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
     assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
 
-    
     // prepare unequip msg from nft id
     let unequip_msg = ExecuteMsg::Unequip {
         token_id: NFT_ID_GIVE.to_string(),
@@ -623,13 +624,13 @@ fn unequip_nft() {
     let give_msg = ExecuteMsg::Give {
         to: TESTER_ADDRESS.to_string(),
         uri: URI.to_string(),
-        signature: permit_signature
+        signature: permit_signature,
     };
 
     // call give function
     let info = mock_info(MINTER_ADDRESS, &[]);
     let _res = entry::execute(deps.as_mut(), env, info, give_msg).unwrap();
-    
+
     // get info of nft
     // prepare query msg
     let query_msg_info = QueryMsg::NftInfo {
@@ -653,7 +654,6 @@ fn unequip_nft() {
     let nft_owner: OwnerOfResponse = from_binary(&nft_owner_res).unwrap();
     assert_eq!(nft_owner.owner, TESTER_ADDRESS.to_string());
 
-    
     // prepare unequip msg from nft id
     let unequip_msg = ExecuteMsg::Unequip {
         token_id: NFT_ID_GIVE.to_string(),
@@ -673,7 +673,7 @@ fn unequip_nft() {
     };
     let env = my_mock_env(CHAIN_ID);
     let nft_info_res = entry::query(deps.as_ref(), env, query_msg_info);
-    assert!(matches!(nft_info_res, Err(_)));    // `Err` value: NotFound
+    assert!(matches!(nft_info_res, Err(_))); // `Err` value: NotFound
 
     // get owner of nft
     // prepare query msg
@@ -683,5 +683,5 @@ fn unequip_nft() {
     };
     let env = my_mock_env(CHAIN_ID);
     let nft_owner_res = entry::query(deps.as_ref(), env, query_msg_owner);
-    assert!(matches!(nft_owner_res, Err(_)));    // `Err` value: NotFound
+    assert!(matches!(nft_owner_res, Err(_))); // `Err` value: NotFound
 }

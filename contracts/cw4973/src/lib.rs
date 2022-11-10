@@ -1,19 +1,22 @@
-pub use crate::msg::{InstantiateMsg, ExecuteMsg};
 pub use crate::error::ContractError;
+pub use crate::msg::{ExecuteMsg, InstantiateMsg};
 pub use crate::state::{ADR36SignDoc, Fee, MsgSignData, MsgSignDataValue, PermitSignature};
-use cosmwasm_std::{Binary, CanonicalAddr, Empty, entry_point, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    entry_point, Binary, CanonicalAddr, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+};
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
-    ContractError as Cw721ContractError, Cw721Contract, ExecuteMsg as Cw721BaseExecuteMsg, Extension, InstantiateMsg as Cw721BaseInstantiateMsg, QueryMsg as Cw721QueryMsg,
-    MintMsg, MinterResponse,
-    state::TokenInfo
+    state::TokenInfo,
+    ContractError as Cw721ContractError, Cw721Contract, ExecuteMsg as Cw721BaseExecuteMsg,
+    Extension, InstantiateMsg as Cw721BaseInstantiateMsg, MintMsg, MinterResponse,
+    QueryMsg as Cw721QueryMsg,
 };
 
-use sha2::{Digest, Sha256};
-use bech32::{ToBase32, Variant::Bech32};
-use ripemd::{Ripemd160};
-use std::{str, env};
 use base64;
+use bech32::{ToBase32, Variant::Bech32};
+use ripemd::Ripemd160;
+use sha2::{Digest, Sha256};
+use std::{env, str};
 
 pub mod error;
 pub mod msg;
@@ -68,21 +71,22 @@ pub mod entry {
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
         match msg {
-            ExecuteMsg::Give { to, uri, signature } => execute_give(deps, env, info, to, uri, signature),
-            ExecuteMsg::Take { from, uri, signature } => execute_take(deps, env, info, from, uri, signature),
+            ExecuteMsg::Give { to, uri, signature } => {
+                execute_give(deps, env, info, to, uri, signature)
+            }
+            ExecuteMsg::Take {
+                from,
+                uri,
+                signature,
+            } => execute_take(deps, env, info, from, uri, signature),
             ExecuteMsg::Unequip { token_id } => execute_unequip(deps, env, info, token_id),
         }
     }
 
     #[entry_point]
-    pub fn query(
-        deps: Deps,
-        env: Env,
-        msg: QueryMsg
-    ) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         Cw4973Contract::default().query(deps, env, msg)
     }
-
 }
 
 // execute_give function is used to give a nft to another address
@@ -107,7 +111,7 @@ fn execute_give(
     }
 
     // get the nft id using _safeCheckAgreement function
-    let nft_id = _safe_check_agreement(&deps,  &env,&minter.into_string(), &to, &uri, &signature)?;
+    let nft_id = _safe_check_agreement(&deps, &env, &minter.into_string(), &to, &uri, &signature)?;
 
     // mint the nft to the address 'to' and return the response of mint function
     let mint_msg = MintMsg {
@@ -116,7 +120,7 @@ fn execute_give(
         token_uri: uri.into(),
         extension: None,
     };
-    
+
     // execute the mint message
     _mint(deps, env, info, mint_msg)
 }
@@ -158,7 +162,7 @@ pub fn execute_take(
         token_uri: uri.into(),
         extension: None,
     };
-    
+
     // execute the mint message
     _mint(deps, env, info, mint_msg)
 }
@@ -171,22 +175,22 @@ pub fn execute_unequip(
     token_id: String,
 ) -> Result<Response, ContractError> {
     // create execute message to burn the nft using the nft_id and ExecuteMsg::Burn of cw721-base
-    let burn_msg = Cw721BaseExecuteMsg::Burn { token_id: token_id.clone() };
+    let burn_msg = Cw721BaseExecuteMsg::Burn {
+        token_id: token_id.clone(),
+    };
     // burn the nft with the given id
     match Cw4973Contract::default().execute(deps, _env, info.clone(), burn_msg) {
         Ok(_) => {
             // return response
             Ok(Response::new()
-            .add_attribute("action", "unequip")
-            .add_attribute("token_id", token_id)
-            .add_attribute("owner", info.sender))
+                .add_attribute("action", "unequip")
+                .add_attribute("token_id", token_id)
+                .add_attribute("owner", info.sender))
         }
-        Err(e) => {
-            match e {
-                Cw721ContractError::Unauthorized{} => Err(ContractError::Unauthorized),
-                _ => Err(ContractError::CannotUnequipNFT),
-            }
-        }
+        Err(e) => match e {
+            Cw721ContractError::Unauthorized {} => Err(ContractError::Unauthorized),
+            _ => Err(ContractError::CannotUnequipNFT),
+        },
     }
 }
 
@@ -228,7 +232,7 @@ fn _safe_check_agreement(
 
     // get the signature value from the signature
     let sig = base64::decode(signature.signature.clone()).unwrap();
-    
+
     // get the public key from the signature
     let pubkey = signature.pub_key.clone();
 
@@ -254,7 +258,7 @@ fn _safe_check_agreement(
                 // return hex encoded hash
                 return Ok(hex::encode(hash));
             }
-        },
+        }
         Ok(false) => Err(ContractError::InvalidSignature),
         Err(_) => {
             // if the signature is not verified then return empty string
@@ -264,12 +268,7 @@ fn _safe_check_agreement(
 }
 
 // the get_hash funtion will concat the address of the sender, the address of the 'to', the uri of the nft and the hash of the string
-fn _get_hash(
-    active: &String,
-    passive: &String,
-    uri: &String,
-    chain_id: &String,
-) -> Vec<u8> {
+fn _get_hash(active: &String, passive: &String, uri: &String, chain_id: &String) -> Vec<u8> {
     // hash the constant string and data
     let big_string = format!("{}{}{}{}", AGREEMENT_STRING, active, passive, uri);
 
@@ -277,7 +276,7 @@ fn _get_hash(
     let sign_doc_json = _get_sign_doc(passive, &big_string, chain_id);
 
     let hash = Sha256::digest(sign_doc_json.as_bytes());
-    
+
     // return the hash
     return hash.as_slice().to_vec();
 }
@@ -298,10 +297,13 @@ fn _mint(
     };
 
     // update tokens list of contract
-    Cw4973Contract::default().tokens
+    Cw4973Contract::default()
+        .tokens
         .update(deps.storage, &msg.token_id, |old| match old {
             // returm cw721contracterror enum
-            Some(_) => Err(ContractError::Cw721ContractError(Cw721ContractError::Claimed{ })),
+            Some(_) => Err(ContractError::Cw721ContractError(
+                Cw721ContractError::Claimed {},
+            )),
             None => Ok(token),
         })?;
 
@@ -321,11 +323,7 @@ fn _mint(
 // @param message: the message to sign
 // @param chain_id: the chain id of the chain
 // @return: the signable structure
-fn _get_sign_doc(
-    signer: &String,
-    message: &String,
-    chain_id: &String,
-) -> String {
+fn _get_sign_doc(signer: &String, message: &String, chain_id: &String) -> String {
     // create signable structure
     let doc = ADR36SignDoc {
         account_number: "0".to_string(),
@@ -342,7 +340,7 @@ fn _get_sign_doc(
                 signer: signer.to_string(),
             },
         },
-        sequence: "0".to_string()
+        sequence: "0".to_string(),
     };
 
     // convert the signable structure to string
