@@ -300,12 +300,9 @@ fn _mint(
         .tokens
         .update(deps.storage, &msg.token_id, |old| match old {
             // returm cw721contracterror enum
-            Some(_) => Err(ContractError::Cw721ContractError(
-                Cw721ContractError::Claimed {},
-            )),
+            Some(_) => Err(ContractError::Claimed),
             None => Ok(token),
         })?;
-
     Cw4973Contract::default().increment_tokens(deps.storage)?;
 
     Ok(Response::new()
@@ -314,14 +311,13 @@ fn _mint(
         .add_attribute("owner", msg.owner)
         .add_attribute("token_id", msg.token_id))
 }
-
-// TODO: modify this function to specify the others fields of the signing document
 // OR: create new contract to handle the signing document is better
 // create signable structure from message and chain ID
 // @param signer: the address of the signer
 // @param message: the message to sign
 // @param chain_id: the chain id of the chain
 // @return: the signable structure
+// TODO: modify this function to specify the others fields of the signing document
 fn _get_sign_doc(signer: &String, message: &String, chain_id: &String) -> String {
     // create signable structure
     let doc = ADR36SignDoc {

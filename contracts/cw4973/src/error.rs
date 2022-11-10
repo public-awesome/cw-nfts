@@ -51,4 +51,7 @@ pub enum ContractError {
 
     #[error("Cannot unequip NFT")]
     CannotUnequipNFT,
+
+    #[error("token_id already claimed")]
+    Claimed,
 }

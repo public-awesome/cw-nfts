@@ -3,9 +3,10 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, DepsMut};
 use cw721_base::Extension;
 
-use crate::{entry, ContractError, Cw4973Contract, ExecuteMsg, PermitSignature, QueryMsg};
+use crate::{
+    entry, ContractError, Cw4973Contract, ExecuteMsg, InstantiateMsg, PermitSignature, QueryMsg,
+};
 use cw721::{ContractInfoResponse, NftInfoResponse, OwnerOfResponse};
-use cw721_base::msg::InstantiateMsg as Cw721InstantiateMsg;
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
@@ -24,6 +25,8 @@ const SIGNATURE_TAKE: &str =
     "s3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
 const SIGNATURE_TAKE_FAKE: &str =
     "a3cAqMjAFazchg09Ji+2Mzw+uAvS7LoN+znboociSdMyLM58C4H4a9A38v+68i8+fhTg3bXbP1NnrlwduLdXCA==";
+const SIGNATURE_TAKE_FAKE_LONG: &str =
+    "0ZZ377+90IHQmNCQFcKs0KzigKAKPSYvwrYzPD7RkQvQotC80ZQK0Ys50KvRnuKAoSJJ0KMyLNCefAvQg9GIa9CgN9GC0Y/RlNGCLz5+FNCw0K3CtdCrP1Nnwq5cHdGRwrcxCA==";
 
 const SIGNATURE_GIVE: &str =
     "yTkGJViQsCRkclfKzN5Akff4DijnZTBrCLZwZ63DTPNAGan2FfQwpEtpb23YXsNU+aJTZazD6Iij4v0idH43cQ==";
@@ -46,13 +49,13 @@ fn my_mock_env(chain_id: &str) -> cosmwasm_std::Env {
 
 fn setup_contract<'a>(deps: DepsMut<'_>) -> Cw4973Contract<'a> {
     let contract = Cw4973Contract::default();
-    let msg = Cw721InstantiateMsg {
+    let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER_ADDRESS),
     };
     let info = mock_info("creator", &[]);
-    let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
+    let res = entry::instantiate(deps, mock_env(), info, msg).unwrap();
     assert_eq!(0, res.messages.len());
     contract
 }
@@ -205,6 +208,39 @@ fn cannot_take_nft_because_signature_invalid() {
 }
 
 #[test]
+fn cannot_take_nft_because_cannot_verify_signature() {
+    // get mock dependencies
+    let mut deps = mock_dependencies();
+
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    // setup contract
+    let _contract: Cw4973Contract = setup_contract(deps.as_mut());
+
+    // create permitSignature
+    let permit_signature = PermitSignature {
+        hrp: "aura".to_string(),
+        pub_key: TESTER_PUBKEY.to_string(),
+        signature: SIGNATURE_TAKE_FAKE_LONG.to_string(),
+    };
+
+    // prepare take msg from minter address, uri and signature
+    let take_msg = ExecuteMsg::Take {
+        from: MINTER_ADDRESS.to_string(),
+        uri: URI.to_string(),
+        signature: permit_signature,
+    };
+
+    // call take function
+    let info = mock_info(TESTER_ADDRESS, &[]);
+    let res = entry::execute(deps.as_mut(), env, info, take_msg);
+
+    // check if error is returned\
+    assert!(matches!(res, Err(ContractError::InvalidSignature)));
+}
+
+#[test]
 fn cannot_take_nft_because_hrp_incorrect() {
     // get mock dependencies
     let mut deps = mock_dependencies();
@@ -268,6 +304,47 @@ fn take_nft() {
     let res = entry::execute(deps.as_mut(), env, info, take_msg).unwrap();
 
     assert_eq!(0, res.messages.len());
+}
+
+#[test]
+fn cannot_take_nft_twice() {
+    // get mock dependencies
+    let mut deps = mock_dependencies();
+
+    // change chanin id of mock env
+    let env = my_mock_env(CHAIN_ID);
+
+    // setup contract
+    let _contract: Cw4973Contract = setup_contract(deps.as_mut());
+
+    // create permitSignature
+    let permit_signature = PermitSignature {
+        hrp: "aura".to_string(),
+        pub_key: TESTER_PUBKEY.to_string(),
+        signature: SIGNATURE_TAKE.to_string(),
+    };
+
+    // prepare take msg from minter address, uri and signature
+    let take_msg = ExecuteMsg::Take {
+        from: MINTER_ADDRESS.to_string(),
+        uri: URI.to_string(),
+        signature: permit_signature,
+    };
+
+    // call take function
+    let info = mock_info(TESTER_ADDRESS, &[]);
+    let res = entry::execute(deps.as_mut(), env.clone(), info, take_msg.clone()).unwrap();
+
+    assert_eq!(0, res.messages.len());
+
+    // call take function
+    let info = mock_info(TESTER_ADDRESS, &[]);
+    let res = entry::execute(deps.as_mut(), env.clone(), info, take_msg.clone());
+
+    println!("res: {:?}", res);
+
+    // check if error is returned\
+    assert!(matches!(res, Err(ContractError::Claimed {})));
 }
 
 #[test]
