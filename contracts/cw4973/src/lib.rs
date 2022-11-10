@@ -12,7 +12,6 @@ pub use cw721_base::{
     QueryMsg as Cw721QueryMsg,
 };
 
-use base64;
 use bech32::{ToBase32, Variant::Bech32};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
@@ -100,7 +99,7 @@ fn execute_give(
     signature: PermitSignature,
 ) -> Result<Response, ContractError> {
     // cannot give to yourself
-    if info.sender.to_string() == to {
+    if info.sender == to {
         return Err(ContractError::CannotGiveToSelf);
     }
 
@@ -115,8 +114,8 @@ fn execute_give(
 
     // mint the nft to the address 'to' and return the response of mint function
     let mint_msg = MintMsg {
-        token_id: nft_id.to_string(),
-        owner: to.to_string(),
+        token_id: nft_id,
+        owner: to,
         token_uri: uri.into(),
         extension: None,
     };
@@ -136,7 +135,7 @@ pub fn execute_take(
     signature: PermitSignature,
 ) -> Result<Response, ContractError> {
     // cannot take from yourself
-    if info.sender.to_string() == from {
+    if info.sender == from {
         return Err(ContractError::CannotTakeFromSelf);
     }
 
@@ -157,7 +156,7 @@ pub fn execute_take(
 
     // create ExecuteMsg::Mint with Option<Extension> = None
     let mint_msg = MintMsg {
-        token_id: nft_id.to_string(),
+        token_id: nft_id,
         owner: owner.to_string(),
         token_uri: uri.into(),
         extension: None,
@@ -228,7 +227,7 @@ fn _safe_check_agreement(
     let chain_id = env.block.chain_id.clone();
 
     // get hash for the agreement
-    let hash = _get_hash(&active, &passive, &uri, &chain_id);
+    let hash = _get_hash(active, passive, uri, &chain_id);
 
     // get the signature value from the signature
     let sig = base64::decode(signature.signature.clone()).unwrap();
@@ -253,16 +252,16 @@ fn _safe_check_agreement(
 
             // check if the recovered address is same as the 'to' address, then return empty string
             if signer_address != *passive {
-                return Err(ContractError::InvalidSigner);
+                Err(ContractError::InvalidSigner)
             } else {
                 // return hex encoded hash
-                return Ok(hex::encode(hash));
+                Ok(hex::encode(hash))
             }
         }
         Ok(false) => Err(ContractError::InvalidSignature),
         Err(_) => {
             // if the signature is not verified then return empty string
-            return Err(ContractError::InvalidSignature);
+            Err(ContractError::InvalidSignature)
         }
     }
 }
@@ -344,6 +343,5 @@ fn _get_sign_doc(signer: &String, message: &String, chain_id: &String) -> String
     };
 
     // convert the signable structure to string
-    let doc_json = serde_json::to_string(&doc).unwrap();
-    doc_json
+    serde_json::to_string(&doc).unwrap()
 }
