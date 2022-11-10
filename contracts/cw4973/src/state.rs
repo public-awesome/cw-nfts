@@ -34,7 +34,7 @@ pub struct ADR36SignDoc {
     pub sequence: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PermitSignature {
     pub hrp: String,
     pub pub_key: String,
