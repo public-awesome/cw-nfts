@@ -135,7 +135,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Total number of tokens issued",
+      "description": "Total number of tokens issued Return type: `NumTokensResponse`",
       "type": "object",
       "required": [
         "num_tokens"
@@ -185,7 +185,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With MetaData Extension. Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization for clients: `AllNftInfo`",
+      "description": "With MetaData Extension. Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization for clients: `AllNftInfoResponse`",
       "type": "object",
       "required": [
         "all_nft_info"
@@ -280,6 +280,7 @@
       "additionalProperties": false
     },
     {
+      "description": "Return the minter Return type: `MinterResponse`",
       "type": "object",
       "required": [
         "minter"
