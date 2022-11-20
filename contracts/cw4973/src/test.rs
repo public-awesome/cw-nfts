@@ -247,8 +247,8 @@ fn cannot_take_nft_because_cannot_verify_signature() {
     let info = mock_info(TESTER_ADDRESS, &[]);
     let res = entry::execute(deps.as_mut(), env, info, take_msg);
 
-    // check if error is returned\
-    assert!(matches!(res, Err(ContractError::InvalidSignature)));
+    // check if error is returned
+    assert!(matches!(res, Err(ContractError::CannotVerifySignature)));
 }
 
 #[test]
@@ -618,8 +618,7 @@ fn cannot_unequip_because_nft_id_invalid() {
     let env = my_mock_env(CHAIN_ID);
     let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
 
-    println!("unequip_res: {:?}", unequip_res);
-    assert!(matches!(unequip_res, Err(ContractError::CannotUnequipNFT)));
+    assert!(matches!(unequip_res, Err(ContractError::Cw721ContractError(_))));
 }
 
 #[test]
@@ -685,7 +684,7 @@ fn cannot_unequip_because_user_not_own_nft() {
     let env = my_mock_env(CHAIN_ID);
     let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
 
-    assert!(matches!(unequip_res, Err(ContractError::Unauthorized)));
+    assert!(matches!(unequip_res, Err(ContractError::Cw721ContractError(_))));
 }
 
 // unequip a nft

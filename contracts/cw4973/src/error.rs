@@ -19,26 +19,8 @@ pub enum ContractError {
     #[error("Cannot take from yourself")]
     CannotTakeFromSelf,
 
-    #[error("Caller is not minter")]
-    NotMinter,
-
-    #[error("NFT is already unequipped")]
-    NftAlreadyUnequipped,
-
-    #[error("NFT is already equipped")]
-    NftAlreadyEquipped,
-
-    #[error("NFT is already unadmitted")]
-    NftAlreadyUnadmitted,
-
     #[error("Invalid human readable path {0}")]
     Hrp(String),
-
-    #[error("Invalid receiver address")]
-    To,
-
-    #[error("Invalid sender address")]
-    From,
 
     #[error("Invalid signature")]
     InvalidSignature,
@@ -48,9 +30,6 @@ pub enum ContractError {
 
     #[error("Cannot verify signature")]
     CannotVerifySignature,
-
-    #[error("Cannot unequip NFT")]
-    CannotUnequipNFT,
 
     #[error("token_id already claimed")]
     Claimed,
