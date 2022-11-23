@@ -618,7 +618,10 @@ fn cannot_unequip_because_nft_id_invalid() {
     let env = my_mock_env(CHAIN_ID);
     let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
 
-    assert!(matches!(unequip_res, Err(ContractError::Cw721ContractError(_))));
+    assert!(matches!(
+        unequip_res,
+        Err(ContractError::Cw721ContractError(_))
+    ));
 }
 
 #[test]
@@ -684,7 +687,10 @@ fn cannot_unequip_because_user_not_own_nft() {
     let env = my_mock_env(CHAIN_ID);
     let unequip_res = entry::execute(deps.as_mut(), env, info, unequip_msg);
 
-    assert!(matches!(unequip_res, Err(ContractError::Cw721ContractError(_))));
+    assert!(matches!(
+        unequip_res,
+        Err(ContractError::Cw721ContractError(_))
+    ));
 }
 
 // unequip a nft

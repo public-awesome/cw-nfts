@@ -173,7 +173,7 @@ pub fn execute_unequip(
     // burn the nft with the given id
     match Cw4973Contract::default().execute(deps, _env, info, burn_msg) {
         Ok(r) => Ok(r),
-        Err(e) => Err(ContractError::Cw721ContractError(e))
+        Err(e) => Err(ContractError::Cw721ContractError(e)),
     }
 }
 

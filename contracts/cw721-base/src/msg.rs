@@ -1,13 +1,12 @@
-use cosmwasm_schema::QueryResponses;
-use schemars::JsonSchema;
+use crate::Extension;
 use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::QueryResponses;
 use cosmwasm_std::Binary;
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
-    Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Expiration,
+    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use crate::Extension;
+use schemars::JsonSchema;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -127,9 +126,7 @@ pub enum QueryMsg<Q: JsonSchema> {
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract: `NftInfoResponse`
     #[returns(NftInfoResponse<Extension>)]
-    NftInfo {
-        token_id: String,
-    },
+    NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients: `AllNftInfoResponse`
@@ -165,9 +162,7 @@ pub enum QueryMsg<Q: JsonSchema> {
 
     /// Extension query
     #[returns(Binary)]
-    Extension {
-        msg: Q,
-    },
+    Extension { msg: Q },
 }
 
 /// Shows who can mint these tokens
