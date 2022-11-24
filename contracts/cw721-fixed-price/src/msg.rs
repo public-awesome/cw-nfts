@@ -1,4 +1,4 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use cw20::Cw20ReceiveMsg;
 use cw721_base::Extension;
@@ -22,7 +22,9 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(crate::msg::ConfigResponse)]
     GetConfig {},
 }
 
