@@ -11,8 +11,8 @@ use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 pub struct Cw721Contract<
     'a,
     T = Empty,
-    E1 = Empty,
-    E2 = Empty,
+    ExtendCw721Msg = Empty,
+    ExtendCw721Query = Empty,
     ModuleMsg = Empty,
     ModuleQuery = Empty,
 > where
@@ -28,28 +28,28 @@ pub struct Cw721Contract<
 
     pub(crate) _custom_response: PhantomData<ModuleMsg>,
     pub(crate) _custom_query: PhantomData<ModuleQuery>,
-    pub(crate) _custom_execute: PhantomData<E1>,
-    pub(crate) _custom_execute_query: PhantomData<E2>,
+    pub(crate) _custom_execute: PhantomData<ExtendCw721Msg>,
+    pub(crate) _custom_execute_query: PhantomData<ExtendCw721Query>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery>
-    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery>
+    for Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
 }
 
-impl<T, E1, E2, ModuleMsg, ModuleQuery> Default
-    for Cw721Contract<'static, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Default
+    for Cw721Contract<'static, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleQuery: CustomQuery,
 {
     fn default() -> Self {
@@ -64,7 +64,7 @@ where
     }
 }
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ModuleQuery: CustomQuery,

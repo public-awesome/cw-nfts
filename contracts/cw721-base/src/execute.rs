@@ -16,11 +16,12 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -48,7 +49,7 @@ where
         deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E1>,
+        msg: ExecuteMsg<T, ExtendCw721Msg>,
     ) -> Result<Response<ModuleMsg>, ContractError> {
         match msg {
             ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
@@ -80,11 +81,12 @@ where
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleQuery: CustomQuery,
 {
     pub fn mint(
@@ -123,12 +125,13 @@ where
     }
 }
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Execute<T, ModuleMsg, ModuleQuery>
-    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Execute<T, ModuleMsg, ModuleQuery>
+    for Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -276,11 +279,12 @@ where
 }
 
 // helpers
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {

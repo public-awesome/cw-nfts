@@ -20,12 +20,12 @@ use crate::state::{Approval, Cw721Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Query<T, ModuleQuery>
-    for Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Query<T, ModuleQuery>
+    for Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -212,11 +212,11 @@ where
     }
 }
 
-impl<'a, T, E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, E1, E2, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E1: DeserializeOwned,
-    E2: DeserializeOwned,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -227,7 +227,7 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps<ModuleQuery>, env: Env, msg: QueryMsg<E2>) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps<ModuleQuery>, env: Env, msg: QueryMsg<ExtendCw721Query>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),

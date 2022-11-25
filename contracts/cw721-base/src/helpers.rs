@@ -16,23 +16,23 @@ use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
 pub struct Cw721Contract<
-    E1: Serialize + DeserializeOwned = Empty,
-    E2: Serialize + DeserializeOwned = Empty,
+    ExtendCw721Msg: Serialize + DeserializeOwned = Empty,
+    ExtendCw721Query: Serialize + DeserializeOwned = Empty,
     ModuleMsg: CustomMsg = Empty,
     ModuleQuery: CustomQuery = Empty,
 >(
     pub Addr,
-    pub PhantomData<E1>,
-    pub PhantomData<E2>,
+    pub PhantomData<ExtendCw721Msg>,
+    pub PhantomData<ExtendCw721Query>,
     pub PhantomData<ModuleMsg>,
     pub PhantomData<ModuleQuery>,
 );
 
 #[allow(dead_code)]
-impl<E1, E2, ModuleMsg, ModuleQuery> Cw721Contract<E1, E2, ModuleMsg, ModuleQuery>
+impl<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
-    E1: Serialize + DeserializeOwned,
-    E2: Serialize + DeserializeOwned,
+    ExtendCw721Msg: Serialize + DeserializeOwned,
+    ExtendCw721Query: Serialize + DeserializeOwned,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -40,7 +40,7 @@ where
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E1>) -> StdResult<CosmosMsg<ModuleMsg>> {
+    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, ExtendCw721Msg>) -> StdResult<CosmosMsg<ModuleMsg>> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -53,7 +53,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper<ModuleQuery>,
-        req: QueryMsg<E2>,
+        req: QueryMsg<ExtendCw721Query>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
