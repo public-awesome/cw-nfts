@@ -1,20 +1,20 @@
 [package]
-name = "cw721"
-version = "0.15.0"
-authors = [
-    "Ethan Frey <ethanfrey@users.noreply.github.com>",
-    "Orkun Külçe <orkun@deuslabs.fi>",
+name          = "cw721"
+description   = "Definition and types for the CosmWasm-721 NFT interface"
+authors       = [
+  "Ethan Frey <ethanfrey@users.noreply.github.com>",
+  "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-edition = "2021"
-description = "Definition and types for the CosmWasm-721 NFT interface"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
 [dependencies]
-cosmwasm-schema = "1.1.0"
-cosmwasm-std = "1.1.0"
-cw-utils = "0.15.0"
-schemars = "0.8.10"
-serde = { version = "1.0.140", default-features = false, features = ["derive"] }
+cosmwasm-schema = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw-utils        = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
