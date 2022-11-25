@@ -33,7 +33,8 @@ pub struct Cw721Contract<
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721<T, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721<T, ModuleMsg, ModuleQuery>
     for Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
@@ -64,7 +65,8 @@ where
     }
 }
 
-impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ModuleQuery: CustomQuery,

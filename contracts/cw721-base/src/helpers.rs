@@ -29,7 +29,8 @@ pub struct Cw721Contract<
 );
 
 #[allow(dead_code)]
-impl<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+impl<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     ExtendCw721Msg: Serialize + DeserializeOwned,
     ExtendCw721Query: Serialize + DeserializeOwned,
@@ -40,7 +41,10 @@ where
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, ExtendCw721Msg>) -> StdResult<CosmosMsg<ModuleMsg>> {
+    pub fn call<T: Serialize>(
+        &self,
+        msg: ExecuteMsg<T, ExtendCw721Msg>,
+    ) -> StdResult<CosmosMsg<ModuleMsg>> {
         let msg = to_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),

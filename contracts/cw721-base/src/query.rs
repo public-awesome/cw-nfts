@@ -212,7 +212,8 @@ where
     }
 }
 
-impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
@@ -227,7 +228,12 @@ where
         })
     }
 
-    pub fn query(&self, deps: Deps<ModuleQuery>, env: Env, msg: QueryMsg<ExtendCw721Query>) -> StdResult<Binary> {
+    pub fn query(
+        &self,
+        deps: Deps<ModuleQuery>,
+        env: Env,
+        msg: QueryMsg<ExtendCw721Query>,
+    ) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
             QueryMsg::ContractInfo {} => to_binary(&self.contract_info(deps)?),
