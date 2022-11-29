@@ -1,7 +1,7 @@
-use schemars::JsonSchema;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::Expiration;
+use schemars::JsonSchema;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -116,9 +116,7 @@ pub enum QueryMsg<Q: JsonSchema> {
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
     #[returns(cw721::NftInfoResponse<Q>)]
-    NftInfo {
-        token_id: String,
-    },
+    NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
