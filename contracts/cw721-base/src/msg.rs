@@ -144,7 +144,7 @@ pub enum QueryMsg<Q: JsonSchema> {
     },
 
     /// Return the minter
-    #[returns(crate::msg::MinterResponse)]
+    #[returns(MinterResponse)]
     Minter {},
 
     /// Extension query
