@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 // Version info for migration
@@ -48,7 +48,12 @@ where
         msg: ExecuteMsg<T, E>,
     ) -> Result<Response<C>, ContractError> {
         match msg {
-            ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
+            ExecuteMsg::Mint {
+                token_id,
+                owner,
+                token_uri,
+                extension,
+            } => self.mint(deps, info, token_id, owner, token_uri, extension),
             ExecuteMsg::Approve {
                 spender,
                 token_id,
@@ -87,9 +92,11 @@ where
     pub fn mint(
         &self,
         deps: DepsMut,
-        _env: Env,
         info: MessageInfo,
-        msg: MintMsg<T>,
+        token_id: String,
+        owner: String,
+        token_uri: Option<String>,
+        extension: T,
     ) -> Result<Response<C>, ContractError> {
         let minter = self.minter.load(deps.storage)?;
 
@@ -99,13 +106,13 @@ where
 
         // create the token
         let token = TokenInfo {
-            owner: deps.api.addr_validate(&msg.owner)?,
+            owner: deps.api.addr_validate(&owner)?,
             approvals: vec![],
-            token_uri: msg.token_uri,
-            extension: msg.extension,
+            token_uri,
+            extension,
         };
         self.tokens
-            .update(deps.storage, &msg.token_id, |old| match old {
+            .update(deps.storage, &token_id, |old| match old {
                 Some(_) => Err(ContractError::Claimed {}),
                 None => Ok(token),
             })?;
@@ -115,8 +122,8 @@ where
         Ok(Response::new()
             .add_attribute("action", "mint")
             .add_attribute("minter", info.sender)
-            .add_attribute("owner", msg.owner)
-            .add_attribute("token_id", msg.token_id))
+            .add_attribute("owner", owner)
+            .add_attribute("token_id", token_id))
     }
 }
 
