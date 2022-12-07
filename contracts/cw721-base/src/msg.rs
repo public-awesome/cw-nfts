@@ -62,7 +62,7 @@ pub enum ExecuteMsg<T, E> {
 pub struct MintMsg<T> {
     /// Unique ID of the NFT
     pub token_id: String,
-    /// The owner of the newly minter NFT
+    /// The owner of the newly minted NFT
     pub owner: String,
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
