@@ -81,7 +81,7 @@ pub fn instantiate(
 pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractError> {
     let mut config: Config = CONFIG.load(deps.storage)?;
 
-    if config.cw721_address != None {
+    if config.cw721_address.is_some() {
         return Err(ContractError::Cw721AlreadyLinked {});
     }
 
@@ -147,7 +147,7 @@ pub fn execute_receive(
         return Err(ContractError::UnauthorizedTokenContract {});
     }
 
-    if config.cw721_address == None {
+    if config.cw721_address.is_none() {
         return Err(ContractError::Uninitialized {});
     }
 
