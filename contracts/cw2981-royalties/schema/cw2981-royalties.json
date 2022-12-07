@@ -416,7 +416,7 @@
             ]
           },
           "owner": {
-            "description": "The owner of the newly minter NFT",
+            "description": "The owner of the newly minted NFT",
             "type": "string"
           },
           "token_id": {
