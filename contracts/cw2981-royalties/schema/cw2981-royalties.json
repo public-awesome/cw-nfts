@@ -212,7 +212,40 @@
         ],
         "properties": {
           "mint": {
-            "$ref": "#/definitions/MintMsg_for_Nullable_Metadata"
+            "type": "object",
+            "required": [
+              "owner",
+              "token_id"
+            ],
+            "properties": {
+              "extension": {
+                "description": "Any custom extension used by this contract",
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Metadata"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "owner": {
+                "description": "The owner of the newly minter NFT",
+                "type": "string"
+              },
+              "token_id": {
+                "description": "Unique ID of the NFT",
+                "type": "string"
+              },
+              "token_uri": {
+                "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
@@ -389,42 +422,6 @@
             "minimum": 0.0
           },
           "youtube_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "MintMsg_for_Nullable_Metadata": {
-        "type": "object",
-        "required": [
-          "owner",
-          "token_id"
-        ],
-        "properties": {
-          "extension": {
-            "description": "Any custom extension used by this contract",
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Metadata"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "owner": {
-            "description": "The owner of the newly minter NFT",
-            "type": "string"
-          },
-          "token_id": {
-            "description": "Unique ID of the NFT",
-            "type": "string"
-          },
-          "token_uri": {
-            "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
             "type": [
               "string",
               "null"

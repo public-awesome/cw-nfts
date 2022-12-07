@@ -212,7 +212,38 @@
         ],
         "properties": {
           "mint": {
-            "$ref": "#/definitions/MintMsg_for_Empty"
+            "type": "object",
+            "required": [
+              "extension",
+              "owner",
+              "token_id"
+            ],
+            "properties": {
+              "extension": {
+                "description": "Any custom extension used by this contract",
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/Empty"
+                  }
+                ]
+              },
+              "owner": {
+                "description": "The owner of the newly minter NFT",
+                "type": "string"
+              },
+              "token_id": {
+                "description": "Unique ID of the NFT",
+                "type": "string"
+              },
+              "token_uri": {
+                "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
@@ -317,40 +348,6 @@
             "additionalProperties": false
           }
         ]
-      },
-      "MintMsg_for_Empty": {
-        "type": "object",
-        "required": [
-          "extension",
-          "owner",
-          "token_id"
-        ],
-        "properties": {
-          "extension": {
-            "description": "Any custom extension used by this contract",
-            "allOf": [
-              {
-                "$ref": "#/definitions/Empty"
-              }
-            ]
-          },
-          "owner": {
-            "description": "The owner of the newly minter NFT",
-            "type": "string"
-          },
-          "token_id": {
-            "description": "Unique ID of the NFT",
-            "type": "string"
-          },
-          "token_uri": {
-            "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
       },
       "Timestamp": {
         "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
