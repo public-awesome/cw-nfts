@@ -21,7 +21,7 @@ impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -86,7 +86,7 @@ impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleQuery: CustomQuery,
 {
     pub fn mint(
@@ -131,7 +131,7 @@ impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -284,7 +284,7 @@ impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {

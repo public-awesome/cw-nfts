@@ -39,7 +39,7 @@ impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
@@ -50,7 +50,7 @@ impl<T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Default
 where
     T: Serialize + DeserializeOwned + Clone,
     ExtendCw721Msg: DeserializeOwned,
-    ExtendCw721Query: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
     ModuleQuery: CustomQuery,
 {
     fn default() -> Self {

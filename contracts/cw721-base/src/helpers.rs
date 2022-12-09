@@ -33,7 +33,7 @@ impl<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
     Cw721Contract<ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     ExtendCw721Msg: Serialize + DeserializeOwned,
-    ExtendCw721Query: Serialize + DeserializeOwned,
+    ExtendCw721Query: Serialize + DeserializeOwned + schemars::JsonSchema,
     ModuleMsg: CustomMsg,
     ModuleQuery: CustomQuery,
 {
