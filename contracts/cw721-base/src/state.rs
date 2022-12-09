@@ -3,16 +3,21 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, CustomQuery, Empty, StdResult, Storage};
 
 use cw721::{ContractInfoResponse, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw721Contract<'a, T, C, E, Q>
-where
+pub struct Cw721Contract<
+    'a,
+    T = Empty,
+    ExtendCw721Msg = Empty,
+    ExtendCw721Query = Empty,
+    ModuleMsg = Empty,
+    ModuleQuery = Empty,
+> where
     T: Serialize + DeserializeOwned + Clone,
-    Q: CustomMsg,
-    E: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
     pub minter: Item<'a, Addr>,
@@ -21,26 +26,32 @@ where
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
 
-    pub(crate) _custom_response: PhantomData<C>,
-    pub(crate) _custom_query: PhantomData<Q>,
-    pub(crate) _custom_execute: PhantomData<E>,
+    pub(crate) _custom_response: PhantomData<ModuleMsg>,
+    pub(crate) _custom_query: PhantomData<ModuleQuery>,
+    pub(crate) _custom_execute: PhantomData<ExtendCw721Msg>,
+    pub(crate) _custom_execute_query: PhantomData<ExtendCw721Query>,
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, T, C, E, Q> Cw721<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721<T, ModuleMsg, ModuleQuery>
+    for Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
 }
 
-impl<T, C, E, Q> Default for Cw721Contract<'static, T, C, E, Q>
+impl<T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery> Default
+    for Cw721Contract<'static, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E: CustomMsg,
-    Q: CustomMsg,
+    ExtendCw721Msg: DeserializeOwned,
+    ExtendCw721Query: DeserializeOwned + schemars::JsonSchema,
+    ModuleQuery: CustomQuery,
 {
     fn default() -> Self {
         Self::new(
@@ -54,11 +65,11 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
+    Cw721Contract<'a, T, ExtendCw721Msg, ExtendCw721Query, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    E: CustomMsg,
-    Q: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     fn new(
         contract_key: &'a str,
@@ -79,6 +90,7 @@ where
             tokens: IndexedMap::new(tokens_key, indexes),
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
+            _custom_execute_query: PhantomData,
             _custom_query: PhantomData,
         }
     }
@@ -116,7 +128,7 @@ pub struct TokenInfo<T> {
     pub extension: T,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Approval {
     /// Account that can transfer/send the token
     pub spender: Addr,

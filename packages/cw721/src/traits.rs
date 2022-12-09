@@ -6,103 +6,109 @@ use crate::{
     AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    Binary, CustomMsg, CustomQuery, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+};
 use cw_utils::Expiration;
 
-pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T>
+pub trait Cw721<T, ModuleMsg, ModuleQuery>:
+    Cw721Execute<T, ModuleMsg, ModuleQuery> + Cw721Query<T, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
 }
 
-pub trait Cw721Execute<T, C>
+pub trait Cw721Execute<T, ModuleMsg, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
+    ModuleMsg: CustomMsg,
+    ModuleQuery: CustomQuery,
 {
     type Err: ToString;
 
     fn transfer_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn send_nft(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn approve(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn revoke(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn approve_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn revoke_all(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 
     fn burn(
         &self,
-        deps: DepsMut,
+        deps: DepsMut<ModuleQuery>,
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<ModuleMsg>, Self::Err>;
 }
 
-pub trait Cw721Query<T>
+pub trait Cw721Query<T, ModuleQuery>
 where
     T: Serialize + DeserializeOwned + Clone,
+    ModuleQuery: CustomQuery,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse>;
+    fn contract_info(&self, deps: Deps<ModuleQuery>) -> StdResult<ContractInfoResponse>;
 
-    fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
+    fn num_tokens(&self, deps: Deps<ModuleQuery>) -> StdResult<NumTokensResponse>;
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>>;
+    fn nft_info(&self, deps: Deps<ModuleQuery>, token_id: String) -> StdResult<NftInfoResponse<T>>;
 
     fn owner_of(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -110,7 +116,7 @@ where
 
     fn operators(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         env: Env,
         owner: String,
         include_expired: bool,
@@ -120,7 +126,7 @@ where
 
     fn approval(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         spender: String,
@@ -129,7 +135,7 @@ where
 
     fn approvals(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,
@@ -137,7 +143,7 @@ where
 
     fn tokens(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -145,14 +151,14 @@ where
 
     fn all_tokens(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse>;
 
     fn all_nft_info(
         &self,
-        deps: Deps,
+        deps: Deps<ModuleQuery>,
         env: Env,
         token_id: String,
         include_expired: bool,

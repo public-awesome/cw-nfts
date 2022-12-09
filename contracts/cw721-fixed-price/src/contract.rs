@@ -168,8 +168,14 @@ pub fn execute_receive(
 
     match config.cw721_address.clone() {
         Some(cw721) => {
-            let callback =
-                Cw721Contract::<Empty, Empty>(cw721, PhantomData, PhantomData).call(mint_msg)?;
+            let callback = Cw721Contract::<Empty, Empty, Empty, Empty>(
+                cw721,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+            )
+            .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
 

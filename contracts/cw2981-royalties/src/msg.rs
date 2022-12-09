@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{CustomMsg, Uint128};
+use cosmwasm_std::Uint128;
 
 #[cw_serde]
 #[derive(QueryResponses)]
@@ -31,8 +31,6 @@ impl Default for Cw2981QueryMsg {
         Cw2981QueryMsg::CheckRoyalties {}
     }
 }
-
-impl CustomMsg for Cw2981QueryMsg {}
 
 #[cw_serde]
 pub struct RoyaltiesInfoResponse {
