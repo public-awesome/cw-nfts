@@ -30,7 +30,7 @@ pub struct ADR36SignDoc {
     pub chain_id: String,
     pub fee: Fee,
     pub memo: String,
-    pub msgs: MsgSignData,
+    pub msgs: Vec<MsgSignData>,
     pub sequence: String,
 }
 

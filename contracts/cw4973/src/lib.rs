@@ -299,13 +299,13 @@ fn _get_sign_doc(signer: &str, message: &str) -> String {
             gas: "0".to_string(),
         },
         memo: "".to_string(),
-        msgs: MsgSignData {
+        msgs: [MsgSignData {
             r#type: "sign/MsgSignData".to_string(),
             value: MsgSignDataValue {
                 data: message.to_string(),
                 signer: signer.to_string(),
             },
-        },
+        }].to_vec(),
         sequence: "0".to_string(),
     };
 
