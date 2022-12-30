@@ -241,7 +241,7 @@ fn _safe_check_agreement(
 // the get_hash funtion will concat the address of the sender, the address of the 'to', the uri of the nft and the hash of the string
 fn _get_hash(active: &str, passive: &str, uri: &str, chain_id: &str) -> Vec<u8> {
     // hash the constant string and data
-    let big_string = format!("{}{}{}{}{}", AGREEMENT_STRING, chain_id, active, passive, uri);
+    let big_string = base64::encode(format!("{}{}{}{}{}", AGREEMENT_STRING, chain_id, active, passive, uri));
 
     // get the signing document
     let sign_doc_json = _get_sign_doc(passive, &big_string);
