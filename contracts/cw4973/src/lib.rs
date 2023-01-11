@@ -26,7 +26,8 @@ pub mod test;
 const CONTRACT_NAME: &str = "crates.io:cw4973";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const AGREEMENT_STRING: &str = "Agreement(string chain_id,address active,address passive,string tokenURI)";
+const AGREEMENT_STRING: &str =
+    "Agreement(string chain_id,address active,address passive,string tokenURI)";
 
 pub type Cw4973Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Empty>;
@@ -241,7 +242,10 @@ fn _safe_check_agreement(
 // the get_hash funtion will concat the address of the sender, the address of the 'to', the uri of the nft and the hash of the string
 fn _get_hash(active: &str, passive: &str, uri: &str, chain_id: &str) -> Vec<u8> {
     // hash the constant string and data
-    let big_string = base64::encode(format!("{}{}{}{}{}", AGREEMENT_STRING, chain_id, active, passive, uri));
+    let big_string = base64::encode(format!(
+        "{}{}{}{}{}",
+        AGREEMENT_STRING, chain_id, active, passive, uri
+    ));
 
     // get the signing document
     let sign_doc_json = _get_sign_doc(passive, &big_string);
@@ -305,7 +309,8 @@ fn _get_sign_doc(signer: &str, message: &str) -> String {
                 data: message.to_string(),
                 signer: signer.to_string(),
             },
-        }].to_vec(),
+        }]
+        .to_vec(),
         sequence: "0".to_string(),
     };
 
