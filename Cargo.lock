@@ -238,7 +238,7 @@ dependencies = [
 
 [[package]]
 name = "cw2981-royalties"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -251,7 +251,7 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -262,7 +262,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-base"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -277,7 +277,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-fixed-price"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -294,7 +294,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-metadata-onchain"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-non-transferable"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
