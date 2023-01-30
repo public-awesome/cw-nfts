@@ -23,6 +23,13 @@ pub enum Cw721QueryMsg {
         token_id: String,
         include_expired: Option<bool>,
     },
+    /// Return approval of a given operator for all tokens of an owner, error if not set
+    /// Return type: `ApprovalResponse`
+    Operator {
+        owner: String,
+        operator: String,
+        include_expired: Option<bool>,
+    },
     /// List all operators that can access all of the owner's tokens
     /// Return type: `OperatorsResponse`
     AllOperators {

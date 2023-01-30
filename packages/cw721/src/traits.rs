@@ -108,6 +108,15 @@ where
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse>;
 
+    fn operator(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: String,
+        operator: String,
+        include_expired: bool,
+    ) -> StdResult<ApprovalResponse>;
+
     fn operators(
         &self,
         deps: Deps,

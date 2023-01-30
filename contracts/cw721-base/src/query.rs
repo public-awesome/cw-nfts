@@ -57,6 +57,38 @@ where
         })
     }
 
+    /// operator returns the approval status of an operator for a given owner if exists
+    fn operator(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: String,
+        operator: String,
+        include_expired: bool,
+    ) -> StdResult<ApprovalResponse> {
+        let owner_addr = deps.api.addr_validate(&owner)?;
+        let operator_addr = deps.api.addr_validate(&operator)?;
+
+        let info = self
+            .operators
+            .may_load(deps.storage, (&owner_addr, &operator_addr))?;
+
+        if let Some(expires) = info {
+            if !include_expired && expires.is_expired(&env.block) {
+                return Err(StdError::not_found("Approval not found"));
+            }
+
+            return Ok(ApprovalResponse {
+                approval: cw721::Approval {
+                    spender: operator,
+                    expires,
+                },
+            });
+        }
+
+        Err(StdError::not_found("Approval not found"))
+    }
+
     /// operators returns all operators owner given access to
     fn operators(
         &self,
@@ -241,6 +273,17 @@ where
                 deps,
                 env,
                 token_id,
+                include_expired.unwrap_or(false),
+            )?),
+            QueryMsg::Operator {
+                owner,
+                operator,
+                include_expired,
+            } => to_binary(&self.operator(
+                deps,
+                env,
+                owner,
+                operator,
                 include_expired.unwrap_or(false),
             )?),
             QueryMsg::AllOperators {

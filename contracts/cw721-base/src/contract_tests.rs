@@ -1,6 +1,8 @@
 #![cfg(test)]
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, WasmMsg};
+use cosmwasm_std::{
+    from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+};
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
@@ -556,6 +558,39 @@ fn approving_all_revoking_all() {
         .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
         .unwrap();
 
+    // query for operator should return approval
+    let res = contract
+        .operator(
+            deps.as_ref(),
+            mock_env(),
+            String::from("person"),
+            String::from("operator"),
+            true,
+        )
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from("operator"),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
+    // query for other should throw error
+    let res = contract.operator(
+        deps.as_ref(),
+        mock_env(),
+        String::from("person"),
+        String::from("other"),
+        true,
+    );
+    match res {
+        Err(StdError::NotFound { kind }) => assert_eq!(kind, "Approval not found"),
+        _ => panic!("Unexpected error"),
+    }
+
     let res = contract
         .operators(
             deps.as_ref(),
@@ -634,6 +669,19 @@ fn approving_all_revoking_all() {
         .execute(deps.as_mut(), mock_env(), owner, revoke_all_msg)
         .unwrap();
 
+    // query for operator should return error
+    let res = contract.operator(
+        deps.as_ref(),
+        mock_env(),
+        String::from("person"),
+        String::from("operator"),
+        true,
+    );
+    match res {
+        Err(StdError::NotFound { kind }) => assert_eq!(kind, "Approval not found"),
+        _ => panic!("Unexpected error"),
+    }
+
     // Approvals are removed / cleared without affecting others
     let res = contract
         .operators(
@@ -661,7 +709,7 @@ fn approving_all_revoking_all() {
     let res = contract
         .operators(
             deps.as_ref(),
-            late_env,
+            late_env.clone(),
             String::from("person"),
             false,
             None,
@@ -669,6 +717,20 @@ fn approving_all_revoking_all() {
         )
         .unwrap();
     assert_eq!(0, res.operators.len());
+
+    // query operator should also return error
+    let res = contract.operator(
+        deps.as_ref(),
+        late_env,
+        String::from("person"),
+        String::from("buddy"),
+        false,
+    );
+
+    match res {
+        Err(StdError::NotFound { kind }) => assert_eq!(kind, "Approval not found"),
+        _ => panic!("Unexpected error"),
+    }
 }
 
 #[test]
