@@ -1,3 +1,4 @@
+use cw_ownable::OwnershipError;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -35,8 +36,7 @@ where
             symbol: msg.symbol,
         };
         self.contract_info.save(deps.storage, &info)?;
-        let minter = deps.api.addr_validate(&msg.minter)?;
-        self.minter.save(deps.storage, &minter)?;
+        cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.minter))?;
         Ok(Response::default())
     }
 
@@ -76,6 +76,7 @@ where
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
+            ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
     }
@@ -98,11 +99,7 @@ where
         token_uri: Option<String>,
         extension: T,
     ) -> Result<Response<C>, ContractError> {
-        let minter = self.minter.load(deps.storage)?;
-
-        if info.sender != minter {
-            return Err(ContractError::Unauthorized {});
-        }
+        cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         // create the token
         let token = TokenInfo {
@@ -275,6 +272,16 @@ where
             .add_attribute("sender", info.sender)
             .add_attribute("token_id", token_id))
     }
+
+    fn update_ownership(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        action: cw_ownable::Action,
+    ) -> Result<Response<C>, Self::Err> {
+        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new().add_attributes(ownership.into_attributes()))
+    }
 }
 
 // helpers
@@ -361,12 +368,12 @@ where
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(OwnershipError::NotOwner))
                 } else {
                     Ok(())
                 }
             }
-            None => Err(ContractError::Unauthorized {}),
+            None => Err(ContractError::Ownership(OwnershipError::NotOwner)),
         }
     }
 
@@ -399,12 +406,12 @@ where
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(OwnershipError::NotOwner))
                 } else {
                     Ok(())
                 }
             }
-            None => Err(ContractError::Unauthorized {}),
+            None => Err(ContractError::Ownership(OwnershipError::NotOwner)),
         }
     }
 }

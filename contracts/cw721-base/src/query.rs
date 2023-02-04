@@ -207,6 +207,10 @@ where
             },
         })
     }
+
+    fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>> {
+        cw_ownable::get_ownership(deps.storage)
+    }
 }
 
 impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
@@ -217,10 +221,11 @@ where
     Q: CustomMsg,
 {
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
-        let minter_addr = self.minter.load(deps.storage)?;
-        Ok(MinterResponse {
-            minter: minter_addr.to_string(),
-        })
+        let minter = cw_ownable::get_ownership(deps.storage)?
+            .owner
+            .map(|a| a.into_string());
+
+        Ok(MinterResponse { minter })
     }
 
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
@@ -282,6 +287,7 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
+            QueryMsg::Ownership {} => to_binary(&Self::ownership(deps)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }

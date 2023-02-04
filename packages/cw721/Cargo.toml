@@ -18,3 +18,4 @@ cosmwasm-std    = { workspace = true }
 cw-utils        = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
+cw-ownable      = { workspace = true }
