@@ -122,6 +122,16 @@ where
             .add_attribute("owner", owner)
             .add_attribute("token_id", token_id))
     }
+
+    pub fn update_ownership(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        action: cw_ownable::Action,
+    ) -> Result<Response<C>, ContractError> {
+        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new().add_attributes(ownership.into_attributes()))
+    }
 }
 
 impl<'a, T, C, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, E, Q>
@@ -271,16 +281,6 @@ where
             .add_attribute("action", "burn")
             .add_attribute("sender", info.sender)
             .add_attribute("token_id", token_id))
-    }
-
-    fn update_ownership(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        action: cw_ownable::Action,
-    ) -> Result<Response<C>, Self::Err> {
-        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
-        Ok(Response::new().add_attributes(ownership.into_attributes()))
     }
 }
 

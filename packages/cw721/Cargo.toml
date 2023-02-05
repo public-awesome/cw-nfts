@@ -11,12 +11,10 @@ license       = { workspace = true }
 repository    = { workspace = true }
 homepage      = { workspace = true }
 documentation = { workspace = true }
-rust-version  = { workspace = true }
 
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
-cw-ownable      = { workspace = true }
 cw-utils        = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }

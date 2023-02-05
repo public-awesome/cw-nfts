@@ -329,7 +329,6 @@ version = "0.16.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-ownable",
  "cw-utils 0.16.0",
  "schemars",
  "serde",

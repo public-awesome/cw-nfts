@@ -6,7 +6,7 @@ use crate::{
     AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
     NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cosmwasm_std::{Addr, Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
 
 pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T>
@@ -85,13 +85,6 @@ where
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response<C>, Self::Err>;
-
-    fn update_ownership(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        action: cw_ownable::Action,
-    ) -> Result<Response<C>, Self::Err>;
 }
 
 pub trait Cw721Query<T>
@@ -164,6 +157,4 @@ where
         token_id: String,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<T>>;
-
-    fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>>;
 }
