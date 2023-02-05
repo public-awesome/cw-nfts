@@ -1,10 +1,9 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::query::ApprovalResponse;
 use crate::{
-    AllNftInfoResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
+    NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
@@ -115,7 +114,7 @@ where
         owner: String,
         operator: String,
         include_expired: bool,
-    ) -> StdResult<ApprovalResponse>;
+    ) -> StdResult<OperatorResponse>;
 
     fn operators(
         &self,

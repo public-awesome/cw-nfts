@@ -7,8 +7,8 @@ use cosmwasm_std::{
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
-    Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    Expiration, NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
@@ -65,7 +65,7 @@ where
         owner: String,
         operator: String,
         include_expired: bool,
-    ) -> StdResult<ApprovalResponse> {
+    ) -> StdResult<OperatorResponse> {
         let owner_addr = deps.api.addr_validate(&owner)?;
         let operator_addr = deps.api.addr_validate(&operator)?;
 
@@ -78,7 +78,7 @@ where
                 return Err(StdError::not_found("Approval not found"));
             }
 
-            return Ok(ApprovalResponse {
+            return Ok(OperatorResponse {
                 approval: cw721::Approval {
                     spender: operator,
                     expires,

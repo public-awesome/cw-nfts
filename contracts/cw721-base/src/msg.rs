@@ -93,7 +93,7 @@ pub enum QueryMsg<Q: JsonSchema> {
         include_expired: Option<bool>,
     },
     /// Return approval of a given operator for all tokens of an owner, error if not set
-    #[returns(cw721::ApprovalResponse)]
+    #[returns(cw721::OperatorResponse)]
     Operator {
         owner: String,
         operator: String,

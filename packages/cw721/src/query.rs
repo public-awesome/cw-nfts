@@ -24,7 +24,7 @@ pub enum Cw721QueryMsg {
         include_expired: Option<bool>,
     },
     /// Return approval of a given operator for all tokens of an owner, error if not set
-    /// Return type: `ApprovalResponse`
+    /// Return type: `OperatorResponse`
     Operator {
         owner: String,
         operator: String,
@@ -99,6 +99,11 @@ pub struct ApprovalResponse {
 #[cw_serde]
 pub struct ApprovalsResponse {
     pub approvals: Vec<Approval>,
+}
+
+#[cw_serde]
+pub struct OperatorResponse {
+    pub approval: Approval,
 }
 
 #[cw_serde]

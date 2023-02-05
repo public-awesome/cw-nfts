@@ -6,7 +6,7 @@ use cosmwasm_std::{
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
-    NftInfoResponse, OperatorsResponse, OwnerOfResponse,
+    NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
 
 use crate::{ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, QueryMsg};
@@ -570,7 +570,7 @@ fn approving_all_revoking_all() {
         .unwrap();
     assert_eq!(
         res,
-        ApprovalResponse {
+        OperatorResponse {
             approval: Approval {
                 spender: String::from("operator"),
                 expires: Expiration::Never {}
