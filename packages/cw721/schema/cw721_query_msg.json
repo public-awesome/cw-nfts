@@ -92,7 +92,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Return approval of a given operator for all tokens of an owner, error if not set Return type: `ApprovalResponse`",
+      "description": "Return approval of a given operator for all tokens of an owner, error if not set Return type: `OperatorResponse`",
       "type": "object",
       "required": [
         "operator"

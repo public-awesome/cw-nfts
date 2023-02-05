@@ -1286,7 +1286,7 @@
     },
     "operator": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ApprovalResponse",
+      "title": "OperatorResponse",
       "type": "object",
       "required": [
         "approval"
