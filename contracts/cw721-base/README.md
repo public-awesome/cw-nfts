@@ -30,6 +30,39 @@ or just create a custom contract as the owner and use that contract to Mint.
 
 If provided, it is expected that the _token_uri_ points to a JSON file following the [ERC721 Metadata JSON Schema](https://eips.ethereum.org/EIPS/eip-721).
 
+## Updating the minter
+
+For contract versions &\gt 0.16$ the minter has been replaced by an
+owner which is updatable via the two-step ownership transfer process
+of [cw_ownable](https://crates.io/crates/cw-ownable). To retreive the
+owner, `QueryMsg::Ownership {}` may be executed.
+
+`QueryMsg::Minter {}` has not bee removed, though after version 0.16
+the response type has made the minter field optional as it may be
+unset. For all intents and purposes, whenever the word minter is used,
+it means owner, and owner in turn means minter, $minter \iff owner$.
+
+Before 0.16:
+
+```rust
+pub struct MinterResponse {
+    pub minter: String,
+}
+```
+
+After 0.16:
+
+```rust
+pub struct MinterResponse {
+    pub minter: Option<String>,
+}
+```
+
+NFTs on version 0.16 may upgrade via `MigrateMsg::From016 {}`. For an
+example of doing so, see
+[this](https://github.com/CosmWasm/cw-nfts/blob/zeke/updatable-minter/contracts/cw721-base/src/multi_tests.rs#L83)
+integration test.
+
 ## Running this contract
 
 You will need Rust 1.44.1+ with `wasm32-unknown-unknown` target installed.
