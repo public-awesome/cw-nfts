@@ -157,3 +157,11 @@ pub enum QueryMsg<Q: JsonSchema> {
 pub struct MinterResponse {
     pub minter: Option<String>,
 }
+
+#[cw_serde]
+pub enum MigrateMsg {
+    /// Migrates the contract from version 0.16.0 to the latest
+    /// version. After 0.16.0 the minter was removed in favor of using
+    /// cw_ownable to track the NFT contract's owner.
+    From016 {},
+}

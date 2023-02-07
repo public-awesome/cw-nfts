@@ -18,4 +18,7 @@ pub enum ContractError {
 
     #[error("Approval not found for: {spender}")]
     ApprovalNotFound { spender: String },
+
+    #[error("found version ({0}) while attempting to migrate from 0.16.0")]
+    WrongMigrateVersion(String),
 }

@@ -1,4 +1,3 @@
-mod contract_tests;
 mod error;
 mod execute;
 pub mod helpers;
@@ -6,8 +5,13 @@ pub mod msg;
 mod query;
 pub mod state;
 
+#[cfg(test)]
+mod contract_tests;
+#[cfg(test)]
+mod multi_tests;
+
 pub use crate::error::ContractError;
-pub use crate::msg::{ExecuteMsg, InstantiateMsg, MinterResponse, QueryMsg};
+pub use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MinterResponse, QueryMsg};
 pub use crate::state::Cw721Contract;
 
 // These types are re-exported so that contracts interacting with this
@@ -57,5 +61,10 @@ pub mod entry {
     pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> StdResult<Binary> {
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
         tract.query(deps, env, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+        Cw721Contract::<Extension, Empty, Empty, Empty>::migrate(deps, msg)
     }
 }
