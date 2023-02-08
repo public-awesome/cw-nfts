@@ -4,6 +4,7 @@ pub mod helpers;
 pub mod msg;
 mod query;
 pub mod state;
+mod upgrades;
 
 #[cfg(test)]
 mod contract_tests;
@@ -11,7 +12,7 @@ mod contract_tests;
 mod multi_tests;
 
 pub use crate::error::ContractError;
-pub use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, MinterResponse, QueryMsg};
+pub use crate::msg::{ExecuteMsg, InstantiateMsg, MinterResponse, QueryMsg};
 pub use crate::state::Cw721Contract;
 
 // These types are re-exported so that contracts interacting with this
@@ -64,7 +65,7 @@ pub mod entry {
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
-        Cw721Contract::<Extension, Empty, Empty, Empty>::migrate(deps, msg)
+    pub fn migrate(deps: DepsMut, env: Env, _msg: Empty) -> Result<Response, ContractError> {
+        Cw721Contract::<Extension, Empty, Empty, Empty>::migrate(deps, env)
     }
 }

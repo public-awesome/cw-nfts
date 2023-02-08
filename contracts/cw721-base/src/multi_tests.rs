@@ -110,7 +110,7 @@ fn test_016_017_migration() {
         WasmMsg::Migrate {
             contract_addr: cw721.to_string(),
             new_code_id: code_id_017,
-            msg: to_binary(&crate::MigrateMsg::From016 {}).unwrap(),
+            msg: to_binary(&Empty::default()).unwrap(),
         }
         .into(),
     )

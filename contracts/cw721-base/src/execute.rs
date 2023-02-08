@@ -10,7 +10,7 @@ use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
-use crate::MigrateMsg;
+use crate::upgrades;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
@@ -134,26 +134,16 @@ where
         Ok(Response::new().add_attributes(ownership.into_attributes()))
     }
 
-    pub fn migrate(deps: DepsMut, msg: MigrateMsg) -> Result<Response<C>, ContractError> {
+    /// Migrates the contract from the previous version to the current
+    /// version.
+    pub fn migrate(deps: DepsMut, _env: Env) -> Result<Response<C>, ContractError> {
         let ContractVersion { version, .. } = get_contract_version(deps.storage)?;
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-        match msg {
-            MigrateMsg::From016 {} => {
-                if version != "0.16.0" {
-                    Err(ContractError::WrongMigrateVersion(version))
-                } else {
-                    use cw721_base_016 as v16;
-                    let tract16 = v16::Cw721Contract::<T, C, E, Q>::default();
-                    let minter = tract16.minter.load(deps.storage)?;
-                    tract16.minter.remove(deps.storage);
-                    cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_str()))?;
-                    let ownership = cw_ownable::get_ownership(deps.storage)?;
-                    Ok(Response::new()
-                        .add_attribute("method", "migrate_from_016")
-                        .add_attribute("old_minter", minter)
-                        .add_attributes(ownership.into_attributes()))
-                }
-            }
+
+        if version != "0.16.0" {
+            Err(ContractError::WrongMigrateVersion(version))
+        } else {
+            upgrades::v0_16::migrate::<T, C, E, Q>(deps)
         }
     }
 }

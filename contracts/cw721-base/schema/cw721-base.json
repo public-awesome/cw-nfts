@@ -759,26 +759,7 @@
       }
     }
   },
-  "migrate": {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "MigrateMsg",
-    "oneOf": [
-      {
-        "description": "Migrates the contract from version 0.16.0 to the latest version. After 0.16.0 the minter was removed in favor of using cw_ownable to track the NFT contract's owner.",
-        "type": "object",
-        "required": [
-          "from016"
-        ],
-        "properties": {
-          "from016": {
-            "type": "object",
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      }
-    ]
-  },
+  "migrate": null,
   "sudo": null,
   "responses": {
     "all_nft_info": {
