@@ -16,7 +16,9 @@ where
     cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_str()))?;
     let ownership = cw_ownable::get_ownership(deps.storage)?;
     Ok(Response::new()
-        .add_attribute("action", "migrate_016_017")
+        .add_attribute("action", "migrate")
+        .add_attribute("from_version", "0.16.0")
+        .add_attribute("to_version", "0.17.0")
         .add_attribute("old_minter", minter)
         .add_attributes(ownership.into_attributes()))
 }
