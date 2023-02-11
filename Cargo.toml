@@ -8,16 +8,20 @@ license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
 homepage      = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
+rust-version  = "1.65"
 
 [workspace.dependencies]
 cosmwasm-schema = "1.1.5"
 cosmwasm-std    = "1.1.5"
+cw-multi-test   = "0.16.0"
+cw-ownable      = "0.5.0"
+cw-storage-plus = "0.16.0"
+cw-utils        = "0.16.0"
 cw2             = "0.16.0"
 cw20            = "0.16.0"
 cw721           = { version = "0.16.0", path = "./packages/cw721" }
 cw721-base      = { version = "0.16.0", path = "./contracts/cw721-base" }
-cw-storage-plus = "0.16.0"
-cw-utils        = "0.16.0"
+cw721-base-016  = { package = "cw721-base", version = "0.16.0" }
 schemars        = "0.8.10"
 serde           = { version = "1.0.140", default-features = false, features = ["derive"] }
 thiserror       = "1.0.31"
