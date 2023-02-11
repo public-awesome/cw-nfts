@@ -13,8 +13,7 @@ where
     let tract16 = v16::Cw721Contract::<T, C, E, Q>::default();
     let minter = tract16.minter.load(deps.storage)?;
     tract16.minter.remove(deps.storage);
-    cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_str()))?;
-    let ownership = cw_ownable::get_ownership(deps.storage)?;
+    let ownership = cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_str()))?;
     Ok(Response::new()
         .add_attribute("action", "migrate")
         .add_attribute("from_version", "0.16.0")

@@ -214,9 +214,9 @@ dependencies = [
 
 [[package]]
 name = "cw-ownable"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58c6a1ce872cf90cfa4e70a0f5dc5682dd849697a348f135abd46e6f96c570a3"
+checksum = "27fc0c75fc61cf268e5dc5f23ff24bd84b629c575b5a1522e2349f61b46874b4"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -229,9 +229,9 @@ dependencies = [
 
 [[package]]
 name = "cw-ownable-derive"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9a0a02e1188a701d79df78dde6a01f4e3d4adb5f199d6f28a0cc7e72f907c09"
+checksum = "ac447d5b5314ee18c2663b5436451c030c072db1eb392a167d19c04e247d77f6"
 dependencies = [
  "proc-macro2",
  "quote",
