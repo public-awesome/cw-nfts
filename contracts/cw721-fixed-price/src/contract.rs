@@ -299,7 +299,7 @@ mod tests {
 
         match err {
             ContractError::InvalidUnitPrice {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -323,7 +323,7 @@ mod tests {
 
         match err {
             ContractError::InvalidMaxTokens {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -431,7 +431,7 @@ mod tests {
         let err = reply(deps.as_mut(), mock_env(), reply_msg).unwrap_err();
         match err {
             ContractError::InvalidTokenReplyId {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -474,7 +474,7 @@ mod tests {
         let err = reply(deps.as_mut(), mock_env(), reply_msg).unwrap_err();
         match err {
             ContractError::Cw721AlreadyLinked {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -527,7 +527,7 @@ mod tests {
 
         match err {
             ContractError::SoldOut {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -562,7 +562,7 @@ mod tests {
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
         match err {
             ContractError::Uninitialized {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -616,7 +616,7 @@ mod tests {
 
         match err {
             ContractError::UnauthorizedTokenContract {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -670,7 +670,7 @@ mod tests {
 
         match err {
             ContractError::WrongPaymentAmount {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 }

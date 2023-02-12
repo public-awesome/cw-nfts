@@ -1,15 +1,19 @@
 #![cfg(test)]
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+
 use cosmwasm_std::{
-    from_binary, to_binary, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+    from_binary, to_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
     NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
+use cw_ownable::OwnershipError;
 
-use crate::{ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, QueryMsg};
+use crate::{
+    ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg,
+};
 
 const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
@@ -48,7 +52,7 @@ fn proper_instantiation() {
 
     // it worked, let's query the state
     let res = contract.minter(deps.as_ref()).unwrap();
-    assert_eq!(MINTER, res.minter);
+    assert_eq!(Some(MINTER.to_string()), res.minter);
     let info = contract.contract_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
@@ -86,7 +90,7 @@ fn minting() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(err, ContractError::Unauthorized {});
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
     // minter can mint
     let allowed = mock_info(MINTER, &[]);
@@ -146,6 +150,106 @@ fn minting() {
 }
 
 #[test]
+fn test_update_minter() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    let token_id = "petrify".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
+
+    let mint_msg = ExecuteMsg::Mint {
+        token_id,
+        owner: String::from("medusa"),
+        token_uri: Some(token_uri.clone()),
+        extension: None,
+    };
+
+    // Minter can mint
+    let minter_info = mock_info(MINTER, &[]);
+    let _ = contract
+        .execute(deps.as_mut(), mock_env(), minter_info.clone(), mint_msg)
+        .unwrap();
+
+    // Update the owner to "random". The new owner should be able to
+    // mint new tokens, the old one should not.
+    contract
+        .execute(
+            deps.as_mut(),
+            mock_env(),
+            minter_info.clone(),
+            ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
+                new_owner: "random".to_string(),
+                expiry: None,
+            }),
+        )
+        .unwrap();
+
+    // Minter does not change until ownership transfer completes.
+    let minter: MinterResponse = from_binary(
+        &contract
+            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(minter.minter, Some(MINTER.to_string()));
+
+    // Pending ownership transfer should be discoverable via query.
+    let ownership: cw_ownable::Ownership<Addr> = from_binary(
+        &contract
+            .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
+            .unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(
+        ownership,
+        cw_ownable::Ownership::<Addr> {
+            owner: Some(Addr::unchecked(MINTER)),
+            pending_owner: Some(Addr::unchecked("random")),
+            pending_expiry: None,
+        }
+    );
+
+    // Accept the ownership transfer.
+    let random_info = mock_info("random", &[]);
+    contract
+        .execute(
+            deps.as_mut(),
+            mock_env(),
+            random_info.clone(),
+            ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership),
+        )
+        .unwrap();
+
+    // Minter changes after ownership transfer is accepted.
+    let minter: MinterResponse = from_binary(
+        &contract
+            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(minter.minter, Some("random".to_string()));
+
+    let mint_msg = ExecuteMsg::Mint {
+        token_id: "randoms_token".to_string(),
+        owner: String::from("medusa"),
+        token_uri: Some(token_uri),
+        extension: None,
+    };
+
+    // Old owner can not mint.
+    let err: ContractError = contract
+        .execute(deps.as_mut(), mock_env(), minter_info, mint_msg.clone())
+        .unwrap_err();
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+    // New owner can mint.
+    let _ = contract
+        .execute(deps.as_mut(), mock_env(), random_info, mint_msg)
+        .unwrap();
+}
+
+#[test]
 fn burning() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
@@ -174,7 +278,7 @@ fn burning() {
         .execute(deps.as_mut(), mock_env(), random, burn_msg.clone())
         .unwrap_err();
 
-    assert_eq!(err, ContractError::Unauthorized {});
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed, burn_msg)
@@ -225,7 +329,7 @@ fn transferring_nft() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, transfer_msg)
         .unwrap_err();
-    assert_eq!(err, ContractError::Unauthorized {});
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
     // owner can
     let random = mock_info("venus", &[]);
@@ -281,7 +385,7 @@ fn sending_nft() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, send_msg.clone())
         .unwrap_err();
-    assert_eq!(err, ContractError::Unauthorized {});
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
     // but owner can
     let random = mock_info("venus", &[]);
@@ -300,7 +404,7 @@ fn sending_nft() {
         CosmosMsg::Wasm(WasmMsg::Execute { contract_addr, .. }) => {
             assert_eq!(contract_addr, &target)
         }
-        m => panic!("Unexpected message type: {:?}", m),
+        m => panic!("Unexpected message type: {m:?}"),
     }
     // and make sure this is the request sent by the contract
     assert_eq!(
