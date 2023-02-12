@@ -3,12 +3,12 @@
   "title": "MinterResponse",
   "description": "Shows who can mint these tokens",
   "type": "object",
-  "required": [
-    "minter"
-  ],
   "properties": {
     "minter": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": false

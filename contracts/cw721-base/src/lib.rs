@@ -1,14 +1,28 @@
-mod contract_tests;
 mod error;
 mod execute;
 pub mod helpers;
 pub mod msg;
 mod query;
 pub mod state;
+mod upgrades;
+
+#[cfg(test)]
+mod contract_tests;
+#[cfg(test)]
+mod multi_tests;
 
 pub use crate::error::ContractError;
-pub use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg, MinterResponse, QueryMsg};
+pub use crate::msg::{ExecuteMsg, InstantiateMsg, MinterResponse, QueryMsg};
 pub use crate::state::Cw721Contract;
+
+// These types are re-exported so that contracts interacting with this
+// one don't need a direct dependency on cw_ownable to use the API.
+//
+// `Action` is used in `ExecuteMsg::UpdateOwnership`, `Ownership` is
+// used in `QueryMsg::Ownership`, and `OwnershipError` is used in
+// `ContractError::Ownership`.
+pub use cw_ownable::{Action, Ownership, OwnershipError};
+
 use cosmwasm_std::Empty;
 
 // This is a simple type to let us handle empty extensions
@@ -48,5 +62,10 @@ pub mod entry {
     pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> StdResult<Binary> {
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
         tract.query(deps, env, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn migrate(deps: DepsMut, env: Env, _msg: Empty) -> Result<Response, ContractError> {
+        Cw721Contract::<Extension, Empty, Empty, Empty>::migrate(deps, env)
     }
 }

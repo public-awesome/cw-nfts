@@ -13,7 +13,7 @@ use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
 use cw721_base::{
     helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
-    msg::InstantiateMsg as Cw721InstantiateMsg, Extension, MintMsg,
+    msg::InstantiateMsg as Cw721InstantiateMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -159,12 +159,12 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint(MintMsg::<Extension> {
+    let mint_msg = Cw721ExecuteMsg::<_, Empty>::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
         extension: config.extension.clone(),
-    });
+    };
 
     match config.cw721_address.clone() {
         Some(cw721) => {
@@ -184,6 +184,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
     use cosmwasm_std::{from_binary, to_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
+    use cw721_base::Extension;
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
@@ -298,7 +299,7 @@ mod tests {
 
         match err {
             ContractError::InvalidUnitPrice {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -322,7 +323,7 @@ mod tests {
 
         match err {
             ContractError::InvalidMaxTokens {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -371,12 +372,12 @@ mod tests {
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint(MintMsg::<Extension> {
+        let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint {
             token_id: String::from("0"),
             owner: String::from("minter"),
             token_uri: Some(String::from("https://ipfs.io/ipfs/Q")),
             extension: None,
-        });
+        };
 
         assert_eq!(
             res.messages[0],
@@ -430,7 +431,7 @@ mod tests {
         let err = reply(deps.as_mut(), mock_env(), reply_msg).unwrap_err();
         match err {
             ContractError::InvalidTokenReplyId {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -473,7 +474,7 @@ mod tests {
         let err = reply(deps.as_mut(), mock_env(), reply_msg).unwrap_err();
         match err {
             ContractError::Cw721AlreadyLinked {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -526,7 +527,7 @@ mod tests {
 
         match err {
             ContractError::SoldOut {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -561,7 +562,7 @@ mod tests {
         let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
         match err {
             ContractError::Uninitialized {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -615,7 +616,7 @@ mod tests {
 
         match err {
             ContractError::UnauthorizedTokenContract {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 
@@ -669,7 +670,7 @@ mod tests {
 
         match err {
             ContractError::WrongPaymentAmount {} => {}
-            e => panic!("unexpected error: {}", e),
+            e => panic!("unexpected error: {e}"),
         }
     }
 }
