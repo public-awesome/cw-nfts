@@ -1,10 +1,10 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::Expiration;
+use cw_ownable::{cw_ownable_execute, cw_ownable_query};
+use schemars::JsonSchema;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     /// Name of the NFT contract
     pub name: String,
@@ -20,8 +20,8 @@ pub struct InstantiateMsg {
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_ownable_execute]
+#[cw_serde]
 pub enum ExecuteMsg<T, E> {
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft { recipient: String, token_id: String },
@@ -51,7 +51,18 @@ pub enum ExecuteMsg<T, E> {
     RevokeAll { operator: String },
 
     /// Mint a new NFT, can only be called by the contract minter
-    Mint(MintMsg<T>),
+    Mint {
+        /// Unique ID of the NFT
+        token_id: String,
+        /// The owner of the newly minter NFT
+        owner: String,
+        /// Universal resource identifier for this NFT
+        /// Should point to a JSON file that conforms to the ERC721
+        /// Metadata JSON Schema
+        token_uri: Option<String>,
+        /// Any custom extension used by this contract
+        extension: T,
+    },
 
     /// Burn an NFT the sender has access to
     Burn { token_id: String },
@@ -60,45 +71,32 @@ pub enum ExecuteMsg<T, E> {
     Extension { msg: E },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MintMsg<T> {
-    /// Unique ID of the NFT
-    pub token_id: String,
-    /// The owner of the newly minter NFT
-    pub owner: String,
-    /// Universal resource identifier for this NFT
-    /// Should point to a JSON file that conforms to the ERC721
-    /// Metadata JSON Schema
-    pub token_uri: Option<String>,
-    /// Any custom extension used by this contract
-    pub extension: T,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum QueryMsg<Q> {
+#[cw_ownable_query]
+#[cw_serde]
+#[derive(QueryResponses)]
+pub enum QueryMsg<Q: JsonSchema> {
     /// Return the owner of the given token, error if token does not exist
-    /// Return type: OwnerOfResponse
+    #[returns(cw721::OwnerOfResponse)]
     OwnerOf {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
     },
     /// Return operator that can access all of the owner's tokens.
-    /// Return type: `ApprovalResponse`
+    #[returns(cw721::ApprovalResponse)]
     Approval {
         token_id: String,
         spender: String,
         include_expired: Option<bool>,
     },
     /// Return approvals that a token has
-    /// Return type: `ApprovalsResponse`
+    #[returns(cw721::ApprovalsResponse)]
     Approvals {
         token_id: String,
         include_expired: Option<bool>,
     },
     /// List all operators that can access all of the owner's tokens
-    /// Return type: `OperatorsResponse`
+    #[returns(cw721::OperatorsResponse)]
     AllOperators {
         owner: String,
         /// unset or false will filter out expired items, you must set to true to see them
@@ -107,20 +105,22 @@ pub enum QueryMsg<Q> {
         limit: Option<u32>,
     },
     /// Total number of tokens issued
+    #[returns(cw721::NumTokensResponse)]
     NumTokens {},
 
     /// With MetaData Extension.
-    /// Returns top-level metadata about the contract: `ContractInfoResponse`
+    /// Returns top-level metadata about the contract
+    #[returns(cw721::ContractInfoResponse)]
     ContractInfo {},
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
-    /// but directly from the contract: `NftInfoResponse`
-    NftInfo {
-        token_id: String,
-    },
+    /// but directly from the contract
+    #[returns(cw721::NftInfoResponse<Q>)]
+    NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
-    /// for clients: `AllNftInfo`
+    /// for clients
+    #[returns(cw721::AllNftInfoResponse<Q>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -129,7 +129,7 @@ pub enum QueryMsg<Q> {
 
     /// With Enumerable extension.
     /// Returns all tokens owned by the given address, [] if unset.
-    /// Return type: TokensResponse.
+    #[returns(cw721::TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -137,23 +137,23 @@ pub enum QueryMsg<Q> {
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-    /// Return type: TokensResponse.
+    #[returns(cw721::TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
     },
 
-    // Return the minter
+    /// Return the minter
+    #[returns(MinterResponse)]
     Minter {},
 
     /// Extension query
-    Extension {
-        msg: Q,
-    },
+    #[returns(())]
+    Extension { msg: Q },
 }
 
 /// Shows who can mint these tokens
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct MinterResponse {
-    pub minter: String,
+    pub minter: Option<String>,
 }

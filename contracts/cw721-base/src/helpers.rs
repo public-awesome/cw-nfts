@@ -1,4 +1,6 @@
-use crate::{ExecuteMsg, QueryMsg};
+use std::marker::PhantomData;
+
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
@@ -6,11 +8,12 @@ use cw721::{
     AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
     NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use serde::__private::PhantomData;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+use crate::{ExecuteMsg, QueryMsg};
+
+#[cw_serde]
 pub struct Cw721Contract<Q: CustomMsg, E: CustomMsg>(
     pub Addr,
     pub PhantomData<Q>,

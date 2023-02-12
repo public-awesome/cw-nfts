@@ -1,11 +1,13 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_binary, Addr, Binary, BlockInfo, Deps, Env, Order, StdError, StdResult};
+use cosmwasm_std::{
+    to_binary, Addr, Binary, BlockInfo, CustomMsg, Deps, Env, Order, StdError, StdResult,
+};
 
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, CustomMsg,
-    Cw721Query, Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
+    Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
     TokensResponse,
 };
 use cw_storage_plus::Bound;
@@ -214,13 +216,6 @@ where
     E: CustomMsg,
     Q: CustomMsg,
 {
-    pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
-        let minter_addr = self.minter.load(deps.storage)?;
-        Ok(MinterResponse {
-            minter: minter_addr.to_string(),
-        })
-    }
-
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
@@ -280,8 +275,21 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
+            QueryMsg::Ownership {} => to_binary(&Self::ownership(deps)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
+    }
+
+    pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
+        let minter = cw_ownable::get_ownership(deps.storage)?
+            .owner
+            .map(|a| a.into_string());
+
+        Ok(MinterResponse { minter })
+    }
+
+    pub fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>> {
+        cw_ownable::get_ownership(deps.storage)
     }
 }
 

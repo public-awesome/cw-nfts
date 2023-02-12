@@ -12,4 +12,4 @@ pub use crate::query::{
     TokensResponse,
 };
 pub use crate::receiver::Cw721ReceiveMsg;
-pub use crate::traits::{CustomMsg, Cw721, Cw721Execute, Cw721Query};
+pub use crate::traits::{Cw721, Cw721Execute, Cw721Query};
