@@ -1,6 +1,6 @@
 {
   "contract_name": "cw2981-royalties",
-  "contract_version": "0.16.0",
+  "contract_version": "0.17.0",
   "idl_version": "1.0.0",
   "instantiate": {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -313,13 +313,6 @@
         "description": "Actions that can be taken to alter the contract's ownership",
         "oneOf": [
           {
-            "type": "string",
-            "enum": [
-              "accept_ownership",
-              "renounce_ownership"
-            ]
-          },
-          {
             "description": "Propose to transfer the contract's ownership to another account, optionally with an expiry time.\n\nCan only be called by the contract's current owner.\n\nAny existing pending ownership transfer is overwritten.",
             "type": "object",
             "required": [
@@ -350,6 +343,20 @@
               }
             },
             "additionalProperties": false
+          },
+          {
+            "description": "Accept the pending ownership transfer.\n\nCan only be called by the pending owner.",
+            "type": "string",
+            "enum": [
+              "accept_ownership"
+            ]
+          },
+          {
+            "description": "Give up the contract's ownership and the possibility of appointing a new owner.\n\nCan only be invoked by the contract's current owner.\n\nAny existing pending ownership transfer is canceled.",
+            "type": "string",
+            "enum": [
+              "renounce_ownership"
+            ]
           }
         ]
       },
