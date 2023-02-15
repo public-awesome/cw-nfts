@@ -29,8 +29,8 @@ use cosmwasm_std::Empty;
 pub type Extension = Option<Empty>;
 
 // Version info for migration
-const CONTRACT_NAME: &str = "crates.io:cw721-base";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
+pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub mod entry {
     use super::*;
@@ -73,5 +73,40 @@ pub mod entry {
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn migrate(deps: DepsMut, env: Env, _msg: Empty) -> Result<Response, ContractError> {
         Cw721Contract::<Extension, Empty, Empty, Empty>::migrate(deps, env)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cw2::ContractVersion;
+
+    use super::*;
+
+    /// Make sure cw2 version info is properly initialized during instantiation.
+    #[test]
+    fn proper_cw2_initialization() {
+        let mut deps = mock_dependencies();
+
+        entry::instantiate(
+            deps.as_mut(),
+            mock_env(),
+            mock_info("larry", &[]),
+            InstantiateMsg {
+                name: "".into(),
+                symbol: "".into(),
+                minter: "larry".into(),
+            },
+        )
+        .unwrap();
+
+        let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
+        assert_eq!(
+            version,
+            ContractVersion {
+                contract: CONTRACT_NAME.into(),
+                version: CONTRACT_VERSION.into(),
+            },
+        );
     }
 }
