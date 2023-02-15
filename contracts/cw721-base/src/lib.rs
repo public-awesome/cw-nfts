@@ -28,6 +28,10 @@ use cosmwasm_std::Empty;
 // This is a simple type to let us handle empty extensions
 pub type Extension = Option<Empty>;
 
+// Version info for migration
+const CONTRACT_NAME: &str = "crates.io:cw721-base";
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub mod entry {
     use super::*;
 
@@ -43,6 +47,8 @@ pub mod entry {
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> StdResult<Response> {
+        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
         tract.instantiate(deps, env, info, msg)
     }

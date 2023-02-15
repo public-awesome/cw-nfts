@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-use cw2::set_contract_version;
 pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
 // Version info for migration
@@ -49,12 +48,10 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> Result<Response, ContractError> {
-        let res = Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)?;
-        // Explicitly set contract name and version, otherwise set to cw721-base info
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(ContractError::Std)?;
-        Ok(res)
+    ) -> StdResult<Response> {
+        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)
     }
 
     #[entry_point]
