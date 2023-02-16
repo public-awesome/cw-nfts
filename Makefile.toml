@@ -36,7 +36,7 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  ${image}:0.12.9
+  ${image}:0.12.11
 """
 
 [tasks.schema]
@@ -56,6 +56,8 @@ for d in contracts/*; do
     cd ../..
   fi
 done
+
+rm -rf contracts/**/schema/raw
 """
 
 [tasks.publish]

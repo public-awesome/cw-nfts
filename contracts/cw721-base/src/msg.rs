@@ -1,6 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::Expiration;
+use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 use schemars::JsonSchema;
 
 #[cw_serde]
@@ -19,6 +20,7 @@ pub struct InstantiateMsg {
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
+#[cw_ownable_execute]
 #[cw_serde]
 pub enum ExecuteMsg<T, E> {
     /// Transfer is a base message to move a token to another account without triggering actions
@@ -69,6 +71,7 @@ pub enum ExecuteMsg<T, E> {
     Extension { msg: E },
 }
 
+#[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg<Q: JsonSchema> {
@@ -90,6 +93,13 @@ pub enum QueryMsg<Q: JsonSchema> {
     #[returns(cw721::ApprovalsResponse)]
     Approvals {
         token_id: String,
+        include_expired: Option<bool>,
+    },
+    /// Return approval of a given operator for all tokens of an owner, error if not set
+    #[returns(cw721::OperatorResponse)]
+    Operator {
+        owner: String,
+        operator: String,
         include_expired: Option<bool>,
     },
     /// List all operators that can access all of the owner's tokens
@@ -152,5 +162,5 @@ pub enum QueryMsg<Q: JsonSchema> {
 /// Shows who can mint these tokens
 #[cw_serde]
 pub struct MinterResponse {
-    pub minter: String,
+    pub minter: Option<String>,
 }

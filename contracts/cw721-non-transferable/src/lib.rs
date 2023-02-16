@@ -75,7 +75,9 @@ pub mod entry {
                 if admin == info.sender {
                     _execute(deps, env, info, msg)
                 } else {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(
+                        cw721_base::OwnershipError::NotOwner,
+                    ))
                 }
             }
             None => match msg {
@@ -86,7 +88,9 @@ pub mod entry {
                     extension,
                 } => Cw721NonTransferableContract::default()
                     .mint(deps, info, token_id, owner, token_uri, extension),
-                _ => Err(ContractError::Unauthorized {}),
+                _ => Err(ContractError::Ownership(
+                    cw721_base::OwnershipError::NotOwner,
+                )),
             },
         }
     }
