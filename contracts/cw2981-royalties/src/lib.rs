@@ -4,7 +4,7 @@ pub mod query;
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Empty};
+use cosmwasm_std::{to_binary, Empty, StdError};
 use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
 pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
@@ -80,7 +80,40 @@ pub mod entry {
         info: MessageInfo,
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
-        Cw2981Contract::default().execute(deps, env, info, msg)
+        match msg {
+            ExecuteMsg::Mint {
+                token_id,
+                owner,
+                token_uri,
+                extension,
+            } => {
+                // validate royalty_percentage to be between 0 and 100
+                if let Some(Metadata {
+                    royalty_percentage: Some(royalty_percentage),
+                    ..
+                }) = extension
+                {
+                    // no need to check < 0 because royalty_percentage is u64
+                    if royalty_percentage > 100 {
+                        return Err(ContractError::Std(StdError::GenericErr {
+                            msg: "Royalty percentage must be between 0 and 100".to_string(),
+                        }));
+                    }
+                }
+                Cw2981Contract::default().execute(
+                    deps,
+                    env,
+                    info,
+                    cw721_base::ExecuteMsg::Mint {
+                        token_id,
+                        owner,
+                        token_uri,
+                        extension,
+                    },
+                )
+            }
+            _ => Cw2981Contract::default().execute(deps, env, info, msg),
+        }
     }
 
     #[entry_point]
@@ -141,6 +174,41 @@ mod tests {
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
+    }
+
+    #[test]
+    fn validate_royalty_information() {
+        let mut deps = mock_dependencies();
+        let _contract = Cw2981Contract::default();
+
+        let info = mock_info(CREATOR, &[]);
+        let init_msg = InstantiateMsg {
+            name: "SpaceShips".to_string(),
+            symbol: "SPACE".to_string(),
+            minter: CREATOR.to_string(),
+        };
+        entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
+
+        let token_id = "Enterprise";
+        let exec_msg = ExecuteMsg::Mint {
+            token_id: token_id.to_string(),
+            owner: "john".to_string(),
+            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
+            extension: Some(Metadata {
+                description: Some("Spaceship with Warp Drive".into()),
+                name: Some("Starship USS Enterprise".to_string()),
+                royalty_percentage: Some(101),
+                ..Metadata::default()
+            }),
+        };
+        // mint will return StdError
+        let err = entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap_err();
+        assert_eq!(
+            err,
+            ContractError::Std(StdError::GenericErr {
+                msg: "Royalty percentage must be between 0 and 100".to_string(),
+            })
+        );
     }
 
     #[test]
