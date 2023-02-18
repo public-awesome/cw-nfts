@@ -82,17 +82,19 @@ pub mod entry {
         info: MessageInfo,
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
-        if let ExecuteMsg::Mint { extension, .. } = &msg {
+        if let ExecuteMsg::Mint {
+            extension:
+                Some(Metadata {
+                    royalty_percentage: Some(royalty_percentage),
+                    ..
+                }),
+            ..
+        } = &msg
+        {
             // validate royalty_percentage to be between 0 and 100
-            if let Some(Metadata {
-                royalty_percentage: Some(royalty_percentage),
-                ..
-            }) = extension
-            {
-                // no need to check < 0 because royalty_percentage is u64
-                if *royalty_percentage > 100 {
-                    return Err(ContractError::InvalidRoyaltyPercentage);
-                }
+            // no need to check < 0 because royalty_percentage is u64
+            if *royalty_percentage > 100 {
+                return Err(ContractError::InvalidRoyaltyPercentage);
             }
         }
 
