@@ -5,7 +5,6 @@ pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_binary, Empty};
-use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
 pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
@@ -65,12 +64,10 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> Result<Response, ContractError> {
-        let res = Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)?;
-        // Explicitly set contract name and version, otherwise set to cw721-base info
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(ContractError::Std)?;
-        Ok(res)
+    ) -> StdResult<Response> {
+        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)
     }
 
     #[entry_point]
