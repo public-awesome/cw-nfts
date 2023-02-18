@@ -91,7 +91,7 @@ pub mod entry {
             {
                 // no need to check < 0 because royalty_percentage is u64
                 if *royalty_percentage > 100 {
-                    return Err(ContractError::InvalidRoyalty);
+                    return Err(ContractError::InvalidRoyaltyPercentage);
                 }
             }
         }
@@ -188,7 +188,7 @@ mod tests {
         };
         // mint will return StdError
         let err = entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap_err();
-        assert_eq!(err, ContractError::InvalidRoyalty);
+        assert_eq!(err, ContractError::InvalidRoyaltyPercentage);
     }
 
     #[test]

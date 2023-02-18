@@ -10,5 +10,5 @@ pub enum ContractError {
     Base(#[from] cw721_base::ContractError),
 
     #[error("Royalty percentage must be between 0 and 100")]
-    InvalidRoyalty,
+    InvalidRoyaltyPercentage,
 }
