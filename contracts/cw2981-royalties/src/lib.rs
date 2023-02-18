@@ -1,14 +1,16 @@
+pub mod error;
 pub mod msg;
 pub mod query;
 
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Empty, StdError};
+use cosmwasm_std::{to_binary, Empty};
 use cw2::set_contract_version;
 use cw721_base::Cw721Contract;
-pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
+pub use cw721_base::{InstantiateMsg, MinterResponse};
 
+use crate::error::ContractError;
 use crate::msg::Cw2981QueryMsg;
 
 // Version info for migration
@@ -80,40 +82,23 @@ pub mod entry {
         info: MessageInfo,
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
-        match msg {
-            ExecuteMsg::Mint {
-                token_id,
-                owner,
-                token_uri,
-                extension,
-            } => {
-                // validate royalty_percentage to be between 0 and 100
-                if let Some(Metadata {
-                    royalty_percentage: Some(royalty_percentage),
-                    ..
-                }) = extension
-                {
-                    // no need to check < 0 because royalty_percentage is u64
-                    if royalty_percentage > 100 {
-                        return Err(ContractError::Std(StdError::GenericErr {
-                            msg: "Royalty percentage must be between 0 and 100".to_string(),
-                        }));
-                    }
+        if let ExecuteMsg::Mint { extension, .. } = &msg {
+            // validate royalty_percentage to be between 0 and 100
+            if let Some(Metadata {
+                royalty_percentage: Some(royalty_percentage),
+                ..
+            }) = extension
+            {
+                // no need to check < 0 because royalty_percentage is u64
+                if *royalty_percentage > 100 {
+                    return Err(ContractError::InvalidRoyalty);
                 }
-                Cw2981Contract::default().execute(
-                    deps,
-                    env,
-                    info,
-                    cw721_base::ExecuteMsg::Mint {
-                        token_id,
-                        owner,
-                        token_uri,
-                        extension,
-                    },
-                )
             }
-            _ => Cw2981Contract::default().execute(deps, env, info, msg),
         }
+
+        Cw2981Contract::default()
+            .execute(deps, env, info, msg)
+            .map_err(Into::into)
     }
 
     #[entry_point]
@@ -203,12 +188,7 @@ mod tests {
         };
         // mint will return StdError
         let err = entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap_err();
-        assert_eq!(
-            err,
-            ContractError::Std(StdError::GenericErr {
-                msg: "Royalty percentage must be between 0 and 100".to_string(),
-            })
-        );
+        assert_eq!(err, ContractError::InvalidRoyalty);
     }
 
     #[test]
