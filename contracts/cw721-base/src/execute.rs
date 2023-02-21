@@ -11,10 +11,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 use crate::upgrades;
-
-// Version info for migration
-const CONTRACT_NAME: &str = "crates.io:cw721-base";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+use crate::{CONTRACT_NAME, CONTRACT_VERSION};
 
 impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
@@ -30,14 +27,14 @@ where
         _info: MessageInfo,
         msg: InstantiateMsg,
     ) -> StdResult<Response<C>> {
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
         let info = ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
         };
         self.contract_info.save(deps.storage, &info)?;
+
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.minter))?;
+
         Ok(Response::default())
     }
 
