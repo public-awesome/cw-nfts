@@ -10,6 +10,9 @@ pub enum ContractError {
     #[error(transparent)]
     Ownership(#[from] OwnershipError),
 
+    #[error(transparent)]
+    Version(#[from] cw2::VersionError),
+
     #[error("token_id already claimed")]
     Claimed {},
 
@@ -18,7 +21,4 @@ pub enum ContractError {
 
     #[error("Approval not found for: {spender}")]
     ApprovalNotFound { spender: String },
-
-    #[error("found version ({0}) while attempting to migrate from 0.16.0")]
-    WrongMigrateVersion(String),
 }
