@@ -130,7 +130,7 @@ jobs:
 
   contract_cw4973:
     docker:
-      - image: rust:1.64.0
+      - image: rust:1.65.0
     working_directory: ~/project/contracts/cw4973
     steps:
       - checkout:
