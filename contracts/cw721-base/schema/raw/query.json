@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "QueryMsg_for_Empty",
+  "title": "QueryMsg",
   "oneOf": [
     {
-      "description": "Return the owner of the given token, error if token does not exist Return type: OwnerOfResponse",
+      "description": "Return the owner of the given token, error if token does not exist",
       "type": "object",
       "required": [
         "owner_of"
@@ -32,7 +32,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Return operator that can access all of the owner's tokens. Return type: `ApprovalResponse`",
+      "description": "Return operator that can access all of the owner's tokens.",
       "type": "object",
       "required": [
         "approval"
@@ -64,7 +64,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Return approvals that a token has Return type: `ApprovalsResponse`",
+      "description": "Return approvals that a token has",
       "type": "object",
       "required": [
         "approvals"
@@ -92,7 +92,39 @@
       "additionalProperties": false
     },
     {
-      "description": "List all operators that can access all of the owner's tokens Return type: `OperatorsResponse`",
+      "description": "Return approval of a given operator for all tokens of an owner, error if not set",
+      "type": "object",
+      "required": [
+        "operator"
+      ],
+      "properties": {
+        "operator": {
+          "type": "object",
+          "required": [
+            "operator",
+            "owner"
+          ],
+          "properties": {
+            "include_expired": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "operator": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "List all operators that can access all of the owner's tokens",
       "type": "object",
       "required": [
         "all_operators"
@@ -135,7 +167,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Total number of tokens issued Return type: `NumTokensResponse`",
+      "description": "Total number of tokens issued",
       "type": "object",
       "required": [
         "num_tokens"
@@ -149,7 +181,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With MetaData Extension. Returns top-level metadata about the contract: `ContractInfoResponse`",
+      "description": "With MetaData Extension. Returns top-level metadata about the contract",
       "type": "object",
       "required": [
         "contract_info"
@@ -163,7 +195,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With MetaData Extension. Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema* but directly from the contract: `NftInfoResponse`",
+      "description": "With MetaData Extension. Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema* but directly from the contract",
       "type": "object",
       "required": [
         "nft_info"
@@ -185,7 +217,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With MetaData Extension. Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization for clients: `AllNftInfoResponse`",
+      "description": "With MetaData Extension. Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization for clients",
       "type": "object",
       "required": [
         "all_nft_info"
@@ -214,7 +246,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With Enumerable extension. Returns all tokens owned by the given address, [] if unset. Return type: TokensResponse.",
+      "description": "With Enumerable extension. Returns all tokens owned by the given address, [] if unset.",
       "type": "object",
       "required": [
         "tokens"
@@ -250,7 +282,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With Enumerable extension. Requires pagination. Lists all token_ids controlled by the contract. Return type: TokensResponse.",
+      "description": "With Enumerable extension. Requires pagination. Lists all token_ids controlled by the contract.",
       "type": "object",
       "required": [
         "all_tokens"
@@ -280,7 +312,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Return the minter Return type: `MinterResponse`",
+      "description": "Return the minter",
       "type": "object",
       "required": [
         "minter"
@@ -310,6 +342,20 @@
               "$ref": "#/definitions/Empty"
             }
           },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Query the contract's ownership information",
+      "type": "object",
+      "required": [
+        "ownership"
+      ],
+      "properties": {
+        "ownership": {
+          "type": "object",
           "additionalProperties": false
         }
       },

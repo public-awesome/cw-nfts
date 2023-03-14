@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteMsg",
+  "oneOf": [
+    {
+      "description": "Called by issuer to give a new ABT to receiver's address",
+      "type": "object",
+      "required": [
+        "give"
+      ],
+      "properties": {
+        "give": {
+          "type": "object",
+          "required": [
+            "signature",
+            "to",
+            "uri"
+          ],
+          "properties": {
+            "signature": {
+              "$ref": "#/definitions/PermitSignature"
+            },
+            "to": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Called by receiver to take a new ABT from issuer's address",
+      "type": "object",
+      "required": [
+        "take"
+      ],
+      "properties": {
+        "take": {
+          "type": "object",
+          "required": [
+            "from",
+            "signature",
+            "uri"
+          ],
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "signature": {
+              "$ref": "#/definitions/PermitSignature"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Called by owner of an ABT to burn it",
+      "type": "object",
+      "required": [
+        "unequip"
+      ],
+      "properties": {
+        "unequip": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "token_id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "PermitSignature": {
+      "type": "object",
+      "required": [
+        "hrp",
+        "pub_key",
+        "signature"
+      ],
+      "properties": {
+        "hrp": {
+          "type": "string"
+        },
+        "pub_key": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
