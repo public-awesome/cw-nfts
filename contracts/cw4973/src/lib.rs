@@ -8,7 +8,7 @@ pub use cw721_base::{
     entry::{execute as _execute, query as _query},
     state::TokenInfo,
     ContractError as Cw721ContractError, Cw721Contract, ExecuteMsg as Cw721BaseExecuteMsg,
-    Extension, InstantiateMsg as Cw721BaseInstantiateMsg, MintMsg, MinterResponse,
+    Extension, InstantiateMsg as Cw721BaseInstantiateMsg, MinterResponse,
     QueryMsg as Cw721QueryMsg,
 };
 
@@ -104,23 +104,18 @@ fn execute_give(
         return Err(ContractError::CannotGiveToSelf);
     }
 
-    // Cannot execute this function if the sender is not the minter get from cw721 contract
-    let minter = Cw4973Contract::default().minter.load(deps.storage)?;
-    if minter != info.sender {
-        return Err(ContractError::Unauthorized);
-    }
+    cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
+    // retrieve the minter by getting from OWNERSHIP of the contract
+    let minter = cw_ownable::get_ownership(deps.storage)
+        .unwrap()
+        .owner
+        .unwrap();
 
     // get the nft id using _safe_check_agreement function
     let nft_id = _safe_check_agreement(&deps, &env, &minter.into_string(), &to, &uri, &signature)?;
 
-    // mint the nft to the address 'to' and return the response of mint function
-    let mint_msg = MintMsg {
-        token_id: nft_id,
-        owner: to,
-        token_uri: uri.into(),
-        extension: None,
-    };
-    _mint(deps, env, info, mint_msg)
+    _mint(deps, info, nft_id, to, uri.into())
 }
 
 // execute_take function is used to take a nft from another address
@@ -138,28 +133,15 @@ pub fn execute_take(
         return Err(ContractError::CannotTakeFromSelf);
     }
 
-    // check 'from' is a valid human's address
-    let from_addr = deps.api.addr_validate(&from)?;
-
-    // Cannot take NFT from a user who is not the minter
-    let minter = Cw4973Contract::default().minter.load(deps.storage)?;
-    if from_addr != minter {
-        return Err(ContractError::Unauthorized);
-    }
+    cw_ownable::assert_owner(deps.storage, &deps.api.addr_validate(&from).unwrap())?;
 
     // get address of the owner of the nft from info.sender
-    let owner = &info.sender;
+    let owner = info.sender.clone();
 
     // get the nft id using _safe_check_agreement function
     let nft_id = _safe_check_agreement(&deps, &env, owner.as_str(), &from, &uri, &signature)?;
 
-    let mint_msg = MintMsg {
-        token_id: nft_id,
-        owner: owner.to_string(),
-        token_uri: uri.into(),
-        extension: None,
-    };
-    _mint(deps, env, info, mint_msg)
+    _mint(deps, info, nft_id, owner.to_string(), uri.into())
 }
 
 // execute_unequip is a function that allows the owner of a nft to unequip it by set the equiped field to false
@@ -259,22 +241,23 @@ fn _get_hash(active: &str, passive: &str, uri: &str, chain_id: &str) -> Vec<u8> 
 // rewrite mint function of cw721 base to ignore minter checking
 fn _mint(
     deps: DepsMut,
-    _env: Env,
     info: MessageInfo,
-    msg: MintMsg<Extension>,
+    token_id: String,
+    owner: String,
+    token_uri: Option<String>,
 ) -> Result<Response, ContractError> {
     // create the token
     let token = TokenInfo {
-        owner: deps.api.addr_validate(&msg.owner)?,
+        owner: deps.api.addr_validate(&owner)?,
         approvals: vec![],
-        token_uri: msg.token_uri,
-        extension: msg.extension,
+        token_uri,
+        extension: None,
     };
 
     // update tokens list of contract
     Cw4973Contract::default()
         .tokens
-        .update(deps.storage, &msg.token_id, |old| match old {
+        .update(deps.storage, &token_id, |old| match old {
             Some(_) => Err(ContractError::Claimed),
             None => Ok(token),
         })?;
@@ -283,8 +266,8 @@ fn _mint(
     Ok(Response::new()
         .add_attribute("action", "mint")
         .add_attribute("minter", info.sender)
-        .add_attribute("owner", msg.owner)
-        .add_attribute("token_id", msg.token_id))
+        .add_attribute("owner", owner)
+        .add_attribute("token_id", token_id))
 }
 // OR: create new contract to handle the signing document is better
 // create signable structure from message and chain ID

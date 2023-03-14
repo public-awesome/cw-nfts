@@ -29,6 +29,7 @@ cw721           = { workspace = true }
 cw721-base      = { workspace = true, features = ["library"] }
 schemars        = { workspace = true }
 serde           = { workspace = true }
+cw-ownable      = { workspace = true }
 
 thiserror = { version = "1.0.31" }
 sha2 = "0.10.6"

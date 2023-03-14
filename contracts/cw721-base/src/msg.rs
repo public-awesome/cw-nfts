@@ -1,18 +1,7 @@
-<<<<<<< HEAD
-use crate::Extension;
-use cosmwasm_schema::cw_serde;
-use cosmwasm_schema::QueryResponses;
-use cosmwasm_std::Binary;
-use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Expiration,
-    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
-};
-=======
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Binary;
 use cw721::Expiration;
 use cw_ownable::{cw_ownable_execute, cw_ownable_query};
->>>>>>> main
 use schemars::JsonSchema;
 
 #[cw_serde]
@@ -84,56 +73,24 @@ pub enum ExecuteMsg<T, E> {
 
 #[cw_ownable_query]
 #[cw_serde]
-<<<<<<< HEAD
-pub struct MintMsg<T> {
-    /// Unique ID of the NFT
-    pub token_id: String,
-    /// The owner of the newly minter NFT
-    pub owner: String,
-    /// Universal resource identifier for this NFT
-    /// Should point to a JSON file that conforms to the ERC721
-    /// Metadata JSON Schema
-    pub token_uri: Option<String>,
-    /// Any custom extension used by this contract
-    pub extension: T,
-}
-
-#[cw_serde]
-#[derive(QueryResponses)]
-pub enum QueryMsg<Q: JsonSchema> {
-    /// Return the owner of the given token, error if token does not exist
-    /// Return type: OwnerOfResponse
-    #[returns(OwnerOfResponse)]
-=======
 #[derive(QueryResponses)]
 pub enum QueryMsg<Q: JsonSchema> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::OwnerOfResponse)]
->>>>>>> main
     OwnerOf {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
     },
     /// Return operator that can access all of the owner's tokens.
-<<<<<<< HEAD
-    /// Return type: `ApprovalResponse`
-    #[returns(ApprovalResponse)]
-=======
     #[returns(cw721::ApprovalResponse)]
->>>>>>> main
     Approval {
         token_id: String,
         spender: String,
         include_expired: Option<bool>,
     },
     /// Return approvals that a token has
-<<<<<<< HEAD
-    /// Return type: `ApprovalsResponse`
-    #[returns(ApprovalsResponse)]
-=======
     #[returns(cw721::ApprovalsResponse)]
->>>>>>> main
     Approvals {
         token_id: String,
         include_expired: Option<bool>,
@@ -146,12 +103,7 @@ pub enum QueryMsg<Q: JsonSchema> {
         include_expired: Option<bool>,
     },
     /// List all operators that can access all of the owner's tokens
-<<<<<<< HEAD
-    /// Return type: `OperatorsResponse`
-    #[returns(OperatorsResponse)]
-=======
     #[returns(cw721::OperatorsResponse)]
->>>>>>> main
     AllOperators {
         owner: String,
         /// unset or false will filter out expired items, you must set to true to see them
@@ -160,25 +112,6 @@ pub enum QueryMsg<Q: JsonSchema> {
         limit: Option<u32>,
     },
     /// Total number of tokens issued
-<<<<<<< HEAD
-    /// Return type: `NumTokensResponse`
-    #[returns(NumTokensResponse)]
-    NumTokens {},
-
-    /// With MetaData Extension.
-    /// Returns top-level metadata about the contract: `ContractInfoResponse`
-    #[returns(ContractInfoResponse)]
-    ContractInfo {},
-    /// With MetaData Extension.
-    /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
-    /// but directly from the contract: `NftInfoResponse`
-    #[returns(NftInfoResponse<Extension>)]
-    NftInfo { token_id: String },
-    /// With MetaData Extension.
-    /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
-    /// for clients: `AllNftInfoResponse`
-    #[returns(AllNftInfoResponse<Extension>)]
-=======
     #[returns(cw721::NumTokensResponse)]
     NumTokens {},
 
@@ -195,7 +128,6 @@ pub enum QueryMsg<Q: JsonSchema> {
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
     #[returns(cw721::AllNftInfoResponse<Q>)]
->>>>>>> main
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -204,12 +136,7 @@ pub enum QueryMsg<Q: JsonSchema> {
 
     /// With Enumerable extension.
     /// Returns all tokens owned by the given address, [] if unset.
-<<<<<<< HEAD
-    /// Return type: TokensResponse.
-    #[returns(TokensResponse)]
-=======
     #[returns(cw721::TokensResponse)]
->>>>>>> main
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -217,31 +144,18 @@ pub enum QueryMsg<Q: JsonSchema> {
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-<<<<<<< HEAD
-    /// Return type: TokensResponse.
-    #[returns(TokensResponse)]
-=======
     #[returns(cw721::TokensResponse)]
->>>>>>> main
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
     },
 
     /// Return the minter
-<<<<<<< HEAD
-    /// Return type: `MinterResponse`
-=======
->>>>>>> main
     #[returns(MinterResponse)]
     Minter {},
 
     /// Extension query
-<<<<<<< HEAD
-    #[returns(Binary)]
-=======
     #[returns(())]
->>>>>>> main
     Extension { msg: Q },
 }
 

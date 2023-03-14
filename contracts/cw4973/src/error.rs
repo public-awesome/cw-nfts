@@ -1,11 +1,15 @@
 use cosmwasm_std::StdError;
 pub use cw721_base::ContractError as Cw721ContractError;
+use cw_ownable::OwnershipError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
     #[error("{0}")]
     Cw721ContractError(Cw721ContractError),
+
+    #[error(transparent)]
+    Ownership(#[from] OwnershipError),
 
     #[error("{0}")]
     Std(#[from] StdError),
