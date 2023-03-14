@@ -1,12 +1,14 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{CustomMsg, Uint128};
 
 #[cw_serde]
+#[derive(QueryResponses)]
 pub enum Cw2981QueryMsg {
     /// Should be called on sale to see if royalties are owed
     /// by the marketplace selling the NFT, if CheckRoyalties
     /// returns true
     /// See https://eips.ethereum.org/EIPS/eip-2981
+    #[returns(RoyaltiesInfoResponse)]
     RoyaltyInfo {
         token_id: String,
         // the denom of this sale must also be the denom returned by RoyaltiesInfoResponse
@@ -20,6 +22,7 @@ pub enum Cw2981QueryMsg {
     /// CheckRoyaltiesResponse - default can simply be true
     /// if royalties are implemented at token level
     /// (i.e. always check on sale)
+    #[returns(CheckRoyaltiesResponse)]
     CheckRoyalties {},
 }
 

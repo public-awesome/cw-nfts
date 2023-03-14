@@ -3,7 +3,7 @@ use cosmwasm_std::Empty;
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
     ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg as Cw721BaseInstantiateMsg,
-    MintMsg, MinterResponse,
+    MinterResponse,
 };
 
 pub mod msg;
@@ -75,14 +75,22 @@ pub mod entry {
                 if admin == info.sender {
                     _execute(deps, env, info, msg)
                 } else {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(
+                        cw721_base::OwnershipError::NotOwner,
+                    ))
                 }
             }
             None => match msg {
-                ExecuteMsg::Mint(msg) => {
-                    Cw721NonTransferableContract::default().mint(deps, env, info, msg)
-                }
-                _ => Err(ContractError::Unauthorized {}),
+                ExecuteMsg::Mint {
+                    token_id,
+                    owner,
+                    token_uri,
+                    extension,
+                } => Cw721NonTransferableContract::default()
+                    .mint(deps, info, token_id, owner, token_uri, extension),
+                _ => Err(ContractError::Ownership(
+                    cw721_base::OwnershipError::NotOwner,
+                )),
             },
         }
     }

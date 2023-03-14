@@ -1,18 +1,17 @@
+use cw_ownable::OwnershipError;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
-use cw2::set_contract_version;
+use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
-
-// Version info for migration
-const CONTRACT_NAME: &str = "crates.io:cw721-base";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+use crate::upgrades;
+use crate::{CONTRACT_NAME, CONTRACT_VERSION};
 
 impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
@@ -28,15 +27,14 @@ where
         _info: MessageInfo,
         msg: InstantiateMsg,
     ) -> StdResult<Response<C>> {
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
         let info = ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
         };
         self.contract_info.save(deps.storage, &info)?;
-        let minter = deps.api.addr_validate(&msg.minter)?;
-        self.minter.save(deps.storage, &minter)?;
+
+        cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.minter))?;
+
         Ok(Response::default())
     }
 
@@ -48,7 +46,12 @@ where
         msg: ExecuteMsg<T, E>,
     ) -> Result<Response<C>, ContractError> {
         match msg {
-            ExecuteMsg::Mint(msg) => self.mint(deps, env, info, msg),
+            ExecuteMsg::Mint {
+                token_id,
+                owner,
+                token_uri,
+                extension,
+            } => self.mint(deps, info, token_id, owner, token_uri, extension),
             ExecuteMsg::Approve {
                 spender,
                 token_id,
@@ -71,6 +74,7 @@ where
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
+            ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
     }
@@ -87,25 +91,23 @@ where
     pub fn mint(
         &self,
         deps: DepsMut,
-        _env: Env,
         info: MessageInfo,
-        msg: MintMsg<T>,
+        token_id: String,
+        owner: String,
+        token_uri: Option<String>,
+        extension: T,
     ) -> Result<Response<C>, ContractError> {
-        let minter = self.minter.load(deps.storage)?;
-
-        if info.sender != minter {
-            return Err(ContractError::Unauthorized {});
-        }
+        cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         // create the token
         let token = TokenInfo {
-            owner: deps.api.addr_validate(&msg.owner)?,
+            owner: deps.api.addr_validate(&owner)?,
             approvals: vec![],
-            token_uri: msg.token_uri,
-            extension: msg.extension,
+            token_uri,
+            extension,
         };
         self.tokens
-            .update(deps.storage, &msg.token_id, |old| match old {
+            .update(deps.storage, &token_id, |old| match old {
                 Some(_) => Err(ContractError::Claimed {}),
                 None => Ok(token),
             })?;
@@ -115,8 +117,31 @@ where
         Ok(Response::new()
             .add_attribute("action", "mint")
             .add_attribute("minter", info.sender)
-            .add_attribute("owner", msg.owner)
-            .add_attribute("token_id", msg.token_id))
+            .add_attribute("owner", owner)
+            .add_attribute("token_id", token_id))
+    }
+
+    pub fn update_ownership(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        action: cw_ownable::Action,
+    ) -> Result<Response<C>, ContractError> {
+        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new().add_attributes(ownership.into_attributes()))
+    }
+
+    /// Migrates the contract from the previous version to the current
+    /// version.
+    pub fn migrate(deps: DepsMut, _env: Env) -> Result<Response<C>, ContractError> {
+        let ContractVersion { version, .. } = get_contract_version(deps.storage)?;
+        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        if version != "0.16.0" {
+            Err(ContractError::WrongMigrateVersion(version))
+        } else {
+            upgrades::v0_16::migrate::<T, C, E, Q>(deps)
+        }
     }
 }
 
@@ -354,12 +379,12 @@ where
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(OwnershipError::NotOwner))
                 } else {
                     Ok(())
                 }
             }
-            None => Err(ContractError::Unauthorized {}),
+            None => Err(ContractError::Ownership(OwnershipError::NotOwner)),
         }
     }
 
@@ -392,12 +417,12 @@ where
         match op {
             Some(ex) => {
                 if ex.is_expired(&env.block) {
-                    Err(ContractError::Unauthorized {})
+                    Err(ContractError::Ownership(OwnershipError::NotOwner))
                 } else {
                     Ok(())
                 }
             }
-            None => Err(ContractError::Unauthorized {}),
+            None => Err(ContractError::Ownership(OwnershipError::NotOwner)),
         }
     }
 }

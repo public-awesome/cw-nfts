@@ -7,8 +7,8 @@ use cosmwasm_std::{
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
-    Expiration, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    Expiration, NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
@@ -55,6 +55,38 @@ where
             owner: info.owner.to_string(),
             approvals: humanize_approvals(&env.block, &info, include_expired),
         })
+    }
+
+    /// operator returns the approval status of an operator for a given owner if exists
+    fn operator(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: String,
+        operator: String,
+        include_expired: bool,
+    ) -> StdResult<OperatorResponse> {
+        let owner_addr = deps.api.addr_validate(&owner)?;
+        let operator_addr = deps.api.addr_validate(&operator)?;
+
+        let info = self
+            .operators
+            .may_load(deps.storage, (&owner_addr, &operator_addr))?;
+
+        if let Some(expires) = info {
+            if !include_expired && expires.is_expired(&env.block) {
+                return Err(StdError::not_found("Approval not found"));
+            }
+
+            return Ok(OperatorResponse {
+                approval: cw721::Approval {
+                    spender: operator,
+                    expires,
+                },
+            });
+        }
+
+        Err(StdError::not_found("Approval not found"))
     }
 
     /// operators returns all operators owner given access to
@@ -216,13 +248,6 @@ where
     E: CustomMsg,
     Q: CustomMsg,
 {
-    pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
-        let minter_addr = self.minter.load(deps.storage)?;
-        Ok(MinterResponse {
-            minter: minter_addr.to_string(),
-        })
-    }
-
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_binary(&self.minter(deps)?),
@@ -241,6 +266,17 @@ where
                 deps,
                 env,
                 token_id,
+                include_expired.unwrap_or(false),
+            )?),
+            QueryMsg::Operator {
+                owner,
+                operator,
+                include_expired,
+            } => to_binary(&self.operator(
+                deps,
+                env,
+                owner,
+                operator,
                 include_expired.unwrap_or(false),
             )?),
             QueryMsg::AllOperators {
@@ -282,8 +318,21 @@ where
             } => {
                 to_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
             }
+            QueryMsg::Ownership {} => to_binary(&Self::ownership(deps)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
+    }
+
+    pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
+        let minter = cw_ownable::get_ownership(deps.storage)?
+            .owner
+            .map(|a| a.into_string());
+
+        Ok(MinterResponse { minter })
+    }
+
+    pub fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>> {
+        cw_ownable::get_ownership(deps.storage)
     }
 }
 

@@ -15,7 +15,6 @@ where
     E: CustomMsg,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
-    pub minter: Item<'a, Addr>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
@@ -45,7 +44,6 @@ where
     fn default() -> Self {
         Self::new(
             "nft_info",
-            "minter",
             "num_tokens",
             "operators",
             "tokens",
@@ -62,7 +60,6 @@ where
 {
     fn new(
         contract_key: &'a str,
-        minter_key: &'a str,
         token_count_key: &'a str,
         operator_key: &'a str,
         tokens_key: &'a str,
@@ -73,7 +70,6 @@ where
         };
         Self {
             contract_info: Item::new(contract_key),
-            minter: Item::new(minter_key),
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
             tokens: IndexedMap::new(tokens_key, indexes),

@@ -6,8 +6,8 @@ use cosmwasm_std::Empty;
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721ExecuteMsg,
-    Cw721QueryMsg, Cw721ReceiveMsg, NftInfoResponse, NumTokensResponse, OperatorsResponse,
-    OwnerOfResponse, TokensResponse,
+    Cw721QueryMsg, Cw721ReceiveMsg, NftInfoResponse, NumTokensResponse, OperatorResponse,
+    OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 
 type Extension = Option<Empty>;
@@ -28,6 +28,7 @@ fn main() {
     );
     export_schema(&schema_for!(ApprovalResponse), &out_dir);
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
+    export_schema(&schema_for!(OperatorResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     export_schema(&schema_for!(ContractInfoResponse), &out_dir);
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);

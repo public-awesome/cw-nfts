@@ -1,7 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-use cw2::set_contract_version;
-pub use cw721_base::{ContractError, InstantiateMsg, MintMsg, MinterResponse};
+pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
@@ -49,12 +48,10 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> Result<Response, ContractError> {
-        let res = Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)?;
-        // Explicitly set contract name and version, otherwise set to cw721-base info
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(ContractError::Std)?;
-        Ok(res)
+    ) -> StdResult<Response> {
+        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+        Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)
     }
 
     #[entry_point]
@@ -82,6 +79,29 @@ mod tests {
 
     const CREATOR: &str = "creator";
 
+    /// Make sure cw2 version info is properly initialized during instantiation,
+    /// and NOT overwritten by the base contract.
+    #[test]
+    fn proper_cw2_initialization() {
+        let mut deps = mock_dependencies();
+
+        entry::instantiate(
+            deps.as_mut(),
+            mock_env(),
+            mock_info("larry", &[]),
+            InstantiateMsg {
+                name: "".into(),
+                symbol: "".into(),
+                minter: "larry".into(),
+            },
+        )
+        .unwrap();
+
+        let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
+        assert_eq!(version.contract, CONTRACT_NAME);
+        assert_ne!(version.contract, cw721_base::CONTRACT_NAME);
+    }
+
     #[test]
     fn use_metadata_extension() {
         let mut deps = mock_dependencies();
@@ -98,23 +118,24 @@ mod tests {
             .unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension = Some(Metadata {
+            description: Some("Spaceship with Warp Drive".into()),
+            name: Some("Starship USS Enterprise".to_string()),
+            ..Metadata::default()
+        });
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
-            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
-                description: Some("Spaceship with Warp Drive".into()),
-                name: Some("Starship USS Enterprise".to_string()),
-                ..Metadata::default()
-            }),
+            token_uri: token_uri.clone(),
+            extension: extension.clone(),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
         contract
             .execute(deps.as_mut(), mock_env(), info, exec_msg)
             .unwrap();
 
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
-        assert_eq!(res.token_uri, mint_msg.token_uri);
-        assert_eq!(res.extension, mint_msg.extension);
+        assert_eq!(res.token_uri, token_uri);
+        assert_eq!(res.extension, extension);
     }
 }
