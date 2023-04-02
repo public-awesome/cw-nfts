@@ -6,24 +6,19 @@ skip_core_tasks = true
 
 [tasks.fmt]
 command = "cargo"
-args = ["fmt", "--all", "--check"]
+args    = ["fmt", "--all", "--check"]
 
 [tasks.test]
 command = "cargo"
-args = ["test", "--locked"]
+args    = ["test", "--locked"]
 
 [tasks.lint]
 command = "cargo"
-args = ["clippy", "--tests", "--", "-D", "warnings"]
+args    = ["clippy", "--tests", "--", "-D", "warnings"]
 
 [tasks.build]
 command = "cargo"
-args = [
-  "build",
-  "--release",
-  "--locked",
-  "--target", "wasm32-unknown-unknown",
-]
+args    = ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"]
 
 [tasks.optimize]
 script = """
@@ -36,7 +31,7 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  ${image}:0.12.11
+  ${image}:0.12.13
 """
 
 [tasks.schema]
