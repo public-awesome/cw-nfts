@@ -4,14 +4,11 @@ use serde::Serialize;
 
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
-use cw2::{get_contract_version, set_contract_version, ContractVersion};
 use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
-use crate::upgrades;
-use crate::{CONTRACT_NAME, CONTRACT_VERSION};
 
 impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
@@ -129,19 +126,6 @@ where
     ) -> Result<Response<C>, ContractError> {
         let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
         Ok(Response::new().add_attributes(ownership.into_attributes()))
-    }
-
-    /// Migrates the contract from the previous version to the current
-    /// version.
-    pub fn migrate(deps: DepsMut, _env: Env) -> Result<Response<C>, ContractError> {
-        let ContractVersion { version, .. } = get_contract_version(deps.storage)?;
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-        if version != "0.16.0" {
-            Err(ContractError::WrongMigrateVersion(version))
-        } else {
-            upgrades::v0_16::migrate::<T, C, E, Q>(deps)
-        }
     }
 }
 
