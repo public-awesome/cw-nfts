@@ -1,0 +1,5 @@
+[placeholders.minimal]
+type = "bool"
+prompt = """The full template includes more example code on how to extend a basic cw721 contract.
+Would you still like to generate the minimal template?"""
+default = false
