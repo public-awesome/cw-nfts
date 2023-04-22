@@ -462,7 +462,6 @@ version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw-ownable",
  "cw-storage-plus 1.0.1",
  "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
  "cw721 0.17.0",
