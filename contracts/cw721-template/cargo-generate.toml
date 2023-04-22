@@ -4,9 +4,8 @@
 # The files will be copied 1:1 to the target project. To avoid shipping them completely add them to `.genignore`.
 exclude = ["test_generate.sh", "cargo-generate.toml"]
 
-
 [placeholders.minimal]
 type = "bool"
-prompt = """The full template includes more example code on how to extend a basic cw721 contract.
-Would you still like to generate the minimal template?"""
+prompt = """The full template includes more example code on how to extend a basic cw721 contract. This is useful
+if you are new to writing CosmWasm NFT contracts. Would you like the minimal template instead?"""
 default = false
