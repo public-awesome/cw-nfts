@@ -1,14 +1,14 @@
-use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Empty;
-pub use cw721_base::{ContractError,{% unless minimal %} CustomMsg,{% endunless %} InstantiateMsg, MinterResponse};
+{% unless minimal %}use cosmwasm_schema::cw_serde;
+{% endunless %}use cosmwasm_std::{% unless minimal %}{CustomMsg, {% endunless %}Empty{% unless minimal %}}{% endunless %};
+pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:{{project-name}}";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-{% if minimal %}pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty, Empty, Empty>;
+{% if minimal %}pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty, Empty, Empty>;
 
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Empt, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Empty>;{% else %}// Implements extended on-chain metadata, by default cw721 NFTs only store a
 // token_uri, which is a URL to off-chain metadata (same as ERC721).
 #[cw_serde]
