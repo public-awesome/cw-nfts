@@ -1,64 +1,50 @@
-# CW721 Metadata Onchain
+# CW721 Template
 
-NFT creators may want to store their NFT metadata on-chain so other contracts are able to interact with it.
-With CW721-Base in CosmWasm, we allow you to store any data on chain you wish, using a generic `extension: T`.
+A template for generating custom cw721 NFT contracts. Based on [cw-template](https://github.com/CosmWasm/cw-template).
 
-In order to support on-chain metadata, and to demonstrate how to use the extension ability, we have created this simple contract.
-There is no business logic here, but looking at `lib.rs` will show you how do define custom data that is included when minting and
-available in all queries.
+## Creating a new repo from template
 
-In particular, here we define:
+Assuming you have a recent version of Rust and Cargo installed
+(via [rustup](https://rustup.rs/)),
+then the following should get you a new repo to start a contract:
 
-```rust
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct Trait {
-    pub display_type: Option<String>,
-    pub trait_type: String,
-    pub value: String,
-}
+Install [cargo-generate](https://github.com/ashleygwilliams/cargo-generate) and cargo-run-script.
+Unless you did that before, run this line now:
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct Metadata {
-    pub image: Option<String>,
-    pub image_data: Option<String>,
-    pub external_url: Option<String>,
-    pub description: Option<String>,
-    pub name: Option<String>,
-    pub attributes: Option<Vec<Trait>>,
-    pub background_color: Option<String>,
-    pub animation_url: Option<String>,
-    pub youtube_url: Option<String>,
-}
-
-pub type Extension = Option<Metadata>;
+```sh
+cargo install cargo-generate --features vendored-openssl
+cargo install cargo-run-script
 ```
 
-In particular, the fields defined conform to the properties supported in the [OpenSea Metadata Standard](https://docs.opensea.io/docs/metadata-standards).
+Now, use it to create your new contract.
 
+Go to the folder in which you want to place it and run:
 
-This means when you query `NftInfo{name: "Enterprise"}`, you will get something like:
+**Latest**
 
-```json
-{
-  "name": "Enterprise",
-  "token_uri": "https://starships.example.com/Starship/Enterprise.json",
-  "extension": {
-    "image": null,
-    "image_data": null,
-    "external_url": null,
-    "description": "Spaceship with Warp Drive",
-    "name": "Starship USS Enterprise",
-    "attributes": null,
-    "background_color": null,
-    "animation_url": null,
-    "youtube_url": null
-  }
-}
+```sh
+cargo generate --git https://github.com/CosmWasm/cw-nfts.git --name PROJECT_NAME
 ```
 
-Please look at the test code for an example usage in Rust.
+For cloning a minimal NFT contract without example code for extensions:
 
-## Notice
+```sh
+cargo generate --git https://github.com/CosmWasm/cw-nfts.git --name PROJECT_NAME -d minimal=true
+```
 
-Feel free to use this contract out of the box, or as inspiration for further customization of cw721-base.
-We will not be adding new features or business logic here.
+**Older Versions**
+
+Pass version as branch flag:
+
+```sh
+cargo generate --git https://github.com/CosmWasm/cw-nfts.git --branch <version> --name PROJECT_NAME
+```
+
+Example:
+
+```sh
+cargo generate --git https://github.com/CosmWasm/cw-nfts.git --branch 0.16 --name PROJECT_NAME
+```
+
+You will now have a new folder called `PROJECT_NAME` (I hope you changed that to something else)
+containing a simple working contract and build system that you can customize.
