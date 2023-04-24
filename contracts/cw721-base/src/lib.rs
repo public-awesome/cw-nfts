@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod msg;
 mod query;
 pub mod state;
-mod upgrades;
+pub mod upgrades;
 
 #[cfg(test)]
 mod contract_tests;
