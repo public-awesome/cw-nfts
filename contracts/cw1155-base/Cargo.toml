@@ -1,0 +1,29 @@
+[package]
+name = "cw1155-base"
+version = "0.13.4"
+authors = ["Huang Yi <huang@crypto.com>"]
+edition = "2018"
+description = "Basic implementation of a CosmWasm-1155 compliant token"
+license = "Apache-2.0"
+repository = "https://github.com/CosmWasm/cw-plus"
+homepage = "https://cosmwasm.com"
+documentation = "https://docs.cosmwasm.com"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all init/handle/query exports
+library = []
+
+[dependencies]
+cw-utils = { workspace = true }
+cw2 = { workspace = true }
+cw1155 = { workspace = true }
+cw-storage-plus = { workspace = true }
+cosmwasm-std = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+cosmwasm-schema = { workspace = true }
