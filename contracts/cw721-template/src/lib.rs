@@ -18,13 +18,13 @@ pub struct MetadataExt {}
 // This is the custom Execute message extension for this contract.
 // Use it to implement custom functionality.
 #[cw_serde]
-pub struct ExecuteExt {}
+pub enum ExecuteExt {}
 impl CustomMsg for ExecuteExt {}
 
 // This is the custom Query message type for this contract.
 // Use it to implement custom query messages.
 #[cw_serde]
-pub struct QueryExt {}
+pub enum QueryExt {}
 impl CustomMsg for QueryExt {}
 
 // This contrains default cw721 logic with extensions.
