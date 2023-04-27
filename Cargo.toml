@@ -1,6 +1,5 @@
 [workspace]
 members = ["packages/*", "contracts/*"]
-exclude = ["contracts/cw721-template"]
 
 [workspace.package]
 version       = "0.17.0"
