@@ -1,15 +1,13 @@
-{% unless minimal %}use cosmwasm_schema::cw_serde;
-{% endunless %}use cosmwasm_std::{% unless minimal %}{CustomMsg, {% endunless %}Empty{% unless minimal %}}{% endunless %};
-pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
+use cosmwasm_schema::cw_serde;
+use cosmwasm_std::{CustomMsg, Empty, StdError};
+pub use cw721_base::{InstantiateMsg, MinterResponse};
+use thiserror::Error;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:{{project-name}}";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-{% if minimal %}pub type Cw721Contract<'a> = cw721_base::Cw721Contract<'a, Empty, Empty, Empty, Empty>;
-
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Empty, Empty>;
-pub type QueryMsg = cw721_base::QueryMsg<Empty>;{% else %}// Implements extended on-chain metadata, by default cw721 NFTs only store a
+// Implements extended on-chain metadata, by default cw721 NFTs only store a
 // token_uri, which is a URL to off-chain metadata (same as ERC721).
 #[cw_serde]
 #[derive(Default)]
@@ -41,7 +39,18 @@ pub type ExecuteMsg = cw721_base::ExecuteMsg<MetadataExt, ExecuteExt>;
 // The query message type for this contract.
 // If you don't need the QueryExt extension, you can use the
 // `Empty` type.
-pub type QueryMsg = cw721_base::QueryMsg<QueryExt>;{% endif %}
+pub type QueryMsg = cw721_base::QueryMsg<QueryExt>;
+
+/// Custom errors for this contract, add additional errors here.
+#[derive(Error, Debug, PartialEq)]
+pub enum ContractError {
+    #[error("{0}")]
+    Std(#[from] StdError),
+
+    /// This inherits from cw721-base::ContractError to handle the base contract errors
+    #[error("{0}")]
+    Cw721Error(#[from] cw721_base::ContractError),
+}
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -71,8 +80,7 @@ pub mod entry {
         info: MessageInfo,
         msg: ExecuteMsg,
     ) -> Result<Response, ContractError> {
-        {% if minimal %}// Use the default cw721-base implementation
-        Cw721Contract::default().execute(deps, env, info, msg){% else %}match msg {
+        match msg {
             // Optionally override the default cw721-base behavior
             // ExecuteMsg::Burn { token_id } => unimplemented!(),
 
@@ -83,14 +91,15 @@ pub mod entry {
             },
 
             // Use the default cw721-base implementation
-            _ => Cw721Contract::default().execute(deps, env, info, msg),
-        }{% endif %}
+            _ => Cw721Contract::default()
+                .execute(deps, env, info, msg)
+                .map_err(Into::into),
+        }
     }
 
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
-        {% if minimal %}// Use default cw721-base query implementation
-        Cw721Contract::default().query(deps, env, msg){% else %}match msg {
+        match msg {
             // Optionally override a default cw721-base query
             // QueryMsg::Minter {} => unimplemented!(),
             QueryMsg::Extension { msg } => match msg {
@@ -99,7 +108,7 @@ pub mod entry {
 
             // Use default cw721-base query implementation
             _ => Cw721Contract::default().query(deps, env, msg),
-        }{% endif %}
+        }
     }
 }
 

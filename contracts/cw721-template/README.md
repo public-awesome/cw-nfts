@@ -26,12 +26,6 @@ Go to the folder in which you want to place it and run:
 cargo generate --git https://github.com/CosmWasm/cw-nfts.git --name PROJECT_NAME
 ```
 
-For cloning a minimal NFT contract without example code for extensions:
-
-```sh
-cargo generate --git https://github.com/CosmWasm/cw-nfts.git --name PROJECT_NAME -d minimal=true
-```
-
 **Older Versions**
 
 Pass version as branch flag:
