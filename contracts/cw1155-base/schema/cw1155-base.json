@@ -1,6 +1,6 @@
 {
   "contract_name": "cw1155-base",
-  "contract_version": "0.13.4",
+  "contract_version": "0.17.0",
   "idl_version": "1.0.0",
   "instantiate": {
     "$schema": "http://json-schema.org/draft-07/schema#",

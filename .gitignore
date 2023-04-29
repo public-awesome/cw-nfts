@@ -22,6 +22,7 @@ target/
 hash.txt
 contracts.txt
 artifacts/
+**/schema/raw/*
 
 # code coverage
 tarpaulin-report.*
