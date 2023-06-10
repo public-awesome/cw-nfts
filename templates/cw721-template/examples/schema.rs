@@ -1,6 +1,7 @@
 use cosmwasm_schema::write_api;
 
-use {{crate_name}}::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw721_base::InstantiateMsg;
+use {{crate_name}}::msg::{ExecuteMsg, QueryMsg};
 
 fn main() {
     write_api! {
