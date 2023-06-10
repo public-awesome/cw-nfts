@@ -5,16 +5,15 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[cfg(not(feature = "library"))]
 pub mod entry {
     use crate::error::ContractError;
-    use crate::msg::{Cw721Contract, ExecuteMsg, QueryMsg};
+    use crate::msg::{Cw721Contract, ExecuteMsg, InstantiateMsg, QueryMsg};
 
     use super::*;
 
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-    use cw721_base::InstantiateMsg;
 
     // This makes a conscious choice on the various generics used by the contract
-    #[cfg_attr(not(feature = "library"), entry_point)]
+    #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
@@ -27,7 +26,7 @@ pub mod entry {
         Cw721Contract::default().instantiate(deps.branch(), env, info, msg)
     }
 
-    #[cfg_attr(not(feature = "library"), entry_point)]
+    #[entry_point]
     pub fn execute(
         deps: DepsMut,
         env: Env,
@@ -51,7 +50,7 @@ pub mod entry {
         }
     }
 
-    #[cfg_attr(not(feature = "library"), entry_point)]
+    #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
             // Optionally override a default cw721-base query
