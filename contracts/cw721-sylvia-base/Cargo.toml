@@ -1,0 +1,19 @@
+[package]
+name = "cw721-sylvia-base"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cosmwasm-schema.workspace = true
+cosmwasm-std.workspace = true
+cw-ownable.workspace = true
+cw-storage-plus.workspace = true
+cw-utils.workspace = true
+cw2.workspace = true
+cw721.workspace = true
+schemars.workspace = true
+serde.workspace = true
+sylvia = "0.5.0"
+thiserror.workspace = true
