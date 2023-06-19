@@ -18,6 +18,7 @@ cosmwasm-std    = "1.2.1"
 cw2             = { git = "https://github.com/mars-protocol/cw-plus", rev = "1a3a944" }
 cw20            = "1.0.1"
 cw721           = { version = "0.17.0", path = "./packages/cw721" }
+cw1155          = { version = "0.17.0", path = "./packages/cw1155" }
 cw721-base      = { version = "0.17.0", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
 cw-multi-test   = "0.16.2"

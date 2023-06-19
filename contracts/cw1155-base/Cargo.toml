@@ -1,0 +1,29 @@
+[package]
+name          = "cw1155-base"
+description   = "Basic implementation of cw1155 multiple tokens contract"
+authors       = ["Huang Yi <huang@crypto.com>"]
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all init/handle/query exports
+library = []
+
+[dependencies]
+cw-utils        = { workspace = true }
+cw2             = { workspace = true }
+cw1155          = { workspace = true }
+cw-storage-plus = { workspace = true }
+cosmwasm-std    = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+thiserror       = { workspace = true }
+cosmwasm-schema = { workspace = true }

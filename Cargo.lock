@@ -302,6 +302,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw1155"
+version = "0.17.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-utils 1.0.1",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cw1155-base"
+version = "0.17.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus 1.0.1",
+ "cw-utils 1.0.1",
+ "cw1155",
+ "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw2"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

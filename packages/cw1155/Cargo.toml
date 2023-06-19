@@ -1,0 +1,18 @@
+[package]
+name          = "cw1155"
+description   = "Definition and types for the CosmWasm-1155 interface"
+authors       = ["Huang Yi <huang@crypto.com>"]
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
+
+[dependencies]
+cw-utils        = { workspace = true }
+cosmwasm-std    = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+cosmwasm-schema = { workspace = true }
+
