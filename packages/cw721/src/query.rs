@@ -143,7 +143,7 @@ pub struct AllNftInfoResponse<T> {
 #[cw_serde]
 pub struct TokensResponse {
     /// Contains all token_ids in lexicographical ordering
-    /// If there are more than `limit`, use `start_from` in future queries
+    /// If there are more than `limit`, use `start_after` in future queries
     /// to achieve pagination.
     pub tokens: Vec<String>,
 }
