@@ -2,7 +2,7 @@
 members = ["packages/*", "contracts/*"]
 
 [workspace.package]
-version       = "0.17.1"
+version       = "0.18.0"
 edition       = "2021"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
@@ -13,11 +13,10 @@ rust-version  = "1.65"
 [workspace.dependencies]
 cosmwasm-schema = "1.2.1"
 cosmwasm-std    = "1.2.1"
-# FIXME: change back to the "official" crates.io release after a cw-plus update is published
-cw2             = { git = "https://github.com/CosmWasm/cw-plus", rev = "de1fb0b" }
+cw2             = "1.1.0"
 cw20            = "1.0.1"
-cw721           = { version = "0.17.1", path = "./packages/cw721" }
-cw721-base      = { version = "0.17.1", path = "./contracts/cw721-base" }
+cw721           = { version = "0.18.0", path = "./packages/cw721" }
+cw721-base      = { version = "0.18.0", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
 cw-multi-test   = "0.16.2"
 cw-ownable      = "0.5.0"
