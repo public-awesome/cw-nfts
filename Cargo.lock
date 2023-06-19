@@ -355,13 +355,13 @@ dependencies = [
 
 [[package]]
 name = "cw2981-royalties"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
- "cw721 1.0.1",
- "cw721-base 1.0.1",
+ "cw721 0.17.1",
+ "cw721-base 0.17.1",
  "schemars",
  "serde",
  "thiserror",
@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -410,7 +410,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-base"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -419,7 +419,7 @@ dependencies = [
  "cw-storage-plus 1.0.1",
  "cw-utils 1.0.1",
  "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
- "cw721 1.0.1",
+ "cw721 0.17.1",
  "cw721-base 0.16.0",
  "schemars",
  "serde",
@@ -428,7 +428,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-fixed-price"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -436,7 +436,7 @@ dependencies = [
  "cw-utils 1.0.1",
  "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw20",
- "cw721-base 1.0.1",
+ "cw721-base 0.17.1",
  "prost 0.10.4",
  "schemars",
  "serde",
@@ -445,27 +445,27 @@ dependencies = [
 
 [[package]]
 name = "cw721-metadata-onchain"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
- "cw721 1.0.1",
- "cw721-base 1.0.1",
+ "cw721 0.17.1",
+ "cw721-base 0.17.1",
  "schemars",
  "serde",
 ]
 
 [[package]]
 name = "cw721-non-transferable"
-version = "1.0.1"
+version = "0.17.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 1.0.1",
  "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
- "cw721 1.0.1",
- "cw721-base 1.0.1",
+ "cw721 0.17.1",
+ "cw721-base 0.17.1",
  "schemars",
  "serde",
 ]
