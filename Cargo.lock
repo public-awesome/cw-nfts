@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "cw2"
 version = "1.0.1"
-source = "git+https://github.com/mars-protocol/cw-plus?rev=1a3a944#1a3a944b64cf6e9fcfada48f2b09aaa1a90aef74"
+source = "git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b#de1fb0b9836e56e5640575d246274d882509d714"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -359,7 +359,7 @@ version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw721 0.17.0",
  "cw721-base 0.17.0",
  "schemars",
@@ -418,7 +418,7 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus 1.0.1",
  "cw-utils 1.0.1",
- "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw721 0.17.0",
  "cw721-base 0.16.0",
  "schemars",
@@ -434,7 +434,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 1.0.1",
  "cw-utils 1.0.1",
- "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw20",
  "cw721-base 0.17.0",
  "prost 0.10.4",
@@ -449,7 +449,7 @@ version = "0.17.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw721 0.17.0",
  "cw721-base 0.17.0",
  "schemars",
@@ -463,7 +463,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 1.0.1",
- "cw2 1.0.1 (git+https://github.com/mars-protocol/cw-plus?rev=1a3a944)",
+ "cw2 1.0.1 (git+https://github.com/CosmWasm/cw-plus?rev=de1fb0b)",
  "cw721 0.17.0",
  "cw721-base 0.17.0",
  "schemars",
