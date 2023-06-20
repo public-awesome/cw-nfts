@@ -1,8 +1,5 @@
 use crate::{
-    contract::{
-        multitest_utils::Cw721ContractProxy, test_utils::Cw721Interface, InstantiateMsgData,
-        MinterResponse,
-    },
+    contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData, MinterResponse},
     ContractError,
 };
 use cosmwasm_std::Empty;
@@ -12,6 +9,7 @@ use cw721::{
 use cw_ownable::OwnershipError;
 use sylvia::multitest::App;
 
+use crate::base::test_utils::Cw721Interface;
 use crate::contract::multitest_utils::CodeId;
 
 const CREATOR: &str = "creator";

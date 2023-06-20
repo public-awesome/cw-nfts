@@ -1,3 +1,4 @@
+mod base;
 pub mod contract;
 mod error;
 
