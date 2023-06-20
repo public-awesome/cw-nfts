@@ -5,11 +5,12 @@ use cw721::{
     Cw721ReceiveMsg, Expiration, NftInfoResponse, NumTokensResponse, OperatorResponse,
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
+use cw721_interface::Cw721Interface;
 use cw_ownable::{Ownership, OwnershipError};
 use cw_storage_plus::{Bound, Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::maybe_addr;
+use sylvia::contract;
 use sylvia::types::{ExecCtx, InstantiateCtx, QueryCtx};
-use sylvia::{contract, entry_points};
 
 use crate::ContractError;
 
@@ -83,7 +84,7 @@ pub struct InstantiateMsgData {
     pub minter: String,
 }
 
-#[cfg_attr(not(feature = "library"), entry_points)]
+#[cfg_attr(not(feature = "library"), sylvia::entry_points)]
 #[contract]
 #[error(ContractError)]
 #[messages(cw721_interface as Cw721Interface)]
@@ -298,7 +299,7 @@ impl Cw721Contract<'_> {
 
 #[contract]
 #[messages(cw721_interface as Cw721Interface)]
-impl cw721_interface::Cw721Interface for Cw721Contract<'_> {
+impl Cw721Interface for Cw721Contract<'_> {
     type Error = ContractError;
 
     #[msg(exec)]

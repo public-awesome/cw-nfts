@@ -5,6 +5,12 @@ edition = { workspace = true }
 repository = { workspace = true }
 license = { workspace = true }
 
+[features]
+library = []
+# enables generation of multi-test utilities for sylvia
+mt = ["library", "sylvia/mt"]
+
+
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
@@ -17,3 +23,8 @@ schemars        = { workspace = true }
 serde           = { workspace = true }
 sylvia          = { workspace = true }
 thiserror       = { workspace = true }
+
+[dev-dependencies]
+anyhow          = { workspace = true }
+cw-multi-test   = { workspace = true }
+sylvia          = { workspace = true, features = ["mt"] }

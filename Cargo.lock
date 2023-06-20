@@ -506,8 +506,10 @@ dependencies = [
 name = "cw721-sylvia-base"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-multi-test",
  "cw-ownable",
  "cw-storage-plus 1.2.0",
  "cw-utils 1.0.3",
@@ -1119,8 +1121,11 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66fc0aae39bc8a76742c1455e3bda09976224e31d236de0e468c91fbc2414c79"
 dependencies = [
+ "anyhow",
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-multi-test",
+ "derivative",
  "konst",
  "schemars",
  "serde",

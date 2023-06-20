@@ -11,6 +11,7 @@ documentation = "https://docs.cosmwasm.com"
 rust-version  = "1.65"
 
 [workspace.dependencies]
+anyhow          = "1.0.68"
 cosmwasm-schema = "1.2.1"
 cosmwasm-std    = "1.2.1"
 cw2             = "1.1.0"
