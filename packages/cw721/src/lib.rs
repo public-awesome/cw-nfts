@@ -1,3 +1,4 @@
+pub mod cw721_interface;
 mod msg;
 mod query;
 mod receiver;

@@ -403,6 +403,7 @@ dependencies = [
  "cw-utils 1.0.3",
  "schemars",
  "serde",
+ "sylvia",
 ]
 
 [[package]]
