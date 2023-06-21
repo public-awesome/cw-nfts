@@ -1,5 +1,5 @@
 use crate::{
-    contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData, MinterResponse},
+    contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData},
     ContractError,
 };
 use cosmwasm_std::Empty;
@@ -11,6 +11,7 @@ use sylvia::multitest::App;
 
 use crate::base::test_utils::Cw721Interface;
 use crate::contract::multitest_utils::CodeId;
+use crate::responses::MinterResponse;
 
 const CREATOR: &str = "creator";
 const RANDOM: &str = "random";

@@ -504,7 +504,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-sylvia-base"
-version = "0.1.0"
+version = "0.17.0"
 dependencies = [
  "anyhow",
  "cosmwasm-schema",

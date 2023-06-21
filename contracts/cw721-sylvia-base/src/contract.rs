@@ -1,82 +1,25 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, Empty, Response, StdResult};
+use cosmwasm_std::{Addr, Empty, Response, StdResult};
 use cw721::{cw721_interface, ContractInfoResponse, Expiration};
 use cw_ownable::Ownership;
-use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
+use cw_storage_plus::{IndexedMap, Item, Map, MultiIndex};
 use sylvia::contract;
 use sylvia::types::{ExecCtx, InstantiateCtx, QueryCtx};
 
+use crate::responses::MinterResponse;
+use crate::state::{token_owner_idx, TokenIndexes, TokenInfo};
 use crate::ContractError;
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-sylvia-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// Default limit for query pagination
 pub const DEFAULT_LIMIT: u32 = 10;
+/// Maximum limit for query pagination
 pub const MAX_LIMIT: u32 = 100;
 
-// TODO should this just be in cw721_interface along with the other responses?
-#[cw_serde]
-pub struct Approval {
-    /// Account that can transfer/send the token
-    pub spender: Addr,
-    /// When the Approval expires (maybe Expiration::never)
-    pub expires: Expiration,
-}
-
-impl Approval {
-    pub fn is_expired(&self, block: &BlockInfo) -> bool {
-        self.expires.is_expired(block)
-    }
-}
-
-/// TODO move to a responses file?
-/// Shows who can mint these tokens
-#[cw_serde]
-pub struct MinterResponse {
-    pub minter: Option<String>,
-}
-
-// TODO what do we want to do with extensions? They seem to be unnessary now?
-// TODO kill extensions
-#[cw_serde]
-pub struct TokenInfo {
-    /// The owner of the newly minted NFT
-    pub owner: Addr,
-    /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
-    pub approvals: Vec<Approval>,
-
-    /// Universal resource identifier for this NFT
-    /// Should point to a JSON file that conforms to the ERC721
-    /// Metadata JSON Schema
-    pub token_uri: Option<String>,
-
-    pub extension: Empty,
-}
-
-pub fn token_owner_idx(_pk: &[u8], d: &TokenInfo) -> Addr {
-    d.owner.clone()
-}
-
-/// Indexed map for NFT tokens by owner
-pub struct TokenIndexes<'a> {
-    pub owner: MultiIndex<'a, Addr, TokenInfo, String>,
-}
-impl<'a> IndexList<TokenInfo> for TokenIndexes<'a> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ (dyn Index<TokenInfo> + '_)> + '_> {
-        let v: Vec<&dyn Index<TokenInfo>> = vec![&self.owner];
-        Box::new(v.into_iter())
-    }
-}
-
-pub struct Cw721Contract<'a> {
-    pub contract_info: Item<'a, ContractInfoResponse>,
-    pub token_count: Item<'a, u64>,
-    /// Stored as (granter, operator) giving operator full control over granter's account
-    pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub tokens: IndexedMap<'a, &'a str, TokenInfo, TokenIndexes<'a>>,
-}
-
+/// The instantiation message data for this contract, used to set initial state
 #[cw_serde]
 pub struct InstantiateMsgData {
     /// Name of the NFT contract
@@ -90,6 +33,17 @@ pub struct InstantiateMsgData {
     pub minter: String,
 }
 
+/// The struct representing this contract, holds contract state.
+/// See Sylvia docmentation for more info about customizing this.
+pub struct Cw721Contract<'a> {
+    pub contract_info: Item<'a, ContractInfoResponse>,
+    pub token_count: Item<'a, u64>,
+    /// Stored as (granter, operator) giving operator full control over granter's account
+    pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
+    pub tokens: IndexedMap<'a, &'a str, TokenInfo, TokenIndexes<'a>>,
+}
+
+/// The actual contract implementation, base cw721 logic is implemented in base.rs
 #[cfg_attr(not(feature = "library"), sylvia::entry_points)]
 #[contract]
 #[error(ContractError)]
@@ -181,5 +135,11 @@ impl Cw721Contract<'_> {
     #[msg(query)]
     pub fn ownership(&self, ctx: QueryCtx) -> StdResult<Ownership<Addr>> {
         cw_ownable::get_ownership(ctx.deps.storage)
+    }
+}
+
+impl Default for Cw721Contract<'_> {
+    fn default() -> Self {
+        Self::new()
     }
 }

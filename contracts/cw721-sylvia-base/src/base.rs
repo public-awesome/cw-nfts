@@ -11,7 +11,8 @@ use cw_utils::maybe_addr;
 use sylvia::contract;
 use sylvia::types::{ExecCtx, QueryCtx};
 
-use crate::contract::{Approval, Cw721Contract, TokenInfo, DEFAULT_LIMIT, MAX_LIMIT};
+use crate::contract::{Cw721Contract, DEFAULT_LIMIT, MAX_LIMIT};
+use crate::state::{Approval, TokenInfo};
 use crate::ContractError;
 
 #[contract(module=crate::contract)]
