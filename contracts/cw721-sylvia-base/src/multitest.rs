@@ -2,7 +2,7 @@ use crate::{
     contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData},
     ContractError,
 };
-use cosmwasm_std::{Addr, Empty, StdError};
+use cosmwasm_std::{to_binary, Addr, Empty, StdError};
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, NftInfoResponse, NumTokensResponse,
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
@@ -264,6 +264,62 @@ fn test_transfer() {
     assert_eq!(ContractError::Ownership(OwnershipError::NotOwner), err);
 }
 
+#[should_panic(
+    expected = "called `Result::unwrap()` on an `Err` value: error executing WasmMsg:\nsender: creator\nExecute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: error executing WasmMsg:\n       sender: contract0\n       Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
+)]
+#[test]
+fn test_send() {
+    let app = App::default();
+    let TestCase { nft_contract } = TestCase::new(&app);
+
+    // Mint NFT
+    nft_contract
+        .mint(
+            "1".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Owned by creator
+    let nft_ownership = nft_contract
+        .cw721_interface_proxy()
+        .owner_of("1".to_string(), false)
+        .unwrap();
+    assert_eq!(
+        OwnerOfResponse {
+            owner: CREATOR.to_string(),
+            approvals: vec![]
+        },
+        nft_ownership
+    );
+
+    // Random address can't send
+    let err = nft_contract
+        .cw721_interface_proxy()
+        .send_nft(
+            nft_contract.contract_addr.clone().into_string(),
+            "1".to_string(),
+            to_binary(&Empty {}).unwrap(),
+        )
+        .call(RANDOM)
+        .unwrap_err();
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+    // Creator can send
+    // This will panic as the base contract does not implement RecieveNft
+    nft_contract
+        .cw721_interface_proxy()
+        .send_nft(
+            nft_contract.contract_addr.into_string(),
+            "1".to_string(),
+            to_binary(&Empty {}).unwrap(),
+        )
+        .call(CREATOR)
+        .unwrap_err();
+}
+
 #[test]
 fn test_update_minter() {
     let app = App::default();
@@ -493,7 +549,7 @@ fn approving_all_revoking_all() {
         .call(RANDOM)
         .unwrap();
 
-    // TODO Random can now send (for now we just do a second transfer)
+    // Random can now transfer
     nft_contract
         .cw721_interface_proxy()
         .transfer_nft(RANDOM.to_string(), "2".to_string())
@@ -630,4 +686,46 @@ fn approving_all_revoking_all() {
         }
         _ => panic!("Unexpected error"),
     }
+}
+
+#[should_panic(
+    expected = "called `Result::unwrap()` on an `Err` value: error executing WasmMsg:\nsender: creator\nExecute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: error executing WasmMsg:\n       sender: contract0\n       Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
+)]
+#[test]
+fn test_send_with_approval() {
+    let app = App::default();
+    let TestCase { nft_contract } = TestCase::new(&app);
+
+    // Mint NFT
+    nft_contract
+        .mint(
+            "1".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Grant approval
+    nft_contract
+        .cw721_interface_proxy()
+        .approve(
+            RANDOM.to_string(),
+            "1".to_string(),
+            Some(Expiration::Never {}),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Random address can send
+    // This will panic as the base contract does not implement RecieveNft
+    nft_contract
+        .cw721_interface_proxy()
+        .send_nft(
+            nft_contract.contract_addr.into_string(),
+            "1".to_string(),
+            to_binary(&Empty {}).unwrap(),
+        )
+        .call(CREATOR)
+        .unwrap_err();
 }
