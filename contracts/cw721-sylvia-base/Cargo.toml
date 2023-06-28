@@ -30,6 +30,5 @@ sylvia          = { workspace = true }
 thiserror       = { workspace = true }
 
 [dev-dependencies]
-anyhow          = { workspace = true }
 cw-multi-test   = { workspace = true }
 sylvia          = { workspace = true, features = ["mt"] }
