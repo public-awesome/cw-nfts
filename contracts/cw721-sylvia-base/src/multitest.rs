@@ -2,11 +2,12 @@ use crate::{
     contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData},
     ContractError,
 };
-use cosmwasm_std::Empty;
+use cosmwasm_std::{Addr, Empty, StdError};
 use cw721::{
-    ContractInfoResponse, NftInfoResponse, NumTokensResponse, OwnerOfResponse, TokensResponse,
+    Approval, ApprovalResponse, ContractInfoResponse, NftInfoResponse, NumTokensResponse,
+    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cw_ownable::OwnershipError;
+use cw_ownable::{Action, Expiration, OwnershipError};
 use sylvia::multitest::App;
 
 use crate::base::test_utils::Cw721Interface;
@@ -261,4 +262,372 @@ fn test_transfer() {
         .call(CREATOR)
         .unwrap_err();
     assert_eq!(ContractError::Ownership(OwnershipError::NotOwner), err);
+}
+
+#[test]
+fn test_update_minter() {
+    let app = App::default();
+    let TestCase { nft_contract } = TestCase::new(&app);
+
+    // Minter Mints NFT
+    nft_contract
+        .mint(
+            "1".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Update the owner to "random". The new owner should be able to
+    // mint new tokens, the old one should not.
+    nft_contract
+        .update_ownership(Action::TransferOwnership {
+            new_owner: RANDOM.to_string(),
+            expiry: None,
+        })
+        .call(CREATOR)
+        .unwrap();
+
+    // Minter does not change until ownership transfer completes.
+    let minter = nft_contract.minter().unwrap();
+    assert_eq!(minter.minter, Some(CREATOR.to_string()));
+
+    // Pending ownership transfer should be discoverable via query.
+    let ownership = nft_contract.ownership().unwrap();
+
+    assert_eq!(
+        ownership,
+        cw_ownable::Ownership::<Addr> {
+            owner: Some(Addr::unchecked(CREATOR)),
+            pending_owner: Some(Addr::unchecked(RANDOM)),
+            pending_expiry: None,
+        }
+    );
+
+    // Accept the ownership transfer.
+    nft_contract
+        .update_ownership(Action::AcceptOwnership)
+        .call(RANDOM)
+        .unwrap();
+
+    // Minter changes after ownership transfer is accepted.
+    let minter = nft_contract.minter().unwrap();
+    assert_eq!(minter.minter, Some(RANDOM.to_string()));
+
+    // Old owner can not mint.
+    let err = nft_contract
+        .mint(
+            "2".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap_err();
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+    // New owner can mint.
+    nft_contract
+        .mint(
+            "2".to_string(),
+            RANDOM.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(RANDOM)
+        .unwrap();
+}
+
+#[test]
+fn test_approving_revoking() {
+    let app = App::default();
+    let TestCase { nft_contract } = TestCase::new(&app);
+
+    // Minter Mints NFT
+    nft_contract
+        .mint(
+            "1".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Token owner shows in approval query
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .approval("1".to_string(), CREATOR.to_string(), false)
+        .unwrap();
+
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: CREATOR.to_string(),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
+    // Give random transferring power
+    nft_contract
+        .cw721_interface_proxy()
+        .approve(
+            RANDOM.to_string(),
+            "1".to_string(),
+            Some(Expiration::AtHeight(1000000)),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Test approval query
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .approval("1".to_string(), RANDOM.to_string(), false)
+        .unwrap();
+    assert_eq!(
+        res,
+        ApprovalResponse {
+            approval: Approval {
+                spender: String::from(RANDOM),
+                expires: Expiration::AtHeight(1000000)
+            }
+        }
+    );
+
+    // Random can now transfer NFT to its address
+    nft_contract
+        .cw721_interface_proxy()
+        .transfer_nft(RANDOM.to_string(), "1".to_string())
+        .call(RANDOM)
+        .unwrap();
+
+    // Approvals are removed / cleared
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .owner_of("1".to_string(), false)
+        .unwrap();
+    assert_eq!(
+        res,
+        OwnerOfResponse {
+            owner: String::from(RANDOM),
+            approvals: vec![],
+        }
+    );
+
+    // Approve, revoke, and check for empty, to test revoke
+    nft_contract
+        .cw721_interface_proxy()
+        .approve(CREATOR.to_string(), "1".to_string(), None)
+        .call(RANDOM)
+        .unwrap();
+    nft_contract
+        .cw721_interface_proxy()
+        .revoke(CREATOR.to_string(), "1".to_string())
+        .call(RANDOM)
+        .unwrap();
+
+    // Approvals are now removed / cleared
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .owner_of("1".to_string(), false)
+        .unwrap();
+
+    assert_eq!(
+        res,
+        OwnerOfResponse {
+            owner: String::from(RANDOM),
+            approvals: vec![],
+        }
+    );
+}
+
+#[test]
+fn approving_all_revoking_all() {
+    let app = App::default();
+    let TestCase { nft_contract } = TestCase::new(&app);
+
+    // Minter Mints a couple NFTs for themselves
+    nft_contract
+        .mint(
+            "1".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    nft_contract
+        .mint(
+            "2".to_string(),
+            CREATOR.to_string(),
+            Some("https://example.com".to_string()),
+        )
+        .call(CREATOR)
+        .unwrap();
+
+    // Paginate token ids
+    let tokens = nft_contract
+        .cw721_interface_proxy()
+        .all_tokens(None, Some(1))
+        .unwrap();
+    assert_eq!(1, tokens.tokens.len());
+    assert_eq!(vec!["1".to_string()], tokens.tokens);
+    let tokens = nft_contract
+        .cw721_interface_proxy()
+        .all_tokens(Some("1".to_string()), Some(3))
+        .unwrap();
+    assert_eq!(1, tokens.tokens.len());
+    assert_eq!(vec!["2".to_string()], tokens.tokens);
+
+    // Creator gives random full (operator) power over her tokens
+    nft_contract
+        .cw721_interface_proxy()
+        .approve_all(RANDOM.to_string(), None)
+        .call(CREATOR)
+        .unwrap();
+
+    // Random can now transfer
+    nft_contract
+        .cw721_interface_proxy()
+        .transfer_nft(RANDOM.to_string(), "1".to_string())
+        .call(RANDOM)
+        .unwrap();
+
+    // TODO Random can now send (for now we just do a second transfer)
+    nft_contract
+        .cw721_interface_proxy()
+        .transfer_nft(RANDOM.to_string(), "2".to_string())
+        .call(RANDOM)
+        .unwrap();
+
+    // Approve_all, revoke_all, and check for empty, to test revoke_all
+    nft_contract
+        .cw721_interface_proxy()
+        .approve_all(CREATOR.to_string(), Some(Expiration::AtHeight(1000000)))
+        .call(RANDOM)
+        .unwrap();
+
+    // Query for operator should return approvals
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operators(RANDOM.to_string(), false, None, None)
+        .unwrap();
+    assert_eq!(
+        res,
+        OperatorsResponse {
+            operators: vec![cw721::Approval {
+                spender: String::from(CREATOR),
+                expires: Expiration::AtHeight(1000000)
+            }]
+        }
+    );
+
+    // Second approval
+    nft_contract
+        .cw721_interface_proxy()
+        .approve_all("second".to_string(), Some(Expiration::AtHeight(1000000)))
+        .call(RANDOM)
+        .unwrap();
+
+    // Paginate queries
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operators(RANDOM.to_string(), true, None, Some(1))
+        .unwrap();
+    assert_eq!(
+        res,
+        OperatorsResponse {
+            operators: vec![cw721::Approval {
+                spender: String::from(CREATOR),
+                expires: Expiration::AtHeight(1000000),
+            }]
+        }
+    );
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operators(RANDOM.to_string(), true, Some(CREATOR.to_string()), Some(1))
+        .unwrap();
+    assert_eq!(
+        res,
+        OperatorsResponse {
+            operators: vec![cw721::Approval {
+                spender: String::from("second"),
+                expires: Expiration::AtHeight(1000000),
+            }]
+        }
+    );
+
+    // Test operator query
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operator(CREATOR.to_string(), RANDOM.to_string(), false)
+        .unwrap();
+    assert_eq!(
+        res,
+        OperatorResponse {
+            approval: Approval {
+                spender: String::from(RANDOM),
+                expires: Expiration::Never {}
+            }
+        }
+    );
+
+    // Revoke all approvals for CREATOR
+    nft_contract
+        .cw721_interface_proxy()
+        .revoke_all(CREATOR.to_string())
+        .call(RANDOM)
+        .unwrap();
+
+    // Approvals are removed / cleared without affecting others
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operators(RANDOM.to_string(), false, None, None)
+        .unwrap();
+    assert_eq!(
+        res,
+        OperatorsResponse {
+            operators: vec![Approval {
+                spender: "second".to_string(),
+                expires: Expiration::AtHeight(1000000)
+            }]
+        }
+    );
+
+    // Query for old operator should return error
+    let res = nft_contract.cw721_interface_proxy().operator(
+        RANDOM.to_string(),
+        CREATOR.to_string(),
+        false,
+    );
+    match res {
+        Err(ContractError::Std(StdError::GenericErr { msg })) => {
+            assert_eq!(msg, "Querier contract error: Approval not found not found")
+        }
+        _ => panic!("Unexpected error"),
+    }
+
+    // Ensure the filter works (approvals should expire)
+    let mut block = nft_contract.app.block_info();
+    block.height += 1000000;
+    nft_contract.app.set_block(block);
+
+    let res = nft_contract
+        .cw721_interface_proxy()
+        .operators(RANDOM.to_string(), false, None, None)
+        .unwrap();
+    assert_eq!(0, res.operators.len());
+
+    // Query operator should also return error
+    let res = nft_contract.cw721_interface_proxy().operator(
+        RANDOM.to_string(),
+        CREATOR.to_string(),
+        false,
+    );
+    match res {
+        Err(ContractError::Std(StdError::GenericErr { msg })) => {
+            assert_eq!(msg, "Querier contract error: Approval not found not found")
+        }
+        _ => panic!("Unexpected error"),
+    }
 }
