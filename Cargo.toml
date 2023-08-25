@@ -2,7 +2,7 @@
 members = ["packages/*", "contracts/*"]
 
 [workspace.package]
-version       = "0.17.0"
+version       = "0.18.0"
 edition       = "2021"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
@@ -13,16 +13,14 @@ rust-version  = "1.65"
 [workspace.dependencies]
 cosmwasm-schema = "1.2.1"
 cosmwasm-std    = "1.2.1"
-# FIXME: change back to the "official" crates.io release after this PR is merged:
-# https://github.com/CosmWasm/cw-plus/pull/858
-cw2             = { git = "https://github.com/mars-protocol/cw-plus", rev = "1a3a944" }
-cw20            = "1.0.1"
-cw721           = { version = "0.17.0", path = "./packages/cw721" }
-cw721-base      = { version = "0.17.0", path = "./contracts/cw721-base" }
+cw2             = "1.1.0"
+cw20            = "1.1.0"
+cw721           = { version = "0.18.0", path = "./packages/cw721" }
+cw721-base      = { version = "0.18.0", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
-cw-multi-test   = "0.16.2"
-cw-ownable      = "0.5.0"
-cw-storage-plus = "1.0.1"
+cw-multi-test   = "0.16.5"
+cw-ownable      = "0.5.1"
+cw-storage-plus = "1.1.0"
 cw-utils        = "1.0.1"
 schemars        = "0.8.11"
 serde           = { version = "1.0.152", default-features = false, features = ["derive"] }
@@ -30,24 +28,24 @@ thiserror       = "1.0.38"
 
 [profile.release.package.cw721-base]
 codegen-units = 1
-incremental = false
+incremental   = false
 
 [profile.release.package.cw721-metadata-onchain]
 codegen-units = 1
-incremental = false
+incremental   = false
 
 [profile.release.package.cw721-fixed-price]
 codegen-units = 1
-incremental = false
+incremental   = false
 
 [profile.release.package.cw721-non-transferable]
 codegen-units = 1
-incremental = false
+incremental   = false
 
 [profile.release]
-rpath = false
-lto = true
-overflow-checks = true
-opt-level = 3
-debug = false
+rpath            = false
+lto              = true
+overflow-checks  = true
+opt-level        = 3
+debug            = false
 debug-assertions = false
