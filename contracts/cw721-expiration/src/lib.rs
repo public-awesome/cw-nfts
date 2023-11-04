@@ -69,7 +69,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
 
-    use crate::{error::ContractError, msg::InstantiateMsg};
+    use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
 
     use super::*;
 
@@ -114,5 +114,7 @@ mod tests {
                 version: CONTRACT_VERSION.into(),
             },
         );
+
+        assert_eq!(1, Cw721ExpirationContract::default().expiration_days.load(deps.as_ref().storage).unwrap());
     }
 }
