@@ -2,7 +2,11 @@ use cosmwasm_std::{Binary, DepsMut, Empty, Env, MessageInfo, Response, StdResult
 use cw721::{Cw721Execute, Expiration};
 use cw721_base::Cw721Contract;
 
-use crate::{state::Cw721ExpirationContract, ContractError, ExecuteMsg, Extension, InstantiateMsg};
+use crate::{
+    error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract, ExecuteMsg,
+    Extension,
+};
+use cw721_base::InstantiateMsg as Cw721InstantiateMsg;
 
 impl<'a> Cw721ExpirationContract<'a> {
     pub fn instantiate(
@@ -11,8 +15,23 @@ impl<'a> Cw721ExpirationContract<'a> {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
-        self.base_contract.instantiate(deps, env, info, msg)
+    ) -> Result<Response, ContractError> {
+        if msg.expiration_days == 0 {
+            return Err(ContractError::MinExpiration {});
+        }
+        self.expiration_days
+            .save(deps.storage, &msg.expiration_days)?;
+        let res = self.base_contract.instantiate(
+            deps,
+            env,
+            info,
+            Cw721InstantiateMsg {
+                name: msg.name,
+                symbol: msg.symbol,
+                minter: msg.minter,
+            },
+        )?;
+        Ok(res)
     }
 
     pub fn execute(
@@ -28,7 +47,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 owner,
                 token_uri,
                 extension,
-            } => self.mint(deps, info, token_id, owner, token_uri, extension),
+            } => self.mint(deps, env, info, token_id, owner, token_uri, extension),
             ExecuteMsg::Approve {
                 spender,
                 token_id,
@@ -55,21 +74,27 @@ impl<'a> Cw721ExpirationContract<'a> {
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
         }
     }
-
 }
 
-impl<'a> Cw721ExpirationContract<'a>
-{
+impl<'a> Cw721ExpirationContract<'a> {
     pub fn mint(
         &self,
         deps: DepsMut,
+        env: Env,
         info: MessageInfo,
         token_id: String,
         owner: String,
         token_uri: Option<String>,
         extension: Extension,
     ) -> Result<Response, ContractError> {
-        self.base_contract.mint(deps, info, token_id, owner, token_uri, extension)
+        let mint_timstamp = env.block.time;
+        self.mint_timestamps
+            .save(deps.storage, &token_id, &mint_timstamp)?;
+        let res = self
+            .base_contract
+            .mint(deps, info, token_id, owner, token_uri, extension)?;
+        let res = res.add_attribute("mint_timestamp", mint_timstamp.to_string());
+        Ok(res)
     }
 
     pub fn update_ownership(
@@ -78,7 +103,10 @@ impl<'a> Cw721ExpirationContract<'a>
         info: MessageInfo,
         action: cw_ownable::Action,
     ) -> Result<Response, ContractError> {
-        Cw721Contract::<Extension, Empty, Empty, Empty>::update_ownership(deps, env, info, action)
+        let res = Cw721Contract::<Extension, Empty, Empty, Empty>::update_ownership(
+            deps, env, info, action,
+        )?;
+        Ok(res)
     }
 }
 
@@ -93,8 +121,10 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         recipient: String,
         token_id: String,
     ) -> Result<Response<Empty>, Self::Err> {
-        self.base_contract
-            .transfer_nft(deps, env, info, recipient, token_id)
+        let res = self
+            .base_contract
+            .transfer_nft(deps, env, info, recipient, token_id)?;
+        Ok(res)
     }
 
     fn send_nft(
@@ -106,8 +136,10 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         token_id: String,
         msg: Binary,
     ) -> Result<Response<Empty>, Self::Err> {
-        self.base_contract
-            .send_nft(deps, env, info, contract, token_id, msg)
+        let res = self
+            .base_contract
+            .send_nft(deps, env, info, contract, token_id, msg)?;
+        Ok(res)
     }
 
     fn approve(
@@ -119,8 +151,10 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<Empty>, Self::Err> {
-        self.base_contract
-            .approve(deps, env, info, spender, token_id, expires)
+        let res = self
+            .base_contract
+            .approve(deps, env, info, spender, token_id, expires)?;
+        Ok(res)
     }
 
     fn revoke(
@@ -131,8 +165,10 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         spender: String,
         token_id: String,
     ) -> Result<Response<Empty>, Self::Err> {
-        self.base_contract
-            .revoke(deps, env, info, spender, token_id)
+        let res = self
+            .base_contract
+            .revoke(deps, env, info, spender, token_id)?;
+        Ok(res)
     }
 
     fn approve_all(
@@ -143,8 +179,10 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         operator: String,
         expires: Option<Expiration>,
     ) -> Result<Response, ContractError> {
-        self.base_contract
-            .approve_all(deps, env, info, operator, expires)
+        let res = self
+            .base_contract
+            .approve_all(deps, env, info, operator, expires)?;
+        Ok(res)
     }
 
     fn revoke_all(
@@ -154,7 +192,8 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         info: MessageInfo,
         operator: String,
     ) -> Result<Response, ContractError> {
-        self.base_contract.revoke_all(deps, env, info, operator)
+        let res = self.base_contract.revoke_all(deps, env, info, operator)?;
+        Ok(res)
     }
 
     fn burn(
@@ -164,6 +203,7 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response, ContractError> {
-        self.base_contract.burn(deps, env, info, token_id)
+        let res = self.base_contract.burn(deps, env, info, token_id)?;
+        Ok(res)
     }
 }

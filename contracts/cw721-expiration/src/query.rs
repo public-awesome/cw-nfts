@@ -6,7 +6,7 @@ use cw721::{
 };
 use cw721_base::MinterResponse;
 
-use crate::{state::Cw721ExpirationContract, Extension, QueryMsg};
+use crate::{msg::QueryMsg, state::Cw721ExpirationContract, Extension};
 
 impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {

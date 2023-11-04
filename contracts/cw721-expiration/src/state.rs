@@ -5,7 +5,7 @@ use cw_storage_plus::{Item, Map};
 use crate::Extension;
 
 pub struct Cw721ExpirationContract<'a> {
-    pub expiration_days: Item<'a, u64>,
+    pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
     pub base_contract: cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>,
 }

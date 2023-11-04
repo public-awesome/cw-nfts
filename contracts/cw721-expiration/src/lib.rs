@@ -1,3 +1,4 @@
+mod error;
 mod execute;
 pub mod msg;
 mod query;
@@ -7,20 +8,22 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
-pub use cw721_base::MinterResponse;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub type MinterResponse = cw721_base::msg::MinterResponse;
 pub type Extension = Option<Empty>;
 
-pub type ContractError = cw721_base::ContractError;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
-pub type InstantiateMsg = cw721_base::InstantiateMsg;
-pub type QueryMsg = cw721_base::QueryMsg<Empty>;
 
 pub mod entry {
-    use crate::state::Cw721ExpirationContract;
+    use crate::{
+        error::ContractError,
+        msg::{InstantiateMsg, QueryMsg},
+        state::Cw721ExpirationContract,
+    };
 
     use super::*;
 
@@ -35,7 +38,7 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
+    ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
         Cw721ExpirationContract::default().instantiate(deps.branch(), env, info, msg)
     }
@@ -66,21 +69,39 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
 
+    use crate::{error::ContractError, msg::InstantiateMsg};
+
     use super::*;
 
-    /// Make sure cw2 version info is properly initialized during instantiation.
     #[test]
     fn proper_cw2_initialization() {
         let mut deps = mock_dependencies();
 
+        // assert min expiration
+        let error = entry::instantiate(
+            deps.as_mut(),
+            mock_env(),
+            mock_info("mrt", &[]),
+            InstantiateMsg {
+                expiration_days: 0,
+                name: "".into(),
+                symbol: "".into(),
+                minter: "mrt".into(),
+            },
+        )
+        .unwrap_err();
+        assert_eq!(error, ContractError::MinExpiration {});
+
+        // Make sure cw2 version info is properly initialized during instantiation.
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("larry", &[]),
+            mock_info("mrt", &[]),
             InstantiateMsg {
+                expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                minter: "larry".into(),
+                minter: "mrt".into(),
             },
         )
         .unwrap();

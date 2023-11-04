@@ -10,15 +10,19 @@ use cw721::{
 use cw_ownable::OwnershipError;
 
 use crate::state::Cw721ExpirationContract;
-use crate::{ContractError, ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg};
+use crate::{
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, ExecuteMsg, Extension, MinterResponse,
+};
+use cw721_base::ContractError as Cw721ContractError;
 
 const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>) -> Cw721ExpirationContract<'static> {
+fn setup_contract(deps: DepsMut<'_>, expiration_days: u16) -> Cw721ExpirationContract<'static> {
     let contract = Cw721ExpirationContract::default();
     let msg = InstantiateMsg {
+        expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
@@ -35,6 +39,7 @@ fn proper_instantiation() {
     let contract = Cw721ExpirationContract::default();
 
     let msg = InstantiateMsg {
+        expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
@@ -68,12 +73,12 @@ fn proper_instantiation() {
 }
 
 #[test]
-fn minting() {
+fn test_mint() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
-    let token_id = "petrify".to_string();
-    let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
+    let token_id = "atomize".to_string();
+    let token_uri = "https://www.merriam-webster.com/dictionary/atomize".to_string();
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
@@ -87,7 +92,10 @@ fn minting() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(
+        err,
+        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
+    );
 
     // minter can mint
     let allowed = mock_info(MINTER, &[]);
@@ -126,6 +134,12 @@ fn minting() {
         }
     );
 
+    let mint_timestamp = contract
+        .mint_timestamps
+        .load(deps.as_ref().storage, token_id.as_str())
+        .unwrap();
+    assert_eq!(mint_timestamp, mock_env().block.time);
+
     // Cannot mint same token_id again
     let mint_msg2 = ExecuteMsg::Mint {
         token_id: token_id.clone(),
@@ -138,7 +152,7 @@ fn minting() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg2)
         .unwrap_err();
-    assert_eq!(err, ContractError::Claimed {});
+    assert_eq!(err, ContractError::Cw721(Cw721ContractError::Claimed {}));
 
     // list the token_ids
     let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
@@ -149,7 +163,7 @@ fn minting() {
 #[test]
 fn test_update_minter() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -238,7 +252,10 @@ fn test_update_minter() {
     let err: ContractError = contract
         .execute(deps.as_mut(), mock_env(), minter_info, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(
+        err,
+        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
+    );
 
     // New owner can mint.
     let _ = contract
@@ -249,7 +266,7 @@ fn test_update_minter() {
 #[test]
 fn burning() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -275,7 +292,10 @@ fn burning() {
         .execute(deps.as_mut(), mock_env(), random, burn_msg.clone())
         .unwrap_err();
 
-    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(
+        err,
+        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
+    );
 
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed, burn_msg)
@@ -298,7 +318,7 @@ fn burning() {
 #[test]
 fn transferring_nft() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -326,7 +346,10 @@ fn transferring_nft() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, transfer_msg)
         .unwrap_err();
-    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(
+        err,
+        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
+    );
 
     // owner can
     let random = mock_info("venus", &[]);
@@ -352,7 +375,7 @@ fn transferring_nft() {
 #[test]
 fn sending_nft() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -382,7 +405,10 @@ fn sending_nft() {
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, send_msg.clone())
         .unwrap_err();
-    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(
+        err,
+        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
+    );
 
     // but owner can
     let random = mock_info("venus", &[]);
@@ -418,7 +444,7 @@ fn sending_nft() {
 #[test]
 fn approving_revoking() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     // Mint a token
     let token_id = "grow".to_string();
@@ -562,7 +588,7 @@ fn approving_revoking() {
 #[test]
 fn approving_all_revoking_all() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
@@ -837,7 +863,7 @@ fn approving_all_revoking_all() {
 #[test]
 fn query_tokens_by_owner() {
     let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
+    let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
 
     // Mint a couple tokens (from the same owner)
