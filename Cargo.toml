@@ -18,7 +18,7 @@ cw20            = "1.1.0"
 cw721           = { version = "0.18.0", path = "./packages/cw721" }
 cw721-base      = { version = "0.18.0", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
-cw-multi-test   = "0.16.5"
+cw-multi-test   = "0.17"
 cw-ownable      = "0.5.1"
 cw-storage-plus = "1.1.0"
 cw-utils        = "1.0.1"
