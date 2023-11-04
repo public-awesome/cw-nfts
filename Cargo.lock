@@ -431,6 +431,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw-ownable",
+ "cw-storage-plus 1.1.0",
  "cw2 1.1.0",
  "cw721 0.18.0",
  "cw721-base 0.18.0",
