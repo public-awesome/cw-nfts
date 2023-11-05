@@ -17,6 +17,7 @@ pub type MinterResponse = cw721_base::msg::MinterResponse;
 pub type Extension = Option<Empty>;
 
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
+pub type TokenInfo = cw721_base::state::TokenInfo<Extension>;
 
 pub mod entry {
     use crate::{
@@ -29,7 +30,7 @@ pub mod entry {
 
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -54,7 +55,7 @@ pub mod entry {
     }
 
     #[entry_point]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
         Cw721ExpirationContract::default().query(deps, env, msg)
     }
 
@@ -115,6 +116,12 @@ mod tests {
             },
         );
 
-        assert_eq!(1, Cw721ExpirationContract::default().expiration_days.load(deps.as_ref().storage).unwrap());
+        assert_eq!(
+            1,
+            Cw721ExpirationContract::default()
+                .expiration_days
+                .load(deps.as_ref().storage)
+                .unwrap()
+        );
     }
 }

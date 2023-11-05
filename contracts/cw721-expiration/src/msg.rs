@@ -1,7 +1,6 @@
 use crate::{Extension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cw_ownable::cw_ownable_query;
-use schemars::JsonSchema;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -72,7 +71,11 @@ pub enum QueryMsg {
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
     #[returns(cw721::NftInfoResponse<Extension>)]
-    NftInfo { token_id: String },
+    NftInfo {
+        token_id: String,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
+    },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients

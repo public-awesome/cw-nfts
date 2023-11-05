@@ -10,9 +10,6 @@ pub struct Cw721ExpirationContract<'a> {
     pub base_contract: cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>,
 }
 
-// This is a signal, the implementations are in other files
-impl<'a> Cw721<Extension, Empty> for Cw721ExpirationContract<'a> {}
-
 impl Default for Cw721ExpirationContract<'static> {
     fn default() -> Self {
         Self {

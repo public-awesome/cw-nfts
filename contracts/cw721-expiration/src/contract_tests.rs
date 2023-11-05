@@ -4,8 +4,8 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, to_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg};
 
 use cw721::{
-    Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
-    NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+    Approval, ApprovalResponse, ContractInfoResponse, Cw721ReceiveMsg, Expiration, NftInfoResponse,
+    OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
 use cw_ownable::OwnershipError;
 
@@ -109,11 +109,13 @@ fn test_mint() {
 
     // unknown nft returns error
     let _ = contract
-        .nft_info(deps.as_ref(), "unknown".to_string())
+        .nft_info(deps.as_ref(), mock_env(), "unknown".to_string(), false)
         .unwrap_err();
 
     // this nft info is correct
-    let info = contract.nft_info(deps.as_ref(), token_id.clone()).unwrap();
+    let info = contract
+        .nft_info(deps.as_ref(), mock_env(), token_id.clone(), false)
+        .unwrap();
     assert_eq!(
         info,
         NftInfoResponse::<Extension> {
@@ -134,6 +136,7 @@ fn test_mint() {
         }
     );
 
+    // assert mint timestamp is set
     let mint_timestamp = contract
         .mint_timestamps
         .load(deps.as_ref().storage, token_id.as_str())
@@ -307,7 +310,7 @@ fn burning() {
 
     // trying to get nft returns error
     let _ = contract
-        .nft_info(deps.as_ref(), "petrify".to_string())
+        .nft_info(deps.as_ref(), mock_env(), "petrify".to_string(), false)
         .unwrap_err();
 
     // list the token_ids
@@ -935,4 +938,46 @@ fn query_tokens_by_owner() {
         .tokens(deps.as_ref(), demeter, Some(by_demeter[0].clone()), Some(3))
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
+}
+
+#[test]
+fn query_nft_info() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut(), 1);
+    let minter = mock_info(MINTER, &[]);
+
+    let token_id = "grow1".to_string();
+    let owner = String::from("ark");
+
+    let mut env = mock_env();
+    let mint_msg = ExecuteMsg::Mint {
+        token_id: token_id.clone(),
+        owner: owner.clone(),
+        token_uri: None,
+        extension: None,
+    };
+    contract
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .unwrap();
+
+    // assert valid nft is returned
+    contract
+        .nft_info(deps.as_ref(), env.clone(), token_id.clone(), false)
+        .unwrap();
+
+    // assert invalid nft throws error
+    let mint_date = env.block.time;
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let error = contract
+        .nft_info(deps.as_ref(), env, token_id.clone(), false)
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id,
+            mint_date,
+            expiration
+        }
+    );
 }
