@@ -424,9 +424,10 @@ fn sending_nft() {
         extension: None,
     };
 
+    let mut env = mock_env();
     let minter = mock_info(MINTER, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     let msg = to_binary("You now have the melting power").unwrap();
@@ -435,11 +436,12 @@ fn sending_nft() {
         contract: target.clone(),
         token_id: token_id.clone(),
         msg: msg.clone(),
+        include_invalid: None,
     };
 
     let random = mock_info("random", &[]);
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, send_msg.clone())
+        .execute(deps.as_mut(), env.clone(), random, send_msg.clone())
         .unwrap_err();
     assert_eq!(
         err,
@@ -449,7 +451,7 @@ fn sending_nft() {
     // but owner can
     let random = mock_info("venus", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), random, send_msg)
+        .execute(deps.as_mut(), env.clone(), random.clone(), send_msg.clone())
         .unwrap();
 
     let payload = Cw721ReceiveMsg {
@@ -473,7 +475,23 @@ fn sending_nft() {
             .add_attribute("action", "send_nft")
             .add_attribute("sender", "venus")
             .add_attribute("recipient", "another_contract")
-            .add_attribute("token_id", token_id)
+            .add_attribute("token_id", token_id.clone())
+    );
+
+    // assert invalid nft throws error
+    let mint_date = env.block.time;
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let error = contract
+        .execute(deps.as_mut(), env.clone(), random, send_msg)
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id,
+            mint_date,
+            expiration
+        }
     );
 }
 
@@ -718,6 +736,7 @@ fn approving_all_revoking_all() {
         contract: String::from("another_contract"),
         token_id: token_id2,
         msg: to_binary(&msg).unwrap(),
+        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random, send_msg)

@@ -39,6 +39,8 @@ pub enum ExecuteMsg {
         contract: String,
         token_id: String,
         msg: Binary,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
     },
     /// Allows operator to transfer / send the token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit

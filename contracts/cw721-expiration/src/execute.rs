@@ -75,7 +75,16 @@ impl<'a> Cw721ExpirationContract<'a> {
                 contract,
                 token_id,
                 msg,
-            } => self.send_nft(deps, env, info, contract, token_id, msg),
+                include_invalid,
+            } => self.send_nft(
+                deps,
+                env,
+                info,
+                contract,
+                token_id,
+                msg,
+                include_invalid.unwrap_or(false),
+            ),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
             ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
@@ -145,7 +154,11 @@ impl<'a> Cw721ExpirationContract<'a> {
         contract: String,
         token_id: String,
         msg: Binary,
+        include_invalid: bool,
     ) -> Result<Response<Empty>, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        }
         Ok(self
             .base_contract
             .send_nft(deps, env, info, contract, token_id, msg)?)
