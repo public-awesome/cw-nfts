@@ -102,9 +102,11 @@ impl<'a> Cw721ExpirationContract<'a> {
         info: MessageInfo,
         action: cw_ownable::Action,
     ) -> Result<Response, ContractError> {
-        Ok(Cw721Contract::<Extension, Empty, Empty, Empty>::update_ownership(
-            deps, env, info, action,
-        )?)
+        Ok(
+            Cw721Contract::<Extension, Empty, Empty, Empty>::update_ownership(
+                deps, env, info, action,
+            )?,
+        )
     }
 }
 

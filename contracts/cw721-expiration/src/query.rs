@@ -34,11 +34,13 @@ impl<'a> Cw721ExpirationContract<'a> {
             QueryMsg::AllNftInfo {
                 token_id,
                 include_expired,
+                include_invalid,
             } => Ok(to_binary(&self.all_nft_info(
                 deps,
                 env,
                 token_id,
                 include_expired.unwrap_or(false),
+                include_invalid.unwrap_or(false),
             )?)?),
             QueryMsg::Operator {
                 owner,
@@ -217,8 +219,13 @@ impl<'a> Cw721ExpirationContract<'a> {
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<AllNftInfoResponse<Extension>> {
-        self.base_contract
-            .all_nft_info(deps, env, token_id, include_expired)
+        include_invalid: bool,
+    ) -> Result<AllNftInfoResponse<Extension>, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps, &env, token_id.as_str())?;
+        }
+        Ok(self
+            .base_contract
+            .all_nft_info(deps, env, token_id, include_expired)?)
     }
 }
