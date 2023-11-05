@@ -149,7 +149,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         include_invalid: bool,
     ) -> Result<NftInfoResponse<Extension>, ContractError> {
         if !include_invalid {
-            self.assert_expiration(deps, &env, token_id.as_str())?;
+            self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
         Ok(self.base_contract.nft_info(deps, token_id)?)
     }
@@ -163,7 +163,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         include_invalid: bool,
     ) -> Result<OwnerOfResponse, ContractError> {
         if !include_invalid {
-            self.assert_expiration(deps, &env, token_id.as_str())?;
+            self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
         Ok(self
             .base_contract
@@ -207,7 +207,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         include_invalid: bool,
     ) -> Result<ApprovalResponse, ContractError> {
         if !include_invalid {
-            self.assert_expiration(deps, &env, token_id.as_str())?;
+            self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
         Ok(self
             .base_contract
@@ -224,7 +224,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         include_invalid: bool,
     ) -> Result<ApprovalsResponse, ContractError> {
         if !include_invalid {
-            self.assert_expiration(deps, &env, token_id.as_str())?;
+            self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
         Ok(self
             .base_contract
@@ -248,7 +248,7 @@ impl<'a> Cw721ExpirationContract<'a> {
             .tokens
             .iter()
             .filter(|token_id| {
-                self.is_valid(deps, &env, token_id)
+                self.is_valid_nft(deps, &env, token_id)
                     .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
                     .unwrap_or(false) // Convert Option<bool> to bool
             })
@@ -273,7 +273,7 @@ impl<'a> Cw721ExpirationContract<'a> {
             .tokens
             .iter()
             .filter(|token_id| {
-                self.is_valid(deps, &env, token_id)
+                self.is_valid_nft(deps, &env, token_id)
                     .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
                     .unwrap_or(false) // Convert Option<bool> to bool
             })
@@ -291,7 +291,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         include_invalid: bool,
     ) -> Result<AllNftInfoResponse<Extension>, ContractError> {
         if !include_invalid {
-            self.assert_expiration(deps, &env, token_id.as_str())?;
+            self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
         Ok(self
             .base_contract

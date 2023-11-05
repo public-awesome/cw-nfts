@@ -120,7 +120,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         recipient: String,
         token_id: String,
     ) -> Result<Response<Empty>, ContractError> {
-        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        self.assert_valid_nft(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .transfer_nft(deps, env, info, recipient, token_id)?)
@@ -135,7 +135,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         msg: Binary,
     ) -> Result<Response<Empty>, ContractError> {
-        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        self.assert_valid_nft(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .send_nft(deps, env, info, contract, token_id, msg)?)
@@ -150,7 +150,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<Empty>, ContractError> {
-        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        self.assert_valid_nft(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .approve(deps, env, info, spender, token_id, expires)?)
@@ -164,7 +164,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         spender: String,
         token_id: String,
     ) -> Result<Response<Empty>, ContractError> {
-        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        self.assert_valid_nft(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .revoke(deps, env, info, spender, token_id)?)
@@ -200,7 +200,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response, ContractError> {
-        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        self.assert_valid_nft(deps.as_ref(), &env, &token_id)?;
         Ok(self.base_contract.burn(deps, env, info, token_id)?)
     }
 }
@@ -208,7 +208,7 @@ impl<'a> Cw721ExpirationContract<'a> {
 // helpers
 impl<'a> Cw721ExpirationContract<'a> {
     /// throws contract error if nft is expired
-    pub fn is_valid(&self, deps: Deps, env: &Env, token_id: &str) -> StdResult<bool> {
+    pub fn is_valid_nft(&self, deps: Deps, env: &Env, token_id: &str) -> StdResult<bool> {
         // any non-expired token approval can send
         let mint_date = self.mint_timestamps.load(deps.storage, token_id)?;
         let expiration_days = self.expiration_days.load(deps.storage)?;
@@ -220,7 +220,7 @@ impl<'a> Cw721ExpirationContract<'a> {
     }
 
     /// throws contract error if nft is expired
-    pub fn assert_expiration(
+    pub fn assert_valid_nft(
         &self,
         deps: Deps,
         env: &Env,

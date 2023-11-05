@@ -1,5 +1,4 @@
 use cosmwasm_std::{Empty, Timestamp};
-use cw721::Cw721;
 use cw_storage_plus::{Item, Map};
 
 use crate::Extension;
