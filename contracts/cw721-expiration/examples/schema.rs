@@ -1,5 +1,5 @@
 use cosmwasm_schema::write_api;
-use cw721_expiration::msg::{InstantiateMsg, ExecuteMsg, QueryMsg};
+use cw721_expiration::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {
