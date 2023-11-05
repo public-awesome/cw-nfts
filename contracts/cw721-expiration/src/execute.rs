@@ -62,29 +62,12 @@ impl<'a> Cw721ExpirationContract<'a> {
             ExecuteMsg::TransferNft {
                 recipient,
                 token_id,
-                include_invalid,
-            } => self.transfer_nft(
-                deps,
-                env,
-                info,
-                recipient,
-                token_id,
-                include_invalid.unwrap_or(false),
-            ),
+            } => self.transfer_nft(deps, env, info, recipient, token_id),
             ExecuteMsg::SendNft {
                 contract,
                 token_id,
                 msg,
-                include_invalid,
-            } => self.send_nft(
-                deps,
-                env,
-                info,
-                contract,
-                token_id,
-                msg,
-                include_invalid.unwrap_or(false),
-            ),
+            } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
             ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
@@ -136,11 +119,8 @@ impl<'a> Cw721ExpirationContract<'a> {
         info: MessageInfo,
         recipient: String,
         token_id: String,
-        include_invalid: bool,
     ) -> Result<Response<Empty>, ContractError> {
-        if !include_invalid {
-            self.assert_expiration(deps.as_ref(), &env, &token_id)?;
-        }
+        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .transfer_nft(deps, env, info, recipient, token_id)?)
@@ -154,11 +134,8 @@ impl<'a> Cw721ExpirationContract<'a> {
         contract: String,
         token_id: String,
         msg: Binary,
-        include_invalid: bool,
     ) -> Result<Response<Empty>, ContractError> {
-        if !include_invalid {
-            self.assert_expiration(deps.as_ref(), &env, &token_id)?;
-        }
+        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .send_nft(deps, env, info, contract, token_id, msg)?)

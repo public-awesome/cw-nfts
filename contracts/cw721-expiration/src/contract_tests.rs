@@ -353,7 +353,6 @@ fn transferring_nft() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("random"),
         token_id: token_id.clone(),
-        include_invalid: None,
     };
 
     let err = contract
@@ -370,7 +369,6 @@ fn transferring_nft() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from(new_owner),
         token_id: token_id.clone(),
-        include_invalid: None,
     };
 
     let res = contract
@@ -393,7 +391,6 @@ fn transferring_nft() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("random"),
         token_id: token_id.clone(),
-        include_invalid: None,
     };
     let error = contract
         .execute(deps.as_mut(), env.clone(), owner_info, transfer_msg)
@@ -436,7 +433,6 @@ fn sending_nft() {
         contract: target.clone(),
         token_id: token_id.clone(),
         msg: msg.clone(),
-        include_invalid: None,
     };
 
     let random = mock_info("random", &[]);
@@ -582,7 +578,6 @@ fn approving_revoking() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id.clone(),
-        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random, transfer_msg)
@@ -718,7 +713,6 @@ fn approving_all_revoking_all() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id1,
-        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random.clone(), transfer_msg)
@@ -736,7 +730,6 @@ fn approving_all_revoking_all() {
         contract: String::from("another_contract"),
         token_id: token_id2,
         msg: to_binary(&msg).unwrap(),
-        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random, send_msg)
