@@ -1,7 +1,7 @@
 [package]
 name          = "cw721-expiration"
-description   = "CW721 NFT with expiration"
-authors       = ["mr-t <ethanfrey@users.noreply.github.com>"]
+description   = "CW721 NFT contract with invalid NFT utility. Example use case: providing services for a limited period, like access cards, SLAs, cloud services, etc."
+authors       = ["mr-t <mrt@arkprotocol.io>"]
 version       = { workspace = true }
 edition       = { workspace = true }
 license       = { workspace = true }
