@@ -93,11 +93,13 @@ impl<'a> Cw721ExpirationContract<'a> {
             QueryMsg::Approvals {
                 token_id,
                 include_expired,
+                include_invalid,
             } => Ok(to_binary(&self.approvals(
                 deps,
                 env,
                 token_id,
                 include_expired.unwrap_or(false),
+                include_invalid.unwrap_or(false),
             )?)?),
             QueryMsg::Ownership {} => Ok(to_binary(&Self::ownership(deps)?)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
@@ -203,9 +205,14 @@ impl<'a> Cw721ExpirationContract<'a> {
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<ApprovalsResponse> {
-        self.base_contract
-            .approvals(deps, env, token_id, include_expired)
+        include_invalid: bool,
+    ) -> Result<ApprovalsResponse, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps, &env, token_id.as_str())?;
+        }
+        Ok(self
+            .base_contract
+            .approvals(deps, env, token_id, include_expired)?)
     }
 
     pub fn tokens(
