@@ -68,7 +68,9 @@ fn proper_instantiation() {
     assert_eq!(0, count.count);
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
 
@@ -158,7 +160,9 @@ fn test_mint() {
     assert_eq!(err, ContractError::Cw721(Cw721ContractError::Claimed {}));
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
 }
@@ -314,7 +318,9 @@ fn burning() {
         .unwrap_err();
 
     // list the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .unwrap();
     assert!(tokens.tokens.is_empty());
 }
 
@@ -627,11 +633,19 @@ fn approving_all_revoking_all() {
         .unwrap();
 
     // paginate the token_ids
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(1)).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, Some(1), false)
+        .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id1.clone()], tokens.tokens);
     let tokens = contract
-        .all_tokens(deps.as_ref(), Some(token_id1.clone()), Some(3))
+        .all_tokens(
+            deps.as_ref(),
+            mock_env(),
+            Some(token_id1.clone()),
+            Some(3),
+            false,
+        )
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id2.clone()], tokens.tokens);
@@ -911,13 +925,23 @@ fn query_tokens_by_owner() {
 
     // get all tokens in order:
     let expected = vec![token_id1.clone(), token_id2.clone(), token_id3.clone()];
-    let tokens = contract.all_tokens(deps.as_ref(), None, None).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .unwrap();
     assert_eq!(&expected, &tokens.tokens);
     // paginate
-    let tokens = contract.all_tokens(deps.as_ref(), None, Some(2)).unwrap();
+    let tokens = contract
+        .all_tokens(deps.as_ref(), mock_env(), None, Some(2), false)
+        .unwrap();
     assert_eq!(&expected[..2], &tokens.tokens[..]);
     let tokens = contract
-        .all_tokens(deps.as_ref(), Some(expected[1].clone()), None)
+        .all_tokens(
+            deps.as_ref(),
+            mock_env(),
+            Some(expected[1].clone()),
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(&expected[2..], &tokens.tokens[..]);
 
@@ -1219,6 +1243,51 @@ fn query_tokens() {
     // assert invalid nft is returned
     let tokens = contract
         .tokens(deps.as_ref(), env, owner, None, None, true)
+        .unwrap();
+    assert_eq!(
+        tokens,
+        TokensResponse {
+            tokens: [token_id].to_vec()
+        }
+    );
+}
+
+#[test]
+fn query_all_tokens() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut(), 1);
+    let minter = mock_info(MINTER, &[]);
+
+    let token_id = "grow1".to_string();
+    let owner = String::from("ark");
+
+    let mut env = mock_env();
+    let mint_msg = ExecuteMsg::Mint {
+        token_id: token_id.clone(),
+        owner: owner.clone(),
+        token_uri: None,
+        extension: None,
+    };
+    contract
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .unwrap();
+
+    // assert valid nft is returned
+    contract
+        .all_tokens(deps.as_ref(), env.clone(), None, None, false)
+        .unwrap();
+
+    // assert invalid nft is not returned
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let tokens = contract
+        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .unwrap();
+    assert_eq!(tokens, TokensResponse { tokens: vec![] });
+
+    // assert invalid nft is returned
+    let tokens = contract
+        .all_tokens(deps.as_ref(), env, None, None, true)
         .unwrap();
     assert_eq!(
         tokens,

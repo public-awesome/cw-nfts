@@ -110,6 +110,8 @@ pub enum QueryMsg {
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
     },
 
     /// Return the minter

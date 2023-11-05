@@ -82,9 +82,17 @@ impl<'a> Cw721ExpirationContract<'a> {
                 limit,
                 include_invalid.unwrap_or(false),
             )?)?),
-            QueryMsg::AllTokens { start_after, limit } => {
-                Ok(to_binary(&self.all_tokens(deps, start_after, limit)?)?)
-            }
+            QueryMsg::AllTokens {
+                start_after,
+                limit,
+                include_invalid,
+            } => Ok(to_binary(&self.all_tokens(
+                deps,
+                env,
+                start_after,
+                limit,
+                include_invalid.unwrap_or(false),
+            )?)?),
             QueryMsg::Approval {
                 token_id,
                 spender,
@@ -252,10 +260,26 @@ impl<'a> Cw721ExpirationContract<'a> {
     pub fn all_tokens(
         &self,
         deps: Deps,
+        env: Env,
         start_after: Option<String>,
         limit: Option<u32>,
-    ) -> StdResult<TokensResponse> {
-        self.base_contract.all_tokens(deps, start_after, limit)
+        include_invalid: bool,
+    ) -> Result<TokensResponse, ContractError> {
+        let tokens = self.base_contract.all_tokens(deps, start_after, limit)?;
+        if include_invalid {
+            return Ok(tokens);
+        }
+        let filtered: Vec<_> = tokens
+            .tokens
+            .iter()
+            .filter(|token_id| {
+                self.is_valid(deps, &env, token_id)
+                    .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
+                    .unwrap_or(false) // Convert Option<bool> to bool
+            })
+            .map(|token_id| token_id.to_string())
+            .collect();
+        Ok(TokensResponse { tokens: filtered })
     }
 
     pub fn all_nft_info(
