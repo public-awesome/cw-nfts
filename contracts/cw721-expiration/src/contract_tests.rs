@@ -5,7 +5,7 @@ use cosmwasm_std::{from_binary, to_binary, Addr, CosmosMsg, DepsMut, Response, S
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721ReceiveMsg, Expiration, NftInfoResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse,
+    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_ownable::OwnershipError;
 
@@ -926,19 +926,42 @@ fn query_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, None)
+        .tokens(
+            deps.as_ref(),
+            mock_env(),
+            demeter.clone(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
-    let tokens = contract.tokens(deps.as_ref(), ceres, None, None).unwrap();
+    let tokens = contract
+        .tokens(deps.as_ref(), mock_env(), ceres, None, None, false)
+        .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, Some(1))
+        .tokens(
+            deps.as_ref(),
+            mock_env(),
+            demeter.clone(),
+            None,
+            Some(1),
+            false,
+        )
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(deps.as_ref(), demeter, Some(by_demeter[0].clone()), Some(3))
+        .tokens(
+            deps.as_ref(),
+            mock_env(),
+            demeter,
+            Some(by_demeter[0].clone()),
+            Some(3),
+            false,
+        )
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
 }
@@ -1156,6 +1179,51 @@ fn query_approvals() {
             token_id,
             mint_date,
             expiration
+        }
+    );
+}
+
+#[test]
+fn query_tokens() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut(), 1);
+    let minter = mock_info(MINTER, &[]);
+
+    let token_id = "grow1".to_string();
+    let owner = String::from("ark");
+
+    let mut env = mock_env();
+    let mint_msg = ExecuteMsg::Mint {
+        token_id: token_id.clone(),
+        owner: owner.clone(),
+        token_uri: None,
+        extension: None,
+    };
+    contract
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .unwrap();
+
+    // assert valid nft is returned
+    contract
+        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .unwrap();
+
+    // assert invalid nft is not returned
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let tokens = contract
+        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .unwrap();
+    assert_eq!(tokens, TokensResponse { tokens: vec![] });
+
+    // assert invalid nft is returned
+    let tokens = contract
+        .tokens(deps.as_ref(), env, owner, None, None, true)
+        .unwrap();
+    assert_eq!(
+        tokens,
+        TokensResponse {
+            tokens: [token_id].to_vec()
         }
     );
 }

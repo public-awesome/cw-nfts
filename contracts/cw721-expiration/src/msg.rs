@@ -65,7 +65,7 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    /// Total number of tokens issued
+    /// Total number of tokens issued, including all expired NFTs
     #[returns(cw721::NumTokensResponse)]
     NumTokens {},
 
@@ -101,6 +101,8 @@ pub enum QueryMsg {
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.

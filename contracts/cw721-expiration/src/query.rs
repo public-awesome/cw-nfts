@@ -73,7 +73,15 @@ impl<'a> Cw721ExpirationContract<'a> {
                 owner,
                 start_after,
                 limit,
-            } => Ok(to_binary(&self.tokens(deps, owner, start_after, limit)?)?),
+                include_invalid,
+            } => Ok(to_binary(&self.tokens(
+                deps,
+                env,
+                owner,
+                start_after,
+                limit,
+                include_invalid.unwrap_or(false),
+            )?)?),
             QueryMsg::AllTokens { start_after, limit } => {
                 Ok(to_binary(&self.all_tokens(deps, start_after, limit)?)?)
             }
@@ -218,11 +226,27 @@ impl<'a> Cw721ExpirationContract<'a> {
     pub fn tokens(
         &self,
         deps: Deps,
+        env: Env,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
+        include_invalid: bool,
     ) -> StdResult<TokensResponse> {
-        self.base_contract.tokens(deps, owner, start_after, limit)
+        let tokens = self.base_contract.tokens(deps, owner, start_after, limit)?;
+        if include_invalid {
+            return Ok(tokens);
+        }
+        let filtered: Vec<_> = tokens
+            .tokens
+            .iter()
+            .filter(|token_id| {
+                self.is_valid(deps, &env, token_id)
+                    .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
+                    .unwrap_or(false) // Convert Option<bool> to bool
+            })
+            .map(|token_id| token_id.to_string())
+            .collect();
+        Ok(TokensResponse { tokens: filtered })
     }
 
     pub fn all_tokens(

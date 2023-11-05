@@ -1,4 +1,4 @@
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response};
+use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
 use cw721::{Cw721Execute, Expiration};
 use cw721_base::Cw721Contract;
 
@@ -203,6 +203,18 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
 
 // helpers
 impl<'a> Cw721ExpirationContract<'a> {
+    /// throws contract error if nft is expired
+    pub fn is_valid(&self, deps: Deps, env: &Env, token_id: &str) -> StdResult<bool> {
+        // any non-expired token approval can send
+        let mint_date = self.mint_timestamps.load(deps.storage, token_id)?;
+        let expiration_days = self.expiration_days.load(deps.storage)?;
+        let expiration = mint_date.plus_days(expiration_days.into());
+        if env.block.time >= expiration {
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
     /// throws contract error if nft is expired
     pub fn assert_expiration(
         &self,
