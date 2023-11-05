@@ -372,7 +372,12 @@ fn transferring_nft() {
     };
 
     let res = contract
-        .execute(deps.as_mut(), env.clone(), owner_info.clone(), transfer_msg)
+        .execute(
+            deps.as_mut(),
+            env.clone(),
+            owner_info.clone(),
+            transfer_msg.clone(),
+        )
         .unwrap();
 
     assert_eq!(
@@ -388,10 +393,6 @@ fn transferring_nft() {
     let mint_date = env.block.time;
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
-    let transfer_msg = ExecuteMsg::TransferNft {
-        recipient: String::from("random"),
-        token_id: token_id.clone(),
-    };
     let error = contract
         .execute(deps.as_mut(), env.clone(), owner_info, transfer_msg)
         .unwrap_err();
@@ -507,16 +508,17 @@ fn approving_revoking() {
         extension: None,
     };
 
+    let mut env = mock_env();
     let minter = mock_info(MINTER, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // token owner shows in approval query
     let res = contract
         .approval(
             deps.as_ref(),
-            mock_env(),
+            env.clone(),
             token_id.clone(),
             String::from("demeter"),
             false,
@@ -541,7 +543,7 @@ fn approving_revoking() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner, approve_msg)
+        .execute(deps.as_mut(), env.clone(), owner, approve_msg)
         .unwrap();
     assert_eq!(
         res,
@@ -556,7 +558,7 @@ fn approving_revoking() {
     let res = contract
         .approval(
             deps.as_ref(),
-            mock_env(),
+            env.clone(),
             token_id.clone(),
             String::from("random"),
             true,
@@ -580,7 +582,7 @@ fn approving_revoking() {
         token_id: token_id.clone(),
     };
     contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), env.clone(), random, transfer_msg)
         .unwrap();
 
     // Approvals are removed / cleared
@@ -591,7 +593,7 @@ fn approving_revoking() {
     };
     let res: OwnerOfResponse = from_binary(
         &contract
-            .query(deps.as_ref(), mock_env(), query_msg.clone())
+            .query(deps.as_ref(), env.clone(), query_msg.clone())
             .unwrap(),
     )
     .unwrap();
@@ -611,21 +613,26 @@ fn approving_revoking() {
     };
     let owner = mock_info("person", &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_msg)
+        .execute(
+            deps.as_mut(),
+            env.clone(),
+            owner.clone(),
+            approve_msg.clone(),
+        )
         .unwrap();
 
     let revoke_msg = ExecuteMsg::Revoke {
         spender: String::from("random"),
-        token_id,
+        token_id: token_id.clone(),
     };
     contract
-        .execute(deps.as_mut(), mock_env(), owner, revoke_msg)
+        .execute(deps.as_mut(), env.clone(), owner.clone(), revoke_msg)
         .unwrap();
 
     // Approvals are now removed / cleared
     let res: OwnerOfResponse = from_binary(
         &contract
-            .query(deps.as_ref(), mock_env(), query_msg)
+            .query(deps.as_ref(), env.clone(), query_msg)
             .unwrap(),
     )
     .unwrap();
@@ -634,6 +641,22 @@ fn approving_revoking() {
         OwnerOfResponse {
             owner: String::from("person"),
             approvals: vec![],
+        }
+    );
+
+    // assert approval of invalid nft throws error
+    let mint_date = env.block.time;
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let error = contract
+        .execute(deps.as_mut(), env.clone(), owner.clone(), approve_msg)
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id,
+            mint_date,
+            expiration
         }
     );
 }

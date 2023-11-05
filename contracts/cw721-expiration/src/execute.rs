@@ -150,6 +150,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<Empty>, ContractError> {
+        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
         Ok(self
             .base_contract
             .approve(deps, env, info, spender, token_id, expires)?)
