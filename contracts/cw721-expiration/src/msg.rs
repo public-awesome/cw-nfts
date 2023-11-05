@@ -29,6 +29,8 @@ pub enum QueryMsg {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
     },
     /// Return operator that can access all of the owner's tokens.
     #[returns(cw721::ApprovalResponse)]

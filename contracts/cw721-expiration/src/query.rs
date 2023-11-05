@@ -25,11 +25,13 @@ impl<'a> Cw721ExpirationContract<'a> {
             QueryMsg::OwnerOf {
                 token_id,
                 include_expired,
+                include_invalid,
             } => Ok(to_binary(&self.owner_of(
                 deps,
                 env,
                 token_id,
                 include_expired.unwrap_or(false),
+                include_invalid.unwrap_or(false),
             )?)?),
             QueryMsg::AllNftInfo {
                 token_id,
@@ -138,9 +140,14 @@ impl<'a> Cw721ExpirationContract<'a> {
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<OwnerOfResponse> {
-        self.base_contract
-            .owner_of(deps, env, token_id, include_expired)
+        include_invalid: bool,
+    ) -> Result<OwnerOfResponse, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps, &env, token_id.as_str())?;
+        }
+        Ok(self
+            .base_contract
+            .owner_of(deps, env, token_id, include_expired)?)
     }
 
     /// operator returns the approval status of an operator for a given owner if exists
