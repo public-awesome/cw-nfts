@@ -626,7 +626,12 @@ fn approving_revoking() {
         token_id: token_id.clone(),
     };
     contract
-        .execute(deps.as_mut(), env.clone(), owner.clone(), revoke_msg)
+        .execute(
+            deps.as_mut(),
+            env.clone(),
+            owner.clone(),
+            revoke_msg.clone(),
+        )
         .unwrap();
 
     // Approvals are now removed / cleared
@@ -650,6 +655,24 @@ fn approving_revoking() {
     env.block.time = expiration;
     let error = contract
         .execute(deps.as_mut(), env.clone(), owner.clone(), approve_msg)
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id: token_id.clone(),
+            mint_date,
+            expiration
+        }
+    );
+
+    // assert revoke of invalid nft throws error
+    let error = contract
+        .execute(
+            deps.as_mut(),
+            env.clone(),
+            owner.clone(),
+            revoke_msg.clone(),
+        )
         .unwrap_err();
     assert_eq!(
         error,
