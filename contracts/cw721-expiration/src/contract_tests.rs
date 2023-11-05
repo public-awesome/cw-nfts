@@ -11,7 +11,8 @@ use cw_ownable::OwnershipError;
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, ExecuteMsg, Extension, MinterResponse,
+    error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, msg::QueryMsg, Extension,
+    MinterResponse,
 };
 use cw721_base::ContractError as Cw721ContractError;
 
@@ -333,16 +334,18 @@ fn transferring_nft() {
     let token_id = "melt".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
+    let owner = "owner";
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: String::from("venus"),
+        owner: String::from(owner),
         token_uri: Some(token_uri),
         extension: None,
     };
 
+    let mut env = mock_env();
     let minter = mock_info(MINTER, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // random cannot transfer
@@ -350,10 +353,11 @@ fn transferring_nft() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("random"),
         token_id: token_id.clone(),
+        include_invalid: None,
     };
 
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), env.clone(), random, transfer_msg)
         .unwrap_err();
     assert_eq!(
         err,
@@ -361,23 +365,46 @@ fn transferring_nft() {
     );
 
     // owner can
-    let random = mock_info("venus", &[]);
+    let owner_info = mock_info(owner, &[]);
+    let new_owner = "random";
     let transfer_msg = ExecuteMsg::TransferNft {
-        recipient: String::from("random"),
+        recipient: String::from(new_owner),
         token_id: token_id.clone(),
+        include_invalid: None,
     };
 
     let res = contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), env.clone(), owner_info.clone(), transfer_msg)
         .unwrap();
 
     assert_eq!(
         res,
         Response::new()
             .add_attribute("action", "transfer_nft")
-            .add_attribute("sender", "venus")
-            .add_attribute("recipient", "random")
-            .add_attribute("token_id", token_id)
+            .add_attribute("sender", owner)
+            .add_attribute("recipient", new_owner)
+            .add_attribute("token_id", token_id.clone())
+    );
+
+    // assert invalid nft throws error
+    let mint_date = env.block.time;
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let transfer_msg = ExecuteMsg::TransferNft {
+        recipient: String::from("random"),
+        token_id: token_id.clone(),
+        include_invalid: None,
+    };
+    let error = contract
+        .execute(deps.as_mut(), env.clone(), owner_info, transfer_msg)
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id,
+            mint_date,
+            expiration
+        }
     );
 }
 
@@ -537,6 +564,7 @@ fn approving_revoking() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id.clone(),
+        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random, transfer_msg)
@@ -672,6 +700,7 @@ fn approving_all_revoking_all() {
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id1,
+        include_invalid: None,
     };
     contract
         .execute(deps.as_mut(), mock_env(), random.clone(), transfer_msg)

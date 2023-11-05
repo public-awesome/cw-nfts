@@ -3,7 +3,7 @@ use cw721::{Cw721Execute, Expiration};
 use cw721_base::Cw721Contract;
 
 use crate::{
-    error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract, ExecuteMsg,
+    error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, state::Cw721ExpirationContract,
     Extension,
 };
 use cw721_base::InstantiateMsg as Cw721InstantiateMsg;
@@ -62,7 +62,15 @@ impl<'a> Cw721ExpirationContract<'a> {
             ExecuteMsg::TransferNft {
                 recipient,
                 token_id,
-            } => self.transfer_nft(deps, env, info, recipient, token_id),
+                include_invalid,
+            } => self.transfer_nft(
+                deps,
+                env,
+                info,
+                recipient,
+                token_id,
+                include_invalid.unwrap_or(false),
+            ),
             ExecuteMsg::SendNft {
                 contract,
                 token_id,
@@ -110,9 +118,8 @@ impl<'a> Cw721ExpirationContract<'a> {
     }
 }
 
-impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
-    type Err = ContractError;
-
+// execute
+impl<'a> Cw721ExpirationContract<'a> {
     fn transfer_nft(
         &self,
         deps: DepsMut,
@@ -120,7 +127,11 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<Empty>, Self::Err> {
+        include_invalid: bool,
+    ) -> Result<Response<Empty>, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps.as_ref(), &env, &token_id)?;
+        }
         Ok(self
             .base_contract
             .transfer_nft(deps, env, info, recipient, token_id)?)
@@ -134,7 +145,7 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<Empty>, Self::Err> {
+    ) -> Result<Response<Empty>, ContractError> {
         Ok(self
             .base_contract
             .send_nft(deps, env, info, contract, token_id, msg)?)
@@ -148,7 +159,7 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<Empty>, Self::Err> {
+    ) -> Result<Response<Empty>, ContractError> {
         Ok(self
             .base_contract
             .approve(deps, env, info, spender, token_id, expires)?)
@@ -161,7 +172,7 @@ impl<'a> Cw721Execute<Extension, Empty> for Cw721ExpirationContract<'a> {
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<Empty>, Self::Err> {
+    ) -> Result<Response<Empty>, ContractError> {
         Ok(self
             .base_contract
             .revoke(deps, env, info, spender, token_id)?)

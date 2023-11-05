@@ -16,13 +16,12 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub type MinterResponse = cw721_base::msg::MinterResponse;
 pub type Extension = Option<Empty>;
 
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
 pub type TokenInfo = cw721_base::state::TokenInfo<Extension>;
 
 pub mod entry {
     use crate::{
         error::ContractError,
-        msg::{InstantiateMsg, QueryMsg},
+        msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
         state::Cw721ExpirationContract,
     };
 
