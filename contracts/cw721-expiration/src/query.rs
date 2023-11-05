@@ -81,12 +81,14 @@ impl<'a> Cw721ExpirationContract<'a> {
                 token_id,
                 spender,
                 include_expired,
+                include_invalid,
             } => Ok(to_binary(&self.approval(
                 deps,
                 env,
                 token_id,
                 spender,
                 include_expired.unwrap_or(false),
+                include_invalid.unwrap_or(false),
             )?)?),
             QueryMsg::Approvals {
                 token_id,
@@ -184,9 +186,14 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         spender: String,
         include_expired: bool,
-    ) -> StdResult<ApprovalResponse> {
-        self.base_contract
-            .approval(deps, env, token_id, spender, include_expired)
+        include_invalid: bool,
+    ) -> Result<ApprovalResponse, ContractError> {
+        if !include_invalid {
+            self.assert_expiration(deps, &env, token_id.as_str())?;
+        }
+        Ok(self
+            .base_contract
+            .approval(deps, env, token_id, spender, include_expired)?)
     }
 
     /// approvals returns all approvals owner given access to

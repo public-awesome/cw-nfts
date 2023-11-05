@@ -38,6 +38,8 @@ pub enum QueryMsg {
         token_id: String,
         spender: String,
         include_expired: Option<bool>,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_invalid: Option<bool>,
     },
     /// Return approvals that a token has
     #[returns(cw721::ApprovalsResponse)]
