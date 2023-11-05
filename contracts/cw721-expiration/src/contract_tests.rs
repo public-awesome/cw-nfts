@@ -1,4 +1,6 @@
 #![cfg(test)]
+use std::env;
+
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{from_binary, to_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg};
@@ -286,18 +288,21 @@ fn test_burn() {
         extension: None,
     };
 
-    let burn_msg = ExecuteMsg::Burn { token_id };
+    let burn_msg = ExecuteMsg::Burn {
+        token_id: token_id.clone(),
+    };
 
     // mint some NFT
-    let allowed = mock_info(MINTER, &[]);
+    let mut env = mock_env();
+    let minter = mock_info(MINTER, &[]);
     let _ = contract
-        .execute(deps.as_mut(), mock_env(), allowed.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg.clone())
         .unwrap();
 
     // random not allowed to burn
     let random = mock_info("random", &[]);
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, burn_msg.clone())
+        .execute(deps.as_mut(), env.clone(), random, burn_msg.clone())
         .unwrap_err();
 
     assert_eq!(
@@ -306,7 +311,7 @@ fn test_burn() {
     );
 
     let _ = contract
-        .execute(deps.as_mut(), mock_env(), allowed, burn_msg)
+        .execute(deps.as_mut(), env.clone(), minter.clone(), burn_msg.clone())
         .unwrap();
 
     // ensure num tokens decreases
@@ -315,14 +320,35 @@ fn test_burn() {
 
     // trying to get nft returns error
     let _ = contract
-        .nft_info(deps.as_ref(), mock_env(), "petrify".to_string(), false)
+        .nft_info(deps.as_ref(), env.clone(), "petrify".to_string(), false)
         .unwrap_err();
 
     // list the token_ids
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .all_tokens(deps.as_ref(), env.clone(), None, None, false)
         .unwrap();
     assert!(tokens.tokens.is_empty());
+
+    // assert invalid nft throws error
+    // - mint again
+    contract
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg.clone())
+        .unwrap();
+    // - burn
+    let mint_date = env.block.time;
+    let expiration = env.block.time.plus_days(1);
+    env.block.time = expiration;
+    let error = contract
+        .execute(deps.as_mut(), env.clone(), minter, burn_msg.clone())
+        .unwrap_err();
+    assert_eq!(
+        error,
+        ContractError::NftExpired {
+            token_id,
+            mint_date,
+            expiration
+        }
+    );
 }
 
 #[test]

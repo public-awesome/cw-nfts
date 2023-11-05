@@ -200,6 +200,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response, ContractError> {
+        self.assert_expiration(deps.as_ref(), &env, &token_id)?;
         Ok(self.base_contract.burn(deps, env, info, token_id)?)
     }
 }
