@@ -272,7 +272,7 @@ fn test_update_minter() {
 }
 
 #[test]
-fn burning() {
+fn test_burn() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
 
@@ -326,7 +326,7 @@ fn burning() {
 }
 
 #[test]
-fn transferring_nft() {
+fn test_transfer_nft() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
 
@@ -407,7 +407,7 @@ fn transferring_nft() {
 }
 
 #[test]
-fn sending_nft() {
+fn test_send_nft() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
 
@@ -493,7 +493,7 @@ fn sending_nft() {
 }
 
 #[test]
-fn approving_revoking() {
+fn test_approve_revoke() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
 
@@ -685,7 +685,7 @@ fn approving_revoking() {
 }
 
 #[test]
-fn approving_all_revoking_all() {
+fn test_approve_all_revoke_all() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
 
@@ -968,7 +968,7 @@ fn approving_all_revoking_all() {
 }
 
 #[test]
-fn query_tokens_by_owner() {
+fn test_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1078,7 +1078,7 @@ fn query_tokens_by_owner() {
 }
 
 #[test]
-fn query_nft_info() {
+fn test_nft_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1120,7 +1120,7 @@ fn query_nft_info() {
 }
 
 #[test]
-fn query_all_nft_info() {
+fn test_all_nft_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1162,7 +1162,7 @@ fn query_all_nft_info() {
 }
 
 #[test]
-fn query_owner_of() {
+fn test_owner_of() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1204,7 +1204,7 @@ fn query_owner_of() {
 }
 
 #[test]
-fn query_approval() {
+fn test_approval() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1253,7 +1253,7 @@ fn query_approval() {
 }
 
 #[test]
-fn query_approvals() {
+fn test_approvals() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1295,7 +1295,7 @@ fn query_approvals() {
 }
 
 #[test]
-fn query_tokens() {
+fn test_tokens() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
@@ -1340,7 +1340,7 @@ fn query_tokens() {
 }
 
 #[test]
-fn query_all_tokens() {
+fn test_all_tokens() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
     let minter = mock_info(MINTER, &[]);
