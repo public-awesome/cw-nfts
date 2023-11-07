@@ -1,29 +1,30 @@
-use crate::{
-    contract::{multitest_utils::Cw721ContractProxy, InstantiateMsgData},
-    ContractError,
-};
-use cosmwasm_std::{to_binary, Addr, Empty, StdError};
+use cosmwasm_std::{to_json_binary, Addr, Empty, StdError};
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, NftInfoResponse, NumTokensResponse,
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
+use cw_multi_test::App as MtApp;
 use cw_ownable::{Action, Expiration, OwnershipError};
 use sylvia::multitest::App;
 
-use crate::base::test_utils::Cw721Interface;
-use crate::contract::multitest_utils::CodeId;
+use crate::base::sv::test_utils::Cw721Interface;
 use crate::responses::MinterResponse;
+use crate::{
+    contract::sv::multitest_utils::{CodeId, Cw721ContractProxy},
+    contract::InstantiateMsgData,
+    ContractError,
+};
 
 const CREATOR: &str = "creator";
 const RANDOM: &str = "random";
 
 pub struct TestCase<'a> {
-    nft_contract: Cw721ContractProxy<'a>,
+    nft_contract: Cw721ContractProxy<'a, MtApp>,
 }
 
 impl TestCase<'_> {
     // Lifetimes with Sylvia are fun. Open to a better way of doing this
-    pub fn new<'b>(app: &'b App) -> TestCase<'b> {
+    pub fn new<'b>(app: &'b App<MtApp>) -> TestCase<'b> {
         let code_id = CodeId::store_code(app);
 
         TestCase::<'b> {
@@ -264,8 +265,9 @@ fn test_transfer() {
     assert_eq!(ContractError::Ownership(OwnershipError::NotOwner), err);
 }
 
+// NOTE: when a reciever test contract is implemented, we don't have to panic here.
 #[should_panic(
-    expected = "called `Result::unwrap()` on an `Err` value: error executing WasmMsg:\nsender: creator\nExecute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: error executing WasmMsg:\n       sender: contract0\n       Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
+    expected = "called `Result::unwrap()` on an `Err` value: Error executing WasmMsg:\n  sender: creator\n  Execute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: Error executing WasmMsg:\n         sender: contract0\n         Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::sv::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
 )]
 #[test]
 fn test_send() {
@@ -301,7 +303,7 @@ fn test_send() {
         .send_nft(
             nft_contract.contract_addr.clone().into_string(),
             "1".to_string(),
-            to_binary(&Empty {}).unwrap(),
+            to_json_binary(&Empty {}).unwrap(),
         )
         .call(RANDOM)
         .unwrap_err();
@@ -314,7 +316,7 @@ fn test_send() {
         .send_nft(
             nft_contract.contract_addr.into_string(),
             "1".to_string(),
-            to_binary(&Empty {}).unwrap(),
+            to_json_binary(&Empty {}).unwrap(),
         )
         .call(CREATOR)
         .unwrap_err();
@@ -689,7 +691,7 @@ fn approving_all_revoking_all() {
 }
 
 #[should_panic(
-    expected = "called `Result::unwrap()` on an `Err` value: error executing WasmMsg:\nsender: creator\nExecute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: error executing WasmMsg:\n       sender: contract0\n       Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
+    expected = "called `Result::unwrap()` on an `Err` value: Error executing WasmMsg:\n  sender: creator\n  Execute { contract_addr: \"contract0\", msg: {\"send_nft\":{\"contract\":\"contract0\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n\nCaused by:\n    0: Error executing WasmMsg:\n         sender: contract0\n         Execute { contract_addr: \"contract0\", msg: {\"receive_nft\":{\"sender\":\"creator\",\"token_id\":\"1\",\"msg\":\"e30=\"}}, funds: [] }\n    1: Error parsing into type cw721_sylvia_base::contract::sv::ContractExecMsg: Unsupported message received: {\"receive_nft\":{\"msg\":\"e30=\",\"sender\":\"creator\",\"token_id\":\"1\"}}. Messages supported by this contract: approve, approve_all, burn, revoke, revoke_all, send_nft, transfer_nft, mint, update_ownership"
 )]
 #[test]
 fn test_send_with_approval() {
@@ -724,7 +726,7 @@ fn test_send_with_approval() {
         .send_nft(
             nft_contract.contract_addr.into_string(),
             "1".to_string(),
-            to_binary(&Empty {}).unwrap(),
+            to_json_binary(&Empty {}).unwrap(),
         )
         .call(CREATOR)
         .unwrap_err();
