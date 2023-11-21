@@ -1,0 +1,65 @@
+{
+  "contract_name": "cw721-receiver",
+  "contract_version": "0.18.0",
+  "idl_version": "1.0.0",
+  "instantiate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InstantiateMsg",
+    "type": "object",
+    "additionalProperties": false
+  },
+  "execute": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ExecuteMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "receive_nft"
+        ],
+        "properties": {
+          "receive_nft": {
+            "$ref": "#/definitions/Cw721ReceiveMsg"
+          }
+        },
+        "additionalProperties": false
+      }
+    ],
+    "definitions": {
+      "Binary": {
+        "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+        "type": "string"
+      },
+      "Cw721ReceiveMsg": {
+        "description": "Cw721ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg",
+        "type": "object",
+        "required": [
+          "msg",
+          "sender",
+          "token_id"
+        ],
+        "properties": {
+          "msg": {
+            "$ref": "#/definitions/Binary"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "token_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "query": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "QueryMsg",
+    "type": "string",
+    "enum": []
+  },
+  "migrate": null,
+  "sudo": null,
+  "responses": {}
+}
