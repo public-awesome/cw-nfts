@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
     NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
@@ -11,12 +11,12 @@ use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract,
 impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
         match msg {
-            QueryMsg::Minter {} => Ok(to_binary(&self.minter(deps)?)?),
-            QueryMsg::ContractInfo {} => Ok(to_binary(&self.contract_info(deps)?)?),
+            QueryMsg::Minter {} => Ok(to_json_binary(&self.minter(deps)?)?),
+            QueryMsg::ContractInfo {} => Ok(to_json_binary(&self.contract_info(deps)?)?),
             QueryMsg::NftInfo {
                 token_id,
                 include_invalid,
-            } => Ok(to_binary(&self.nft_info(
+            } => Ok(to_json_binary(&self.nft_info(
                 deps,
                 env,
                 token_id,
@@ -26,7 +26,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 token_id,
                 include_expired,
                 include_invalid,
-            } => Ok(to_binary(&self.owner_of(
+            } => Ok(to_json_binary(&self.owner_of(
                 deps,
                 env,
                 token_id,
@@ -37,7 +37,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 token_id,
                 include_expired,
                 include_invalid,
-            } => Ok(to_binary(&self.all_nft_info(
+            } => Ok(to_json_binary(&self.all_nft_info(
                 deps,
                 env,
                 token_id,
@@ -48,7 +48,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 owner,
                 operator,
                 include_expired,
-            } => Ok(to_binary(&self.operator(
+            } => Ok(to_json_binary(&self.operator(
                 deps,
                 env,
                 owner,
@@ -60,7 +60,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 include_expired,
                 start_after,
                 limit,
-            } => Ok(to_binary(&self.operators(
+            } => Ok(to_json_binary(&self.operators(
                 deps,
                 env,
                 owner,
@@ -68,13 +68,13 @@ impl<'a> Cw721ExpirationContract<'a> {
                 start_after,
                 limit,
             )?)?),
-            QueryMsg::NumTokens {} => Ok(to_binary(&self.num_tokens(deps)?)?),
+            QueryMsg::NumTokens {} => Ok(to_json_binary(&self.num_tokens(deps)?)?),
             QueryMsg::Tokens {
                 owner,
                 start_after,
                 limit,
                 include_invalid,
-            } => Ok(to_binary(&self.tokens(
+            } => Ok(to_json_binary(&self.tokens(
                 deps,
                 env,
                 owner,
@@ -86,7 +86,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 start_after,
                 limit,
                 include_invalid,
-            } => Ok(to_binary(&self.all_tokens(
+            } => Ok(to_json_binary(&self.all_tokens(
                 deps,
                 env,
                 start_after,
@@ -98,7 +98,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 spender,
                 include_expired,
                 include_invalid,
-            } => Ok(to_binary(&self.approval(
+            } => Ok(to_json_binary(&self.approval(
                 deps,
                 env,
                 token_id,
@@ -110,14 +110,14 @@ impl<'a> Cw721ExpirationContract<'a> {
                 token_id,
                 include_expired,
                 include_invalid,
-            } => Ok(to_binary(&self.approvals(
+            } => Ok(to_json_binary(&self.approvals(
                 deps,
                 env,
                 token_id,
                 include_expired.unwrap_or(false),
                 include_invalid.unwrap_or(false),
             )?)?),
-            QueryMsg::Ownership {} => Ok(to_binary(&Self::ownership(deps)?)?),
+            QueryMsg::Ownership {} => Ok(to_json_binary(&Self::ownership(deps)?)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }

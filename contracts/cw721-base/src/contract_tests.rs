@@ -2,7 +2,7 @@
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_binary, to_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
 use cw721::{
@@ -185,7 +185,7 @@ fn test_update_minter() {
         .unwrap();
 
     // Minter does not change until ownership transfer completes.
-    let minter: MinterResponse = from_binary(
+    let minter: MinterResponse = from_json(
         &contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
             .unwrap(),
@@ -194,7 +194,7 @@ fn test_update_minter() {
     assert_eq!(minter.minter, Some(MINTER.to_string()));
 
     // Pending ownership transfer should be discoverable via query.
-    let ownership: cw_ownable::Ownership<Addr> = from_binary(
+    let ownership: cw_ownable::Ownership<Addr> = from_json(
         &contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
             .unwrap(),
@@ -222,7 +222,7 @@ fn test_update_minter() {
         .unwrap();
 
     // Minter changes after ownership transfer is accepted.
-    let minter: MinterResponse = from_binary(
+    let minter: MinterResponse = from_json(
         &contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
             .unwrap(),
@@ -373,7 +373,7 @@ fn sending_nft() {
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
 
-    let msg = to_binary("You now have the melting power").unwrap();
+    let msg = to_json_binary("You now have the melting power").unwrap();
     let target = String::from("another_contract");
     let send_msg = ExecuteMsg::SendNft {
         contract: target.clone(),
@@ -513,7 +513,7 @@ fn approving_revoking() {
         token_id: token_id.clone(),
         include_expired: None,
     };
-    let res: OwnerOfResponse = from_binary(
+    let res: OwnerOfResponse = from_json(
         &contract
             .query(deps.as_ref(), mock_env(), query_msg.clone())
             .unwrap(),
@@ -547,7 +547,7 @@ fn approving_revoking() {
         .unwrap();
 
     // Approvals are now removed / cleared
-    let res: OwnerOfResponse = from_binary(
+    let res: OwnerOfResponse = from_json(
         &contract
             .query(deps.as_ref(), mock_env(), query_msg)
             .unwrap(),
@@ -637,7 +637,7 @@ fn approving_all_revoking_all() {
     // random can now send
     let inner_msg = WasmMsg::Execute {
         contract_addr: "another_contract".into(),
-        msg: to_binary("You now also have the growing power").unwrap(),
+        msg: to_json_binary("You now also have the growing power").unwrap(),
         funds: vec![],
     };
     let msg: CosmosMsg = CosmosMsg::Wasm(inner_msg);
@@ -645,7 +645,7 @@ fn approving_all_revoking_all() {
     let send_msg = ExecuteMsg::SendNft {
         contract: String::from("another_contract"),
         token_id: token_id2,
-        msg: to_binary(&msg).unwrap(),
+        msg: to_json_binary(&msg).unwrap(),
     };
     contract
         .execute(deps.as_mut(), mock_env(), random, send_msg)

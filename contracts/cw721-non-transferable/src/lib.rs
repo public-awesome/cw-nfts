@@ -22,7 +22,7 @@ pub mod entry {
     use crate::query::admin;
     use crate::state::{Config, CONFIG};
     use cosmwasm_std::{
-        entry_point, to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+        entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
     };
 
     #[entry_point]
@@ -98,7 +98,7 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Admin {} => to_binary(&admin(deps)?),
+            QueryMsg::Admin {} => to_json_binary(&admin(deps)?),
             _ => _query(deps, env, msg.into()),
         }
     }

@@ -5,7 +5,7 @@ pub mod query;
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Empty};
+use cosmwasm_std::{to_json_binary, Empty};
 use cw721_base::Cw721Contract;
 pub use cw721_base::{InstantiateMsg, MinterResponse};
 
@@ -107,8 +107,8 @@ pub mod entry {
                 Cw2981QueryMsg::RoyaltyInfo {
                     token_id,
                     sale_price,
-                } => to_binary(&query_royalties_info(deps, token_id, sale_price)?),
-                Cw2981QueryMsg::CheckRoyalties {} => to_binary(&check_royalties(deps)?),
+                } => to_json_binary(&query_royalties_info(deps, token_id, sale_price)?),
+                Cw2981QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
             },
             _ => Cw2981Contract::default().query(deps, env, msg),
         }
@@ -120,7 +120,7 @@ mod tests {
     use super::*;
     use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
 
-    use cosmwasm_std::{from_binary, Uint128};
+    use cosmwasm_std::{from_json, Uint128};
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw721::Cw721Query;
@@ -227,7 +227,7 @@ mod tests {
             msg: Cw2981QueryMsg::CheckRoyalties {},
         };
         let query_res: CheckRoyaltiesResponse =
-            from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
+            from_json(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
     }
 
@@ -275,7 +275,7 @@ mod tests {
             },
         };
         let query_res: RoyaltiesInfoResponse =
-            from_binary(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
+            from_json(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
 
         // check for rounding down
