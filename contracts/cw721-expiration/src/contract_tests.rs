@@ -1383,7 +1383,7 @@ fn test_all_tokens() {
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1395,7 +1395,7 @@ fn test_all_tokens() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .tokens(deps.as_ref(), env.clone(), owner, None, None, false)
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
