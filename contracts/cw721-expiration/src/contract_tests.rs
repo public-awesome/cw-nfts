@@ -333,14 +333,14 @@ fn test_burn() {
     // assert invalid nft throws error
     // - mint again
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg.clone())
+        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
         .unwrap();
     // - burn
     let mint_date = env.block.time;
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .execute(deps.as_mut(), env.clone(), minter, burn_msg.clone())
+        .execute(deps.as_mut(), env, minter, burn_msg)
         .unwrap_err();
     assert_eq!(
         error,
@@ -421,7 +421,7 @@ fn test_transfer_nft() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .execute(deps.as_mut(), env.clone(), owner_info, transfer_msg)
+        .execute(deps.as_mut(), env, owner_info, transfer_msg)
         .unwrap_err();
     assert_eq!(
         error,
@@ -507,7 +507,7 @@ fn test_send_nft() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .execute(deps.as_mut(), env.clone(), random, send_msg)
+        .execute(deps.as_mut(), env, random, send_msg)
         .unwrap_err();
     assert_eq!(
         error,
@@ -694,12 +694,7 @@ fn test_approve_revoke() {
 
     // assert revoke of invalid nft throws error
     let error = contract
-        .execute(
-            deps.as_mut(),
-            env.clone(),
-            owner.clone(),
-            revoke_msg.clone(),
-        )
+        .execute(deps.as_mut(), env, owner, revoke_msg)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1116,12 +1111,12 @@ fn test_nft_info() {
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner,
         token_uri: None,
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1158,12 +1153,12 @@ fn test_all_nft_info() {
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner,
         token_uri: None,
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1200,12 +1195,12 @@ fn test_owner_of() {
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner,
         token_uri: None,
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1247,7 +1242,7 @@ fn test_approval() {
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1291,12 +1286,12 @@ fn test_approvals() {
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner,
         token_uri: None,
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
@@ -1338,7 +1333,7 @@ fn test_tokens() {
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // assert valid nft is returned
