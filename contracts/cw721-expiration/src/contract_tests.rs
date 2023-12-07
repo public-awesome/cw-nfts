@@ -2,7 +2,9 @@
 
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
-use cosmwasm_std::{from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg};
+use cosmwasm_std::{
+    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg,
+};
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721ReceiveMsg, Expiration, NftInfoResponse,
