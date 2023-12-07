@@ -25,3 +25,6 @@ artifacts/
 
 # code coverage
 tarpaulin-report.*
+
+# raw json schema files
+**/raw/*.json

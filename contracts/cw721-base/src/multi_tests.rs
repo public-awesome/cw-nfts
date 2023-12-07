@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr, Empty, QuerierWrapper, WasmMsg};
+use cosmwasm_std::{to_json_binary, Addr, Empty, QuerierWrapper, WasmMsg};
 use cw721::OwnerOfResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
@@ -110,7 +110,7 @@ fn test_016_017_migration() {
         WasmMsg::Migrate {
             contract_addr: cw721.to_string(),
             new_code_id: code_id_017,
-            msg: to_binary(&Empty::default()).unwrap(),
+            msg: to_json_binary(&Empty::default()).unwrap(),
         }
         .into(),
     )
