@@ -1,5 +1,4 @@
 #![cfg(test)]
-use std::env;
 
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
@@ -207,7 +206,7 @@ fn test_update_minter() {
 
     // Minter does not change until ownership transfer completes.
     let minter: MinterResponse = from_json(
-        &contract
+        contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
             .unwrap(),
     )
@@ -216,7 +215,7 @@ fn test_update_minter() {
 
     // Pending ownership transfer should be discoverable via query.
     let ownership: cw_ownable::Ownership<Addr> = from_json(
-        &contract
+        contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
             .unwrap(),
     )
@@ -244,7 +243,7 @@ fn test_update_minter() {
 
     // Minter changes after ownership transfer is accepted.
     let minter: MinterResponse = from_json(
-        &contract
+        contract
             .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
             .unwrap(),
     )
@@ -618,7 +617,7 @@ fn test_approve_revoke() {
         include_invalid: None,
     };
     let res: OwnerOfResponse = from_json(
-        &contract
+        contract
             .query(deps.as_ref(), env.clone(), query_msg.clone())
             .unwrap(),
     )
@@ -662,7 +661,7 @@ fn test_approve_revoke() {
 
     // Approvals are now removed / cleared
     let res: OwnerOfResponse = from_json(
-        &contract
+        contract
             .query(deps.as_ref(), env.clone(), query_msg)
             .unwrap(),
     )

@@ -249,7 +249,6 @@ impl<'a> Cw721ExpirationContract<'a> {
             .iter()
             .filter(|token_id| {
                 self.is_valid_nft(deps, &env, token_id)
-                    .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
                     .unwrap_or(false) // Convert Option<bool> to bool
             })
             .map(|token_id| token_id.to_string())
@@ -274,7 +273,6 @@ impl<'a> Cw721ExpirationContract<'a> {
             .iter()
             .filter(|token_id| {
                 self.is_valid_nft(deps, &env, token_id)
-                    .map(|result| result) // Convert Result<Option<bool>> to Option<bool>
                     .unwrap_or(false) // Convert Option<bool> to bool
             })
             .map(|token_id| token_id.to_string())

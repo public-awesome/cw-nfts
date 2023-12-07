@@ -261,7 +261,7 @@ mod tests {
 
         let query_msg = QueryMsg::GetConfig {};
         let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-        let config: Config = from_json(&res).unwrap();
+        let config: Config = from_json(res).unwrap();
         assert_eq!(
             config,
             Config {

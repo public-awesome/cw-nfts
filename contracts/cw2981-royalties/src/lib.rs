@@ -227,7 +227,7 @@ mod tests {
             msg: Cw2981QueryMsg::CheckRoyalties {},
         };
         let query_res: CheckRoyaltiesResponse =
-            from_json(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
+            from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
     }
 
@@ -275,7 +275,7 @@ mod tests {
             },
         };
         let query_res: RoyaltiesInfoResponse =
-            from_json(&entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
+            from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
 
         // check for rounding down

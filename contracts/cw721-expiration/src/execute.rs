@@ -76,6 +76,7 @@ impl<'a> Cw721ExpirationContract<'a> {
 }
 
 impl<'a> Cw721ExpirationContract<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn mint(
         &self,
         deps: DepsMut,
