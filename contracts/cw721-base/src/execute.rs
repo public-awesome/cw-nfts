@@ -183,7 +183,7 @@ where
         match address {
             Some(address) => {
                 let msg = BankMsg::Send {
-                    to_address: address.clone(),
+                    to_address: address,
                     amount: vec![amount.clone()],
                 };
                 Ok(Response::new()
