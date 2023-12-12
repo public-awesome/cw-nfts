@@ -19,6 +19,7 @@ where
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
+    pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<C>,
     pub(crate) _custom_query: PhantomData<Q>,
@@ -48,6 +49,7 @@ where
             "operators",
             "tokens",
             "tokens__owner",
+            "withdraw_address",
         )
     }
 }
@@ -64,6 +66,7 @@ where
         operator_key: &'a str,
         tokens_key: &'a str,
         tokens_owner_key: &'a str,
+        withdraw_address_key: &'a str,
     ) -> Self {
         let indexes = TokenIndexes {
             owner: MultiIndex::new(token_owner_idx, tokens_key, tokens_owner_key),
@@ -73,6 +76,7 @@ where
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
             tokens: IndexedMap::new(tokens_key, indexes),
+            withdraw_address: Item::new(withdraw_address_key),
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
             _custom_query: PhantomData,

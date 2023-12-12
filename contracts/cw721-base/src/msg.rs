@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Binary;
+use cosmwasm_std::{Binary, Coin};
 use cw721::Expiration;
 use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 use schemars::JsonSchema;
@@ -15,6 +15,8 @@ pub struct InstantiateMsg {
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: String,
+
+    pub withdraw_address: Option<String>,
 }
 
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
@@ -69,6 +71,14 @@ pub enum ExecuteMsg<T, E> {
 
     /// Extension msg
     Extension { msg: E },
+
+    /// Sets address to send withdrawn fees to. Only owner can call this.
+    SetWithdrawAddress { address: String },
+    /// Removes the withdraw address, so fees are sent to the contract. Only owner can call this.
+    RemoveWithdrawAddress {},
+    /// Withdraw from the contract to the given address. Anyone can call this,
+    /// which is okay since withdraw address has been set by owner.
+    WithdrawFunds { amount: Coin },
 }
 
 #[cw_ownable_query]
@@ -157,6 +167,9 @@ pub enum QueryMsg<Q: JsonSchema> {
     /// Extension query
     #[returns(())]
     Extension { msg: Q },
+
+    #[returns(String)]
+    GetWithdrawAddress {},
 }
 
 /// Shows who can mint these tokens

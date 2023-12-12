@@ -47,6 +47,7 @@ pub mod entry {
             name: msg.name,
             symbol: msg.symbol,
             minter: msg.minter,
+            withdraw_address: None,
         };
 
         Cw721NonTransferableContract::default().instantiate(
