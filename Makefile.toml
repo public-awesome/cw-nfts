@@ -21,6 +21,7 @@ command = "cargo"
 args    = ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"]
 
 [tasks.optimize]
+# https://hub.docker.com/r/cosmwasm/workspace-optimizer/tags https://hub.docker.com/r/cosmwasm/workspace-optimizer-arm64/tags
 script = """
 if [[ $(arch) == "arm64" ]]; then
   image="cosmwasm/workspace-optimizer-arm64"
@@ -31,7 +32,7 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  ${image}:0.12.13
+  ${image}:0.15.0
 """
 
 [tasks.schema]
