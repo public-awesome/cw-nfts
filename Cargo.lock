@@ -354,13 +354,13 @@ dependencies = [
 
 [[package]]
 name = "cw2981-royalties"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw2 1.1.2",
- "cw721 0.18.0",
- "cw721-base 0.18.0",
+ "cw721 0.18.1",
+ "cw721-base 0.18.1",
  "schemars",
  "serde",
  "thiserror",
@@ -381,7 +381,7 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -409,7 +409,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-base"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -418,7 +418,7 @@ dependencies = [
  "cw-storage-plus 1.2.0",
  "cw-utils 1.0.3",
  "cw2 1.1.2",
- "cw721 0.18.0",
+ "cw721 0.18.1",
  "cw721-base 0.16.0",
  "schemars",
  "serde",
@@ -427,7 +427,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-expiration"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -435,8 +435,8 @@ dependencies = [
  "cw-ownable",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
- "cw721 0.18.0",
- "cw721-base 0.18.0",
+ "cw721 0.18.1",
+ "cw721-base 0.18.1",
  "schemars",
  "serde",
  "thiserror",
@@ -444,7 +444,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-fixed-price"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -452,7 +452,7 @@ dependencies = [
  "cw-utils 1.0.3",
  "cw2 1.1.2",
  "cw20",
- "cw721-base 0.18.0",
+ "cw721-base 0.18.1",
  "prost 0.10.4",
  "schemars",
  "serde",
@@ -461,27 +461,27 @@ dependencies = [
 
 [[package]]
 name = "cw721-metadata-onchain"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw2 1.1.2",
- "cw721 0.18.0",
- "cw721-base 0.18.0",
+ "cw721 0.18.1",
+ "cw721-base 0.18.1",
  "schemars",
  "serde",
 ]
 
 [[package]]
 name = "cw721-non-transferable"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus 1.2.0",
  "cw2 1.1.2",
- "cw721 0.18.0",
- "cw721-base 0.18.0",
+ "cw721 0.18.1",
+ "cw721-base 0.18.1",
  "schemars",
  "serde",
 ]
