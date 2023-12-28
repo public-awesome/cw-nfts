@@ -1588,8 +1588,11 @@
     },
     "get_withdraw_address": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "String",
-      "type": "string"
+      "title": "Nullable_String",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "minter": {
       "$schema": "http://json-schema.org/draft-07/schema#",
