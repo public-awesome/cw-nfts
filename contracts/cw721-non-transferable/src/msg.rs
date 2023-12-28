@@ -8,6 +8,7 @@ pub struct InstantiateMsg {
     pub name: String,
     pub symbol: String,
     pub minter: String,
+    pub withdraw_address: Option<String>,
 }
 
 #[cw_serde]
