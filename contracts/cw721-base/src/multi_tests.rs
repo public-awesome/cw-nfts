@@ -4,7 +4,7 @@ use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
 use crate::MinterResponse;
 
-fn cw721_base_contract() -> Box<dyn Contract<Empty>> {
+fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::entry::execute,
         crate::entry::instantiate,
@@ -80,13 +80,13 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
 /// Instantiates a 0.16 version of this contract and tests that tokens
 /// can be minted, transferred, and burnred after migration.
 #[test]
-fn test_016_017_migration() {
+fn test_migration_016_to_latest() {
     use cw721_base_016 as v16;
     let mut app = App::default();
     let admin = || Addr::unchecked("admin");
 
     let code_id_016 = app.store_code(cw721_base_016_contract());
-    let code_id_017 = app.store_code(cw721_base_contract());
+    let code_id_latest = app.store_code(cw721_base_latest_contract());
 
     let cw721 = app
         .instantiate_contract(
@@ -109,7 +109,7 @@ fn test_016_017_migration() {
         admin(),
         WasmMsg::Migrate {
             contract_addr: cw721.to_string(),
-            new_code_id: code_id_017,
+            new_code_id: code_id_latest,
             msg: to_json_binary(&Empty::default()).unwrap(),
         }
         .into(),
