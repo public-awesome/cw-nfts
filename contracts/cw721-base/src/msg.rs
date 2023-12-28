@@ -168,7 +168,7 @@ pub enum QueryMsg<Q: JsonSchema> {
     #[returns(())]
     Extension { msg: Q },
 
-    #[returns(String)]
+    #[returns(Option<String>)]
     GetWithdrawAddress {},
 }
 
