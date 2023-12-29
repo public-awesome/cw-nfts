@@ -62,6 +62,7 @@ pub fn instantiate(
                 name: msg.name.clone(),
                 symbol: msg.symbol,
                 minter: env.contract.address.to_string(),
+                withdraw_address: msg.withdraw_address,
             })?,
             funds: vec![],
             admin: None,
@@ -211,6 +212,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -227,6 +229,7 @@ mod tests {
                         name: msg.name.clone(),
                         symbol: msg.symbol.clone(),
                         minter: MOCK_CONTRACT_ADDR.to_string(),
+                        withdraw_address: None,
                     })
                     .unwrap(),
                     funds: vec![],
@@ -292,6 +295,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -316,6 +320,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -340,6 +345,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -407,6 +413,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -448,6 +455,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -491,6 +499,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -545,6 +554,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -579,6 +589,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);
@@ -633,6 +644,7 @@ mod tests {
             cw20_address: Addr::unchecked(MOCK_CONTRACT_ADDR),
             token_uri: String::from("https://ipfs.io/ipfs/Q"),
             extension: None,
+            withdraw_address: None,
         };
 
         let info = mock_info("owner", &[]);

@@ -14,6 +14,7 @@ pub struct InstantiateMsg {
     pub cw20_address: Addr,
     pub token_uri: String,
     pub extension: Extension,
+    pub withdraw_address: Option<String>,
 }
 
 #[cw_serde]

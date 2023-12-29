@@ -2,7 +2,9 @@ use cw_ownable::OwnershipError;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    Addr, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, Storage,
+};
 
 use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
@@ -23,14 +25,19 @@ where
         _env: Env,
         _info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response<C>> {
-        let info = ContractInfoResponse {
+    ) -> Result<Response<C>, ContractError> {
+        let contract_info = ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
         };
-        self.contract_info.save(deps.storage, &info)?;
+        self.contract_info.save(deps.storage, &contract_info)?;
 
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.minter))?;
+
+        if let Some(address) = msg.withdraw_address {
+            let owner = deps.api.addr_validate(&msg.minter)?;
+            self.set_withdraw_address(deps, &owner, address)?;
+        }
 
         Ok(Response::default())
     }
@@ -73,6 +80,13 @@ where
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
             ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
+            ExecuteMsg::SetWithdrawAddress { address } => {
+                self.set_withdraw_address(deps, &info.sender, address)
+            }
+            ExecuteMsg::RemoveWithdrawAddress {} => {
+                self.remove_withdraw_address(deps.storage, &info.sender)
+            }
+            ExecuteMsg::WithdrawFunds { amount } => self.withdraw_funds(deps.storage, &amount),
         }
     }
 }
@@ -126,6 +140,60 @@ where
     ) -> Result<Response<C>, ContractError> {
         let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
         Ok(Response::new().add_attributes(ownership.into_attributes()))
+    }
+
+    pub fn set_withdraw_address(
+        &self,
+        deps: DepsMut,
+        sender: &Addr,
+        address: String,
+    ) -> Result<Response<C>, ContractError> {
+        cw_ownable::assert_owner(deps.storage, sender)?;
+        deps.api.addr_validate(&address)?;
+        self.withdraw_address.save(deps.storage, &address)?;
+        Ok(Response::new()
+            .add_attribute("action", "set_withdraw_address")
+            .add_attribute("address", address))
+    }
+
+    pub fn remove_withdraw_address(
+        &self,
+        storage: &mut dyn Storage,
+        sender: &Addr,
+    ) -> Result<Response<C>, ContractError> {
+        cw_ownable::assert_owner(storage, sender)?;
+        let address = self.withdraw_address.may_load(storage)?;
+        match address {
+            Some(address) => {
+                self.withdraw_address.remove(storage);
+                Ok(Response::new()
+                    .add_attribute("action", "remove_withdraw_address")
+                    .add_attribute("address", address))
+            }
+            None => Err(ContractError::NoWithdrawAddress {}),
+        }
+    }
+
+    pub fn withdraw_funds(
+        &self,
+        storage: &mut dyn Storage,
+        amount: &Coin,
+    ) -> Result<Response<C>, ContractError> {
+        let address = self.withdraw_address.may_load(storage)?;
+        match address {
+            Some(address) => {
+                let msg = BankMsg::Send {
+                    to_address: address,
+                    amount: vec![amount.clone()],
+                };
+                Ok(Response::new()
+                    .add_message(msg)
+                    .add_attribute("action", "withdraw_funds")
+                    .add_attribute("amount", amount.amount.to_string())
+                    .add_attribute("denom", amount.denom.to_string()))
+            }
+            None => Err(ContractError::NoWithdrawAddress {}),
+        }
     }
 }
 

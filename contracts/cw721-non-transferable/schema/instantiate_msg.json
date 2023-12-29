@@ -22,6 +22,12 @@
     },
     "symbol": {
       "type": "string"
+    },
+    "withdraw_address": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": false

@@ -54,6 +54,12 @@
       },
       "unit_price": {
         "$ref": "#/definitions/Uint128"
+      },
+      "withdraw_address": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "additionalProperties": false,
