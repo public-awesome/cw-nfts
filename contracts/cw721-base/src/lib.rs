@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 mod execute;
 pub mod helpers;
 pub mod msg;

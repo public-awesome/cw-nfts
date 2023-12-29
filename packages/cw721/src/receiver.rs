@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_binary, Binary, CosmosMsg, StdResult, WasmMsg};
+use cosmwasm_std::{to_json_binary, Binary, CosmosMsg, StdResult, WasmMsg};
 
 /// Cw721ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg
 #[cw_serde]
@@ -13,9 +13,9 @@ pub struct Cw721ReceiveMsg {
 
 impl Cw721ReceiveMsg {
     /// serializes the message
-    pub fn into_binary(self) -> StdResult<Binary> {
+    pub fn into_json_binary(self) -> StdResult<Binary> {
         let msg = ReceiverExecuteMsg::ReceiveNft(self);
-        to_binary(&msg)
+        to_json_binary(&msg)
     }
 
     /// creates a cosmos_msg sending this struct to the named contract
@@ -23,7 +23,7 @@ impl Cw721ReceiveMsg {
     where
         C: Clone + std::fmt::Debug + PartialEq + JsonSchema,
     {
-        let msg = self.into_binary()?;
+        let msg = self.into_json_binary()?;
         let execute = WasmMsg::Execute {
             contract_addr: contract_addr.into(),
             msg,

@@ -6,7 +6,7 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
     StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -58,7 +58,7 @@ pub fn instantiate(
     let sub_msg: Vec<SubMsg> = vec![SubMsg {
         msg: WasmMsg::Instantiate {
             code_id: msg.token_code_id,
-            msg: to_binary(&Cw721InstantiateMsg {
+            msg: to_json_binary(&Cw721InstantiateMsg {
                 name: msg.name.clone(),
                 symbol: msg.symbol,
                 minter: env.contract.address.to_string(),
@@ -99,7 +99,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetConfig {} => to_binary(&query_config(deps)?),
+        QueryMsg::GetConfig {} => to_json_binary(&query_config(deps)?),
     }
 }
 
@@ -183,7 +183,7 @@ pub fn execute_receive(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_binary, to_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
+    use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
     use cw721_base::Extension;
     use prost::Message;
 
@@ -223,7 +223,7 @@ mod tests {
             vec![SubMsg {
                 msg: WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
-                    msg: to_binary(&Cw721InstantiateMsg {
+                    msg: to_json_binary(&Cw721InstantiateMsg {
                         name: msg.name.clone(),
                         symbol: msg.symbol.clone(),
                         minter: MOCK_CONTRACT_ADDR.to_string(),
@@ -261,7 +261,7 @@ mod tests {
 
         let query_msg = QueryMsg::GetConfig {};
         let res = query(deps.as_ref(), mock_env(), query_msg).unwrap();
-        let config: Config = from_binary(&res).unwrap();
+        let config: Config = from_json(res).unwrap();
         assert_eq!(
             config,
             Config {
@@ -384,7 +384,7 @@ mod tests {
             SubMsg {
                 msg: CosmosMsg::Wasm(WasmMsg::Execute {
                     contract_addr: NFT_CONTRACT_ADDR.to_string(),
-                    msg: to_binary(&mint_msg).unwrap(),
+                    msg: to_json_binary(&mint_msg).unwrap(),
                     funds: vec![],
                 }),
                 id: 0,
