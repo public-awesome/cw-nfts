@@ -21,4 +21,7 @@ pub enum ContractError {
 
     #[error("Approval not found for: {spender}")]
     ApprovalNotFound { spender: String },
+
+    #[error("No withdraw address set")]
+    NoWithdrawAddress {},
 }

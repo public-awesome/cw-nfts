@@ -66,10 +66,10 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
+    ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)
+        Ok(Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)?)
     }
 
     #[entry_point]
@@ -137,6 +137,7 @@ mod tests {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             minter: CREATOR.to_string(),
+            withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
@@ -170,6 +171,7 @@ mod tests {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             minter: CREATOR.to_string(),
+            withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
@@ -200,6 +202,7 @@ mod tests {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             minter: CREATOR.to_string(),
+            withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
@@ -240,6 +243,7 @@ mod tests {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             minter: CREATOR.to_string(),
+            withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 

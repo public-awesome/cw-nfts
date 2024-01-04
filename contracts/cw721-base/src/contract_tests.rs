@@ -2,7 +2,7 @@
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+    from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
 use cw721::{
@@ -25,6 +25,7 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
+        withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
     let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
@@ -41,6 +42,7 @@ fn proper_instantiation() {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
+        withdraw_address: Some(String::from(MINTER)),
     };
     let info = mock_info("creator", &[]);
 
@@ -61,6 +63,12 @@ fn proper_instantiation() {
             symbol: SYMBOL.to_string(),
         }
     );
+
+    let withdraw_address = contract
+        .withdraw_address
+        .may_load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(Some(MINTER.to_string()), withdraw_address);
 
     let count = contract.num_tokens(deps.as_ref()).unwrap();
     assert_eq!(0, count.count);
@@ -835,6 +843,86 @@ fn approving_all_revoking_all() {
         Err(StdError::NotFound { kind }) => assert_eq!(kind, "Approval not found"),
         _ => panic!("Unexpected error"),
     }
+}
+
+#[test]
+fn test_set_withdraw_address() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    // other cant set
+    let err = contract
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked("other"), "foo".to_string())
+        .unwrap_err();
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+    // minter can set
+    contract
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .unwrap();
+
+    let withdraw_address = contract
+        .withdraw_address
+        .load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(withdraw_address, "foo".to_string())
+}
+
+#[test]
+fn test_remove_withdraw_address() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    // other cant remove
+    let err = contract
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked("other"))
+        .unwrap_err();
+    assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+    // no owner set yet
+    let err = contract
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER))
+        .unwrap_err();
+    assert_eq!(err, ContractError::NoWithdrawAddress {});
+
+    // set and remove
+    contract
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .unwrap();
+    contract
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER))
+        .unwrap();
+    assert!(!contract.withdraw_address.exists(deps.as_ref().storage));
+
+    // test that we can set again
+    contract
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .unwrap();
+    let withdraw_address = contract
+        .withdraw_address
+        .load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(withdraw_address, "foo".to_string())
+}
+
+#[test]
+fn test_withdraw_funds() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    // no withdraw address set
+    let err = contract
+        .withdraw_funds(deps.as_mut().storage, &Coin::new(100, "uark"))
+        .unwrap_err();
+    assert_eq!(err, ContractError::NoWithdrawAddress {});
+
+    // set and withdraw by non-owner
+    contract
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .unwrap();
+    contract
+        .withdraw_funds(deps.as_mut().storage, &Coin::new(100, "uark"))
+        .unwrap();
 }
 
 #[test]

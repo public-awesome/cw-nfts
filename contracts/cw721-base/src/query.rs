@@ -326,6 +326,9 @@ where
             )?),
             QueryMsg::Ownership {} => to_json_binary(&Self::ownership(deps)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
+            QueryMsg::GetWithdrawAddress {} => {
+                to_json_binary(&self.withdraw_address.may_load(deps.storage)?)
+            }
         }
     }
 

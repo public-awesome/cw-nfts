@@ -87,6 +87,7 @@ mod tests {
                 name: "".into(),
                 symbol: "".into(),
                 minter: "mrt".into(),
+                withdraw_address: None,
             },
         )
         .unwrap_err();
@@ -102,6 +103,7 @@ mod tests {
                 name: "".into(),
                 symbol: "".into(),
                 minter: "mrt".into(),
+                withdraw_address: None,
             },
         )
         .unwrap();
