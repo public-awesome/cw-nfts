@@ -126,6 +126,7 @@ fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
                 name: "nft".to_string(),
                 symbol: "NFT".to_string(),
                 minter: admin.to_string(),
+                withdraw_address: None,
             },
             &[],
             "nft".to_string(),
