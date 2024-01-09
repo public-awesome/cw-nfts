@@ -18,7 +18,7 @@ fn test_cw721_base_receive_succeed() {
     let response = app
         .execute_contract(
             admin.clone(),
-            nft_contract.clone(),
+            nft_contract,
             &ExecuteMsg::<(), ()>::SendNft {
                 contract: receiver_contract.to_string(),
                 token_id: "test".to_string(),
