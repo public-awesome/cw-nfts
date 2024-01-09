@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_binary, Addr};
+use cosmwasm_std::{to_json_binary, Addr};
 use cw_multi_test::{App, ContractWrapper, Executor};
 
 #[test]
@@ -66,11 +66,9 @@ fn test_cw721_base_receive() {
             &base_msg::ExecuteMsg::<(), ()>::SendNft {
                 contract: receiver_contract.to_string(),
                 token_id: "test".to_string(),
-                msg: to_binary(&InnerMsg::Succeed).unwrap(),
+                msg: to_json_binary(&InnerMsg::Succeed).unwrap(),
             },
             &[],
         )
         .unwrap();
-
-    println!("{:?}", response);
 }

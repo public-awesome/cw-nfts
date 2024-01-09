@@ -21,15 +21,15 @@ pub enum QueryMsg {}
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::{from_slice, to_binary};
+    use cosmwasm_std::{from_json, to_json_binary};
 
     use super::*;
 
     #[test]
     fn inner_msg_json() {
-        let json = to_binary(&InnerMsg::Succeed).unwrap();
+        let json = to_json_binary(&InnerMsg::Succeed).unwrap();
         assert_eq!(json, br#""succeed""#);
-        let msg: InnerMsg = from_slice(&json).unwrap();
+        let msg: InnerMsg = from_json(&json).unwrap();
         assert_eq!(msg, InnerMsg::Succeed);
     }
 }

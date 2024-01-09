@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{from_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{from_json, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InnerMsg, InstantiateMsg, QueryMsg};
@@ -24,7 +24,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::ReceiveNft(receive_msg) => {
-            let inner: InnerMsg = from_binary(&receive_msg.msg)?;
+            let inner: InnerMsg = from_json(&receive_msg.msg)?;
             match inner {
                 InnerMsg::Succeed => Ok(Response::new()
                     .add_attributes([
