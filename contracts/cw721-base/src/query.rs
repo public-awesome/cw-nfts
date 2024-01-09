@@ -17,7 +17,7 @@ use crate::msg::{MinterResponse, QueryMsg};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 const DEFAULT_LIMIT: u32 = 10;
-const MAX_LIMIT: u32 = 100;
+const MAX_LIMIT: u32 = 1000;
 
 impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
 where
@@ -326,6 +326,9 @@ where
             )?),
             QueryMsg::Ownership {} => to_json_binary(&Self::ownership(deps)?),
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
+            QueryMsg::GetWithdrawAddress {} => {
+                to_json_binary(&self.withdraw_address.may_load(deps.storage)?)
+            }
         }
     }
 

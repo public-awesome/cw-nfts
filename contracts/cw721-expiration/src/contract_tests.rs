@@ -30,6 +30,7 @@ fn setup_contract(deps: DepsMut<'_>, expiration_days: u16) -> Cw721ExpirationCon
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
+        withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
     let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
@@ -47,6 +48,7 @@ fn proper_instantiation() {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: String::from(MINTER),
+        withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
 

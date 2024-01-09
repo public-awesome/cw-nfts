@@ -1,4 +1,6 @@
-use cosmwasm_std::{Binary, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{
+    Addr, Binary, Coin, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Storage,
+};
 use cw721::{Cw721Execute, Expiration};
 use cw721_base::Cw721Contract;
 
@@ -29,6 +31,7 @@ impl<'a> Cw721ExpirationContract<'a> {
                 name: msg.name,
                 symbol: msg.symbol,
                 minter: msg.minter,
+                withdraw_address: msg.withdraw_address,
             },
         )?)
     }
@@ -71,6 +74,13 @@ impl<'a> Cw721ExpirationContract<'a> {
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
             ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
+            ExecuteMsg::SetWithdrawAddress { address } => {
+                self.set_withdraw_address(deps, &info.sender, address)
+            }
+            ExecuteMsg::RemoveWithdrawAddress {} => {
+                self.remove_withdraw_address(deps.storage, &info.sender)
+            }
+            ExecuteMsg::WithdrawFunds { amount } => self.withdraw_funds(deps.storage, &amount),
         }
     }
 }
@@ -108,6 +118,35 @@ impl<'a> Cw721ExpirationContract<'a> {
                 deps, env, info, action,
             )?,
         )
+    }
+
+    pub fn set_withdraw_address(
+        &self,
+        deps: DepsMut,
+        sender: &Addr,
+        address: String,
+    ) -> Result<Response, ContractError> {
+        Ok(self
+            .base_contract
+            .set_withdraw_address(deps, sender, address)?)
+    }
+
+    pub fn remove_withdraw_address(
+        &self,
+        storage: &mut dyn Storage,
+        sender: &Addr,
+    ) -> Result<Response, ContractError> {
+        Ok(self
+            .base_contract
+            .remove_withdraw_address(storage, sender)?)
+    }
+
+    pub fn withdraw_funds(
+        &self,
+        storage: &mut dyn Storage,
+        amount: &Coin,
+    ) -> Result<Response, ContractError> {
+        Ok(self.base_contract.withdraw_funds(storage, amount)?)
     }
 }
 

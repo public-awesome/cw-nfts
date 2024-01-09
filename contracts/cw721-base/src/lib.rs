@@ -52,7 +52,7 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
+    ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
@@ -110,6 +110,7 @@ mod tests {
                 name: "".into(),
                 symbol: "".into(),
                 minter: "larry".into(),
+                withdraw_address: None,
             },
         )
         .unwrap();

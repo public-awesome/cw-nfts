@@ -48,7 +48,7 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> StdResult<Response> {
+    ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         Cw721MetadataContract::default().instantiate(deps.branch(), env, info, msg)
@@ -93,6 +93,7 @@ mod tests {
                 name: "".into(),
                 symbol: "".into(),
                 minter: "larry".into(),
+                withdraw_address: None,
             },
         )
         .unwrap();
@@ -112,6 +113,7 @@ mod tests {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             minter: CREATOR.to_string(),
+            withdraw_address: None,
         };
         contract
             .instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg)
