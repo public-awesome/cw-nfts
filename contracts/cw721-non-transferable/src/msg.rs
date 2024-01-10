@@ -7,7 +7,7 @@ pub struct InstantiateMsg {
     pub admin: Option<String>,
     pub name: String,
     pub symbol: String,
-    pub minter: String,
+    pub minter: Option<String>,
     pub withdraw_address: Option<String>,
 }
 

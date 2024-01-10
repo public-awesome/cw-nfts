@@ -23,7 +23,7 @@ where
         &self,
         deps: DepsMut,
         _env: Env,
-        _info: MessageInfo,
+        info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response<C>, ContractError> {
         let contract_info = ContractInfoResponse {
@@ -32,10 +32,13 @@ where
         };
         self.contract_info.save(deps.storage, &contract_info)?;
 
-        cw_ownable::initialize_owner(deps.storage, deps.api, Some(&msg.minter))?;
+        let owner = match msg.minter {
+            Some(owner) => deps.api.addr_validate(&owner)?,
+            None => info.sender,
+        };
+        cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_ref()))?;
 
         if let Some(address) = msg.withdraw_address {
-            let owner = deps.api.addr_validate(&msg.minter)?;
             self.set_withdraw_address(deps, &owner, address)?;
         }
 
