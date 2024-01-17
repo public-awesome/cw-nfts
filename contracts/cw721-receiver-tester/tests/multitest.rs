@@ -4,7 +4,7 @@ use cw_multi_test::{App, ContractWrapper, Executor};
 #[test]
 fn test_cw721_base_receive_succeed() {
     use cw721_base::msg::*;
-    use cw721_receiver::msg::InnerMsg;
+    use cw721_receiver_tester::msg::InnerMsg;
 
     let mut app = App::default();
     let admin = app.api().addr_make("admin");
@@ -61,7 +61,7 @@ fn test_cw721_base_receive_succeed() {
 #[test]
 fn test_cw721_base_receive_fail() {
     use cw721_base::msg::*;
-    use cw721_receiver::msg::InnerMsg;
+    use cw721_receiver_tester::msg::InnerMsg;
 
     let mut app = App::default();
     let admin = app.api().addr_make("admin");
@@ -105,8 +105,8 @@ struct Contracts {
 
 /// Setup the cw721-receiver and cw721-base contracts and mint a test token
 fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
-    use cw721_receiver::contract::*;
-    use cw721_receiver::msg::*;
+    use cw721_receiver_tester::contract::*;
+    use cw721_receiver_tester::msg::*;
 
     use cw721_base::msg as base_msg;
 

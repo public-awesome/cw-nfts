@@ -1,5 +1,5 @@
 [package]
-name = "cw721-receiver"
+name = "cw721-receiver-tester"
 description = "A basic contract that can receive a cw721 token for testing purposes"
 authors = ["Christoph Otter <chris@confio.gmbh>"]
 version = { workspace = true }
