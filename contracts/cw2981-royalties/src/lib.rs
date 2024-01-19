@@ -136,7 +136,7 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
-            minter: CREATOR.to_string(),
+            minter: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -170,7 +170,7 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
-            minter: CREATOR.to_string(),
+            minter: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -201,7 +201,7 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
-            minter: CREATOR.to_string(),
+            minter: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -242,7 +242,7 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
-            minter: CREATOR.to_string(),
+            minter: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();

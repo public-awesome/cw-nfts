@@ -92,7 +92,7 @@ mod tests {
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),
-                minter: "larry".into(),
+                minter: None,
                 withdraw_address: None,
             },
         )
@@ -112,7 +112,7 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
-            minter: CREATOR.to_string(),
+            minter: None,
             withdraw_address: None,
         };
         contract

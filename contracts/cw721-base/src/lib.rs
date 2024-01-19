@@ -109,11 +109,17 @@ mod tests {
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),
-                minter: "larry".into(),
+                minter: Some("other".into()),
                 withdraw_address: None,
             },
         )
         .unwrap();
+
+        let minter = cw_ownable::get_ownership(deps.as_ref().storage)
+            .unwrap()
+            .owner
+            .map(|a| a.into_string());
+        assert_eq!(minter, Some("other".to_string()));
 
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(
@@ -123,5 +129,29 @@ mod tests {
                 version: CONTRACT_VERSION.into(),
             },
         );
+    }
+
+    #[test]
+    fn proper_owner_initialization() {
+        let mut deps = mock_dependencies();
+
+        entry::instantiate(
+            deps.as_mut(),
+            mock_env(),
+            mock_info("owner", &[]),
+            InstantiateMsg {
+                name: "".into(),
+                symbol: "".into(),
+                minter: None,
+                withdraw_address: None,
+            },
+        )
+        .unwrap();
+
+        let minter = cw_ownable::get_ownership(deps.as_ref().storage)
+            .unwrap()
+            .owner
+            .map(|a| a.into_string());
+        assert_eq!(minter, Some("owner".to_string()));
     }
 }
