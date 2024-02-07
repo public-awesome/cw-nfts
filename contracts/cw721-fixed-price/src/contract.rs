@@ -26,7 +26,7 @@ const INSTANTIATE_TOKEN_REPLY_ID: u64 = 1;
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
@@ -61,7 +61,7 @@ pub fn instantiate(
             msg: to_json_binary(&Cw721InstantiateMsg {
                 name: msg.name.clone(),
                 symbol: msg.symbol,
-                minter: env.contract.address.to_string(),
+                minter: None,
                 withdraw_address: msg.withdraw_address,
             })?,
             funds: vec![],
@@ -228,7 +228,7 @@ mod tests {
                     msg: to_json_binary(&Cw721InstantiateMsg {
                         name: msg.name.clone(),
                         symbol: msg.symbol.clone(),
-                        minter: MOCK_CONTRACT_ADDR.to_string(),
+                        minter: None,
                         withdraw_address: None,
                     })
                     .unwrap(),

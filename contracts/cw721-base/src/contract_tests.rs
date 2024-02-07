@@ -24,7 +24,7 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty,
     let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        minter: String::from(MINTER),
+        minter: Some(String::from(MINTER)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -41,7 +41,7 @@ fn proper_instantiation() {
     let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        minter: String::from(MINTER),
+        minter: Some(String::from(MINTER)),
         withdraw_address: Some(String::from(MINTER)),
     };
     let info = mock_info("creator", &[]);

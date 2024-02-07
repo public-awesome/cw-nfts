@@ -86,7 +86,7 @@ mod tests {
                 expiration_days: 0,
                 name: "".into(),
                 symbol: "".into(),
-                minter: "mrt".into(),
+                minter: Some("mrt".into()),
                 withdraw_address: None,
             },
         )
@@ -102,7 +102,7 @@ mod tests {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                minter: "mrt".into(),
+                minter: Some("mrt".into()),
                 withdraw_address: None,
             },
         )

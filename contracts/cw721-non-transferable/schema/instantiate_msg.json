@@ -3,7 +3,6 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
-    "minter",
     "name",
     "symbol"
   ],
@@ -15,7 +14,10 @@
       ]
     },
     "minter": {
-      "type": "string"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "name": {
       "type": "string"
