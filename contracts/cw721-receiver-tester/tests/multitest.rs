@@ -125,7 +125,7 @@ fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
             &base_msg::InstantiateMsg {
                 name: "nft".to_string(),
                 symbol: "NFT".to_string(),
-                minter: admin.to_string(),
+                minter: Some(admin.to_string()),
                 withdraw_address: None,
             },
             &[],
