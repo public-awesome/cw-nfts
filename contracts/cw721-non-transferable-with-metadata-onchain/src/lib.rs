@@ -1,15 +1,13 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
 
+pub use cw721_base::{Cw721Contract, InstantiateMsg as Cw721BaseInstantiateMsg, MinterResponse};
 use cw_ownable::{get_ownership, initialize_owner};
-pub use cw721_base::{
-    Cw721Contract, InstantiateMsg as Cw721BaseInstantiateMsg, MinterResponse
-};
 
 pub use crate::msg::InstantiateMsg;
 
-pub mod msg;
 pub mod error;
+pub mod msg;
 
 pub use crate::error::ContractError;
 
@@ -46,9 +44,7 @@ pub type QueryMsg = cw721_base::QueryMsg<Empty>;
 pub mod entry {
     use super::*;
 
-    use cosmwasm_std::{
-        entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult
-    };
+    use cosmwasm_std::{entry_point, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
     #[entry_point]
     pub fn instantiate(
@@ -58,7 +54,7 @@ pub mod entry {
         msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
         initialize_owner(deps.storage, deps.api, msg.admin.as_deref())?;
-        
+
         let cw721_base_instantiate_msg = Cw721BaseInstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
@@ -93,8 +89,10 @@ pub mod entry {
                 if owner != info.sender {
                     return Err(ContractError::Unauthorized {});
                 }
-                Cw721NonTransferableContract::default().execute(deps, env, info, msg).map_err(Into::into)
-            } 
+                Cw721NonTransferableContract::default()
+                    .execute(deps, env, info, msg)
+                    .map_err(Into::into)
+            }
             None => match msg {
                 ExecuteMsg::Mint {
                     token_id,
@@ -102,22 +100,19 @@ pub mod entry {
                     token_uri,
                     extension,
                 } => Cw721NonTransferableContract::default()
-                    .mint(deps, info, token_id, owner, token_uri, extension).map_err(Into::into),
+                    .mint(deps, info, token_id, owner, token_uri, extension)
+                    .map_err(Into::into),
                 _ => Err(ContractError::Ownership(
                     cw721_base::OwnershipError::NotOwner,
                 )),
             },
         }
-       
     }
-    
+
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    
         Cw721NonTransferableContract::default().query(deps, env, msg)
-        
     }
-            
 }
 
 #[cfg(test)]
@@ -163,8 +158,7 @@ mod tests {
 
         // random cannot mint
         let random = mock_info("random", &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone())
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         // minter can mint
@@ -174,7 +168,7 @@ mod tests {
         // ensure num tokens increases
         let count = contract.num_tokens(deps.as_ref()).unwrap();
         assert_eq!(1, count.count);
-        
+
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
@@ -186,9 +180,13 @@ mod tests {
             token_id: token_id.to_string().clone(),
         };
 
-        let err = entry::execute(deps.as_mut(), mock_env(), random, transfer_msg)
-            .unwrap_err();
-        assert_eq!(err, ContractError::Base(cw721_base::ContractError::Ownership(cw_ownable::OwnershipError::NotOwner)));
+        let err = entry::execute(deps.as_mut(), mock_env(), random, transfer_msg).unwrap_err();
+        assert_eq!(
+            err,
+            ContractError::Base(cw721_base::ContractError::Ownership(
+                cw_ownable::OwnershipError::NotOwner
+            ))
+        );
 
         // minter cannot send
 
@@ -201,11 +199,13 @@ mod tests {
         };
 
         let random = mock_info(MINTER, &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone())
-            .unwrap_err();
-        assert_eq!(err, ContractError::Base(cw721_base::ContractError::Ownership(cw_ownable::OwnershipError::NotOwner)));
-
-
+        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone()).unwrap_err();
+        assert_eq!(
+            err,
+            ContractError::Base(cw721_base::ContractError::Ownership(
+                cw_ownable::OwnershipError::NotOwner
+            ))
+        );
     }
     #[test]
     fn minter_and_admin_should_be_same() {
@@ -238,8 +238,7 @@ mod tests {
 
         // admin cannot mint
         let random = mock_info(CREATOR, &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone())
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         // minter can mint
@@ -249,7 +248,7 @@ mod tests {
         // ensure num tokens increases
         let count = contract.num_tokens(deps.as_ref()).unwrap();
         assert_eq!(1, count.count);
-        
+
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
@@ -286,8 +285,7 @@ mod tests {
 
         // random cannot mint
         let random = mock_info("random", &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone())
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, exec_msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         // creator can mint
@@ -297,7 +295,7 @@ mod tests {
         // ensure num tokens increases
         let count = contract.num_tokens(deps.as_ref()).unwrap();
         assert_eq!(1, count.count);
-        
+
         let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
@@ -342,8 +340,7 @@ mod tests {
             token_id: token_id.to_string().clone(),
         };
 
-        let err = entry::execute(deps.as_mut(), mock_env(), random, transfer_msg)
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, transfer_msg).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         // owner of the NFT also cannot transfer, i.e. it is non-transferable
@@ -353,10 +350,8 @@ mod tests {
             token_id: token_id.to_string().clone(),
         };
 
-        let err = entry::execute(deps.as_mut(), mock_env(), john, transfer_msg)
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), john, transfer_msg).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
-
     }
 
     #[test]
@@ -372,7 +367,7 @@ mod tests {
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
-    
+
         // Mint a token
         let token_id = "Enterprise";
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
@@ -388,7 +383,7 @@ mod tests {
             extension: extension.clone(),
         };
         entry::execute(deps.as_mut(), mock_env(), info.clone(), mint_msg).unwrap();
-    
+
         let msg = to_json_binary("You now have the NFT").unwrap();
         let target = String::from("another_contract");
         let send_msg = ExecuteMsg::SendNft {
@@ -398,16 +393,13 @@ mod tests {
         };
 
         let random = mock_info("random", &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone())
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone()).unwrap_err();
         assert_eq!(err, ContractError::Unauthorized {});
 
         // owner of the NFT also cannot transfer, i.e. it is non-transferable
         let random = mock_info("venus", &[]);
-        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone())
-            .unwrap_err();
+        let err = entry::execute(deps.as_mut(), mock_env(), random, send_msg.clone()).unwrap_err();
 
         assert_eq!(err, ContractError::Unauthorized {});
-
     }
 }

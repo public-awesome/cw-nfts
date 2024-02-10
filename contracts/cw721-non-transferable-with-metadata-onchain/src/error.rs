@@ -1,6 +1,6 @@
 use cosmwasm_std::StdError;
-use thiserror::Error;
 use cw_ownable::OwnershipError;
+use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
 pub enum ContractError {
