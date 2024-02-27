@@ -100,48 +100,78 @@ where
     }
 
     // Adds an approval for a token, ensuring not to duplicate or exceed a max number of approvals.
-    pub fn add_approval(&self, storage: &mut dyn Storage, token_id: &'a str, approval: Approval) -> StdResult<()> {
-        self.tokens.update(storage, token_id, |token_info_option| match token_info_option {
-            Some(mut token_info) => {
-                // Ensure the approval does not already exist
-                if !token_info.approvals.iter().any(|a| a.spender == approval.spender) {
-                    token_info.approvals.push(approval);
+    pub fn add_approval(
+        &self,
+        storage: &mut dyn Storage,
+        token_id: &'a str,
+        approval: Approval,
+    ) -> StdResult<()> {
+        self.tokens.update(
+            storage,
+            token_id,
+            |token_info_option| match token_info_option {
+                Some(mut token_info) => {
+                    // Ensure the approval does not already exist
+                    if !token_info
+                        .approvals
+                        .iter()
+                        .any(|a| a.spender == approval.spender)
+                    {
+                        token_info.approvals.push(approval);
+                    }
+                    Ok(token_info)
                 }
-                Ok(token_info)
+                None => Err(StdError::not_found("TokenInfo")),
             },
-            None => Err(StdError::not_found("TokenInfo")),
-        })?;
+        )?;
         Ok(())
     }
-    
 
     // Revokes an approval for a token.
-    pub fn revoke_approval(&self, storage: &mut dyn Storage, token_id: &'a str, spender: &Addr) -> StdResult<()> {
-        self.tokens.update(storage, token_id, |token_info_option| match token_info_option {
-            Some(mut token_info) => {
-                token_info.approvals.retain(|a| &a.spender != spender);
-                Ok(token_info)
+    pub fn revoke_approval(
+        &self,
+        storage: &mut dyn Storage,
+        token_id: &'a str,
+        spender: &Addr,
+    ) -> StdResult<()> {
+        self.tokens.update(
+            storage,
+            token_id,
+            |token_info_option| match token_info_option {
+                Some(mut token_info) => {
+                    token_info.approvals.retain(|a| &a.spender != spender);
+                    Ok(token_info)
+                }
+                None => Err(StdError::not_found("TokenInfo")),
             },
-            None => Err(StdError::not_found("TokenInfo")),
-        })?;
+        )?;
         Ok(())
     }
-    
+
     // Queries all current approvals for a token, excluding expired ones.
-pub fn query_approvals(&self, storage: &dyn Storage, token_id: &'a str, block_info: &BlockInfo) -> StdResult<Vec<Approval>> {
-    // Attempt to load the token info. If it does not exist, return an empty vector.
-    match self.tokens.load(storage, token_id) {
-        Ok(token_info) => {
-            // Filter out expired approvals
-            let current_approvals = token_info.approvals.into_iter().filter(|a| !a.is_expired(block_info)).collect();
-            Ok(current_approvals)
-        },
-        Err(_) => {
-            // If there's no token info, return an empty list of approvals
-            Ok(vec![])
-        },
+    pub fn query_approvals(
+        &self,
+        storage: &dyn Storage,
+        token_id: &'a str,
+        block_info: &BlockInfo,
+    ) -> StdResult<Vec<Approval>> {
+        // Attempt to load the token info. If it does not exist, return an empty vector.
+        match self.tokens.load(storage, token_id) {
+            Ok(token_info) => {
+                // Filter out expired approvals
+                let current_approvals = token_info
+                    .approvals
+                    .into_iter()
+                    .filter(|a| !a.is_expired(block_info))
+                    .collect();
+                Ok(current_approvals)
+            }
+            Err(_) => {
+                // If there's no token info, return an empty list of approvals
+                Ok(vec![])
+            }
+        }
     }
-}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
