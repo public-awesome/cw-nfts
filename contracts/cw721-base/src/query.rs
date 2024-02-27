@@ -27,7 +27,7 @@ where
     Q: CustomMsg,
 {
     fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
-        self.contract_info.load(deps.storage)
+        self.collection_info.load(deps.storage)
     }
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse> {
@@ -36,7 +36,7 @@ where
     }
 
     fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>> {
-        let info = self.tokens.load(deps.storage, &token_id)?;
+        let info = self.nft_info.load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
             extension: info.extension,
@@ -50,7 +50,7 @@ where
         token_id: String,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let info = self.tokens.load(deps.storage, &token_id)?;
+        let info = self.nft_info.load(deps.storage, &token_id)?;
         Ok(OwnerOfResponse {
             owner: info.owner.to_string(),
             approvals: humanize_approvals(&env.block, &info, include_expired),
@@ -125,7 +125,7 @@ where
         spender: String,
         include_expired: bool,
     ) -> StdResult<ApprovalResponse> {
-        let token = self.tokens.load(deps.storage, &token_id)?;
+        let token = self.nft_info.load(deps.storage, &token_id)?;
 
         // token owner has absolute approval
         if token.owner == spender {
@@ -164,7 +164,7 @@ where
         token_id: String,
         include_expired: bool,
     ) -> StdResult<ApprovalsResponse> {
-        let token = self.tokens.load(deps.storage, &token_id)?;
+        let token = self.nft_info.load(deps.storage, &token_id)?;
         let approvals: Vec<_> = token
             .approvals
             .into_iter()
@@ -190,7 +190,7 @@ where
 
         let owner_addr = deps.api.addr_validate(&owner)?;
         let tokens: Vec<String> = self
-            .tokens
+            .nft_info
             .idx
             .owner
             .prefix(owner_addr)
@@ -211,7 +211,7 @@ where
         let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
         let tokens: StdResult<Vec<String>> = self
-            .tokens
+            .nft_info
             .range(deps.storage, start, None, Order::Ascending)
             .take(limit)
             .map(|item| item.map(|(k, _)| k))
@@ -227,7 +227,7 @@ where
         token_id: String,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<T>> {
-        let info = self.tokens.load(deps.storage, &token_id)?;
+        let info = self.nft_info.load(deps.storage, &token_id)?;
         Ok(AllNftInfoResponse {
             access: OwnerOfResponse {
                 owner: info.owner.to_string(),

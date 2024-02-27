@@ -30,7 +30,7 @@ where
             name: msg.name,
             symbol: msg.symbol,
         };
-        self.contract_info.save(deps.storage, &contract_info)?;
+        self.collection_info.save(deps.storage, &contract_info)?;
 
         let owner = match msg.minter {
             Some(owner) => deps.api.addr_validate(&owner)?,
@@ -120,7 +120,7 @@ where
             token_uri,
             extension,
         };
-        self.tokens
+        self.nft_info
             .update(deps.storage, &token_id, |old| match old {
                 Some(_) => Err(ContractError::Claimed {}),
                 None => Ok(token),
@@ -337,10 +337,10 @@ where
         info: MessageInfo,
         token_id: String,
     ) -> Result<Response<C>, ContractError> {
-        let token = self.tokens.load(deps.storage, &token_id)?;
+        let token = self.nft_info.load(deps.storage, &token_id)?;
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
-        self.tokens.remove(deps.storage, &token_id)?;
+        self.nft_info.remove(deps.storage, &token_id)?;
         self.decrement_tokens(deps.storage)?;
 
         Ok(Response::new()
@@ -366,13 +366,13 @@ where
         recipient: &str,
         token_id: &str,
     ) -> Result<TokenInfo<T>, ContractError> {
-        let mut token = self.tokens.load(deps.storage, token_id)?;
+        let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_send(deps.as_ref(), env, info, &token)?;
         // set owner and remove existing approvals
         token.owner = deps.api.addr_validate(recipient)?;
         token.approvals = vec![];
-        self.tokens.save(deps.storage, token_id, &token)?;
+        self.nft_info.save(deps.storage, token_id, &token)?;
         Ok(token)
     }
 
@@ -388,7 +388,7 @@ where
         add: bool,
         expires: Option<Expiration>,
     ) -> Result<TokenInfo<T>, ContractError> {
-        let mut token = self.tokens.load(deps.storage, token_id)?;
+        let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_approve(deps.as_ref(), env, info, &token)?;
 
@@ -410,7 +410,7 @@ where
             token.approvals.push(approval);
         }
 
-        self.tokens.save(deps.storage, token_id, &token)?;
+        self.nft_info.save(deps.storage, token_id, &token)?;
 
         Ok(token)
     }

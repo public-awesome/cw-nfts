@@ -10,7 +10,7 @@ pub fn query_royalties_info(
     sale_price: Uint128,
 ) -> StdResult<RoyaltiesInfoResponse> {
     let contract = Cw2981Contract::default();
-    let token_info = contract.tokens.load(deps.storage, &token_id)?;
+    let token_info = contract.nft_info.load(deps.storage, &token_id)?;
 
     let royalty_percentage = match token_info.extension {
         Some(ref ext) => match ext.royalty_percentage {

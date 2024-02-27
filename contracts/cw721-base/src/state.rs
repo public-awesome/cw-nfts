@@ -14,11 +14,11 @@ where
     Q: CustomMsg,
     E: CustomMsg,
 {
-    pub contract_info: Item<'a, ContractInfoResponse>,
+    pub collection_info: Item<'a, ContractInfoResponse>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
+    pub nft_info: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
     pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<C>,
@@ -61,21 +61,21 @@ where
     Q: CustomMsg,
 {
     fn new(
-        contract_key: &'a str,
+        collection_info_key: &'a str,
         token_count_key: &'a str,
         operator_key: &'a str,
-        tokens_key: &'a str,
-        tokens_owner_key: &'a str,
+        nft_info_key: &'a str,
+        nft_info_owner_key: &'a str,
         withdraw_address_key: &'a str,
     ) -> Self {
         let indexes = TokenIndexes {
-            owner: MultiIndex::new(token_owner_idx, tokens_key, tokens_owner_key),
+            owner: MultiIndex::new(token_owner_idx, nft_info_key, nft_info_owner_key),
         };
         Self {
-            contract_info: Item::new(contract_key),
+            collection_info: Item::new(collection_info_key),
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
-            tokens: IndexedMap::new(tokens_key, indexes),
+            nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
