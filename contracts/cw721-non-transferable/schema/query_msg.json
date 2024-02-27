@@ -155,12 +155,26 @@
       "additionalProperties": false
     },
     {
+      "deprecated": true,
       "type": "object",
       "required": [
         "contract_info"
       ],
       "properties": {
         "contract_info": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "collection_info"
+      ],
+      "properties": {
+        "collection_info": {
           "type": "object",
           "additionalProperties": false
         }
