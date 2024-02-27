@@ -139,7 +139,7 @@ where
             token_id,
             |token_info_option| match token_info_option {
                 Some(mut token_info) => {
-                    token_info.approvals.retain(|a| &a.spender != spender);
+                    token_info.approvals.retain(|a| a.spender != spender);
                     Ok(token_info)
                 }
                 None => Err(StdError::not_found("TokenInfo")),
