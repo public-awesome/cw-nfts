@@ -7,8 +7,8 @@ use cosmwasm_std::{
 };
 
 use cw721::{
-    Approval, ApprovalResponse, ContractInfoResponse, Cw721ReceiveMsg, Expiration, NftInfoResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    Approval, ApprovalResponse, CollectionInfoResponse, Cw721ReceiveMsg, Expiration,
+    NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_ownable::OwnershipError;
 
@@ -64,7 +64,7 @@ fn proper_instantiation() {
     let info = contract.contract_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
-        ContractInfoResponse {
+        CollectionInfoResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
         }

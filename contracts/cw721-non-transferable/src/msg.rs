@@ -34,7 +34,9 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     NumTokens {},
+    #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
     ContractInfo {},
+    CollectionInfo {},
     NftInfo {
         token_id: String,
     },
@@ -65,7 +67,9 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty> {
                 include_expired,
             },
             QueryMsg::NumTokens {} => Cw721QueryMsg::NumTokens {},
-            QueryMsg::ContractInfo {} => Cw721QueryMsg::ContractInfo {},
+            #[allow(deprecated)]
+            QueryMsg::ContractInfo {} => Cw721QueryMsg::CollectionInfo {},
+            QueryMsg::CollectionInfo {} => Cw721QueryMsg::CollectionInfo {},
             QueryMsg::NftInfo { token_id } => Cw721QueryMsg::NftInfo { token_id },
             QueryMsg::AllNftInfo {
                 token_id,

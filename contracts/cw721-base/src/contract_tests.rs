@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use cw721::{
-    Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
+    Approval, ApprovalResponse, CollectionInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
     NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
 use cw_ownable::OwnershipError;
@@ -55,10 +55,10 @@ fn proper_instantiation() {
     // it worked, let's query the state
     let res = contract.minter(deps.as_ref()).unwrap();
     assert_eq!(Some(MINTER.to_string()), res.minter);
-    let info = contract.contract_info(deps.as_ref()).unwrap();
+    let info = contract.collection_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
-        ContractInfoResponse {
+        CollectionInfoResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
         }

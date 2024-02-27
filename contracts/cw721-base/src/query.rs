@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse, Cw721Query,
     Expiration, NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse,
     OwnerOfResponse, TokensResponse,
 };
@@ -14,7 +14,7 @@ use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
 use crate::msg::{MinterResponse, QueryMsg};
-use crate::state::{Approval, Cw721Contract, TokenInfo};
+use crate::state::{Approval, Cw721Contract, NftInfo};
 
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 1000;
@@ -26,7 +26,7 @@ where
     E: CustomMsg,
     Q: CustomMsg,
 {
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
+    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
         self.collection_info.load(deps.storage)
     }
 
@@ -251,7 +251,9 @@ where
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_json_binary(&self.minter(deps)?),
-            QueryMsg::ContractInfo {} => to_json_binary(&self.contract_info(deps)?),
+            #[allow(deprecated)]
+            QueryMsg::ContractInfo {} => to_json_binary(&self.collection_info(deps)?),
+            QueryMsg::CollectionInfo {} => to_json_binary(&self.collection_info(deps)?),
             QueryMsg::NftInfo { token_id } => to_json_binary(&self.nft_info(deps, token_id)?),
             QueryMsg::OwnerOf {
                 token_id,
@@ -354,7 +356,7 @@ fn parse_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<cw721::Appro
 
 fn humanize_approvals<T>(
     block: &BlockInfo,
-    info: &TokenInfo<T>,
+    info: &NftInfo<T>,
     include_expired: bool,
 ) -> Vec<cw721::Approval> {
     info.approvals

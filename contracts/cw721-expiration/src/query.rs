@@ -1,6 +1,6 @@
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse, Cw721Query,
     NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
     TokensResponse,
 };
@@ -12,7 +12,9 @@ impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
         match msg {
             QueryMsg::Minter {} => Ok(to_json_binary(&self.minter(deps)?)?),
-            QueryMsg::ContractInfo {} => Ok(to_json_binary(&self.contract_info(deps)?)?),
+            #[allow(deprecated)]
+            QueryMsg::ContractInfo {} => Ok(to_json_binary(&self.collection_info(deps)?)?),
+            QueryMsg::CollectionInfo {} => Ok(to_json_binary(&self.collection_info(deps)?)?),
             QueryMsg::NftInfo {
                 token_id,
                 include_invalid,
@@ -133,8 +135,12 @@ impl<'a> Cw721ExpirationContract<'a> {
 
 // queries
 impl<'a> Cw721ExpirationContract<'a> {
-    pub fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse> {
-        self.base_contract.contract_info(deps)
+    pub fn contract_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
+        self.base_contract.collection_info(deps)
+    }
+
+    pub fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
+        self.base_contract.collection_info.load(deps.storage)
     }
 
     pub fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse> {

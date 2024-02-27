@@ -2,6 +2,7 @@
 name          = "cw721-base"
 description   = "Basic implementation cw721 NFTs"
 authors       = [
+  "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]

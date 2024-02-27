@@ -6,11 +6,11 @@ use cosmwasm_std::{
     Addr, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, Storage,
 };
 
-use cw721::{ContractInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
+use cw721::{CollectionInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Approval, Cw721Contract, TokenInfo};
+use crate::state::{Approval, Cw721Contract, NftInfo};
 
 impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
 where
@@ -26,7 +26,7 @@ where
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response<C>, ContractError> {
-        let contract_info = ContractInfoResponse {
+        let contract_info = CollectionInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
         };
@@ -114,7 +114,7 @@ where
         cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         // create the token
-        let token = TokenInfo {
+        let token = NftInfo {
             owner: deps.api.addr_validate(&owner)?,
             approvals: vec![],
             token_uri,
@@ -365,7 +365,7 @@ where
         info: &MessageInfo,
         recipient: &str,
         token_id: &str,
-    ) -> Result<TokenInfo<T>, ContractError> {
+    ) -> Result<NftInfo<T>, ContractError> {
         let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_send(deps.as_ref(), env, info, &token)?;
@@ -387,7 +387,7 @@ where
         // if add == false, remove. if add == true, remove then set with this expiration
         add: bool,
         expires: Option<Expiration>,
-    ) -> Result<TokenInfo<T>, ContractError> {
+    ) -> Result<NftInfo<T>, ContractError> {
         let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -421,7 +421,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        token: &NftInfo<T>,
     ) -> Result<(), ContractError> {
         // owner can approve
         if token.owner == info.sender {
@@ -449,7 +449,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &TokenInfo<T>,
+        token: &NftInfo<T>,
     ) -> Result<(), ContractError> {
         // owner can send
         if token.owner == info.sender {

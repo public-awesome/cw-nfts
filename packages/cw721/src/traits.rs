@@ -2,8 +2,9 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, NftInfoResponse,
-    NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse,
+    NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+    TokensResponse,
 };
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
@@ -93,7 +94,7 @@ where
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn contract_info(&self, deps: Deps) -> StdResult<ContractInfoResponse>;
+    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 

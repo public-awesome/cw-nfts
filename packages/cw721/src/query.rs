@@ -116,8 +116,12 @@ pub struct NumTokensResponse {
     pub count: u64,
 }
 
+#[deprecated(since = "0.19.0", note = "Please use CollectionInfoResponse instead")]
+#[allow(dead_code)]
+pub type ContractInfoResponse = CollectionInfoResponse;
+
 #[cw_serde]
-pub struct ContractInfoResponse {
+pub struct CollectionInfoResponse {
     pub name: String,
     pub symbol: String,
 }

@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 
-use cw721::{ContractInfoResponse, Cw721, Expiration};
+use cw721::{CollectionInfoResponse, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 pub struct Cw721Contract<'a, T, C, E, Q>
@@ -14,11 +14,11 @@ where
     Q: CustomMsg,
     E: CustomMsg,
 {
-    pub collection_info: Item<'a, ContractInfoResponse>,
+    pub collection_info: Item<'a, CollectionInfoResponse>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
+    pub nft_info: IndexedMap<'a, &'a str, NftInfo<T>, TokenIndexes<'a, T>>,
     pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<C>,
@@ -100,8 +100,11 @@ where
     }
 }
 
+#[deprecated(since = "0.19.0", note = "Please use NftInfo")]
+pub type TokenInfo<T> = NftInfo<T>;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct TokenInfo<T> {
+pub struct NftInfo<T> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
@@ -134,19 +137,19 @@ pub struct TokenIndexes<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    pub owner: MultiIndex<'a, Addr, TokenInfo<T>, String>,
+    pub owner: MultiIndex<'a, Addr, NftInfo<T>, String>,
 }
 
-impl<'a, T> IndexList<TokenInfo<T>> for TokenIndexes<'a, T>
+impl<'a, T> IndexList<NftInfo<T>> for TokenIndexes<'a, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<TokenInfo<T>>> + '_> {
-        let v: Vec<&dyn Index<TokenInfo<T>>> = vec![&self.owner];
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<T>>> + '_> {
+        let v: Vec<&dyn Index<NftInfo<T>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }
 }
 
-pub fn token_owner_idx<T>(_pk: &[u8], d: &TokenInfo<T>) -> Addr {
+pub fn token_owner_idx<T>(_pk: &[u8], d: &NftInfo<T>) -> Addr {
     d.owner.clone()
 }

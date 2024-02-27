@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use cw721::{
-    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, ContractInfoResponse,
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse,
     NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
@@ -118,9 +118,14 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
         Ok(res.count)
     }
 
+    #[deprecated(since = "0.19.0", note = "Please use collection_info instead")]
+    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfoResponse> {
+        self.collection_info(querier)
+    }
+
     /// With metadata extension
-    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<ContractInfoResponse> {
-        let req = QueryMsg::ContractInfo {};
+    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfoResponse> {
+        let req = QueryMsg::CollectionInfo {};
         self.query(querier, req)
     }
 
@@ -179,7 +184,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
 
     /// returns true if the contract supports the metadata extension
     pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
-        self.contract_info(querier).is_ok()
+        self.collection_info(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension
