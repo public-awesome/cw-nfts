@@ -2,7 +2,6 @@ use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
-use std::ops::Add;
 
 use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdError, StdResult, Storage};
 
