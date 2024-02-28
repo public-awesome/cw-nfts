@@ -4,7 +4,6 @@ pub mod helpers;
 pub mod msg;
 mod query;
 pub mod state;
-pub mod upgrades;
 
 #[cfg(test)]
 mod contract_tests;
@@ -32,18 +31,18 @@ pub type Extension = Option<Empty>;
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-// currently we only support migrating from 0.16.0. this is ok for now because
-// we have not released any 0.16.x where x != 0
-//
-// TODO: parse semvar so that any version 0.16.x can be migrated from
-pub const EXPECTED_FROM_VERSION: &str = "0.16.0";
-
 pub mod entry {
+    use self::state::{token_owner_idx, NftInfo, TokenIndexes};
+
     use super::*;
 
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cosmwasm_std::{
+        Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Storage,
+    };
+    use cw721::CollectionInfoResponse;
+    use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -77,23 +76,122 @@ pub mod entry {
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn migrate(deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+    pub fn migrate(deps: DepsMut, env: Env, msg: Empty) -> Result<Response, ContractError> {
+        let response = migrate_version(deps.storage, &env, &msg)?;
+        let response = migrate_legacy_minter(deps.storage, deps.api, &env, &msg, response)?;
+        let response = migrate_legacy_contract_info(deps.storage, &env, &msg, response)?;
+        migrate_legacy_tokens(deps.storage, &env, &msg, response)
+    }
+
+    pub fn migrate_version(
+        storage: &mut dyn Storage,
+        _env: &Env,
+        _msg: &Empty,
+    ) -> Result<Response, ContractError> {
         // make sure the correct contract is being upgraded, and it's being
         // upgraded from the correct version.
-        cw2::assert_contract_version(deps.as_ref().storage, CONTRACT_NAME, EXPECTED_FROM_VERSION)?;
+        let response = Response::<Empty>::default()
+            .add_attribute("from_version", cw2::get_contract_version(storage)?.version)
+            .add_attribute("to_version", CONTRACT_VERSION);
 
         // update contract version
-        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        cw2::set_contract_version(storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+        Ok(response)
+    }
 
-        // perform the upgrade
-        upgrades::v0_17::migrate::<Extension, Empty, Empty, Empty>(deps)
+    /// Migrates only in case ownership is not present
+    pub fn migrate_legacy_minter(
+        storage: &mut dyn Storage,
+        api: &dyn Api,
+        _env: &Env,
+        _msg: &Empty,
+        response: Response,
+    ) -> Result<Response, ContractError> {
+        let owner_store: Item<Ownership<Addr>> = Item::new("ownership"); // TODO: cw_ownable does not support may_load, change this once it has support
+        match owner_store.may_load(storage)? {
+            Some(_) => Ok(response),
+            None => {
+                let legacy_minter_store: Item<Addr> = Item::new("minter");
+                let legacy_minter = legacy_minter_store.load(storage)?;
+                let ownership =
+                    cw_ownable::initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
+                Ok(response
+                    .add_attribute("old_minter", legacy_minter)
+                    .add_attributes(ownership.into_attributes()))
+            }
+        }
+    }
+
+    /// Migrates only in case collection_info is not present
+    pub fn migrate_legacy_contract_info(
+        storage: &mut dyn Storage,
+        _env: &Env,
+        _msg: &Empty,
+        response: Response,
+    ) -> Result<Response, ContractError> {
+        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        match contract.collection_info.may_load(storage)? {
+            Some(_) => Ok(response),
+            None => {
+                let legacy_collection_info_store: Item<CollectionInfoResponse> =
+                    Item::new("nft_info");
+                let legacy_collection_info = legacy_collection_info_store.load(storage)?;
+                contract
+                    .collection_info
+                    .save(storage, &legacy_collection_info)?;
+                Ok(response
+                    .add_attribute("migrated collection name", legacy_collection_info.name)
+                    .add_attribute("migrated collection symbol", legacy_collection_info.symbol))
+            }
+        }
+    }
+
+    /// Migrates only in case collection_info is not present
+    pub fn migrate_legacy_tokens(
+        storage: &mut dyn Storage,
+        _env: &Env,
+        _msg: &Empty,
+        response: Response,
+    ) -> Result<Response, ContractError> {
+        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        match contract.nft_info.is_empty(storage) {
+            false => Ok(response),
+            true => {
+                let indexes = TokenIndexes {
+                    owner: MultiIndex::new(token_owner_idx, "tokens", "tokens__owner"),
+                };
+                let legacy_tokens_store: IndexedMap<
+                    &str,
+                    NftInfo<Extension>,
+                    TokenIndexes<Extension>,
+                > = IndexedMap::new("tokens", indexes);
+                let keys = legacy_tokens_store
+                    .keys(storage, None, None, Order::Ascending)
+                    .collect::<StdResult<Vec<String>>>()?;
+                for key in keys {
+                    let legacy_token = legacy_tokens_store.load(storage, &key)?;
+                    contract.nft_info.save(storage, &key, &legacy_token)?;
+                }
+                Ok(response)
+            }
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{
+        testing::{mock_dependencies, mock_env, mock_info},
+        Addr, Order, StdError, StdResult,
+    };
     use cw2::ContractVersion;
+    use cw721::{CollectionInfoResponse, Cw721Query};
+    use cw_storage_plus::{IndexedMap, Item, MultiIndex};
+
+    use crate::{
+        query::MAX_LIMIT,
+        state::{token_owner_idx, NftInfo, TokenIndexes},
+    };
 
     use super::*;
 
@@ -153,5 +251,135 @@ mod tests {
             .owner
             .map(|a| a.into_string());
         assert_eq!(minter, Some("owner".to_string()));
+    }
+
+    #[test]
+    fn test_migrate() {
+        let mut deps = mock_dependencies();
+
+        let env = mock_env();
+        use cw721_base_016 as v16;
+        v16::entry::instantiate(
+            deps.as_mut(),
+            env.clone(),
+            mock_info("owner", &[]),
+            v16::InstantiateMsg {
+                name: "legacy_name".into(),
+                symbol: "legacy_symbol".into(),
+                minter: "legacy_minter".into(),
+            },
+        )
+        .unwrap();
+
+        // mint 200 NFTs before migration
+        for i in 0..200 {
+            let info = mock_info("legacy_minter", &[]);
+            let msg = v16::ExecuteMsg::Mint(v16::msg::MintMsg {
+                token_id: i.to_string(),
+                owner: "owner".into(),
+                token_uri: None,
+                extension: None,
+            });
+            v16::entry::execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+        }
+
+        // assert new data before migration:
+        // - ownership and collection info throws NotFound Error
+        cw_ownable::get_ownership(deps.as_ref().storage).unwrap_err();
+        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        contract.collection_info(deps.as_ref()).unwrap_err();
+        // - no tokens
+        let all_tokens = contract
+            .all_tokens(deps.as_ref(), None, Some(MAX_LIMIT))
+            .unwrap();
+        assert_eq!(all_tokens.tokens.len(), 0);
+
+        // assert legacy data before migration:
+        // - version
+        let version = cw2::get_contract_version(deps.as_ref().storage)
+            .unwrap()
+            .version;
+        assert_eq!(version, "0.16.0");
+        // - legacy minter is set
+        let legacy_minter_store: Item<Addr> = Item::new("minter");
+        let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
+        assert_eq!(legacy_minter, "legacy_minter");
+        // - legacy collection info is set
+        let legacy_collection_info_store: Item<CollectionInfoResponse> = Item::new("nft_info");
+        let legacy_collection_info = legacy_collection_info_store
+            .load(deps.as_ref().storage)
+            .unwrap();
+        assert_eq!(legacy_collection_info.name, "legacy_name");
+        assert_eq!(legacy_collection_info.symbol, "legacy_symbol");
+        // - legacy tokens are set
+        let indexes = TokenIndexes {
+            owner: MultiIndex::new(token_owner_idx, "tokens", "tokens__owner"),
+        };
+        let legacy_tokens_store: IndexedMap<&str, NftInfo<Extension>, TokenIndexes<Extension>> =
+            IndexedMap::new("tokens", indexes);
+        let keys = legacy_tokens_store
+            .keys(deps.as_ref().storage, None, None, Order::Ascending)
+            .collect::<StdResult<Vec<String>>>()
+            .unwrap();
+        assert_eq!(keys.len(), 200);
+        for key in keys {
+            let legacy_token = legacy_tokens_store
+                .load(deps.as_ref().storage, &key)
+                .unwrap();
+            assert_eq!(legacy_token.owner.as_str(), "owner");
+        }
+
+        entry::migrate(deps.as_mut(), env, Empty {}).unwrap();
+
+        // version
+        let version = cw2::get_contract_version(deps.as_ref().storage)
+            .unwrap()
+            .version;
+        assert_eq!(version, CONTRACT_VERSION);
+        assert_ne!(version, "0.16.0");
+
+        // assert ownership
+        let ownership = cw_ownable::get_ownership(deps.as_ref().storage)
+            .unwrap()
+            .owner
+            .map(|a| a.into_string());
+        assert_eq!(ownership, Some("legacy_minter".to_string()));
+
+        // assert collection info
+        let collection_info = contract.collection_info(deps.as_ref()).unwrap();
+        let legacy_contract_info = CollectionInfoResponse {
+            name: "legacy_name".to_string(),
+            symbol: "legacy_symbol".to_string(),
+        };
+        assert_eq!(collection_info, legacy_contract_info);
+
+        // assert tokens
+        let all_tokens = contract
+            .all_tokens(deps.as_ref(), None, Some(MAX_LIMIT))
+            .unwrap();
+        assert_eq!(all_tokens.tokens.len(), 200);
+
+        // assert legacy data is still there (allowing backward migration in case of issues)
+        // - minter
+        let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
+        assert_eq!(legacy_minter, "legacy_minter");
+        // - collection info
+        let legacy_collection_info = legacy_collection_info_store
+            .load(deps.as_ref().storage)
+            .unwrap();
+        assert_eq!(legacy_collection_info.name, "legacy_name");
+        assert_eq!(legacy_collection_info.symbol, "legacy_symbol");
+        // - tokens
+        let keys = legacy_tokens_store
+            .keys(deps.as_ref().storage, None, None, Order::Ascending)
+            .collect::<StdResult<Vec<String>>>()
+            .unwrap();
+        assert_eq!(keys.len(), 200);
+        for key in keys {
+            let legacy_token = legacy_tokens_store
+                .load(deps.as_ref().storage, &key)
+                .unwrap();
+            assert_eq!(legacy_token.owner.as_str(), "owner");
+        }
     }
 }

@@ -14,10 +14,12 @@ where
     Q: CustomMsg,
     E: CustomMsg,
 {
+    /// Note: do not use deprecated/legacy key "nft_info"!
     pub collection_info: Item<'a, CollectionInfoResponse>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
+    /// Note: do not use deprecated/legacy keys "tokens" and "tokens__owner"!
     pub nft_info: IndexedMap<'a, &'a str, NftInfo<T>, TokenIndexes<'a, T>>,
     pub withdraw_address: Item<'a, String>,
 
@@ -44,11 +46,11 @@ where
 {
     fn default() -> Self {
         Self::new(
-            "nft_info",
+            "collection_info", // Note: do not use deprecated/legacy key "nft_info"
             "num_tokens",
             "operators",
-            "tokens",
-            "tokens__owner",
+            "nft",        // Note: do not use deprecated/legacy key "tokens"
+            "nft__owner", // Note: do not use deprecated/legacy key "tokens__owner"
             "withdraw_address",
         )
     }

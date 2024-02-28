@@ -16,8 +16,8 @@ use cw_utils::maybe_addr;
 use crate::msg::{MinterResponse, QueryMsg};
 use crate::state::{Approval, Cw721Contract, NftInfo};
 
-const DEFAULT_LIMIT: u32 = 10;
-const MAX_LIMIT: u32 = 1000;
+pub const DEFAULT_LIMIT: u32 = 10;
+pub const MAX_LIMIT: u32 = 1000;
 
 impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
 where
