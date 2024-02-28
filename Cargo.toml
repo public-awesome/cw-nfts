@@ -19,7 +19,7 @@ cw721           = { version = "*", path = "./packages/cw721" }
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
 cw-multi-test   = "^0.20"
-cw-ownable      = "^0.5"
+cw-ownable      = { git = "https://github.com/public-awesome/cw-plus-plus.git", branch = "multiple_ownership"} # TODO: switch to official https://github.com/larry0x/cw-plus-plus once merged
 cw-storage-plus = "^1.1"
 cw-utils        = "^1.0"
 schemars        = "^0.8"

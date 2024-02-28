@@ -42,6 +42,7 @@ pub mod entry {
         Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Storage,
     };
     use cw721::CollectionInfoResponse;
+    use cw_ownable::OWNERSHIP;
     use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
     // This makes a conscious choice on the various generics used by the contract
@@ -107,8 +108,7 @@ pub mod entry {
         _msg: &Empty,
         response: Response,
     ) -> Result<Response, ContractError> {
-        let owner_store: Item<Ownership<Addr>> = Item::new("ownership"); // TODO: cw_ownable does not support may_load, change this once it has support
-        match owner_store.may_load(storage)? {
+        match OWNERSHIP.item.may_load(storage)? {
             Some(_) => Ok(response),
             None => {
                 let legacy_minter_store: Item<Addr> = Item::new("minter");
