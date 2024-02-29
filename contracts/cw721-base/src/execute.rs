@@ -6,7 +6,7 @@ use cosmwasm_std::{
     Addr, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, Storage,
 };
 
-use cw721::{CollectionInfoResponse, Cw721Execute, Cw721ReceiveMsg, Expiration};
+use cw721::{CollectionInfo, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
@@ -27,7 +27,7 @@ where
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        let contract_info = CollectionInfoResponse {
+        let contract_info = CollectionInfo {
             name: msg.name,
             symbol: msg.symbol,
         };

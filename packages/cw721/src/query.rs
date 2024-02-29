@@ -1,6 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cw_utils::Expiration;
 
+use crate::CollectionInfo;
+
 #[cw_serde]
 pub enum Cw721QueryMsg {
     /// Return the owner of the given token, error if token does not exist
@@ -118,13 +120,7 @@ pub struct NumTokensResponse {
 
 #[deprecated(since = "0.19.0", note = "Please use CollectionInfoResponse instead")]
 #[allow(dead_code)]
-pub type ContractInfoResponse = CollectionInfoResponse;
-
-#[cw_serde]
-pub struct CollectionInfoResponse {
-    pub name: String,
-    pub symbol: String,
-}
+pub type ContractInfoResponse = CollectionInfo;
 
 #[cw_serde]
 pub struct NftInfoResponse<TMetadata> {

@@ -5,9 +5,9 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 
 #[allow(deprecated)]
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse,
-    ContractInfoResponse, Cw721ExecuteMsg, NftInfoResponse, NumTokensResponse, OperatorsResponse,
-    OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, ContractInfoResponse,
+    Cw721ExecuteMsg, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    TokensResponse,
 };
 use cw721_non_transferable::{Extension, InstantiateMsg, MinterResponse, QueryMsg};
 
@@ -30,7 +30,7 @@ fn main() {
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     #[allow(deprecated)]
     export_schema(&schema_for!(ContractInfoResponse), &out_dir);
-    export_schema(&schema_for!(CollectionInfoResponse), &out_dir);
+    export_schema(&schema_for!(CollectionInfo), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema_with_title(
         &schema_for!(NftInfoResponse<Extension>),

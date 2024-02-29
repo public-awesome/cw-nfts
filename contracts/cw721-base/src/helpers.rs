@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use cw721::{
-    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse,
+    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, CollectionInfo,
     NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
@@ -124,12 +124,12 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>
     }
 
     #[deprecated(since = "0.19.0", note = "Please use collection_info instead")]
-    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfoResponse> {
+    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
         self.collection_info(querier)
     }
 
     /// With metadata extension
-    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfoResponse> {
+    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
         let req = QueryMsg::CollectionInfo {};
         self.query(querier, req)
     }

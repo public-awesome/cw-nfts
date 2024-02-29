@@ -126,12 +126,12 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema> {
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
-    #[returns(cw721::CollectionInfoResponse)]
+    #[returns(cw721::CollectionInfo)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(cw721::CollectionInfoResponse)]
+    #[returns(cw721::CollectionInfo)]
     CollectionInfo {},
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*

@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse, Cw721Query,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721Query,
     Expiration, NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse,
     OwnerOfResponse, TokensResponse,
 };
@@ -34,7 +34,7 @@ where
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
 {
-    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
+    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
         self.collection_info.load(deps.storage)
     }
 

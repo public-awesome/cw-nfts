@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 
-use cw721::{CollectionInfoResponse, Cw721, Expiration};
+use cw721::{CollectionInfo, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 pub struct Cw721Contract<
@@ -20,7 +20,7 @@ pub struct Cw721Contract<
     TExtensionExecuteMsg: CustomMsg,
 {
     /// Note: do not use deprecated/legacy key "nft_info"!
-    pub collection_info: Item<'a, CollectionInfoResponse>,
+    pub collection_info: Item<'a, CollectionInfo>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,

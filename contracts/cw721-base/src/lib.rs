@@ -41,7 +41,7 @@ pub mod entry {
     use cosmwasm_std::{
         Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Storage,
     };
-    use cw721::CollectionInfoResponse;
+    use cw721::CollectionInfo;
     use cw_ownable::OWNERSHIP;
     use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
@@ -133,8 +133,7 @@ pub mod entry {
         match contract.collection_info.may_load(storage)? {
             Some(_) => Ok(response),
             None => {
-                let legacy_collection_info_store: Item<CollectionInfoResponse> =
-                    Item::new("nft_info");
+                let legacy_collection_info_store: Item<CollectionInfo> = Item::new("nft_info");
                 let legacy_collection_info = legacy_collection_info_store.load(storage)?;
                 contract
                     .collection_info
@@ -185,7 +184,7 @@ mod tests {
         Addr, Order, StdResult,
     };
     use cw2::ContractVersion;
-    use cw721::{CollectionInfoResponse, Cw721Query};
+    use cw721::{CollectionInfo, Cw721Query};
     use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
     use crate::{
@@ -305,7 +304,7 @@ mod tests {
         let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
         assert_eq!(legacy_minter, "legacy_minter");
         // - legacy collection info is set
-        let legacy_collection_info_store: Item<CollectionInfoResponse> = Item::new("nft_info");
+        let legacy_collection_info_store: Item<CollectionInfo> = Item::new("nft_info");
         let legacy_collection_info = legacy_collection_info_store
             .load(deps.as_ref().storage)
             .unwrap();
@@ -347,7 +346,7 @@ mod tests {
 
         // assert collection info
         let collection_info = contract.collection_info(deps.as_ref()).unwrap();
-        let legacy_contract_info = CollectionInfoResponse {
+        let legacy_contract_info = CollectionInfo {
             name: "legacy_name".to_string(),
             symbol: "legacy_symbol".to_string(),
         };

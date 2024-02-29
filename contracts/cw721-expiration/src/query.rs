@@ -1,6 +1,6 @@
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoResponse, Cw721Query,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721Query,
     NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
     TokensResponse,
 };
@@ -135,11 +135,11 @@ impl<'a> Cw721ExpirationContract<'a> {
 
 // queries
 impl<'a> Cw721ExpirationContract<'a> {
-    pub fn contract_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
+    pub fn contract_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
         self.base_contract.collection_info(deps)
     }
 
-    pub fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
+    pub fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
         self.base_contract.collection_info.load(deps.storage)
     }
 
