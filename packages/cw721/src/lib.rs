@@ -18,6 +18,6 @@ pub use crate::receiver::Cw721ReceiveMsg;
 pub use crate::state::{CollectionInfo, Metadata, MetadataExtension, Trait};
 pub use crate::traits::{Cw721, Cw721Execute, Cw721Query};
 
-// These are simple type to let us handle empty extensions
+// These are simple types to let us handle empty extensions
 pub type EmptyExtension = Option<Empty>;
 pub type EmptyCollectionInfoExtension = Option<Empty>;

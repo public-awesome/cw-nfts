@@ -24,7 +24,7 @@ pub use cw_ownable::{Action, Ownership, OwnershipError};
 
 use cosmwasm_std::Empty;
 
-// These are simple type to let us handle empty extensions
+// These are simple types to let us handle empty extensions
 pub use cw721::EmptyCollectionInfoExtension;
 pub use cw721::EmptyExtension;
 
