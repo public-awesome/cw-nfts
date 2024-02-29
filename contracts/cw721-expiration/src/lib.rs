@@ -18,9 +18,6 @@ pub use cw721_base::{EmptyCollectionInfoExtension, EmptyExtension};
 
 pub type NftInfo = cw721_base::state::NftInfo<EmptyExtension>;
 
-#[deprecated(since = "0.19.0", note = "Please use NftInfo")]
-pub type TokenInfo = NftInfo;
-
 pub mod entry {
     use crate::{
         error::ContractError,

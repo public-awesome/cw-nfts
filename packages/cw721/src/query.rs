@@ -119,11 +119,6 @@ pub struct NumTokensResponse {
     pub count: u64,
 }
 
-#[deprecated(since = "0.19.0", note = "Please use CollectionInfoResponse instead")]
-#[allow(dead_code)]
-pub type ContractInfoResponse<TCollectionInfoExtension = Empty> =
-    CollectionInfo<TCollectionInfoExtension>;
-
 #[cw_serde]
 pub struct NftInfoResponse<TMetadata> {
     /// Universal resource identifier for this NFT

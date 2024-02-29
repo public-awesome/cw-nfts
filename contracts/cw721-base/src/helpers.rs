@@ -129,14 +129,6 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         Ok(res.count)
     }
 
-    #[deprecated(since = "0.19.0", note = "Please use collection_info instead")]
-    pub fn contract_info<U: DeserializeOwned>(
-        &self,
-        querier: &QuerierWrapper,
-    ) -> StdResult<CollectionInfo<U>> {
-        self.collection_info(querier)
-    }
-
     /// With metadata extension
     pub fn collection_info<U: DeserializeOwned>(
         &self,

@@ -159,9 +159,6 @@ where
     }
 }
 
-#[deprecated(since = "0.19.0", note = "Please use NftInfo")]
-pub type TokenInfo<TMetadata> = NftInfo<TMetadata>;
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct NftInfo<TMetadata> {
     /// The owner of the newly minted NFT
