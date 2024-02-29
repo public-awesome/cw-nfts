@@ -9,17 +9,18 @@ use crate::{
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
 
-pub trait Cw721<T, C>: Cw721Execute<T, C> + Cw721Query<T>
+pub trait Cw721<TMetadata, TCustomResponseMessage>:
+    Cw721Execute<TMetadata, TCustomResponseMessage> + Cw721Query<TMetadata>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
 {
 }
 
-pub trait Cw721Execute<T, C>
+pub trait Cw721Execute<TMetadata, TCustomResponseMessage>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
 {
     type Err: ToString;
 
@@ -30,7 +31,7 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn send_nft(
         &self,
@@ -40,7 +41,7 @@ where
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn approve(
         &self,
@@ -50,7 +51,7 @@ where
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn revoke(
         &self,
@@ -59,7 +60,7 @@ where
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn approve_all(
         &self,
@@ -68,7 +69,7 @@ where
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn revoke_all(
         &self,
@@ -76,7 +77,7 @@ where
         env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 
     fn burn(
         &self,
@@ -84,12 +85,12 @@ where
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<C>, Self::Err>;
+    ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 }
 
-pub trait Cw721Query<T>
+pub trait Cw721Query<TMetadata>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    TMetadata: Serialize + DeserializeOwned + Clone,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
@@ -98,7 +99,7 @@ where
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>>;
+    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<TMetadata>>;
 
     fn owner_of(
         &self,
@@ -165,5 +166,5 @@ where
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<AllNftInfoResponse<T>>;
+    ) -> StdResult<AllNftInfoResponse<TMetadata>>;
 }

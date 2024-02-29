@@ -127,21 +127,21 @@ pub struct CollectionInfoResponse {
 }
 
 #[cw_serde]
-pub struct NftInfoResponse<T> {
+pub struct NftInfoResponse<TMetadata> {
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: T,
+    pub extension: TMetadata,
 }
 
 #[cw_serde]
-pub struct AllNftInfoResponse<T> {
+pub struct AllNftInfoResponse<TMetadata> {
     /// Who can transfer the token
     pub access: OwnerOfResponse,
     /// Data on the token itself,
-    pub info: NftInfoResponse<T>,
+    pub info: NftInfoResponse<TMetadata>,
 }
 
 #[cw_serde]

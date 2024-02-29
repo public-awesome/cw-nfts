@@ -182,7 +182,7 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::{
         testing::{mock_dependencies, mock_env, mock_info},
-        Addr, Order, StdError, StdResult,
+        Addr, Order, StdResult,
     };
     use cw2::ContractVersion;
     use cw721::{CollectionInfoResponse, Cw721Query};

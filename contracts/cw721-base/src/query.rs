@@ -19,12 +19,20 @@ use crate::state::{Approval, Cw721Contract, NftInfo};
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
 
-impl<'a, T, C, E, Q> Cw721Query<T> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Query<TMetadata>
+    for Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+    >
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
     fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfoResponse> {
         self.collection_info.load(deps.storage)
@@ -35,7 +43,7 @@ where
         Ok(NumTokensResponse { count })
     }
 
-    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<T>> {
+    fn nft_info(&self, deps: Deps, token_id: String) -> StdResult<NftInfoResponse<TMetadata>> {
         let info = self.nft_info.load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
@@ -226,7 +234,7 @@ where
         env: Env,
         token_id: String,
         include_expired: bool,
-    ) -> StdResult<AllNftInfoResponse<T>> {
+    ) -> StdResult<AllNftInfoResponse<TMetadata>> {
         let info = self.nft_info.load(deps.storage, &token_id)?;
         Ok(AllNftInfoResponse {
             access: OwnerOfResponse {
@@ -241,14 +249,20 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
-    pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg<Q>) -> StdResult<Binary> {
+    pub fn query(
+        &self,
+        deps: Deps,
+        env: Env,
+        msg: QueryMsg<TMetadataResponse>,
+    ) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_json_binary(&self.minter(deps)?),
             #[allow(deprecated)]
@@ -354,9 +368,9 @@ fn parse_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<cw721::Appro
     })
 }
 
-fn humanize_approvals<T>(
+fn humanize_approvals<TMetadata>(
     block: &BlockInfo,
-    info: &NftInfo<T>,
+    info: &NftInfo<TMetadata>,
     include_expired: bool,
 ) -> Vec<cw721::Approval> {
     info.approvals

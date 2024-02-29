@@ -14,19 +14,24 @@ use serde::Serialize;
 use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
-pub struct Cw721Contract<Q: CustomMsg, E: CustomMsg>(
+pub struct Cw721Contract<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>(
     pub Addr,
-    pub PhantomData<Q>,
-    pub PhantomData<E>,
+    pub PhantomData<TMetadataResponse>,
+    pub PhantomData<TExtensionExecuteMsg>,
 );
 
 #[allow(dead_code)]
-impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
+impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>
+    Cw721Contract<TMetadataResponse, TExtensionExecuteMsg>
+{
     pub fn addr(&self) -> Addr {
         self.0.clone()
     }
 
-    pub fn call<T: Serialize>(&self, msg: ExecuteMsg<T, E>) -> StdResult<CosmosMsg> {
+    pub fn call<TMetadata: Serialize>(
+        &self,
+        msg: ExecuteMsg<TMetadata, TExtensionExecuteMsg>,
+    ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
             contract_addr: self.addr().into(),
@@ -39,7 +44,7 @@ impl<Q: CustomMsg, E: CustomMsg> Cw721Contract<Q, E> {
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: QueryMsg<Q>,
+        req: QueryMsg<TMetadataResponse>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),

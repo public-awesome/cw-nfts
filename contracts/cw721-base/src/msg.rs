@@ -24,7 +24,7 @@ pub struct InstantiateMsg {
 /// use other control logic in any contract that inherits this.
 #[cw_ownable_execute]
 #[cw_serde]
-pub enum ExecuteMsg<T, E> {
+pub enum ExecuteMsg<TMetadata, TExtensionExecuteMsg> {
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft { recipient: String, token_id: String },
     /// Send is a base message to transfer a token to a contract and trigger an action
@@ -63,14 +63,14 @@ pub enum ExecuteMsg<T, E> {
         /// Metadata JSON Schema
         token_uri: Option<String>,
         /// Any custom extension used by this contract
-        extension: T,
+        extension: TMetadata,
     },
 
     /// Burn an NFT the sender has access to
     Burn { token_id: String },
 
     /// Extension msg
-    Extension { msg: E },
+    Extension { msg: TExtensionExecuteMsg },
 
     /// Sets address to send withdrawn fees to. Only owner can call this.
     SetWithdrawAddress { address: String },
@@ -84,7 +84,7 @@ pub enum ExecuteMsg<T, E> {
 #[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg<Q: JsonSchema> {
+pub enum QueryMsg<TMetadataResponse: JsonSchema> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::OwnerOfResponse)]
     OwnerOf {
@@ -136,12 +136,12 @@ pub enum QueryMsg<Q: JsonSchema> {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(cw721::NftInfoResponse<Q>)]
+    #[returns(cw721::NftInfoResponse<TMetadataResponse>)]
     NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(cw721::AllNftInfoResponse<Q>)]
+    #[returns(cw721::AllNftInfoResponse<TMetadataResponse>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -170,7 +170,7 @@ pub enum QueryMsg<Q: JsonSchema> {
 
     /// Extension query
     #[returns(())]
-    Extension { msg: Q },
+    Extension { msg: TMetadataResponse },
 
     #[returns(Option<String>)]
     GetWithdrawAddress {},

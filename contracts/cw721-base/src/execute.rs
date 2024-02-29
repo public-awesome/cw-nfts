@@ -12,12 +12,13 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
 use crate::state::{Approval, Cw721Contract, NftInfo};
 
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
     pub fn instantiate(
         &self,
@@ -25,7 +26,7 @@ where
         _env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let contract_info = CollectionInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
@@ -50,8 +51,8 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T, E>,
-    ) -> Result<Response<C>, ContractError> {
+        msg: ExecuteMsg<TMetadata, TExtensionExecuteMsg>,
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         match msg {
             ExecuteMsg::Mint {
                 token_id,
@@ -95,12 +96,13 @@ where
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
     pub fn mint(
         &self,
@@ -109,8 +111,8 @@ where
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: T,
-    ) -> Result<Response<C>, ContractError> {
+        extension: TMetadata,
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         // create the token
@@ -140,7 +142,7 @@ where
         env: Env,
         info: MessageInfo,
         action: cw_ownable::Action,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
         Ok(Response::new().add_attributes(ownership.into_attributes()))
     }
@@ -150,7 +152,7 @@ where
         deps: DepsMut,
         sender: &Addr,
         address: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         cw_ownable::assert_owner(deps.storage, sender)?;
         deps.api.addr_validate(&address)?;
         self.withdraw_address.save(deps.storage, &address)?;
@@ -163,7 +165,7 @@ where
         &self,
         storage: &mut dyn Storage,
         sender: &Addr,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         cw_ownable::assert_owner(storage, sender)?;
         let address = self.withdraw_address.may_load(storage)?;
         match address {
@@ -181,7 +183,7 @@ where
         &self,
         storage: &mut dyn Storage,
         amount: &Coin,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let address = self.withdraw_address.may_load(storage)?;
         match address {
             Some(address) => {
@@ -200,12 +202,20 @@ where
     }
 }
 
-impl<'a, T, C, E, Q> Cw721Execute<T, C> for Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Execute<TMetadata, TCustomResponseMessage>
+    for Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+    >
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
     type Err = ContractError;
 
@@ -216,7 +226,7 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         self._transfer_nft(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
@@ -234,7 +244,7 @@ where
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         // Transfer token
         self._transfer_nft(deps, &env, &info, &contract, &token_id)?;
 
@@ -261,7 +271,7 @@ where
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, true, expires)?;
 
         Ok(Response::new()
@@ -278,7 +288,7 @@ where
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         self._update_approvals(deps, &env, &info, &spender, &token_id, false, None)?;
 
         Ok(Response::new()
@@ -295,7 +305,7 @@ where
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         // reject expired data as invalid
         let expires = expires.unwrap_or_default();
         if expires.is_expired(&env.block) {
@@ -319,7 +329,7 @@ where
         _env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         self.operators
             .remove(deps.storage, (&info.sender, &operator_addr));
@@ -336,7 +346,7 @@ where
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<C>, ContractError> {
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let token = self.nft_info.load(deps.storage, &token_id)?;
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
@@ -351,12 +361,13 @@ where
 }
 
 // helpers
-impl<'a, T, C, E, Q> Cw721Contract<'a, T, C, E, Q>
+impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
 where
-    T: Serialize + DeserializeOwned + Clone,
-    C: CustomMsg,
-    E: CustomMsg,
-    Q: CustomMsg,
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
 {
     pub fn _transfer_nft(
         &self,
@@ -365,7 +376,7 @@ where
         info: &MessageInfo,
         recipient: &str,
         token_id: &str,
-    ) -> Result<NftInfo<T>, ContractError> {
+    ) -> Result<NftInfo<TMetadata>, ContractError> {
         let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_send(deps.as_ref(), env, info, &token)?;
@@ -387,7 +398,7 @@ where
         // if add == false, remove. if add == true, remove then set with this expiration
         add: bool,
         expires: Option<Expiration>,
-    ) -> Result<NftInfo<T>, ContractError> {
+    ) -> Result<NftInfo<TMetadata>, ContractError> {
         let mut token = self.nft_info.load(deps.storage, token_id)?;
         // ensure we have permissions
         self.check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -421,7 +432,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &NftInfo<T>,
+        token: &NftInfo<TMetadata>,
     ) -> Result<(), ContractError> {
         // owner can approve
         if token.owner == info.sender {
@@ -449,7 +460,7 @@ where
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        token: &NftInfo<T>,
+        token: &NftInfo<TMetadata>,
     ) -> Result<(), ContractError> {
         // owner can send
         if token.owner == info.sender {
