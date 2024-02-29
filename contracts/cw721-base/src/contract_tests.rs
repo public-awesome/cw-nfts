@@ -12,19 +12,25 @@ use cw721::{
 use cw_ownable::OwnershipError;
 
 use crate::{
-    ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg,
+    ContractError, Cw721Contract, EmptyExtension, ExecuteMsg, InstantiateMsg, MinterResponse,
+    QueryMsg,
 };
 
-const MINTER: &str = "merlin";
+const MINTER: &str = "minter";
+const CREATOR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty, Empty, Empty> {
+fn setup_contract(
+    deps: DepsMut<'_>,
+) -> Cw721Contract<'static, EmptyExtension, Empty, Empty, Empty, Empty> {
     let contract = Cw721Contract::default();
     let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        collection_info_extension: Empty {},
         minter: Some(String::from(MINTER)),
+        creator: Some(String::from(CREATOR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -36,19 +42,22 @@ fn setup_contract(deps: DepsMut<'_>) -> Cw721Contract<'static, Extension, Empty,
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+    let contract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
 
     let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        collection_info_extension: Empty {},
         minter: Some(String::from(MINTER)),
+        creator: Some(String::from(CREATOR)),
         withdraw_address: Some(String::from(MINTER)),
     };
     let info = mock_info("creator", &[]);
+    let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(deps.as_mut(), mock_env(), info, msg)
+        .instantiate(deps.as_mut(), env.clone(), info, msg)
         .unwrap();
     assert_eq!(0, res.messages.len());
 
@@ -61,6 +70,8 @@ fn proper_instantiation() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
+            extension: Empty {},
+            updated_at: env.block.time
         }
     );
 
@@ -119,7 +130,7 @@ fn minting() {
     let info = contract.nft_info(deps.as_ref(), token_id.clone()).unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<Extension> {
+        NftInfoResponse::<EmptyExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }

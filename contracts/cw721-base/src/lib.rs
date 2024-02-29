@@ -24,8 +24,9 @@ pub use cw_ownable::{Action, Ownership, OwnershipError};
 
 use cosmwasm_std::Empty;
 
-// This is a simple type to let us handle empty extensions
-pub type Extension = Option<Empty>;
+// These are simple type to let us handle empty extensions
+pub use cw721::EmptyCollectionInfoExtension;
+pub use cw721::EmptyExtension;
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
@@ -51,11 +52,17 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let tract = Cw721Contract::<
+            EmptyExtension,
+            Empty,
+            Empty,
+            Empty,
+            EmptyCollectionInfoExtension,
+        >::default();
         tract.instantiate(deps, env, info, msg)
     }
 
@@ -64,15 +71,15 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<Extension, Empty>,
+        msg: ExecuteMsg<EmptyExtension, Empty>,
     ) -> Result<Response, ContractError> {
-        let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let tract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
         tract.execute(deps, env, info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> StdResult<Binary> {
-        let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let tract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
         tract.query(deps, env, msg)
     }
 
@@ -125,19 +132,30 @@ pub mod entry {
     /// Migrates only in case collection_info is not present
     pub fn migrate_legacy_contract_info(
         storage: &mut dyn Storage,
-        _env: &Env,
+        env: &Env,
         _msg: &Empty,
         response: Response,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let contract = Cw721Contract::<
+            EmptyExtension,
+            Empty,
+            Empty,
+            Empty,
+            EmptyCollectionInfoExtension,
+        >::default();
         match contract.collection_info.may_load(storage)? {
             Some(_) => Ok(response),
             None => {
-                let legacy_collection_info_store: Item<CollectionInfo> = Item::new("nft_info");
+                let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
+                    Item::new("nft_info");
                 let legacy_collection_info = legacy_collection_info_store.load(storage)?;
-                contract
-                    .collection_info
-                    .save(storage, &legacy_collection_info)?;
+                let collection_info = CollectionInfo {
+                    name: legacy_collection_info.name.clone(),
+                    symbol: legacy_collection_info.symbol.clone(),
+                    extension: None,
+                    updated_at: env.block.time,
+                };
+                contract.collection_info.save(storage, &collection_info)?;
                 Ok(response
                     .add_attribute("migrated collection name", legacy_collection_info.name)
                     .add_attribute("migrated collection symbol", legacy_collection_info.symbol))
@@ -152,7 +170,7 @@ pub mod entry {
         _msg: &Empty,
         response: Response,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let contract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
         match contract.nft_info.is_empty(storage) {
             false => Ok(response),
             true => {
@@ -161,8 +179,8 @@ pub mod entry {
                 };
                 let legacy_tokens_store: IndexedMap<
                     &str,
-                    NftInfo<Extension>,
-                    TokenIndexes<Extension>,
+                    NftInfo<EmptyExtension>,
+                    TokenIndexes<EmptyExtension>,
                 > = IndexedMap::new("tokens", indexes);
                 let keys = legacy_tokens_store
                     .keys(storage, None, None, Order::Ascending)
@@ -189,7 +207,7 @@ mod tests {
 
     use crate::{
         query::MAX_LIMIT,
-        state::{token_owner_idx, NftInfo, TokenIndexes},
+        state::{token_owner_idx, NftInfo, TokenIndexes, CREATOR},
     };
 
     use super::*;
@@ -204,9 +222,11 @@ mod tests {
             mock_env(),
             mock_info("larry", &[]),
             InstantiateMsg {
-                name: "".into(),
-                symbol: "".into(),
-                minter: Some("other".into()),
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                minter: Some("minter".into()),
+                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )
@@ -216,7 +236,7 @@ mod tests {
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(minter, Some("other".to_string()));
+        assert_eq!(minter, Some("minter".to_string()));
 
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(
@@ -237,8 +257,10 @@ mod tests {
             mock_env(),
             mock_info("owner", &[]),
             InstantiateMsg {
-                name: "".into(),
-                symbol: "".into(),
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: None,
                 minter: None,
                 withdraw_address: None,
             },
@@ -250,6 +272,8 @@ mod tests {
             .owner
             .map(|a| a.into_string());
         assert_eq!(minter, Some("owner".to_string()));
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(creator, Some(Addr::unchecked("owner")));
     }
 
     #[test]
@@ -285,7 +309,13 @@ mod tests {
         // assert new data before migration:
         // - ownership and collection info throws NotFound Error
         cw_ownable::get_ownership(deps.as_ref().storage).unwrap_err();
-        let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+        let contract = Cw721Contract::<
+            EmptyExtension,
+            Empty,
+            Empty,
+            Empty,
+            EmptyCollectionInfoExtension,
+        >::default();
         contract.collection_info(deps.as_ref()).unwrap_err();
         // - no tokens
         let all_tokens = contract
@@ -304,7 +334,8 @@ mod tests {
         let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
         assert_eq!(legacy_minter, "legacy_minter");
         // - legacy collection info is set
-        let legacy_collection_info_store: Item<CollectionInfo> = Item::new("nft_info");
+        let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
+            Item::new("nft_info");
         let legacy_collection_info = legacy_collection_info_store
             .load(deps.as_ref().storage)
             .unwrap();
@@ -314,8 +345,11 @@ mod tests {
         let indexes = TokenIndexes {
             owner: MultiIndex::new(token_owner_idx, "tokens", "tokens__owner"),
         };
-        let legacy_tokens_store: IndexedMap<&str, NftInfo<Extension>, TokenIndexes<Extension>> =
-            IndexedMap::new("tokens", indexes);
+        let legacy_tokens_store: IndexedMap<
+            &str,
+            NftInfo<EmptyExtension>,
+            TokenIndexes<EmptyExtension>,
+        > = IndexedMap::new("tokens", indexes);
         let keys = legacy_tokens_store
             .keys(deps.as_ref().storage, None, None, Order::Ascending)
             .collect::<StdResult<Vec<String>>>()
@@ -328,7 +362,7 @@ mod tests {
             assert_eq!(legacy_token.owner.as_str(), "owner");
         }
 
-        entry::migrate(deps.as_mut(), env, Empty {}).unwrap();
+        entry::migrate(deps.as_mut(), env.clone(), Empty {}).unwrap();
 
         // version
         let version = cw2::get_contract_version(deps.as_ref().storage)
@@ -349,6 +383,8 @@ mod tests {
         let legacy_contract_info = CollectionInfo {
             name: "legacy_name".to_string(),
             symbol: "legacy_symbol".to_string(),
+            extension: None,
+            updated_at: env.block.time,
         };
         assert_eq!(collection_info, legacy_contract_info);
 

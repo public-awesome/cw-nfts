@@ -2,7 +2,6 @@ use std::env::current_dir;
 use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
-use cosmwasm_std::Empty;
 
 #[allow(deprecated)]
 use cw721::{
@@ -10,9 +9,7 @@ use cw721::{
     Cw721ExecuteMsg, Cw721QueryMsg, Cw721ReceiveMsg, NftInfoResponse, NumTokensResponse,
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-
-type Extension = Option<Empty>;
-
+use cw721::{EmptyCollectionInfoExtension, EmptyExtension};
 fn main() {
     let mut out_dir = current_dir().unwrap();
     out_dir.push("schema");
@@ -23,7 +20,7 @@ fn main() {
     export_schema(&schema_for!(Cw721QueryMsg), &out_dir);
     export_schema(&schema_for!(Cw721ReceiveMsg), &out_dir);
     export_schema_with_title(
-        &schema_for!(AllNftInfoResponse<Extension>),
+        &schema_for!(AllNftInfoResponse<EmptyExtension>),
         &out_dir,
         "AllNftInfoResponse",
     );
@@ -33,10 +30,13 @@ fn main() {
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     #[allow(deprecated)]
     export_schema(&schema_for!(ContractInfoResponse), &out_dir);
-    export_schema(&schema_for!(CollectionInfo), &out_dir);
+    export_schema(
+        &schema_for!(CollectionInfo<EmptyCollectionInfoExtension>),
+        &out_dir,
+    );
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema_with_title(
-        &schema_for!(NftInfoResponse<Extension>),
+        &schema_for!(NftInfoResponse<EmptyExtension>),
         &out_dir,
         "NftInfoResponse",
     );

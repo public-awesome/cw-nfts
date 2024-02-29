@@ -3,11 +3,13 @@ use cosmwasm_std::Empty;
 use cw721_base::msg::QueryMsg as Cw721QueryMsg;
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct InstantiateMsg<TCollectionInfoExtension> {
     pub admin: Option<String>,
     pub name: String,
     pub symbol: String,
+    pub collection_info_extension: TCollectionInfoExtension,
     pub minter: Option<String>,
+    pub creator: Option<String>,
     pub withdraw_address: Option<String>,
 }
 

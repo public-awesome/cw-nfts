@@ -1,20 +1,25 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Coin};
+use cosmwasm_std::{Binary, Coin, Empty};
 use cw721::Expiration;
 use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 use schemars::JsonSchema;
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct InstantiateMsg<TCollectionInfoExtension> {
     /// Name of the NFT contract
     pub name: String,
     /// Symbol of the NFT contract
     pub symbol: String,
 
+    pub collection_info_extension: TCollectionInfoExtension,
+
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
+
+    /// The creator is the only who can update collection info.
+    pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,
 }
@@ -126,12 +131,12 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema> {
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
-    #[returns(cw721::CollectionInfo)]
+    #[returns(cw721::CollectionInfo<Empty>)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(cw721::CollectionInfo)]
+    #[returns(cw721::CollectionInfo<Empty>)]
     CollectionInfo {},
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*

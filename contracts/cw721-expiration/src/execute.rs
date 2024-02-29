@@ -1,12 +1,12 @@
 use cosmwasm_std::{
     Addr, Binary, Coin, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult, Storage,
 };
-use cw721::{Cw721Execute, Expiration};
+use cw721::{Cw721Execute, EmptyCollectionInfoExtension, Expiration};
 use cw721_base::Cw721Contract;
 
 use crate::{
     error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, state::Cw721ExpirationContract,
-    Extension,
+    EmptyExtension,
 };
 use cw721_base::InstantiateMsg as Cw721InstantiateMsg;
 
@@ -16,7 +16,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
         if msg.expiration_days == 0 {
             return Err(ContractError::MinExpiration {});
@@ -30,7 +30,9 @@ impl<'a> Cw721ExpirationContract<'a> {
             Cw721InstantiateMsg {
                 name: msg.name,
                 symbol: msg.symbol,
+                collection_info_extension: msg.extension,
                 minter: msg.minter,
+                creator: msg.creator,
                 withdraw_address: msg.withdraw_address,
             },
         )?)
@@ -95,7 +97,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: Extension,
+        extension: EmptyExtension,
     ) -> Result<Response, ContractError> {
         let mint_timstamp = env.block.time;
         self.mint_timestamps
@@ -113,11 +115,13 @@ impl<'a> Cw721ExpirationContract<'a> {
         info: MessageInfo,
         action: cw_ownable::Action,
     ) -> Result<Response, ContractError> {
-        Ok(
-            Cw721Contract::<Extension, Empty, Empty, Empty>::update_ownership(
-                deps, env, info, action,
-            )?,
-        )
+        Ok(Cw721Contract::<
+            EmptyExtension,
+            Empty,
+            Empty,
+            Empty,
+            EmptyCollectionInfoExtension,
+        >::update_ownership(deps, env, info, action)?)
     }
 
     pub fn set_withdraw_address(

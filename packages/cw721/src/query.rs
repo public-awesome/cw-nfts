@@ -1,4 +1,5 @@
 use cosmwasm_schema::cw_serde;
+use cosmwasm_std::Empty;
 use cw_utils::Expiration;
 
 use crate::CollectionInfo;
@@ -120,7 +121,8 @@ pub struct NumTokensResponse {
 
 #[deprecated(since = "0.19.0", note = "Please use CollectionInfoResponse instead")]
 #[allow(dead_code)]
-pub type ContractInfoResponse = CollectionInfo;
+pub type ContractInfoResponse<TCollectionInfoExtension = Empty> =
+    CollectionInfo<TCollectionInfoExtension>;
 
 #[cw_serde]
 pub struct NftInfoResponse<TMetadata> {

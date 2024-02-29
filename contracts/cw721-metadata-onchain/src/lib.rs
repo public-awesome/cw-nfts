@@ -1,37 +1,20 @@
-use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
+use cw721::MetadataExtension;
+pub use cw721_base::{ContractError, EmptyCollectionInfoExtension, InstantiateMsg, MinterResponse};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cw_serde]
-pub struct Trait {
-    pub display_type: Option<String>,
-    pub trait_type: String,
-    pub value: String,
-}
-
-// see: https://docs.opensea.io/docs/metadata-standards
-#[cw_serde]
-#[derive(Default)]
-pub struct Metadata {
-    pub image: Option<String>,
-    pub image_data: Option<String>,
-    pub external_url: Option<String>,
-    pub description: Option<String>,
-    pub name: Option<String>,
-    pub attributes: Option<Vec<Trait>>,
-    pub background_color: Option<String>,
-    pub animation_url: Option<String>,
-    pub youtube_url: Option<String>,
-}
-
-pub type Extension = Option<Metadata>;
-
-pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<'a, Extension, Empty, Empty, Empty>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
+pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<
+    'a,
+    MetadataExtension,
+    Empty,
+    Empty,
+    Empty,
+    EmptyCollectionInfoExtension,
+>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<MetadataExtension, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Empty>;
 
 #[cfg(not(feature = "library"))]
@@ -47,7 +30,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -75,7 +58,7 @@ mod tests {
     use super::*;
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721::Cw721Query;
+    use cw721::{Cw721Query, Metadata};
 
     const CREATOR: &str = "creator";
 
@@ -90,9 +73,11 @@ mod tests {
             mock_env(),
             mock_info("larry", &[]),
             InstantiateMsg {
-                name: "".into(),
-                symbol: "".into(),
-                minter: None,
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                minter: Some("minter".into()),
+                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )
@@ -110,9 +95,11 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = InstantiateMsg {
-            name: "SpaceShips".to_string(),
-            symbol: "SPACE".to_string(),
+            name: "collection_name".into(),
+            symbol: "collection_symbol".into(),
+            collection_info_extension: None,
             minter: None,
+            creator: None,
             withdraw_address: None,
         };
         contract

@@ -14,9 +14,9 @@ const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type MinterResponse = cw721_base::msg::MinterResponse;
-pub use cw721_base::Extension;
+pub use cw721_base::{EmptyCollectionInfoExtension, EmptyExtension};
 
-pub type NftInfo = cw721_base::state::NftInfo<Extension>;
+pub type NftInfo = cw721_base::state::NftInfo<EmptyExtension>;
 
 #[deprecated(since = "0.19.0", note = "Please use NftInfo")]
 pub type TokenInfo = NftInfo;
@@ -40,7 +40,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
         Cw721ExpirationContract::default().instantiate(deps.branch(), env, info, msg)
@@ -87,9 +87,11 @@ mod tests {
             mock_info("mrt", &[]),
             InstantiateMsg {
                 expiration_days: 0,
-                name: "".into(),
-                symbol: "".into(),
-                minter: Some("mrt".into()),
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                extension: None,
+                minter: Some("minter".into()),
+                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )
@@ -105,7 +107,9 @@ mod tests {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                minter: Some("mrt".into()),
+                extension: None,
+                minter: Some("minter".into()),
+                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )

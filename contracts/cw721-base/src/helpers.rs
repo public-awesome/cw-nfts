@@ -2,7 +2,8 @@ use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
+    to_json_binary, Addr, CosmosMsg, CustomMsg, Empty, QuerierWrapper, StdResult, WasmMsg,
+    WasmQuery,
 };
 use cw721::{
     AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, CollectionInfo,
@@ -14,15 +15,20 @@ use serde::Serialize;
 use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
-pub struct Cw721Contract<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>(
+pub struct Cw721Contract<
+    TMetadataResponse: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TCollectionInfoExtension,
+>(
     pub Addr,
     pub PhantomData<TMetadataResponse>,
     pub PhantomData<TExtensionExecuteMsg>,
+    pub PhantomData<TCollectionInfoExtension>,
 );
 
 #[allow(dead_code)]
-impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>
-    Cw721Contract<TMetadataResponse, TExtensionExecuteMsg>
+impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>
+    Cw721Contract<TMetadataResponse, TExtensionExecuteMsg, TCollectionInfoExtension>
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -124,12 +130,18 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>
     }
 
     #[deprecated(since = "0.19.0", note = "Please use collection_info instead")]
-    pub fn contract_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
+    pub fn contract_info<U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+    ) -> StdResult<CollectionInfo<U>> {
         self.collection_info(querier)
     }
 
     /// With metadata extension
-    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
+    pub fn collection_info<U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+    ) -> StdResult<CollectionInfo<U>> {
         let req = QueryMsg::CollectionInfo {};
         self.query(querier, req)
     }
@@ -189,7 +201,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg>
 
     /// returns true if the contract supports the metadata extension
     pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
-        self.collection_info(querier).is_ok()
+        self.collection_info::<Empty>(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension

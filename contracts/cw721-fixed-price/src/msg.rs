@@ -1,10 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use cw20::Cw20ReceiveMsg;
-use cw721_base::Extension;
+use cw721_base::EmptyExtension;
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct InstantiateMsg<TCollectionInfoExtension> {
     pub owner: Addr,
     pub max_tokens: u32,
     pub unit_price: Uint128,
@@ -13,7 +13,8 @@ pub struct InstantiateMsg {
     pub token_code_id: u64,
     pub cw20_address: Addr,
     pub token_uri: String,
-    pub extension: Extension,
+    pub extension: EmptyExtension,
+    pub collection_info_extension: TCollectionInfoExtension,
     pub withdraw_address: Option<String>,
 }
 
@@ -39,6 +40,6 @@ pub struct ConfigResponse {
     pub name: String,
     pub symbol: String,
     pub token_uri: String,
-    pub extension: Extension,
+    pub extension: EmptyExtension,
     pub unused_token_id: u32,
 }

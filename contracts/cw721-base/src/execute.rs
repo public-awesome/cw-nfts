@@ -10,40 +10,64 @@ use cw721::{CollectionInfo, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Approval, Cw721Contract, NftInfo};
+use crate::state::{Approval, Cw721Contract, NftInfo, CREATOR};
 
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+    Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn instantiate(
         &self,
         deps: DepsMut,
-        _env: Env,
+        env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        let contract_info = CollectionInfo {
+        let collection_info = CollectionInfo {
             name: msg.name,
             symbol: msg.symbol,
+            extension: msg.collection_info_extension,
+            updated_at: env.block.time,
         };
-        self.collection_info.save(deps.storage, &contract_info)?;
+        self.collection_info.save(deps.storage, &collection_info)?;
 
-        let owner = match msg.minter {
+        let minter = match msg.minter {
+            Some(owner) => deps.api.addr_validate(&owner)?,
+            None => info.sender.clone(),
+        };
+        cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_ref()))?;
+        let creator = match msg.creator {
             Some(owner) => deps.api.addr_validate(&owner)?,
             None => info.sender,
         };
-        cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_ref()))?;
+        CREATOR.initialize_owner(deps.storage, deps.api, Some(creator.as_ref()))?;
 
         if let Some(address) = msg.withdraw_address {
-            self.set_withdraw_address(deps, &owner, address)?;
+            self.set_withdraw_address(deps, &minter, address)?;
         }
 
-        Ok(Response::default())
+        Ok(Response::default()
+            .add_attribute("minter", minter)
+            .add_attribute("creator", creator))
     }
 
     pub fn execute(
@@ -96,13 +120,28 @@ where
 }
 
 // TODO pull this into some sort of trait extension??
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+    Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn mint(
         &self,
@@ -202,20 +241,28 @@ where
     }
 }
 
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Execute<TMetadata, TCustomResponseMessage>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    > Cw721Execute<TMetadata, TCustomResponseMessage>
     for Cw721Contract<
         'a,
         TMetadata,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
         TMetadataResponse,
+        TCollectionInfoExtension,
     >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     type Err = ContractError;
 
@@ -361,13 +408,28 @@ where
 }
 
 // helpers
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+    Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn _transfer_nft(
         &self,

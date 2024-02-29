@@ -1,11 +1,11 @@
-use crate::{Extension, MinterResponse};
+use crate::{EmptyExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Empty;
 use cw_ownable::cw_ownable_query;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
+pub type ExecuteMsg = cw721_base::ExecuteMsg<EmptyExtension, Empty>;
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct InstantiateMsg<TCollectionInfoExtension> {
     /// max 65535 days
     pub expiration_days: u16,
 
@@ -15,10 +15,15 @@ pub struct InstantiateMsg {
     /// Symbol of the NFT contract
     pub symbol: String,
 
+    pub extension: TCollectionInfoExtension,
+
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
+
+    /// The creator is the only who can update collection info.
+    pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,
 }
@@ -74,17 +79,17 @@ pub enum QueryMsg {
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
-    #[returns(cw721::CollectionInfo)]
+    #[returns(cw721::CollectionInfo<cw721::EmptyCollectionInfoExtension>)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(cw721::CollectionInfo)]
+    #[returns(cw721::CollectionInfo<cw721::EmptyCollectionInfoExtension>)]
     CollectionInfo {},
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(cw721::NftInfoResponse<Extension>)]
+    #[returns(cw721::NftInfoResponse<EmptyExtension>)]
     NftInfo {
         token_id: String,
         /// unset or false will filter out expired nfts, you must set to true to see them
@@ -93,7 +98,7 @@ pub enum QueryMsg {
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(cw721::AllNftInfoResponse<Extension>)]
+    #[returns(cw721::AllNftInfoResponse<EmptyExtension>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them

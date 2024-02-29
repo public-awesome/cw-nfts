@@ -8,11 +8,12 @@ use crate::{
 use cosmwasm_std::{Binary, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw_utils::Expiration;
 
-pub trait Cw721<TMetadata, TCustomResponseMessage>:
-    Cw721Execute<TMetadata, TCustomResponseMessage> + Cw721Query<TMetadata>
+pub trait Cw721<TMetadata, TCustomResponseMessage, TCollectionInfoExtension>:
+    Cw721Execute<TMetadata, TCustomResponseMessage> + Cw721Query<TMetadata, TCollectionInfoExtension>
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }
 
@@ -87,14 +88,15 @@ where
     ) -> Result<Response<TCustomResponseMessage>, Self::Err>;
 }
 
-pub trait Cw721Query<TMetadata>
+pub trait Cw721Query<TMetadata, TCollectionInfoExtension>
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     // TODO: use custom error?
     // How to handle the two derived error types?
 
-    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo>;
+    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo<TCollectionInfoExtension>>;
 
     fn num_tokens(&self, deps: Deps) -> StdResult<NumTokensResponse>;
 

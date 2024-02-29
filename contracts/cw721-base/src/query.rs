@@ -19,22 +19,30 @@ use crate::state::{Approval, Cw721Contract, NftInfo};
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
 
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Query<TMetadata>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    > Cw721Query<TMetadata, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadata,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
         TMetadataResponse,
+        TCollectionInfoExtension,
     >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
-    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
+    fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo<TCollectionInfoExtension>> {
         self.collection_info.load(deps.storage)
     }
 
@@ -249,13 +257,28 @@ where
     }
 }
 
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+    Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(
         &self,

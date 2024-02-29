@@ -4,6 +4,7 @@ mod receiver;
 mod state;
 mod traits;
 
+use cosmwasm_std::Empty;
 pub use cw_utils::Expiration;
 
 pub use crate::msg::Cw721ExecuteMsg;
@@ -14,5 +15,9 @@ pub use crate::query::{
     OwnerOfResponse, TokensResponse,
 };
 pub use crate::receiver::Cw721ReceiveMsg;
-pub use crate::state::CollectionInfo;
+pub use crate::state::{CollectionInfo, Metadata, MetadataExtension, Trait};
 pub use crate::traits::{Cw721, Cw721Execute, Cw721Query};
+
+// These are simple type to let us handle empty extensions
+pub type EmptyExtension = Option<Empty>;
+pub type EmptyCollectionInfoExtension = Option<Empty>;

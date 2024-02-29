@@ -16,6 +16,7 @@ cosmwasm-std    = "^1.2"
 cw2             = "^1.1"
 cw20            = "^1.1"
 cw721           = { version = "*", path = "./packages/cw721" }
+cw721-016       = { version = "0.16.0", package = "cw721" }
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
 cw-multi-test   = "^0.20"

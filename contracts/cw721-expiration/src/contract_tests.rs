@@ -14,12 +14,13 @@ use cw_ownable::OwnershipError;
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, msg::QueryMsg, Extension,
+    error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, msg::QueryMsg, EmptyExtension,
     MinterResponse,
 };
 use cw721_base::ContractError as Cw721ContractError;
 
-const MINTER: &str = "merlin";
+const MINTER: &str = "minter";
+const CREATOR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
@@ -29,7 +30,9 @@ fn setup_contract(deps: DepsMut<'_>, expiration_days: u16) -> Cw721ExpirationCon
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        extension: None,
         minter: Some(String::from(MINTER)),
+        creator: Some(String::from(CREATOR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -47,14 +50,17 @@ fn proper_instantiation() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        extension: None,
         minter: Some(String::from(MINTER)),
+        creator: Some(String::from(CREATOR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
+    let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(deps.as_mut(), mock_env(), info, msg)
+        .instantiate(deps.as_mut(), env.clone(), info, msg)
         .unwrap();
     assert_eq!(0, res.messages.len());
 
@@ -67,6 +73,8 @@ fn proper_instantiation() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
+            extension: None,
+            updated_at: env.block.time,
         }
     );
 
@@ -126,7 +134,7 @@ fn test_mint() {
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<Extension> {
+        NftInfoResponse::<EmptyExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }

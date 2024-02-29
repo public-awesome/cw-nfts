@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
-use cw721_base::Extension;
+use cw721_base::EmptyExtension;
 use cw_storage_plus::Item;
 
 #[cw_serde]
@@ -13,7 +13,7 @@ pub struct Config {
     pub name: String,
     pub symbol: String,
     pub token_uri: String,
-    pub extension: Extension,
+    pub extension: EmptyExtension,
     pub unused_token_id: u32,
 }
 

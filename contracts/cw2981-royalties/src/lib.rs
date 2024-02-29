@@ -2,6 +2,7 @@ pub mod error;
 pub mod msg;
 pub mod query;
 
+use cw721::EmptyCollectionInfoExtension;
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
@@ -49,7 +50,8 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
+pub type Cw2981Contract<'a> =
+    Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg, EmptyCollectionInfoExtension>;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
 pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
 
@@ -65,7 +67,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -136,7 +138,9 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
+            collection_info_extension: None,
             minter: None,
+            creator: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -170,7 +174,9 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
+            collection_info_extension: None,
             minter: None,
+            creator: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -201,7 +207,9 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
+            collection_info_extension: None,
             minter: None,
+            creator: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
@@ -242,7 +250,9 @@ mod tests {
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
+            collection_info_extension: None,
             minter: None,
+            creator: None,
             withdraw_address: None,
         };
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();

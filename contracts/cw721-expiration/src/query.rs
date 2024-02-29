@@ -1,12 +1,12 @@
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721Query,
-    NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    EmptyCollectionInfoExtension, NftInfoResponse, NumTokensResponse, OperatorResponse,
+    OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721_base::MinterResponse;
 
-use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract, Extension};
+use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract, EmptyExtension};
 
 impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
@@ -135,11 +135,17 @@ impl<'a> Cw721ExpirationContract<'a> {
 
 // queries
 impl<'a> Cw721ExpirationContract<'a> {
-    pub fn contract_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
+    pub fn contract_info(
+        &self,
+        deps: Deps,
+    ) -> StdResult<CollectionInfo<EmptyCollectionInfoExtension>> {
         self.base_contract.collection_info(deps)
     }
 
-    pub fn collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
+    pub fn collection_info(
+        &self,
+        deps: Deps,
+    ) -> StdResult<CollectionInfo<EmptyCollectionInfoExtension>> {
         self.base_contract.collection_info.load(deps.storage)
     }
 
@@ -153,7 +159,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         env: Env,
         token_id: String,
         include_invalid: bool,
-    ) -> Result<NftInfoResponse<Extension>, ContractError> {
+    ) -> Result<NftInfoResponse<EmptyExtension>, ContractError> {
         if !include_invalid {
             self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }
@@ -291,7 +297,7 @@ impl<'a> Cw721ExpirationContract<'a> {
         token_id: String,
         include_expired: bool,
         include_invalid: bool,
-    ) -> Result<AllNftInfoResponse<Extension>, ContractError> {
+    ) -> Result<AllNftInfoResponse<EmptyExtension>, ContractError> {
         if !include_invalid {
             self.assert_valid_nft(deps, &env, token_id.as_str())?;
         }

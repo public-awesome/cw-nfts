@@ -1,3 +1,4 @@
+use cw_ownable::OwnershipStore;
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -8,19 +9,23 @@ use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 use cw721::{CollectionInfo, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
+pub const CREATOR: OwnershipStore = OwnershipStore::new("collection_creator");
+
 pub struct Cw721Contract<
     'a,
     TMetadata,
     TCustomResponseMessage,
     TExtensionExecuteMsg,
     TMetadataResponse,
+    TCollectionInfoExtension,
 > where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TMetadataResponse: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     /// Note: do not use deprecated/legacy key "nft_info"!
-    pub collection_info: Item<'a, CollectionInfo>,
+    pub collection_info: Item<'a, CollectionInfo<TCollectionInfoExtension>>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
@@ -34,35 +39,51 @@ pub struct Cw721Contract<
 }
 
 // This is a signal, the implementations are in other files
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721<TMetadata, TCustomResponseMessage>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    > Cw721<TMetadata, TCustomResponseMessage, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadata,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
         TMetadataResponse,
+        TCollectionInfoExtension,
     >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }
 
-impl<TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse> Default
+impl<
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    > Default
     for Cw721Contract<
         'static,
         TMetadata,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
         TMetadataResponse,
+        TCollectionInfoExtension,
     >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self::new(
@@ -76,12 +97,27 @@ where
     }
 }
 
-impl<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
-    Cw721Contract<'a, TMetadata, TCustomResponseMessage, TExtensionExecuteMsg, TMetadataResponse>
+impl<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+    Cw721Contract<
+        'a,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
 where
     TMetadata: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
     TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn new(
         collection_info_key: &'a str,
