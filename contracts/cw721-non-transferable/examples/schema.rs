@@ -18,9 +18,10 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
-    export_schema(
+    export_schema_with_title(
         &schema_for!(InstantiateMsg<EmptyCollectionInfoExtension>),
         &out_dir,
+        "InstantiateMsg",
     );
     export_schema_with_title(&schema_for!(Cw721ExecuteMsg), &out_dir, "Cw721ExecuteMsg");
     export_schema(&schema_for!(QueryMsg), &out_dir);
@@ -34,9 +35,10 @@ fn main() {
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     #[allow(deprecated)]
     export_schema(&schema_for!(ContractInfoResponse), &out_dir);
-    export_schema(
+    export_schema_with_title(
         &schema_for!(CollectionInfo<EmptyCollectionInfoExtension>),
         &out_dir,
+        "CollectionInfo",
     );
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema_with_title(

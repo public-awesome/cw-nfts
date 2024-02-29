@@ -17,6 +17,16 @@
       "unit_price"
     ],
     "properties": {
+      "collection_info_extension": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Empty"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "cw20_address": {
         "$ref": "#/definitions/Addr"
       },

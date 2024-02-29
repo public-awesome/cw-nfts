@@ -15,7 +15,7 @@ pub struct InstantiateMsg<TCollectionInfoExtension> {
     /// Symbol of the NFT contract
     pub symbol: String,
 
-    pub extension: TCollectionInfoExtension,
+    pub collection_info_extension: TCollectionInfoExtension,
 
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program

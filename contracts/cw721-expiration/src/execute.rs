@@ -30,7 +30,7 @@ impl<'a> Cw721ExpirationContract<'a> {
             Cw721InstantiateMsg {
                 name: msg.name,
                 symbol: msg.symbol,
-                collection_info_extension: msg.extension,
+                collection_info_extension: msg.collection_info_extension,
                 minter: msg.minter,
                 creator: msg.creator,
                 withdraw_address: msg.withdraw_address,
