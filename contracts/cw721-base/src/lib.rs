@@ -87,7 +87,7 @@ pub mod entry {
     pub fn migrate(deps: DepsMut, env: Env, msg: Empty) -> Result<Response, ContractError> {
         let response = migrate_version(deps.storage, &env, &msg)?;
         let response = migrate_legacy_minter(deps.storage, deps.api, &env, &msg, response)?;
-        let response = migrate_legacy_contract_info(deps.storage, &env, &msg, response)?;
+        let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
         migrate_legacy_tokens(deps.storage, &env, &msg, response)
     }
 
@@ -130,7 +130,7 @@ pub mod entry {
     }
 
     /// Migrates only in case collection_info is not present
-    pub fn migrate_legacy_contract_info(
+    pub fn migrate_legacy_collection_info(
         storage: &mut dyn Storage,
         env: &Env,
         _msg: &Empty,
@@ -146,6 +146,7 @@ pub mod entry {
         match contract.collection_info.may_load(storage)? {
             Some(_) => Ok(response),
             None => {
+                // contract info is legacy collection info
                 let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
                     Item::new("nft_info");
                 let legacy_collection_info = legacy_collection_info_store.load(storage)?;
