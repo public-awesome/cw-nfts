@@ -85,20 +85,21 @@ pub mod entry {
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn migrate(deps: DepsMut, env: Env, msg: Empty) -> Result<Response, ContractError> {
-        let response = migrate_version(deps.storage, &env, &msg)?;
+        let response = Response::<Empty>::default();
         let response = migrate_legacy_minter(deps.storage, deps.api, &env, &msg, response)?;
         let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
-        migrate_legacy_tokens(deps.storage, &env, &msg, response)
+        let response = migrate_legacy_tokens(deps.storage, &env, &msg, response)?;
+        let response = migrate_version(deps.storage, &env, &msg, response)?;
+        Ok(response)
     }
 
     pub fn migrate_version(
         storage: &mut dyn Storage,
         _env: &Env,
         _msg: &Empty,
-    ) -> Result<Response, ContractError> {
-        // make sure the correct contract is being upgraded, and it's being
-        // upgraded from the correct version.
-        let response = Response::<Empty>::default()
+        response: Response,
+    ) -> StdResult<Response> {
+        let response = response
             .add_attribute("from_version", cw2::get_contract_version(storage)?.version)
             .add_attribute("to_version", CONTRACT_VERSION);
 
@@ -170,7 +171,7 @@ pub mod entry {
         _env: &Env,
         _msg: &Empty,
         response: Response,
-    ) -> Result<Response, ContractError> {
+    ) -> StdResult<Response> {
         let contract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
         match contract.nft_info.is_empty(storage) {
             false => Ok(response),
