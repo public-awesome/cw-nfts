@@ -1,20 +1,21 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult, Storage};
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721Query,
     EmptyCollectionInfoExtension, NftInfoResponse, NumTokensResponse, OperatorResponse,
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721_base::MinterResponse;
+use cw_ownable::Ownership;
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract, EmptyExtension};
 
 impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
         match msg {
-            QueryMsg::Minter {} => Ok(to_json_binary(&self.minter(deps)?)?),
             #[allow(deprecated)]
+            QueryMsg::Minter {} => Ok(to_json_binary(&self.minter(deps)?)?),
             QueryMsg::ContractInfo {} => Ok(to_json_binary(&self.collection_info(deps)?)?),
-            QueryMsg::CollectionInfo {} => Ok(to_json_binary(&self.collection_info(deps)?)?),
+            QueryMsg::GetCollectionInfo {} => Ok(to_json_binary(&self.collection_info(deps)?)?),
             QueryMsg::NftInfo {
                 token_id,
                 include_invalid,
@@ -119,17 +120,31 @@ impl<'a> Cw721ExpirationContract<'a> {
                 include_expired.unwrap_or(false),
                 include_invalid.unwrap_or(false),
             )?)?),
-            QueryMsg::Ownership {} => Ok(to_json_binary(&Self::ownership(deps)?)?),
+            #[allow(deprecated)]
+            QueryMsg::Ownership {} => Ok(to_json_binary(&self.minter_ownership(deps.storage)?)?),
+            QueryMsg::GetMinterOwnership {} => {
+                Ok(to_json_binary(&self.minter_ownership(deps.storage)?)?)
+            }
+            QueryMsg::GetCreatorOwnership {} => {
+                Ok(to_json_binary(&self.creator_ownership(deps.storage)?)?)
+            }
+
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
         }
     }
 
+    #[deprecated(since = "0.19.0", note = "Please use minter_ownership instead")]
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
+        #[allow(deprecated)]
         self.base_contract.minter(deps)
     }
 
-    pub fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>> {
-        cw_ownable::get_ownership(deps.storage)
+    pub fn minter_ownership(&self, storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
+        self.base_contract.minter_ownership(storage)
+    }
+
+    pub fn creator_ownership(&self, storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
+        self.base_contract.creator_ownership(storage)
     }
 }
 

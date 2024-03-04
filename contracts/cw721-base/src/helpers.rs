@@ -134,7 +134,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         &self,
         querier: &QuerierWrapper,
     ) -> StdResult<CollectionInfo<U>> {
-        let req = QueryMsg::CollectionInfo {};
+        let req = QueryMsg::GetCollectionInfo {};
         self.query(querier, req)
     }
 

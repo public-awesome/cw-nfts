@@ -1,16 +1,17 @@
-use cw_ownable::OwnershipError;
+use cw_ownable::{Action, Ownership, OwnershipError};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use cosmwasm_std::{
-    Addr, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response, Storage,
+    Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Env, MessageInfo, Response,
+    StdResult, Storage,
 };
 
 use cw721::{CollectionInfo, Cw721Execute, Cw721ReceiveMsg, Expiration};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Approval, Cw721Contract, NftInfo, CREATOR};
+use crate::state::{Approval, Cw721Contract, NftInfo, CREATOR, MINTER};
 
 impl<
         'a,
@@ -50,19 +51,23 @@ where
         };
         self.collection_info.save(deps.storage, &collection_info)?;
 
-        let minter = match msg.minter {
-            Some(owner) => deps.api.addr_validate(&owner)?,
-            None => info.sender.clone(),
+        // use info.sender if None is passed
+        let minter: &str = match msg.minter.as_deref() {
+            Some(minter) => minter,
+            None => info.sender.as_str(),
         };
-        cw_ownable::initialize_owner(deps.storage, deps.api, Some(minter.as_ref()))?;
-        let creator = match msg.creator {
-            Some(owner) => deps.api.addr_validate(&owner)?,
-            None => info.sender,
-        };
-        CREATOR.initialize_owner(deps.storage, deps.api, Some(creator.as_ref()))?;
+        self.initialize_minter(deps.storage, deps.api, Some(minter))?;
 
-        if let Some(address) = msg.withdraw_address {
-            self.set_withdraw_address(deps, &minter, address)?;
+        // use info.sender if None is passed
+        let creator: &str = match msg.creator.as_deref() {
+            Some(creator) => creator,
+            None => info.sender.as_str(),
+        };
+        self.initialize_creator(deps.storage, deps.api, Some(creator))?;
+
+        if let Some(withdraw_address) = msg.withdraw_address {
+            let creator = deps.api.addr_validate(creator)?;
+            self.set_withdraw_address(deps, &creator, withdraw_address)?;
         }
 
         Ok(Response::default()
@@ -106,7 +111,16 @@ where
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
-            ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
+            #[allow(deprecated)]
+            ExecuteMsg::UpdateOwnership(action) => {
+                Self::update_minter_ownership(deps, env, info, action)
+            }
+            ExecuteMsg::UpdateMinterOwnership(action) => {
+                Self::update_minter_ownership(deps, env, info, action)
+            }
+            ExecuteMsg::UpdateCreatorOwnership(action) => {
+                Self::update_creator_ownership(deps, env, info, action)
+            }
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
             ExecuteMsg::SetWithdrawAddress { address } => {
                 self.set_withdraw_address(deps, &info.sender, address)
@@ -143,6 +157,24 @@ where
     TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
+    pub fn initialize_creator(
+        &self,
+        storage: &mut dyn Storage,
+        api: &dyn Api,
+        creator: Option<&str>,
+    ) -> StdResult<Ownership<Addr>> {
+        CREATOR.initialize_owner(storage, api, creator)
+    }
+
+    pub fn initialize_minter(
+        &self,
+        storage: &mut dyn Storage,
+        api: &dyn Api,
+        minter: Option<&str>,
+    ) -> StdResult<Ownership<Addr>> {
+        MINTER.initialize_owner(storage, api, minter)
+    }
+
     pub fn mint(
         &self,
         deps: DepsMut,
@@ -152,7 +184,7 @@ where
         token_uri: Option<String>,
         extension: TMetadata,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        cw_ownable::assert_owner(deps.storage, &info.sender)?;
+        MINTER.assert_owner(deps.storage, &info.sender)?;
 
         // create the token
         let token = NftInfo {
@@ -176,14 +208,28 @@ where
             .add_attribute("token_id", token_id))
     }
 
-    pub fn update_ownership(
+    pub fn update_minter_ownership(
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        action: cw_ownable::Action,
+        action: Action,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
-        Ok(Response::new().add_attributes(ownership.into_attributes()))
+        let ownership = MINTER.update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new()
+            .add_attribute("update_minter_ownership", info.sender)
+            .add_attributes(ownership.into_attributes()))
+    }
+
+    pub fn update_creator_ownership(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        action: Action,
+    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+        let ownership = CREATOR.update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new()
+            .add_attribute("update_creator_ownership", info.sender)
+            .add_attributes(ownership.into_attributes()))
     }
 
     pub fn set_withdraw_address(
@@ -192,7 +238,7 @@ where
         sender: &Addr,
         address: String,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        cw_ownable::assert_owner(deps.storage, sender)?;
+        CREATOR.assert_owner(deps.storage, sender)?;
         deps.api.addr_validate(&address)?;
         self.withdraw_address.save(deps.storage, &address)?;
         Ok(Response::new()
@@ -205,7 +251,7 @@ where
         storage: &mut dyn Storage,
         sender: &Addr,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        cw_ownable::assert_owner(storage, sender)?;
+        CREATOR.assert_owner(storage, sender)?;
         let address = self.withdraw_address.may_load(storage)?;
         match address {
             Some(address) => {
@@ -223,8 +269,8 @@ where
         storage: &mut dyn Storage,
         amount: &Coin,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
-        let address = self.withdraw_address.may_load(storage)?;
-        match address {
+        let withdraw_address = self.withdraw_address.may_load(storage)?;
+        match withdraw_address {
             Some(address) => {
                 let msg = BankMsg::Send {
                     to_address: address,

@@ -10,7 +10,7 @@ use cw721::{
     Approval, ApprovalResponse, CollectionInfo, Cw721ReceiveMsg, Expiration, NftInfoResponse,
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cw_ownable::OwnershipError;
+use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
@@ -209,7 +209,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
+            ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -217,25 +217,25 @@ fn test_update_minter() {
         .unwrap();
 
     // Minter does not change until ownership transfer completes.
-    let minter: MinterResponse = from_json(
+    let minter_ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some(MINTER.to_string()));
+    assert_eq!(minter_ownership.owner, Some(minter_info.sender.clone()));
 
     // Pending ownership transfer should be discoverable via query.
-    let ownership: cw_ownable::Ownership<Addr> = from_json(
+    let ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
 
     assert_eq!(
         ownership,
-        cw_ownable::Ownership::<Addr> {
+        Ownership::<Addr> {
             owner: Some(Addr::unchecked(MINTER)),
             pending_owner: Some(Addr::unchecked("random")),
             pending_expiry: None,
@@ -249,18 +249,18 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership),
+            ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 
     // Minter changes after ownership transfer is accepted.
-    let minter: MinterResponse = from_json(
+    let minter_ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some("random".to_string()));
+    assert_eq!(minter_ownership.owner, Some(random_info.sender.clone()));
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),

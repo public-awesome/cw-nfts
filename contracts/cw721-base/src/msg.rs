@@ -1,7 +1,9 @@
+use std::{os::raw, result};
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Coin, Empty};
+use cosmwasm_std::{Addr, Binary, Coin, Empty};
 use cw721::Expiration;
-use cw_ownable::{cw_ownable_execute, cw_ownable_query};
+use cw_ownable::{Action, Ownership};
 use schemars::JsonSchema;
 
 #[cw_serde]
@@ -27,11 +29,17 @@ pub struct InstantiateMsg<TCollectionInfoExtension> {
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
-#[cw_ownable_execute]
 #[cw_serde]
 pub enum ExecuteMsg<TMetadata, TExtensionExecuteMsg> {
+    #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
+    UpdateOwnership(Action),
+    UpdateMinterOwnership(Action),
+    UpdateCreatorOwnership(Action),
     /// Transfer is a base message to move a token to another account without triggering actions
-    TransferNft { recipient: String, token_id: String },
+    TransferNft {
+        recipient: String,
+        token_id: String,
+    },
     /// Send is a base message to transfer a token to a contract and trigger an action
     /// on the receiving contract.
     SendNft {
@@ -47,7 +55,10 @@ pub enum ExecuteMsg<TMetadata, TExtensionExecuteMsg> {
         expires: Option<Expiration>,
     },
     /// Remove previously granted Approval
-    Revoke { spender: String, token_id: String },
+    Revoke {
+        spender: String,
+        token_id: String,
+    },
     /// Allows operator to transfer / send any token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit
     ApproveAll {
@@ -55,7 +66,9 @@ pub enum ExecuteMsg<TMetadata, TExtensionExecuteMsg> {
         expires: Option<Expiration>,
     },
     /// Remove previously granted ApproveAll permission
-    RevokeAll { operator: String },
+    RevokeAll {
+        operator: String,
+    },
 
     /// Mint a new NFT, can only be called by the contract minter
     Mint {
@@ -72,21 +85,28 @@ pub enum ExecuteMsg<TMetadata, TExtensionExecuteMsg> {
     },
 
     /// Burn an NFT the sender has access to
-    Burn { token_id: String },
+    Burn {
+        token_id: String,
+    },
 
     /// Extension msg
-    Extension { msg: TExtensionExecuteMsg },
+    Extension {
+        msg: TExtensionExecuteMsg,
+    },
 
     /// Sets address to send withdrawn fees to. Only owner can call this.
-    SetWithdrawAddress { address: String },
+    SetWithdrawAddress {
+        address: String,
+    },
     /// Removes the withdraw address, so fees are sent to the contract. Only owner can call this.
     RemoveWithdrawAddress {},
     /// Withdraw from the contract to the given address. Anyone can call this,
     /// which is okay since withdraw address has been set by owner.
-    WithdrawFunds { amount: Coin },
+    WithdrawFunds {
+        amount: Coin,
+    },
 }
 
-#[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg<TMetadataResponse: JsonSchema> {
@@ -130,14 +150,25 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema> {
     #[returns(cw721::NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
     #[returns(cw721::CollectionInfo<Empty>)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
     #[returns(cw721::CollectionInfo<Empty>)]
-    CollectionInfo {},
+    GetCollectionInfo {},
+
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    #[returns(Ownership<Addr>)]
+    Ownership {},
+
+    #[returns(Ownership<Addr>)]
+    GetMinterOwnership {},
+
+    #[returns(Ownership<Addr>)]
+    GetCreatorOwnership {},
+
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
@@ -170,6 +201,7 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema> {
     },
 
     /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
     Minter {},
 
@@ -185,4 +217,12 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema> {
 #[cw_serde]
 pub struct MinterResponse {
     pub minter: Option<String>,
+}
+
+#[cw_serde]
+pub enum MigrateMsg {
+    WithUpdate {
+        minter: Option<String>,
+        creator: Option<String>,
+    },
 }

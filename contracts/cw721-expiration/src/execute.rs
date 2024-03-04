@@ -3,6 +3,7 @@ use cosmwasm_std::{
 };
 use cw721::{Cw721Execute, EmptyCollectionInfoExtension, Expiration};
 use cw721_base::Cw721Contract;
+use cw_ownable::Action;
 
 use crate::{
     error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, state::Cw721ExpirationContract,
@@ -74,7 +75,16 @@ impl<'a> Cw721ExpirationContract<'a> {
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             ExecuteMsg::Burn { token_id } => self.burn(deps, env, info, token_id),
-            ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(deps, env, info, action),
+            #[allow(deprecated)]
+            ExecuteMsg::UpdateOwnership(action) => {
+                Self::update_minter_ownership(deps, env, info, action)
+            }
+            ExecuteMsg::UpdateMinterOwnership(action) => {
+                Self::update_minter_ownership(deps, env, info, action)
+            }
+            ExecuteMsg::UpdateCreatorOwnership(action) => {
+                Self::update_creator_ownership(deps, env, info, action)
+            }
             ExecuteMsg::Extension { msg: _ } => Ok(Response::default()),
             ExecuteMsg::SetWithdrawAddress { address } => {
                 self.set_withdraw_address(deps, &info.sender, address)
@@ -109,11 +119,11 @@ impl<'a> Cw721ExpirationContract<'a> {
         Ok(res)
     }
 
-    pub fn update_ownership(
+    pub fn update_minter_ownership(
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        action: cw_ownable::Action,
+        action: Action,
     ) -> Result<Response, ContractError> {
         Ok(Cw721Contract::<
             EmptyExtension,
@@ -121,7 +131,22 @@ impl<'a> Cw721ExpirationContract<'a> {
             Empty,
             Empty,
             EmptyCollectionInfoExtension,
-        >::update_ownership(deps, env, info, action)?)
+        >::update_minter_ownership(deps, env, info, action)?)
+    }
+
+    pub fn update_creator_ownership(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        action: Action,
+    ) -> Result<Response, ContractError> {
+        Ok(Cw721Contract::<
+            EmptyExtension,
+            Empty,
+            Empty,
+            Empty,
+            EmptyCollectionInfoExtension,
+        >::update_creator_ownership(deps, env, info, action)?)
     }
 
     pub fn set_withdraw_address(

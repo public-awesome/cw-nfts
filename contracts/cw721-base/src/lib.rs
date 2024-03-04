@@ -33,7 +33,10 @@ pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub mod entry {
-    use self::state::{token_owner_idx, NftInfo, TokenIndexes};
+    use self::{
+        msg::MigrateMsg,
+        state::{token_owner_idx, NftInfo, TokenIndexes, CREATOR, MINTER},
+    };
 
     use super::*;
 
@@ -43,7 +46,7 @@ pub mod entry {
         Addr, Api, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdResult, Storage,
     };
     use cw721::CollectionInfo;
-    use cw_ownable::OWNERSHIP;
+    use cw_ownable::none_or;
     use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
     // This makes a conscious choice on the various generics used by the contract
@@ -84,19 +87,25 @@ pub mod entry {
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn migrate(deps: DepsMut, env: Env, msg: Empty) -> Result<Response, ContractError> {
+    pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
         let response = Response::<Empty>::default();
-        let response = migrate_legacy_minter(deps.storage, deps.api, &env, &msg, response)?;
+        // first migrate legacy data ...
+        let response =
+            migrate_legacy_minter_and_creator(deps.storage, deps.api, &env, &msg, response)?;
         let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
         let response = migrate_legacy_tokens(deps.storage, &env, &msg, response)?;
+        // ... then migrate
         let response = migrate_version(deps.storage, &env, &msg, response)?;
+        // ... and update creator and minter AFTER legacy migration
+        let response = migrate_creator(deps.storage, deps.api, &env, &msg, response)?;
+        let response = migrate_minter(deps.storage, deps.api, &env, &msg, response)?;
         Ok(response)
     }
 
     pub fn migrate_version(
         storage: &mut dyn Storage,
         _env: &Env,
-        _msg: &Empty,
+        _msg: &MigrateMsg,
         response: Response,
     ) -> StdResult<Response> {
         let response = response
@@ -108,33 +117,90 @@ pub mod entry {
         Ok(response)
     }
 
-    /// Migrates only in case ownership is not present
-    pub fn migrate_legacy_minter(
+    pub fn migrate_creator(
         storage: &mut dyn Storage,
         api: &dyn Api,
         _env: &Env,
-        _msg: &Empty,
+        msg: &MigrateMsg,
+        response: Response,
+    ) -> StdResult<Response> {
+        match msg {
+            MigrateMsg::WithUpdate { creator, .. } => {
+                if let Some(creator) = creator {
+                    CREATOR.initialize_owner(storage, api, Some(creator.as_str()))?;
+                    return Ok(response.add_attribute("creator", creator));
+                }
+            }
+        }
+        Ok(response)
+    }
+
+    pub fn migrate_minter(
+        storage: &mut dyn Storage,
+        api: &dyn Api,
+        _env: &Env,
+        msg: &MigrateMsg,
+        response: Response,
+    ) -> StdResult<Response> {
+        match msg {
+            MigrateMsg::WithUpdate { minter, .. } => {
+                if let Some(minter) = minter {
+                    MINTER.initialize_owner(storage, api, Some(minter.as_str()))?;
+                    return Ok(response.add_attribute("creator", minter));
+                }
+            }
+        }
+        Ok(response)
+    }
+
+    /// Migrates only in case ownership is not present
+    /// !!! Important note here: !!!
+    /// - creator owns the contract and can update collection info
+    /// - minter can mint new tokens
+    ///
+    /// Before v0.19.0 there were confusing naming conventions:
+    /// - v0.17.0: minter was replaced by cw_ownable, as a result minter is owner
+    /// - v0.16.0 and below: minter was stored in dedicated `minter` store (so NOT using cw_ownable at all)
+    pub fn migrate_legacy_minter_and_creator(
+        storage: &mut dyn Storage,
+        api: &dyn Api,
+        _env: &Env,
+        _msg: &MigrateMsg,
         response: Response,
     ) -> Result<Response, ContractError> {
-        match OWNERSHIP.item.may_load(storage)? {
-            Some(_) => Ok(response),
+        let minter = MINTER.item.may_load(storage)?;
+        // no migration in case minter is already set
+        if minter.is_some() {
+            return Ok(response);
+        }
+        // in v0.17/18 cw_ownable::OWNERSHIP was used for minter, now it is used for creator
+        let ownership_previously_used_as_minter = CREATOR.item.may_load(storage)?;
+        let creator_and_minter = match ownership_previously_used_as_minter {
+            // v0.18 migration
+            Some(ownership) => {
+                // owner is used for both: creator and minter
+                // since it is already set for creator, we only need to migrate minter
+                let owner = ownership.owner.map(|a| a.to_string());
+                MINTER.initialize_owner(storage, api, owner.as_deref())?;
+                owner
+            }
+            // v0.17 and older migration
             None => {
                 let legacy_minter_store: Item<Addr> = Item::new("minter");
                 let legacy_minter = legacy_minter_store.load(storage)?;
-                let ownership =
-                    cw_ownable::initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
-                Ok(response
-                    .add_attribute("old_minter", legacy_minter)
-                    .add_attributes(ownership.into_attributes()))
+                MINTER.initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
+                CREATOR.initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
+                Some(legacy_minter.to_string())
             }
-        }
+        };
+        Ok(response.add_attribute("creator_and_minter", none_or(creator_and_minter.as_ref())))
     }
 
     /// Migrates only in case collection_info is not present
     pub fn migrate_legacy_collection_info(
         storage: &mut dyn Storage,
         env: &Env,
-        _msg: &Empty,
+        _msg: &MigrateMsg,
         response: Response,
     ) -> Result<Response, ContractError> {
         let contract = Cw721Contract::<
@@ -169,7 +235,7 @@ pub mod entry {
     pub fn migrate_legacy_tokens(
         storage: &mut dyn Storage,
         _env: &Env,
-        _msg: &Empty,
+        _msg: &MigrateMsg,
         response: Response,
     ) -> StdResult<Response> {
         let contract = Cw721Contract::<EmptyExtension, Empty, Empty, Empty, Empty>::default();
@@ -208,8 +274,9 @@ mod tests {
     use cw_storage_plus::{IndexedMap, Item, MultiIndex};
 
     use crate::{
+        msg::MigrateMsg,
         query::MAX_LIMIT,
-        state::{token_owner_idx, NftInfo, TokenIndexes, CREATOR},
+        state::{token_owner_idx, NftInfo, TokenIndexes, CREATOR, MINTER},
     };
 
     use super::*;
@@ -234,11 +301,19 @@ mod tests {
         )
         .unwrap();
 
-        let minter = cw_ownable::get_ownership(deps.as_ref().storage)
+        let minter = MINTER
+            .get_ownership(deps.as_ref().storage)
             .unwrap()
             .owner
             .map(|a| a.into_string());
         assert_eq!(minter, Some("minter".to_string()));
+
+        let creator = CREATOR
+            .get_ownership(deps.as_ref().storage)
+            .unwrap()
+            .owner
+            .map(|a| a.into_string());
+        assert_eq!(creator, Some("creator".to_string()));
 
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(
@@ -254,10 +329,11 @@ mod tests {
     fn proper_owner_initialization() {
         let mut deps = mock_dependencies();
 
+        let info_owner = mock_info("owner", &[]);
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("owner", &[]),
+            info_owner.clone(),
             InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -269,11 +345,8 @@ mod tests {
         )
         .unwrap();
 
-        let minter = cw_ownable::get_ownership(deps.as_ref().storage)
-            .unwrap()
-            .owner
-            .map(|a| a.into_string());
-        assert_eq!(minter, Some("owner".to_string()));
+        let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(minter, Some(info_owner.sender));
         let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(Addr::unchecked("owner")));
     }
@@ -310,7 +383,7 @@ mod tests {
 
         // assert new data before migration:
         // - ownership and collection info throws NotFound Error
-        cw_ownable::get_ownership(deps.as_ref().storage).unwrap_err();
+        MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
         let contract = Cw721Contract::<
             EmptyExtension,
             Empty,
@@ -319,6 +392,9 @@ mod tests {
             EmptyCollectionInfoExtension,
         >::default();
         contract.collection_info(deps.as_ref()).unwrap_err();
+        // query on minter and creator store also throws NotFound Error
+        MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
+        CREATOR.get_ownership(deps.as_ref().storage).unwrap_err();
         // - no tokens
         let all_tokens = contract
             .all_tokens(deps.as_ref(), None, Some(MAX_LIMIT))
@@ -364,7 +440,15 @@ mod tests {
             assert_eq!(legacy_token.owner.as_str(), "owner");
         }
 
-        entry::migrate(deps.as_mut(), env.clone(), Empty {}).unwrap();
+        entry::migrate(
+            deps.as_mut(),
+            env.clone(),
+            MigrateMsg::WithUpdate {
+                minter: None,
+                creator: None,
+            },
+        )
+        .unwrap();
 
         // version
         let version = cw2::get_contract_version(deps.as_ref().storage)
@@ -373,12 +457,21 @@ mod tests {
         assert_eq!(version, CONTRACT_VERSION);
         assert_ne!(version, "0.16.0");
 
-        // assert ownership
-        let ownership = cw_ownable::get_ownership(deps.as_ref().storage)
+        // assert minter ownership
+        let minter_ownership = MINTER
+            .get_ownership(deps.as_ref().storage)
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(ownership, Some("legacy_minter".to_string()));
+        assert_eq!(minter_ownership, Some("legacy_minter".to_string()));
+
+        // assert creator ownership
+        let creator_ownership = CREATOR
+            .get_ownership(deps.as_ref().storage)
+            .unwrap()
+            .owner
+            .map(|a| a.into_string());
+        assert_eq!(creator_ownership, Some("legacy_minter".to_string()));
 
         // assert collection info
         let collection_info = contract.collection_info(deps.as_ref()).unwrap();

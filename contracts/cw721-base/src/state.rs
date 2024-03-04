@@ -1,4 +1,4 @@
-use cw_ownable::OwnershipStore;
+use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,13 @@ use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 use cw721::{CollectionInfo, Cw721, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub const CREATOR: OwnershipStore = OwnershipStore::new("collection_creator");
+/// Creator owns this contract and can update collection info!
+/// !!! Important note here: !!!
+/// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
+/// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
+pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
+/// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
+pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
 pub struct Cw721Contract<
     'a,

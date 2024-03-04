@@ -1,8 +1,13 @@
 use cosmwasm_std::{to_json_binary, Addr, Empty, QuerierWrapper, WasmMsg};
 use cw721::OwnerOfResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
+use cw_ownable::{Ownership, OwnershipError};
 
-use crate::MinterResponse;
+use crate::{msg::MigrateMsg, ContractError, MinterResponse};
+
+pub const CREATOR_ADDR: &str = "creator";
+pub const MINTER_ADDR: &str = "minter";
+pub const OTHER_ADDR: &str = "other";
 
 fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
@@ -20,6 +25,26 @@ fn cw721_base_016_contract() -> Box<dyn Contract<Empty>> {
         v16::entry::execute,
         v16::entry::instantiate,
         v16::entry::query,
+    );
+    Box::new(contract)
+}
+
+fn cw721_base_017_contract() -> Box<dyn Contract<Empty>> {
+    use cw721_base_017 as v17;
+    let contract = ContractWrapper::new(
+        v17::entry::execute,
+        v17::entry::instantiate,
+        v17::entry::query,
+    );
+    Box::new(contract)
+}
+
+fn cw721_base_018_contract() -> Box<dyn Contract<Empty>> {
+    use cw721_base_018 as v18;
+    let contract = ContractWrapper::new(
+        v18::entry::execute,
+        v18::entry::instantiate,
+        v18::entry::query,
     );
     Box::new(contract)
 }
@@ -80,62 +105,638 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
 /// Instantiates a 0.16 version of this contract and tests that tokens
 /// can be minted, transferred, and burnred after migration.
 #[test]
-fn test_migration_016_to_latest() {
-    use cw721_base_016 as v16;
-    let mut app = App::default();
-    let admin = || Addr::unchecked("admin");
+fn test_migration_legacy_to_latest() {
+    // case 1: migrate from v0.16 to latest by using existing minter addr
+    {
+        use cw721_base_016 as v16;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
 
-    let code_id_016 = app.store_code(cw721_base_016_contract());
-    let code_id_latest = app.store_code(cw721_base_latest_contract());
+        let code_id_016 = app.store_code(cw721_base_016_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-    let cw721 = app
-        .instantiate_contract(
-            code_id_016,
-            admin(),
-            &v16::InstantiateMsg {
-                name: "collection".to_string(),
-                symbol: "symbol".to_string(),
-                minter: admin().into_string(),
-            },
-            &[],
-            "cw721-base",
-            Some(admin().into_string()),
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_016,
+                legacy_creator_and_minter.clone(),
+                &v16::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: None,
+                    creator: None,
+                })
+                .unwrap(),
+            }
+            .into(),
         )
         .unwrap();
 
-    mint_transfer_and_burn(&mut app, cw721.clone(), admin(), "1".to_string());
+        // non-minter user cant mint
+        let other = Addr::unchecked(OTHER_ADDR);
+        let err: ContractError = app
+            .execute_contract(
+                other.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: other.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
-    app.execute(
-        admin(),
-        WasmMsg::Migrate {
-            contract_addr: cw721.to_string(),
-            new_code_id: code_id_latest,
-            msg: to_json_binary(&Empty::default()).unwrap(),
-        }
-        .into(),
-    )
-    .unwrap();
+        // legacy minter can still mint
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
 
-    mint_transfer_and_burn(&mut app, cw721.clone(), admin(), "1".to_string());
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
-    // check new mint query response works.
-    let m: MinterResponse = app
-        .wrap()
-        .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v16::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, legacy_creator_and_minter.to_string());
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
+    }
+    // case 2: migrate from v0.16 to latest by providing new creator and minter addr
+    {
+        use cw721_base_016 as v16;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_016 = app.store_code(cw721_base_016_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_016,
+                legacy_creator_and_minter.clone(),
+                &v16::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: Some(MINTER_ADDR.to_string()),
+                    creator: Some(CREATOR_ADDR.to_string()),
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
         .unwrap();
-    assert_eq!(m.minter, Some(admin().to_string()));
 
-    // check that the new response is backwards compatable when minter
-    // is not None.
-    let m: v16::MinterResponse = app
-        .wrap()
-        .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+        // legacy minter user cant mint
+        let err: ContractError = app
+            .execute_contract(
+                legacy_creator_and_minter.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: legacy_creator_and_minter.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+        // new minter can mint
+        let minter = Addr::unchecked(MINTER_ADDR);
+        mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
+
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v16::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, minter.to_string());
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
+    }
+    // case 3: migrate from v0.17 to latest by using existing minter addr
+    {
+        use cw721_base_017 as v17;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_017 = app.store_code(cw721_base_017_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_017,
+                legacy_creator_and_minter.clone(),
+                &v17::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: None,
+                    creator: None,
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
         .unwrap();
-    assert_eq!(m.minter, admin().to_string());
+
+        // non-minter user cant mint
+        let other = Addr::unchecked(OTHER_ADDR);
+        let err: ContractError = app
+            .execute_contract(
+                other.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: other.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+        // legacy minter can still mint
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v17::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
+    }
+    // case 4: migrate from v0.17 to latest by providing new creator and minter addr
+    {
+        use cw721_base_017 as v17;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_017 = app.store_code(cw721_base_017_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_017,
+                legacy_creator_and_minter.clone(),
+                &v17::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: Some(MINTER_ADDR.to_string()),
+                    creator: Some(CREATOR_ADDR.to_string()),
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
+
+        // legacy minter user cant mint
+        let err: ContractError = app
+            .execute_contract(
+                legacy_creator_and_minter.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: legacy_creator_and_minter.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+        // new minter can mint
+        let minter = Addr::unchecked(MINTER_ADDR);
+        mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
+
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v17::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
+    }
+    // case 5: migrate from v0.18 to latest by using existing minter addr
+    {
+        use cw721_base_018 as v18;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_018 = app.store_code(cw721_base_018_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_018,
+                legacy_creator_and_minter.clone(),
+                &v18::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: None,
+                    creator: None,
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
+
+        // non-minter user cant mint
+        let other = Addr::unchecked(OTHER_ADDR);
+        let err: ContractError = app
+            .execute_contract(
+                other.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: other.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+        // legacy minter can still mint
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v18::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
+    }
+    // case 4: migrate from v0.18 to latest by providing new creator and minter addr
+    {
+        use cw721_base_018 as v18;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_018 = app.store_code(cw721_base_018_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_018,
+                legacy_creator_and_minter.clone(),
+                &v18::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin.clone(),
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&MigrateMsg::WithUpdate {
+                    minter: Some(MINTER_ADDR.to_string()),
+                    creator: Some(CREATOR_ADDR.to_string()),
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
+
+        // legacy minter user cant mint
+        let err: ContractError = app
+            .execute_contract(
+                legacy_creator_and_minter.clone(),
+                cw721.clone(),
+                &crate::ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: legacy_creator_and_minter.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
+
+        // new minter can mint
+        let minter = Addr::unchecked(MINTER_ADDR);
+        mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
+
+        // check new mint query response works.
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        let m: v18::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::Minter {})
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetMinterOwnership {})
+            .unwrap();
+        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(&cw721, &crate::QueryMsg::<Empty>::GetCreatorOwnership {})
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
+    }
 }
 
 /// Test backward compatibility using instantiate msg from a 0.16 version on latest contract.
-/// This ensures existing 3rd party contracts doesnt need to updated as well.
+/// This ensures existing 3rd party contracts doesnt need to update as well.
 #[test]
 fn test_instantiate_016_msg() {
     use cw721_base_016 as v16;

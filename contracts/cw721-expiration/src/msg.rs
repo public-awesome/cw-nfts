@@ -1,7 +1,7 @@
 use crate::{EmptyExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Empty;
-use cw_ownable::cw_ownable_query;
+use cosmwasm_std::{Addr, Empty};
+use cw_ownable::Ownership;
 pub type ExecuteMsg = cw721_base::ExecuteMsg<EmptyExtension, Empty>;
 
 #[cw_serde]
@@ -28,7 +28,6 @@ pub struct InstantiateMsg<TCollectionInfoExtension> {
     pub withdraw_address: Option<String>,
 }
 
-#[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
@@ -78,14 +77,25 @@ pub enum QueryMsg {
     #[returns(cw721::NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
     #[returns(cw721::CollectionInfo<cw721::EmptyCollectionInfoExtension>)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
     #[returns(cw721::CollectionInfo<cw721::EmptyCollectionInfoExtension>)]
-    CollectionInfo {},
+    GetCollectionInfo {},
+
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    #[returns(Ownership<Addr>)]
+    Ownership {},
+
+    #[returns(Ownership<Addr>)]
+    GetMinterOwnership {},
+
+    #[returns(Ownership<Addr>)]
+    GetCreatorOwnership {},
+
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
@@ -128,6 +138,7 @@ pub enum QueryMsg {
     },
 
     /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
     Minter {},
 

@@ -9,15 +9,13 @@ use cw721::{
     Approval, ApprovalResponse, CollectionInfo, Cw721Query, Cw721ReceiveMsg, Expiration,
     NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
-use cw_ownable::OwnershipError;
+use cw_ownable::{Action, Ownership, OwnershipError};
 
-use crate::{
-    ContractError, Cw721Contract, EmptyExtension, ExecuteMsg, InstantiateMsg, MinterResponse,
-    QueryMsg,
-};
+use crate::state::{CREATOR, MINTER};
+use crate::{ContractError, Cw721Contract, EmptyExtension, ExecuteMsg, InstantiateMsg, QueryMsg};
 
-const MINTER: &str = "minter";
-const CREATOR: &str = "creator";
+const MINTER_ADDR: &str = "minter";
+const CREATOR_ADDR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
@@ -29,8 +27,8 @@ fn setup_contract(
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         collection_info_extension: Empty {},
-        minter: Some(String::from(MINTER)),
-        creator: Some(String::from(CREATOR)),
+        minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -48,9 +46,9 @@ fn proper_instantiation() {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         collection_info_extension: Empty {},
-        minter: Some(String::from(MINTER)),
-        creator: Some(String::from(CREATOR)),
-        withdraw_address: Some(String::from(MINTER)),
+        minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
+        withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
     let env = mock_env();
@@ -62,8 +60,10 @@ fn proper_instantiation() {
     assert_eq!(0, res.messages.len());
 
     // it worked, let's query the state
-    let res = contract.minter(deps.as_ref()).unwrap();
-    assert_eq!(Some(MINTER.to_string()), res.minter);
+    let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract.collection_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
@@ -79,7 +79,7 @@ fn proper_instantiation() {
         .withdraw_address
         .may_load(deps.as_ref().storage)
         .unwrap();
-    assert_eq!(Some(MINTER.to_string()), withdraw_address);
+    assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
 
     let count = contract.num_tokens(deps.as_ref()).unwrap();
     assert_eq!(0, count.count);
@@ -112,7 +112,7 @@ fn minting() {
     assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
     // minter can mint
-    let allowed = mock_info(MINTER, &[]);
+    let allowed = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg)
         .unwrap();
@@ -156,7 +156,7 @@ fn minting() {
         extension: None,
     };
 
-    let allowed = mock_info(MINTER, &[]);
+    let allowed = mock_info(MINTER_ADDR, &[]);
     let err = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg2)
         .unwrap_err();
@@ -184,7 +184,7 @@ fn test_update_minter() {
     };
 
     // Minter can mint
-    let minter_info = mock_info(MINTER, &[]);
+    let minter_info = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), minter_info.clone(), mint_msg)
         .unwrap();
@@ -196,7 +196,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
+            ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -204,26 +204,18 @@ fn test_update_minter() {
         .unwrap();
 
     // Minter does not change until ownership transfer completes.
-    let minter: MinterResponse = from_json(
-        contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
-            .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(minter.minter, Some(MINTER.to_string()));
-
     // Pending ownership transfer should be discoverable via query.
-    let ownership: cw_ownable::Ownership<Addr> = from_json(
+    let ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
 
     assert_eq!(
         ownership,
-        cw_ownable::Ownership::<Addr> {
-            owner: Some(Addr::unchecked(MINTER)),
+        Ownership::<Addr> {
+            owner: Some(Addr::unchecked(MINTER_ADDR)),
             pending_owner: Some(Addr::unchecked("random")),
             pending_expiry: None,
         }
@@ -236,18 +228,18 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership),
+            ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 
     // Minter changes after ownership transfer is accepted.
-    let minter: MinterResponse = from_json(
+    let minter_ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some("random".to_string()));
+    assert_eq!(minter_ownership.owner, Some(random_info.sender.clone()));
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
@@ -278,7 +270,7 @@ fn burning() {
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: MINTER.to_string(),
+        owner: MINTER_ADDR.to_string(),
         token_uri: Some(token_uri),
         extension: None,
     };
@@ -286,7 +278,7 @@ fn burning() {
     let burn_msg = ExecuteMsg::Burn { token_id };
 
     // mint some NFT
-    let allowed = mock_info(MINTER, &[]);
+    let allowed = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed.clone(), mint_msg)
         .unwrap();
@@ -333,7 +325,7 @@ fn transferring_nft() {
         extension: None,
     };
 
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
@@ -387,7 +379,7 @@ fn sending_nft() {
         extension: None,
     };
 
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
@@ -453,7 +445,7 @@ fn approving_revoking() {
         extension: None,
     };
 
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
@@ -600,7 +592,7 @@ fn approving_all_revoking_all() {
         extension: None,
     };
 
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg1)
         .unwrap();
@@ -861,15 +853,23 @@ fn test_set_withdraw_address() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    // other cant set
+    // other than creator cant set
     let err = contract
-        .set_withdraw_address(deps.as_mut(), &Addr::unchecked("other"), "foo".to_string())
+        .set_withdraw_address(
+            deps.as_mut(),
+            &Addr::unchecked(MINTER_ADDR),
+            "foo".to_string(),
+        )
         .unwrap_err();
     assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
-    // minter can set
+    // creator can set
     contract
-        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .set_withdraw_address(
+            deps.as_mut(),
+            &Addr::unchecked(CREATOR_ADDR),
+            "foo".to_string(),
+        )
         .unwrap();
 
     let withdraw_address = contract
@@ -884,30 +884,38 @@ fn test_remove_withdraw_address() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    // other cant remove
+    // other than creator cant remove
     let err = contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked("other"))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER_ADDR))
         .unwrap_err();
     assert_eq!(err, ContractError::Ownership(OwnershipError::NotOwner));
 
-    // no owner set yet
+    // no withdraw address set yet
     let err = contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(CREATOR_ADDR))
         .unwrap_err();
     assert_eq!(err, ContractError::NoWithdrawAddress {});
 
     // set and remove
     contract
-        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .set_withdraw_address(
+            deps.as_mut(),
+            &Addr::unchecked(CREATOR_ADDR),
+            "foo".to_string(),
+        )
         .unwrap();
     contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(CREATOR_ADDR))
         .unwrap();
     assert!(!contract.withdraw_address.exists(deps.as_ref().storage));
 
     // test that we can set again
     contract
-        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .set_withdraw_address(
+            deps.as_mut(),
+            &Addr::unchecked(CREATOR_ADDR),
+            "foo".to_string(),
+        )
         .unwrap();
     let withdraw_address = contract
         .withdraw_address
@@ -927,9 +935,13 @@ fn test_withdraw_funds() {
         .unwrap_err();
     assert_eq!(err, ContractError::NoWithdrawAddress {});
 
-    // set and withdraw by non-owner
+    // set and withdraw by non-creator
     contract
-        .set_withdraw_address(deps.as_mut(), &Addr::unchecked(MINTER), "foo".to_string())
+        .set_withdraw_address(
+            deps.as_mut(),
+            &Addr::unchecked(CREATOR_ADDR),
+            "foo".to_string(),
+        )
         .unwrap();
     contract
         .withdraw_funds(deps.as_mut().storage, &Coin::new(100, "uark"))
@@ -940,7 +952,7 @@ fn test_withdraw_funds() {
 fn query_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();

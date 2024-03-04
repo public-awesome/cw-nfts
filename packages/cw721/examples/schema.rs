@@ -6,9 +6,9 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 use cosmwasm_std::Empty;
 #[allow(deprecated)]
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo,
-    Cw721ExecuteMsg, Cw721QueryMsg, Cw721ReceiveMsg, NftInfoResponse, NumTokensResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721ExecuteMsg,
+    Cw721QueryMsg, Cw721ReceiveMsg, NftInfoResponse, NumTokensResponse, OperatorResponse,
+    OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721::{EmptyCollectionInfoExtension, EmptyExtension};
 fn main() {

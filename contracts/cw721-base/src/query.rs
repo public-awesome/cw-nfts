@@ -1,8 +1,10 @@
+use cw_ownable::Ownership;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, BlockInfo, CustomMsg, Deps, Env, Order, StdError, StdResult,
+    Storage,
 };
 
 use cw721::{
@@ -14,7 +16,7 @@ use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
 use crate::msg::{MinterResponse, QueryMsg};
-use crate::state::{Approval, Cw721Contract, NftInfo};
+use crate::state::{Approval, Cw721Contract, NftInfo, CREATOR, MINTER};
 
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
@@ -287,10 +289,11 @@ where
         msg: QueryMsg<TMetadataResponse>,
     ) -> StdResult<Binary> {
         match msg {
+            #[allow(deprecated)]
             QueryMsg::Minter {} => to_json_binary(&self.minter(deps)?),
             #[allow(deprecated)]
             QueryMsg::ContractInfo {} => to_json_binary(&self.collection_info(deps)?),
-            QueryMsg::CollectionInfo {} => to_json_binary(&self.collection_info(deps)?),
+            QueryMsg::GetCollectionInfo {} => to_json_binary(&self.collection_info(deps)?),
             QueryMsg::NftInfo { token_id } => to_json_binary(&self.nft_info(deps, token_id)?),
             QueryMsg::OwnerOf {
                 token_id,
@@ -363,7 +366,14 @@ where
                 token_id,
                 include_expired.unwrap_or(false),
             )?),
-            QueryMsg::Ownership {} => to_json_binary(&Self::ownership(deps)?),
+            #[allow(deprecated)]
+            QueryMsg::Ownership {} => to_json_binary(&self.minter_ownership(deps.storage)?),
+            QueryMsg::GetMinterOwnership {} => {
+                to_json_binary(&self.minter_ownership(deps.storage)?)
+            }
+            QueryMsg::GetCreatorOwnership {} => {
+                to_json_binary(&self.creator_ownership(deps.storage)?)
+            }
             QueryMsg::Extension { msg: _ } => Ok(Binary::default()),
             QueryMsg::GetWithdrawAddress {} => {
                 to_json_binary(&self.withdraw_address.may_load(deps.storage)?)
@@ -371,16 +381,22 @@ where
         }
     }
 
+    #[deprecated(since = "0.19.0", note = "Please use minter_ownership instead")]
     pub fn minter(&self, deps: Deps) -> StdResult<MinterResponse> {
-        let minter = cw_ownable::get_ownership(deps.storage)?
+        let minter = MINTER
+            .get_ownership(deps.storage)?
             .owner
             .map(|a| a.into_string());
 
         Ok(MinterResponse { minter })
     }
 
-    pub fn ownership(deps: Deps) -> StdResult<cw_ownable::Ownership<Addr>> {
-        cw_ownable::get_ownership(deps.storage)
+    pub fn minter_ownership(&self, storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
+        MINTER.get_ownership(storage)
+    }
+
+    pub fn creator_ownership(&self, storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
+        CREATOR.get_ownership(storage)
     }
 }
 

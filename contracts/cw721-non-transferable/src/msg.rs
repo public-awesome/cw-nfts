@@ -36,9 +36,12 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     NumTokens {},
-    #[deprecated(since = "0.19.0", note = "Please use CollectionInfo instead")]
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
     ContractInfo {},
-    CollectionInfo {},
+    GetCollectionInfo {},
+    GetMinterOwnership {},
+    GetCreatorOwnership {},
+
     NftInfo {
         token_id: String,
     },
@@ -55,7 +58,10 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     Minter {},
+
+    GetWithdrawAddress {},
 }
 
 impl From<QueryMsg> for Cw721QueryMsg<Empty> {
@@ -70,8 +76,8 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty> {
             },
             QueryMsg::NumTokens {} => Cw721QueryMsg::NumTokens {},
             #[allow(deprecated)]
-            QueryMsg::ContractInfo {} => Cw721QueryMsg::CollectionInfo {},
-            QueryMsg::CollectionInfo {} => Cw721QueryMsg::CollectionInfo {},
+            QueryMsg::ContractInfo {} => Cw721QueryMsg::GetCollectionInfo {},
+            QueryMsg::GetCollectionInfo {} => Cw721QueryMsg::GetCollectionInfo {},
             QueryMsg::NftInfo { token_id } => Cw721QueryMsg::NftInfo { token_id },
             QueryMsg::AllNftInfo {
                 token_id,
@@ -93,7 +99,13 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty> {
                 Cw721QueryMsg::AllTokens { start_after, limit }
             }
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
-            _ => unreachable!("cannot convert {:?} to Cw721QueryMsg", msg),
+            QueryMsg::GetMinterOwnership {} => Cw721QueryMsg::GetMinterOwnership {},
+            QueryMsg::GetCreatorOwnership {} => Cw721QueryMsg::GetCreatorOwnership {},
+            QueryMsg::GetWithdrawAddress {} => Cw721QueryMsg::GetWithdrawAddress {},
+            QueryMsg::AllOperators { .. } => unreachable!("AllOperators is not supported!"),
+            QueryMsg::Approval { .. } => unreachable!("Approval is not supported!"),
+            QueryMsg::Approvals { .. } => unreachable!("Approvals is not supported!"),
+            QueryMsg::Admin { .. } => unreachable!("Approvals is not supported!"),
         }
     }
 }

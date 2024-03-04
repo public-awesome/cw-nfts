@@ -16,9 +16,13 @@ cosmwasm-std    = "^1.2"
 cw2             = "^1.1"
 cw20            = "^1.1"
 cw721           = { version = "*", path = "./packages/cw721" }
-cw721-016       = { version = "0.16.0", package = "cw721" }
+cw721-016       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721" } # needed for backwards compatibility and legacy migration
+cw721-017       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721" } # needed for testing legacy migration
+cw721-018       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721" } # needed for testing legacy migration
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
-cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
+cw721-base-016  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721-base" } # needed for testing legacy migration
+cw721-base-017  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721-base" } # needed for testing legacy migration
+cw721-base-018  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721-base" } # needed for testing legacy migration
 cw-multi-test   = "^0.20"
 cw-ownable      = { git = "https://github.com/public-awesome/cw-plus-plus.git", branch = "multiple_ownership"} # TODO: switch to official https://github.com/larry0x/cw-plus-plus once merged
 cw-storage-plus = "^1.1"
