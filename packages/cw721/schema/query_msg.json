@@ -381,7 +381,20 @@
       "additionalProperties": false
     },
     {
-      "description": "Extension query",
+      "type": "object",
+      "required": [
+        "get_withdraw_address"
+      ],
+      "properties": {
+        "get_withdraw_address": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Do not use - dummy extension query, needed for inferring type parameter during compile",
       "type": "object",
       "required": [
         "extension"
@@ -403,7 +416,7 @@
       "additionalProperties": false
     },
     {
-      "description": "This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error: `cannot infer type for type parameter `TCollectionInfoExtension` declared on the enum `QueryMsg`",
+      "description": "Do not use - dummy collection info extension query, needed for inferring type parameter during compile",
       "type": "object",
       "required": [
         "get_collection_info_extension"
@@ -423,19 +436,6 @@
               ]
             }
           },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
-        "get_withdraw_address"
-      ],
-      "properties": {
-        "get_withdraw_address": {
-          "type": "object",
           "additionalProperties": false
         }
       },
