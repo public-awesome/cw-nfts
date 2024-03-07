@@ -19,7 +19,11 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
-    export_schema_with_title(&schema_for!(Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>), &out_dir, "InstantiateMsg");
+    export_schema_with_title(
+        &schema_for!(Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>),
+        &out_dir,
+        "InstantiateMsg",
+    );
     export_schema_with_title(
         &schema_for!(
             Cw721ExecuteMsg::<
@@ -29,9 +33,13 @@ fn main() {
             >
         ),
         &out_dir,
-        "ExecuteMsg"
+        "ExecuteMsg",
     );
-    export_schema_with_title(&schema_for!(Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension>), &out_dir, "QueryMsg");
+    export_schema_with_title(
+        &schema_for!(Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension>),
+        &out_dir,
+        "QueryMsg",
+    );
     export_schema(&schema_for!(Cw721ReceiveMsg), &out_dir);
     export_schema_with_title(
         &schema_for!(NftInfoResponse<DefaultOptionMetadataExtension>),
