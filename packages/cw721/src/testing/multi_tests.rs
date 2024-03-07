@@ -202,7 +202,7 @@ fn test_operator() {
     let minter = Addr::unchecked(MINTER_ADDR);
     let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
     app.execute_contract(
-        minter.clone(),
+        minter,
         cw721.clone(),
         &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: "1".to_string(),
@@ -329,7 +329,7 @@ fn test_operator() {
 
     // revoke operator
     app.execute_contract(
-        nft_owner.clone(),
+        nft_owner,
         cw721.clone(),
         &Cw721ExecuteMsg::<Empty, Empty, Empty>::RevokeAll {
             operator: other.to_string(),
@@ -342,7 +342,7 @@ fn test_operator() {
     let err: Cw721ContractError = app
         .execute_contract(
             other.clone(),
-            cw721.clone(),
+            cw721,
             &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
@@ -394,7 +394,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -510,7 +510,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -571,7 +571,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
             )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+        assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
@@ -619,7 +619,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -735,7 +735,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -796,7 +796,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
             )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+        assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
@@ -844,7 +844,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -960,7 +960,7 @@ fn test_migration_legacy_to_latest() {
 
         // migrate
         app.execute(
-            admin.clone(),
+            admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
@@ -1021,7 +1021,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
             )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(minter.clone()));
+        assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
