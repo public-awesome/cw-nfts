@@ -1,18 +1,19 @@
 use std::marker::PhantomData;
 
+use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
+use crate::query::{
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, NumTokensResponse,
+    OperatorsResponse, OwnerOfResponse, TokensResponse,
+};
+use crate::state::CollectionInfo;
+use crate::Approval;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, CustomMsg, Empty, QuerierWrapper, StdResult, WasmMsg,
     WasmQuery,
 };
-use cw721::{
-    AllNftInfoResponse, Approval, ApprovalResponse, ApprovalsResponse, CollectionInfo,
-    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
-};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-
-use crate::{ExecuteMsg, QueryMsg};
 
 #[cw_serde]
 pub struct Cw721Contract<
@@ -29,6 +30,8 @@ pub struct Cw721Contract<
 #[allow(dead_code)]
 impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>
     Cw721Contract<TMetadataResponse, TExtensionExecuteMsg, TCollectionInfoExtension>
+where
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -36,7 +39,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
 
     pub fn call<TMetadata: Serialize>(
         &self,
-        msg: ExecuteMsg<TMetadata, TExtensionExecuteMsg>,
+        msg: Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtension>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
@@ -50,7 +53,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: QueryMsg<TMetadataResponse>,
+        req: Cw721QueryMsg<TMetadataResponse, TCollectionInfoExtension>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -68,7 +71,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         token_id: T,
         include_expired: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let req = QueryMsg::OwnerOf {
+        let req = Cw721QueryMsg::OwnerOf {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
         };
@@ -82,7 +85,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         spender: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalResponse> {
-        let req = QueryMsg::Approval {
+        let req = Cw721QueryMsg::Approval {
             token_id: token_id.into(),
             spender: spender.into(),
             include_expired,
@@ -97,7 +100,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         token_id: T,
         include_expired: Option<bool>,
     ) -> StdResult<ApprovalsResponse> {
-        let req = QueryMsg::Approvals {
+        let req = Cw721QueryMsg::Approvals {
             token_id: token_id.into(),
             include_expired,
         };
@@ -113,7 +116,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<Vec<Approval>> {
-        let req = QueryMsg::AllOperators {
+        let req = Cw721QueryMsg::AllOperators {
             owner: owner.into(),
             include_expired: Some(include_expired),
             start_after,
@@ -124,7 +127,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
     }
 
     pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
-        let req = QueryMsg::NumTokens {};
+        let req = Cw721QueryMsg::NumTokens {};
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
     }
@@ -134,7 +137,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         &self,
         querier: &QuerierWrapper,
     ) -> StdResult<CollectionInfo<U>> {
-        let req = QueryMsg::GetCollectionInfo {};
+        let req = Cw721QueryMsg::GetCollectionInfo {};
         self.query(querier, req)
     }
 
@@ -144,7 +147,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         querier: &QuerierWrapper,
         token_id: T,
     ) -> StdResult<NftInfoResponse<U>> {
-        let req = QueryMsg::NftInfo {
+        let req = Cw721QueryMsg::NftInfo {
             token_id: token_id.into(),
         };
         self.query(querier, req)
@@ -157,7 +160,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         token_id: T,
         include_expired: bool,
     ) -> StdResult<AllNftInfoResponse<U>> {
-        let req = QueryMsg::AllNftInfo {
+        let req = Cw721QueryMsg::AllNftInfo {
             token_id: token_id.into(),
             include_expired: Some(include_expired),
         };
@@ -172,7 +175,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::Tokens {
+        let req = Cw721QueryMsg::Tokens {
             owner: owner.into(),
             start_after,
             limit,
@@ -187,7 +190,7 @@ impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionI
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
-        let req = QueryMsg::AllTokens { start_after, limit };
+        let req = Cw721QueryMsg::AllTokens { start_after, limit };
         self.query(querier, req)
     }
 

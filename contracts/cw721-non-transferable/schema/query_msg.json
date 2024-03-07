@@ -171,10 +171,36 @@
     {
       "type": "object",
       "required": [
-        "collection_info"
+        "get_collection_info"
       ],
       "properties": {
-        "collection_info": {
+        "get_collection_info": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_minter_ownership"
+      ],
+      "properties": {
+        "get_minter_ownership": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_creator_ownership"
+      ],
+      "properties": {
+        "get_creator_ownership": {
           "type": "object",
           "additionalProperties": false
         }
@@ -294,12 +320,26 @@
       "additionalProperties": false
     },
     {
+      "deprecated": true,
       "type": "object",
       "required": [
         "minter"
       ],
       "properties": {
         "minter": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_withdraw_address"
+      ],
+      "properties": {
+        "get_withdraw_address": {
           "type": "object",
           "additionalProperties": false
         }

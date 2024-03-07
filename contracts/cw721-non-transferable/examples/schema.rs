@@ -3,13 +3,17 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
 
-use cw721::EmptyCollectionInfoExtension;
-#[allow(deprecated)]
+use cosmwasm_std::Empty;
 use cw721::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfo, Cw721ExecuteMsg,
-    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    msg::{Cw721ExecuteMsg, MinterResponse},
+    query::{
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse,
+        NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    },
+    state::{CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
 };
-use cw721_non_transferable::{EmptyExtension, InstantiateMsg, MinterResponse, QueryMsg};
+#[allow(deprecated)]
+use cw721_non_transferable::{InstantiateMsg, QueryMsg};
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -18,14 +22,23 @@ fn main() {
     remove_schemas(&out_dir).unwrap();
 
     export_schema_with_title(
-        &schema_for!(InstantiateMsg<EmptyCollectionInfoExtension>),
+        &schema_for!(InstantiateMsg<DefaultOptionCollectionInfoExtension>),
         &out_dir,
         "InstantiateMsg",
     );
-    export_schema_with_title(&schema_for!(Cw721ExecuteMsg), &out_dir, "Cw721ExecuteMsg");
+    export_schema_with_title(
+        &schema_for!(Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty, DefaultOptionCollectionInfoExtension>),
+        &out_dir,
+        "ExecuteMsg",
+    );
     export_schema(&schema_for!(QueryMsg), &out_dir);
     export_schema_with_title(
-        &schema_for!(AllNftInfoResponse<EmptyExtension>),
+        &schema_for!(NftInfoResponse<DefaultOptionMetadataExtension>),
+        &out_dir,
+        "NftInfoResponse",
+    );
+    export_schema_with_title(
+        &schema_for!(AllNftInfoResponse<DefaultOptionMetadataExtension>),
         &out_dir,
         "AllNftInfoResponse",
     );
@@ -33,16 +46,11 @@ fn main() {
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     export_schema_with_title(
-        &schema_for!(CollectionInfo<EmptyCollectionInfoExtension>),
+        &schema_for!(CollectionInfo<DefaultOptionCollectionInfoExtension>),
         &out_dir,
         "CollectionInfo",
     );
     export_schema(&schema_for!(MinterResponse), &out_dir);
-    export_schema_with_title(
-        &schema_for!(NftInfoResponse<EmptyExtension>),
-        &out_dir,
-        "NftInfoResponse",
-    );
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);

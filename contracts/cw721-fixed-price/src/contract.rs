@@ -6,16 +6,14 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
-    StdResult, SubMsg, Uint128, WasmMsg,
+    to_json_binary, Addr, Binary, CosmosMsg, Deps, DepsMut, Empty, Env, MessageInfo, Reply,
+    ReplyOn, Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
-use cw721_base::EmptyCollectionInfoExtension;
-use cw721_base::{
-    helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
-    msg::InstantiateMsg as Cw721InstantiateMsg,
-};
+use cw721::helpers::Cw721Contract;
+use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+use cw721::state::DefaultOptionCollectionInfoExtension;
 use cw_utils::parse_reply_instantiate_data;
 
 // version info for migration info
@@ -29,7 +27,7 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    msg: InstantiateMsg<EmptyCollectionInfoExtension>,
+    msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -163,7 +161,7 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<_, Empty>::Mint {
+    let mint_msg = Cw721ExecuteMsg::<_, Empty, Empty>::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
@@ -189,7 +187,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
     use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
-    use cw721_base::EmptyExtension;
+    use cw721::state::DefaultOptionMetadataExtension;
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
@@ -388,7 +386,7 @@ mod tests {
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let mint_msg = Cw721ExecuteMsg::<EmptyExtension, Empty>::Mint {
+        let mint_msg = Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty, Empty>::Mint {
             token_id: String::from("0"),
             owner: String::from("minter"),
             token_uri: Some(String::from("https://ipfs.io/ipfs/Q")),

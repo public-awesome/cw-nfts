@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-use cw721_base::msg::QueryMsg as Cw721QueryMsg;
+use cw721::{msg::Cw721QueryMsg, state::DefaultOptionCollectionInfoExtension};
 
 #[cw_serde]
 pub struct InstantiateMsg<TCollectionInfoExtension> {
@@ -64,8 +64,8 @@ pub enum QueryMsg {
     GetWithdrawAddress {},
 }
 
-impl From<QueryMsg> for Cw721QueryMsg<Empty> {
-    fn from(msg: QueryMsg) -> Cw721QueryMsg<Empty> {
+impl From<QueryMsg> for Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension> {
+    fn from(msg: QueryMsg) -> Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,

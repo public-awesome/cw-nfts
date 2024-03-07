@@ -1,27 +1,60 @@
-use cosmwasm_std::{Empty, Timestamp};
+use cosmwasm_std::{CustomMsg, Timestamp};
+use cw721_base::Cw721Contract;
 use cw_storage_plus::{Item, Map};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
-use crate::{EmptyCollectionInfoExtension, EmptyExtension};
-
-pub struct Cw721ExpirationContract<'a> {
+pub struct Cw721ExpirationContract<
+    'a,
+    TMetadata,
+    TCustomResponseMessage,
+    TExtensionExecuteMsg,
+    TMetadataResponse,
+    TCollectionInfoExtension,
+> where
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataResponse: CustomMsg,
+    TExtensionExecuteMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+{
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
-    pub base_contract: cw721_base::Cw721Contract<
+    pub base_contract: Cw721Contract<
         'a,
-        EmptyExtension,
-        Empty,
-        Empty,
-        Empty,
-        EmptyCollectionInfoExtension,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
     >,
 }
 
-impl Default for Cw721ExpirationContract<'static> {
+impl<
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    > Default
+    for Cw721ExpirationContract<
+        'static,
+        TMetadata,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TMetadataResponse,
+        TCollectionInfoExtension,
+    >
+where
+    TMetadata: Serialize + DeserializeOwned + Clone,
+    TExtensionExecuteMsg: CustomMsg,
+    TMetadataResponse: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+{
     fn default() -> Self {
         Self {
             expiration_days: Item::new("expiration_days"),
             mint_timestamps: Map::new("mint_timestamps"),
-            base_contract: cw721_base::Cw721Contract::default(),
+            base_contract: Cw721Contract::default(),
         }
     }
 }

@@ -1,9 +1,9 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
+use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
-    ContractError, Cw721Contract, EmptyCollectionInfoExtension, EmptyExtension, ExecuteMsg,
-    InstantiateMsg as Cw721BaseInstantiateMsg, MinterResponse,
+    Cw721Contract,
 };
 
 pub mod msg;
@@ -14,8 +14,14 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> =
-    Cw721Contract<'a, EmptyExtension, Empty, Empty, Empty, EmptyCollectionInfoExtension>;
+pub type Cw721NonTransferableContract<'a> = Cw721Contract<
+    'a,
+    DefaultOptionMetadataExtension,
+    Empty,
+    Empty,
+    Empty,
+    DefaultOptionCollectionInfoExtension,
+>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -26,14 +32,17 @@ pub mod entry {
         entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
         StdResult,
     };
+    use cw721::error::Cw721ContractError;
+    use cw721::execute::Cw721Execute;
+    use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
 
     #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
-    ) -> Result<Response, ContractError> {
+        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
+    ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
             .as_deref()
@@ -44,7 +53,7 @@ pub mod entry {
 
         CONFIG.save(deps.storage, &config)?;
 
-        let cw721_base_instantiate_msg = Cw721BaseInstantiateMsg {
+        let cw721_base_instantiate_msg = Cw721InstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
             collection_info_extension: msg.collection_info_extension,
@@ -58,6 +67,8 @@ pub mod entry {
             env,
             info,
             cw721_base_instantiate_msg,
+            "contract_name",
+            "contract_version",
         )?;
 
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -72,28 +83,32 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<EmptyExtension, Empty>,
-    ) -> Result<Response, cw721_base::ContractError> {
+        msg: Cw721ExecuteMsg<
+            DefaultOptionMetadataExtension,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >,
+    ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;
         match config.admin {
             Some(admin) => {
                 if admin == info.sender {
                     _execute(deps, env, info, msg)
                 } else {
-                    Err(ContractError::Ownership(
+                    Err(Cw721ContractError::Ownership(
                         cw721_base::OwnershipError::NotOwner,
                     ))
                 }
             }
             None => match msg {
-                ExecuteMsg::Mint {
+                Cw721ExecuteMsg::Mint {
                     token_id,
                     owner,
                     token_uri,
                     extension,
                 } => Cw721NonTransferableContract::default()
                     .mint(deps, info, token_id, owner, token_uri, extension),
-                _ => Err(ContractError::Ownership(
+                _ => Err(Cw721ContractError::Ownership(
                     cw721_base::OwnershipError::NotOwner,
                 )),
             },

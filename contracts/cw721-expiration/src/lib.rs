@@ -8,20 +8,21 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
+use cw721::state::DefaultOptionMetadataExtension;
+use cw721::{execute::Cw721Execute, query::Cw721Query};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type MinterResponse = cw721_base::msg::MinterResponse;
-pub use cw721_base::{EmptyCollectionInfoExtension, EmptyExtension};
+pub type MinterResponse = cw721::msg::MinterResponse;
 
-pub type NftInfo = cw721_base::state::NftInfo<EmptyExtension>;
+pub type NftInfo = cw721::state::NftInfo<DefaultOptionMetadataExtension>;
 
 pub mod entry {
     use crate::{
         error::ContractError,
-        msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+        msg::{InstantiateMsg, QueryMsg},
         state::Cw721ExpirationContract,
     };
 
@@ -29,7 +30,11 @@ pub mod entry {
 
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
+    use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response};
+    use cw721::{
+        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+        state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    };
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -37,10 +42,16 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<EmptyCollectionInfoExtension>,
+        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
     ) -> Result<Response, ContractError> {
-        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-        Cw721ExpirationContract::default().instantiate(deps.branch(), env, info, msg)
+        let contract = Cw721ExpirationContract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >::default();
+        contract.instantiate(deps, env, info, msg)
     }
 
     #[entry_point]
@@ -48,19 +59,42 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg,
+        msg: Cw721ExecuteMsg<
+            DefaultOptionMetadataExtension,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >,
     ) -> Result<Response, ContractError> {
-        Cw721ExpirationContract::default().execute(deps, env, info, msg)
+        let contract = Cw721ExpirationContract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >::default();
+        contract.execute(deps, env, info, msg)
     }
 
     #[entry_point]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
-        Cw721ExpirationContract::default().query(deps, env, msg)
+    pub fn query(
+        deps: Deps,
+        env: Env,
+        msg: QueryMsg<Empty, DefaultOptionCollectionInfoExtension>,
+    ) -> Result<Binary, ContractError> {
+        let contract = Cw721ExpirationContract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >::default();
+        contract.query(deps, env, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
-        Ok(Response::default())
+        // TODO: allow migration e.g. from cw721-base
+        panic!("This contract does not support migrations")
     }
 }
 
@@ -68,6 +102,7 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
+    use cw721::state::DefaultOptionCollectionInfoExtension;
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
 
@@ -123,10 +158,16 @@ mod tests {
 
         assert_eq!(
             1,
-            Cw721ExpirationContract::default()
-                .expiration_days
-                .load(deps.as_ref().storage)
-                .unwrap()
+            Cw721ExpirationContract::<
+                DefaultOptionMetadataExtension,
+                Empty,
+                Empty,
+                Empty,
+                DefaultOptionCollectionInfoExtension,
+            >::default()
+            .expiration_days
+            .load(deps.as_ref().storage)
+            .unwrap()
         );
     }
 }
