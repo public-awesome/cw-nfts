@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, Decimal, Empty, StdResult, Storage, Timestamp};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, Decimal, StdResult, Storage, Timestamp};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;

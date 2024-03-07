@@ -9,7 +9,6 @@ mod contract_tests;
 
 use cosmwasm_std::Empty;
 use cw721::state::DefaultOptionMetadataExtension;
-use cw721::{execute::Cw721Execute, query::Cw721Query};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
@@ -30,16 +29,16 @@ pub mod entry {
 
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response};
+    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
-        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+        msg::Cw721ExecuteMsg,
         state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
     };
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn instantiate(
-        mut deps: DepsMut,
+        deps: DepsMut,
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,

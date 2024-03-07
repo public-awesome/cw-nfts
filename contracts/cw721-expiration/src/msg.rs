@@ -1,6 +1,6 @@
 use crate::{DefaultOptionMetadataExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Empty};
+use cosmwasm_std::{Addr};
 use cw721::state::CollectionInfo;
 use cw_ownable::Ownership;
 use schemars::JsonSchema;

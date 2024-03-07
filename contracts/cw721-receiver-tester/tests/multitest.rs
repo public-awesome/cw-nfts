@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_json_binary, Addr, Attribute, Binary, Empty};
+use cosmwasm_std::{to_json_binary, Addr, Attribute, Binary};
 use cw721::state::DefaultOptionCollectionInfoExtension;
 use cw_multi_test::{App, ContractWrapper, Executor};
 

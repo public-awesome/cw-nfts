@@ -1,14 +1,13 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, CustomMsg, Deps, Env, StdResult, Storage};
+use cosmwasm_std::{to_json_binary, Binary, CustomMsg, Deps, Env, StdResult};
 use cw721::query::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721Query, NftInfoResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::{
     error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract,
-    DefaultOptionMetadataExtension,
 };
 
 impl<

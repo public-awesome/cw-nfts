@@ -436,6 +436,7 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -444,6 +445,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -545,6 +547,7 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -553,6 +556,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -657,6 +661,7 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -665,6 +670,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -766,6 +772,7 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -774,6 +781,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -878,6 +886,7 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -886,6 +895,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -987,6 +997,7 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
@@ -995,6 +1006,7 @@ fn test_migration_legacy_to_latest() {
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
             .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})

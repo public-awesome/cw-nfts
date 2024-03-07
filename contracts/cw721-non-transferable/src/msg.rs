@@ -98,6 +98,7 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtensio
             QueryMsg::AllTokens { start_after, limit } => {
                 Cw721QueryMsg::AllTokens { start_after, limit }
             }
+            #[allow(deprecated)]
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
             QueryMsg::GetMinterOwnership {} => Cw721QueryMsg::GetMinterOwnership {},
             QueryMsg::GetCreatorOwnership {} => Cw721QueryMsg::GetCreatorOwnership {},

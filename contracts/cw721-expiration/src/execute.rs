@@ -1,10 +1,9 @@
 use cosmwasm_std::{
-    Binary, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Response, StdResult,
+    Binary, CustomMsg, DepsMut, Env, MessageInfo, Response,
 };
 use cw721::{
     execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
     Expiration,
 };
 use serde::de::DeserializeOwned;
@@ -127,6 +126,7 @@ where
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn mint_with_timestamp(
         &self,
         deps: DepsMut,

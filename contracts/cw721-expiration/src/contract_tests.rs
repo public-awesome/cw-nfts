@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-use std::ops::Add;
-
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
@@ -16,7 +14,7 @@ use cw721::query::{
 };
 use cw721::receiver::Cw721ReceiveMsg;
 use cw721::state::{CollectionInfo, DefaultOptionCollectionInfoExtension, CREATOR, MINTER};
-use cw721::{execute::Cw721Execute, query::Cw721Query, Approval, Expiration};
+use cw721::{query::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;
