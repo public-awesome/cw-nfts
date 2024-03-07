@@ -2,8 +2,8 @@
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response,
-    StdError, Timestamp, WasmMsg,
+    from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response, StdError,
+    Timestamp, WasmMsg,
 };
 
 use crate::error::Cw721ContractError;
@@ -13,8 +13,8 @@ use crate::query::{
 };
 use crate::receiver::Cw721ReceiveMsg;
 use crate::state::{
-    CollectionInfo, DefaultOptionCollectionInfoExtension,
-    DefaultOptionMetadataExtension, CREATOR, MINTER,
+    CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, CREATOR,
+    MINTER,
 };
 use crate::{execute::Cw721Execute, query::Cw721Query, Approval, Expiration};
 use crate::{CollectionInfoExtension, RoyaltyInfo};

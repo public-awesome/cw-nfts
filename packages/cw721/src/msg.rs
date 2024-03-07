@@ -214,17 +214,19 @@ pub enum Cw721QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> 
     #[returns(MinterResponse)]
     Minter {},
 
-    /// Extension query
+    #[returns(Option<String>)]
+    GetWithdrawAddress {},
+
+    // -- below queries, Extension and GetCollectionInfoExtension, are just dummies, since type annotations are required for
+    // -- TMetadataResponse and TCollectionInfoExtension, Error:
+    // -- "type annotations needed: cannot infer type for type parameter `TMetadataResponse` declared on the enum `Cw721QueryMsg`"
+    /// Do not use - dummy extension query, needed for inferring type parameter during compile
     #[returns(())]
     Extension { msg: TMetadataResponse },
 
-    /// This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error:
-    /// `cannot infer type for type parameter `TCollectionInfoExtension` declared on the enum `QueryMsg`
+    /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
     #[returns(())]
     GetCollectionInfoExtension { msg: TCollectionInfoExtension },
-
-    #[returns(Option<String>)]
-    GetWithdrawAddress {},
 }
 
 /// Shows who can mint these tokens

@@ -6,9 +6,7 @@ use cw721::query::{
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::{
-    error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract,
-};
+use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
 impl<
         'a,
