@@ -5,10 +5,10 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 
 use cosmwasm_std::Empty;
 use cw721::{
-    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg},
-    query::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse,
-        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    msg::{
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721ExecuteMsg,
+        Cw721InstantiateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OperatorResponse,
+        OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
     state::{CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},

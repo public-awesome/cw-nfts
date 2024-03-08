@@ -26,7 +26,12 @@ pub struct Cw721Contract<
     >,
 }
 
-impl<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension> Default
+impl<
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    > Default
     for Cw721Contract<
         'static,
         TMetadataExtension,
@@ -46,8 +51,19 @@ where
     }
 }
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
-    Cw721Execute<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    >
+    Cw721Execute<
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    >
     for Cw721Contract<
         'a,
         TMetadataExtension,
@@ -63,8 +79,13 @@ where
 {
 }
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
-    Cw721Query<TMetadataExtension, TCollectionInfoExtension>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadataExtension,

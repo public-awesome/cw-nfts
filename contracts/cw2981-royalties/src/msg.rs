@@ -3,9 +3,8 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Empty, Uint128};
 use cw721::{msg::Cw721QueryMsg, state::DefaultOptionCollectionInfoExtension};
 use cw721_base::{
-    msg::MinterResponse,
-    query::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse,
+    msg::{
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
         NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     state::CollectionInfo,

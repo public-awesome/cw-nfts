@@ -37,14 +37,20 @@ pub struct Cw721Config<
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info: IndexedMap<'a, &'a str, NftInfo<TMetadataExtension>, TokenIndexes<'a, TMetadataExtension>>,
+    pub nft_info:
+        IndexedMap<'a, &'a str, NftInfo<TMetadataExtension>, TokenIndexes<'a, TMetadataExtension>>,
     pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<TCustomResponseMessage>,
     pub(crate) _custom_execute: PhantomData<TExtensionExecuteMsg>,
 }
 
-impl<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension> Default
+impl<
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    > Default
     for Cw721Config<
         'static,
         TMetadataExtension,
@@ -69,7 +75,13 @@ where
     }
 }
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    >
     Cw721Config<
         'a,
         TMetadataExtension,
@@ -162,11 +174,14 @@ where
     pub owner: MultiIndex<'a, Addr, NftInfo<TMetadataExtension>, String>,
 }
 
-impl<'a, TMetadataExtension> IndexList<NftInfo<TMetadataExtension>> for TokenIndexes<'a, TMetadataExtension>
+impl<'a, TMetadataExtension> IndexList<NftInfo<TMetadataExtension>>
+    for TokenIndexes<'a, TMetadataExtension>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TMetadataExtension>>> + '_> {
+    fn get_indexes(
+        &'_ self,
+    ) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TMetadataExtension>>> + '_> {
         let v: Vec<&dyn Index<NftInfo<TMetadataExtension>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }

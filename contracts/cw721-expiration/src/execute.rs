@@ -12,7 +12,13 @@ use crate::{
     CONTRACT_VERSION,
 };
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    >
     Cw721ExpirationContract<
         'a,
         TMetadataExtension,

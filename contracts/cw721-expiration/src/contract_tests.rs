@@ -7,10 +7,9 @@ use cosmwasm_std::{
 };
 
 use cw721::error::Cw721ContractError;
-use cw721::msg::Cw721ExecuteMsg;
-use cw721::query::{
-    ApprovalResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+use cw721::msg::{
+    ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
 use cw721::state::{CollectionInfo, DefaultOptionCollectionInfoExtension, CREATOR, MINTER};

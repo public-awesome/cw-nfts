@@ -7,10 +7,10 @@ use cosmwasm_std::{
 };
 
 use crate::error::Cw721ContractError;
-use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
-use crate::query::{
+use crate::msg::{
     ApprovalResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
+use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
 use crate::state::{
     CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, CREATOR,

@@ -210,7 +210,9 @@ pub trait Cw721Execute<
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        _update_approvals::<TMetadataExtension>(deps, &env, &info, &spender, &token_id, true, expires)?;
+        _update_approvals::<TMetadataExtension>(
+            deps, &env, &info, &spender, &token_id, true, expires,
+        )?;
 
         Ok(Response::new()
             .add_attribute("action", "approve")
@@ -227,7 +229,9 @@ pub trait Cw721Execute<
         spender: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        _update_approvals::<TMetadataExtension>(deps, &env, &info, &spender, &token_id, false, None)?;
+        _update_approvals::<TMetadataExtension>(
+            deps, &env, &info, &spender, &token_id, false, None,
+        )?;
 
         Ok(Response::new()
             .add_attribute("action", "revoke")

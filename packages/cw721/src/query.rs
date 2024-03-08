@@ -1,4 +1,3 @@
-use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, BlockInfo, Deps, Empty, Env, Order, StdError, StdResult, Storage,
 };
@@ -9,7 +8,11 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::{
-    msg::{Cw721QueryMsg, MinterResponse},
+    msg::{
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721QueryMsg, MinterResponse,
+        NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+        TokensResponse,
+    },
     state::{Approval, CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
 };
 
@@ -162,8 +165,9 @@ where
     }
 
     fn query_num_tokens(&self, deps: Deps, _env: Env) -> StdResult<NumTokensResponse> {
-        let count = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .token_count(deps.storage)?;
+        let count =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .token_count(deps.storage)?;
         Ok(NumTokensResponse { count })
     }
 
@@ -173,9 +177,10 @@ where
         _env: Env,
         token_id: String,
     ) -> StdResult<NftInfoResponse<TMetadataExtension>> {
-        let info = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+        let info =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .nft_info
+                .load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
             extension: info.extension,
@@ -189,9 +194,10 @@ where
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let nft_info = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+        let nft_info =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .nft_info
+                .load(deps.storage, &token_id)?;
         Ok(OwnerOfResponse {
             owner: nft_info.owner.to_string(),
             approvals: humanize_approvals(&env.block, &nft_info, include_expired_approval),
@@ -210,9 +216,10 @@ where
         let owner_addr = deps.api.addr_validate(&owner)?;
         let operator_addr = deps.api.addr_validate(&operator)?;
 
-        let info = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .operators
-            .may_load(deps.storage, (&owner_addr, &operator_addr))?;
+        let info =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .operators
+                .may_load(deps.storage, (&owner_addr, &operator_addr))?;
 
         if let Some(expires) = info {
             if !include_expired_approval && expires.is_expired(&env.block) {
@@ -269,9 +276,10 @@ where
         spender: String,
         include_expired_approval: bool,
     ) -> StdResult<ApprovalResponse> {
-        let token = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+        let token =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .nft_info
+                .load(deps.storage, &token_id)?;
 
         // token owner has absolute approval
         if token.owner == spender {
@@ -310,9 +318,10 @@ where
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<ApprovalsResponse> {
-        let token = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+        let token =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .nft_info
+                .load(deps.storage, &token_id)?;
         let approvals: Vec<_> = token
             .approvals
             .into_iter()
@@ -379,9 +388,10 @@ where
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<AllNftInfoResponse<TMetadataExtension>> {
-        let nft_info = Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+        let nft_info =
+            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+                .nft_info
+                .load(deps.storage, &token_id)?;
         Ok(AllNftInfoResponse {
             access: OwnerOfResponse {
                 owner: nft_info.owner.to_string(),
@@ -394,7 +404,12 @@ where
         })
     }
 
-    fn query_extension(&self, _deps: Deps, _env: Env, _msg: TMetadataExtension) -> StdResult<Binary> {
+    fn query_extension(
+        &self,
+        _deps: Deps,
+        _env: Env,
+        _msg: TMetadataExtension,
+    ) -> StdResult<Binary> {
         Ok(Binary::default())
     }
 
@@ -439,63 +454,4 @@ pub fn humanize_approval(approval: &Approval) -> Approval {
         spender: approval.spender.clone(),
         expires: approval.expires,
     }
-}
-
-#[cw_serde]
-pub struct OwnerOfResponse {
-    /// Owner of the token
-    pub owner: String,
-    /// If set this address is approved to transfer/send the token as well
-    pub approvals: Vec<Approval>,
-}
-
-#[cw_serde]
-pub struct ApprovalResponse {
-    pub approval: Approval,
-}
-
-#[cw_serde]
-pub struct ApprovalsResponse {
-    pub approvals: Vec<Approval>,
-}
-
-#[cw_serde]
-pub struct OperatorResponse {
-    pub approval: Approval,
-}
-
-#[cw_serde]
-pub struct OperatorsResponse {
-    pub operators: Vec<Approval>,
-}
-
-#[cw_serde]
-pub struct NumTokensResponse {
-    pub count: u64,
-}
-
-#[cw_serde]
-pub struct NftInfoResponse<TMetadataExtension> {
-    /// Universal resource identifier for this NFT
-    /// Should point to a JSON file that conforms to the ERC721
-    /// Metadata JSON Schema
-    pub token_uri: Option<String>,
-    /// You can add any custom metadata here when you extend cw721-base
-    pub extension: TMetadataExtension,
-}
-
-#[cw_serde]
-pub struct AllNftInfoResponse<TMetadataExtension> {
-    /// Who can transfer the token
-    pub access: OwnerOfResponse,
-    /// Data on the token itself,
-    pub info: NftInfoResponse<TMetadataExtension>,
-}
-
-#[cw_serde]
-pub struct TokensResponse {
-    /// Contains all token_ids in lexicographical ordering
-    /// If there are more than `limit`, use `start_after` in future queries
-    /// to achieve pagination.
-    pub tokens: Vec<String>,
 }

@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
-use crate::query::{
+use crate::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, NumTokensResponse,
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
+use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
 use crate::state::CollectionInfo;
 use crate::Approval;
 use cosmwasm_schema::cw_serde;
@@ -16,7 +16,11 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 #[cw_serde]
-pub struct Cw721Contract<TMetadataExtension, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>(
+pub struct Cw721Contract<
+    TMetadataExtension,
+    TExtensionExecuteMsg: CustomMsg,
+    TCollectionInfoExtension,
+>(
     pub Addr,
     pub PhantomData<TMetadataExtension>,
     pub PhantomData<TExtensionExecuteMsg>,

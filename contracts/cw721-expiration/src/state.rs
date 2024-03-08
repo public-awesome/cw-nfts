@@ -26,7 +26,12 @@ pub struct Cw721ExpirationContract<
     >,
 }
 
-impl<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension> Default
+impl<
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    > Default
     for Cw721ExpirationContract<
         'static,
         TMetadataExtension,

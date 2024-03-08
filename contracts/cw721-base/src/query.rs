@@ -6,8 +6,13 @@ use serde::Serialize;
 
 use crate::Cw721Contract;
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
-    Cw721Query<TMetadataExtension, TCollectionInfoExtension>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TExtensionExecuteMsg,
+        TCollectionInfoExtension,
+    > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadataExtension,

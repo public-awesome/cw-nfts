@@ -3,12 +3,8 @@ use cosmwasm_std::{Addr, Binary, Coin};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
 
-use crate::query::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, NumTokensResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
-};
-
 use crate::state::CollectionInfo;
+use crate::Approval;
 
 use cosmwasm_std::Empty;
 
@@ -228,12 +224,6 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     GetCollectionInfoExtension { msg: TCollectionInfoExtension },
 }
 
-/// Shows who can mint these tokens
-#[cw_serde]
-pub struct MinterResponse {
-    pub minter: Option<String>,
-}
-
 #[cw_serde]
 pub enum Cw721MigrateMsg {
     WithUpdate {
@@ -247,4 +237,70 @@ pub struct CollectionInfoMsg<TCollectionInfoExtension> {
     pub name: String,
     pub symbol: String,
     pub extension: TCollectionInfoExtension,
+}
+
+#[cw_serde]
+pub struct OwnerOfResponse {
+    /// Owner of the token
+    pub owner: String,
+    /// If set this address is approved to transfer/send the token as well
+    pub approvals: Vec<Approval>,
+}
+
+#[cw_serde]
+pub struct ApprovalResponse {
+    pub approval: Approval,
+}
+
+#[cw_serde]
+pub struct ApprovalsResponse {
+    pub approvals: Vec<Approval>,
+}
+
+#[cw_serde]
+pub struct OperatorResponse {
+    pub approval: Approval,
+}
+
+#[cw_serde]
+pub struct OperatorsResponse {
+    pub operators: Vec<Approval>,
+}
+
+#[cw_serde]
+pub struct NumTokensResponse {
+    pub count: u64,
+}
+
+#[cw_serde]
+pub struct NftInfoResponse<TMetadataExtension> {
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
+    /// You can add any custom metadata here when you extend cw721-base
+    pub extension: TMetadataExtension,
+}
+
+#[cw_serde]
+pub struct AllNftInfoResponse<TMetadataExtension> {
+    /// Who can transfer the token
+    pub access: OwnerOfResponse,
+    /// Data on the token itself,
+    pub info: NftInfoResponse<TMetadataExtension>,
+}
+
+#[cw_serde]
+pub struct TokensResponse {
+    /// Contains all token_ids in lexicographical ordering
+    /// If there are more than `limit`, use `start_after` in future queries
+    /// to achieve pagination.
+    pub tokens: Vec<String>,
+}
+
+/// Deprecated: use Cw721QueryMsg::GetMinterOwnership instead!
+/// Shows who can mint these tokens.
+#[cw_serde]
+pub struct MinterResponse {
+    pub minter: Option<String>,
 }

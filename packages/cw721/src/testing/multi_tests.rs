@@ -1,8 +1,11 @@
 use crate::{
     error::Cw721ContractError,
     execute::Cw721Execute,
-    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse},
-    query::{Cw721Query, OwnerOfResponse},
+    msg::{
+        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
+        OwnerOfResponse,
+    },
+    query::Cw721Query,
     state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
 };
 use cosmwasm_std::{
