@@ -2,7 +2,6 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Binary, Coin};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
-use schemars::JsonSchema;
 
 use crate::query::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, NumTokensResponse,
@@ -14,7 +13,7 @@ use crate::state::CollectionInfo;
 use cosmwasm_std::Empty;
 
 #[cw_serde]
-pub enum Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtension> {
+pub enum Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension> {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
     UpdateOwnership(Action),
     UpdateMinterOwnership(Action),
@@ -70,7 +69,7 @@ pub enum Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtensi
         /// Metadata JSON Schema
         token_uri: Option<String>,
         /// Any custom extension used by this contract
-        extension: TMetadata,
+        extension: TMetadataExtension,
     },
 
     /// Burn an NFT the sender has access to
@@ -118,7 +117,7 @@ pub struct Cw721InstantiateMsg<TCollectionInfoExtension> {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum Cw721QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> {
+pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {
@@ -181,12 +180,12 @@ pub enum Cw721QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> 
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(NftInfoResponse<TMetadataResponse>)]
+    #[returns(NftInfoResponse<TMetadataExtension>)]
     NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(AllNftInfoResponse<TMetadataResponse>)]
+    #[returns(AllNftInfoResponse<TMetadataExtension>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -218,11 +217,11 @@ pub enum Cw721QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> 
     GetWithdrawAddress {},
 
     // -- below queries, Extension and GetCollectionInfoExtension, are just dummies, since type annotations are required for
-    // -- TMetadataResponse and TCollectionInfoExtension, Error:
-    // -- "type annotations needed: cannot infer type for type parameter `TMetadataResponse` declared on the enum `Cw721QueryMsg`"
+    // -- TMetadataExtension and TCollectionInfoExtension, Error:
+    // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
     /// Do not use - dummy extension query, needed for inferring type parameter during compile
     #[returns(())]
-    Extension { msg: TMetadataResponse },
+    Extension { msg: TMetadataExtension },
 
     /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
     #[returns(())]

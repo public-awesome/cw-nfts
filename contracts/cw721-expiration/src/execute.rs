@@ -12,27 +12,18 @@ use crate::{
     CONTRACT_VERSION,
 };
 
-impl<
-        'a,
-        TMetadata,
-        TCustomResponseMessage,
-        TExtensionExecuteMsg,
-        TMetadataResponse,
-        TCollectionInfoExtension,
-    >
+impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
     Cw721ExpirationContract<
         'a,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     // -- instantiate --
@@ -47,10 +38,9 @@ where
             return Err(ContractError::MinExpiration {});
         }
         let contract = Cw721ExpirationContract::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         contract
@@ -79,13 +69,12 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let contract = Cw721ExpirationContract::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         match msg {
@@ -133,7 +122,7 @@ where
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TMetadata,
+        extension: TMetadataExtension,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let mint_timstamp = env.block.time;
         self.mint_timestamps

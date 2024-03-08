@@ -3,7 +3,6 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw721::state::CollectionInfo;
 use cw_ownable::Ownership;
-use schemars::JsonSchema;
 
 #[cw_serde]
 pub struct InstantiateMsg<TCollectionInfoExtension> {
@@ -31,7 +30,7 @@ pub struct InstantiateMsg<TCollectionInfoExtension> {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> {
+pub enum QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     // -------- below adds `include_expired_nft` prop to cw721/src/msg.rs --------
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::query::OwnerOfResponse)]
@@ -150,7 +149,7 @@ pub enum QueryMsg<TMetadataResponse: JsonSchema, TCollectionInfoExtension> {
 
     /// Extension query
     #[returns(())]
-    Extension { msg: TMetadataResponse },
+    Extension { msg: TMetadataExtension },
 
     /// This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error:
     /// `cannot infer type for type parameter `TCollectionInfoExtension` declared on the enum `QueryMsg`

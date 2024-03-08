@@ -8,40 +8,30 @@ use serde::Serialize;
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
-impl<
-        'a,
-        TMetadata,
-        TCustomResponseMessage,
-        TExtensionExecuteMsg,
-        TMetadataResponse,
-        TCollectionInfoExtension,
-    >
+impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
     Cw721ExpirationContract<
         'a,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<TMetadataResponse, TCollectionInfoExtension>,
+        msg: QueryMsg<TMetadataExtension, TCollectionInfoExtension>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         match msg {
@@ -214,7 +204,7 @@ where
         env: Env,
         token_id: String,
         include_expired_nft: bool,
-    ) -> Result<NftInfoResponse<TMetadata>, ContractError> {
+    ) -> Result<NftInfoResponse<TMetadataExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
@@ -333,7 +323,7 @@ where
         token_id: String,
         include_expired_approval: bool,
         include_expired_nft: bool,
-    ) -> Result<AllNftInfoResponse<TMetadata>, ContractError> {
+    ) -> Result<AllNftInfoResponse<TMetadataExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }

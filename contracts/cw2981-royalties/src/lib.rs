@@ -12,7 +12,6 @@ pub use cw721_base::{
 };
 
 use crate::error::ContractError;
-use crate::msg::Cw2981QueryMsg;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
@@ -51,20 +50,15 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<
-    'a,
-    Extension,
-    Empty,
-    Empty,
-    Cw2981QueryMsg,
-    DefaultOptionCollectionInfoExtension,
->;
+pub type Cw2981Contract<'a> =
+    Cw721Contract<'a, Extension, Empty, Empty, DefaultOptionCollectionInfoExtension>;
 pub type ExecuteMsg =
     cw721_base::msg::ExecuteMsg<Extension, Empty, DefaultOptionCollectionInfoExtension>;
-pub type QueryMsg = cw721_base::msg::QueryMsg<Cw2981QueryMsg, DefaultOptionCollectionInfoExtension>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
+    use self::msg::QueryMsg;
+
     use super::*;
 
     use cosmwasm_std::entry_point;
@@ -118,14 +112,12 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Extension { msg } => match msg {
-                Cw2981QueryMsg::RoyaltyInfo {
-                    token_id,
-                    sale_price,
-                } => to_json_binary(&query_royalties_info(deps, env, token_id, sale_price)?),
-                Cw2981QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
-            },
-            _ => Cw2981Contract::default().query(deps, env, msg),
+            QueryMsg::RoyaltyInfo {
+                token_id,
+                sale_price,
+            } => to_json_binary(&query_royalties_info(deps, env, token_id, sale_price)?),
+            QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
+            _ => Cw2981Contract::default().query(deps, env, msg.into()),
         }
     }
 }
@@ -133,7 +125,7 @@ pub mod entry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
+    use crate::msg::{CheckRoyaltiesResponse, QueryMsg, RoyaltiesInfoResponse};
 
     use cosmwasm_std::{from_json, Uint128};
 
@@ -249,9 +241,7 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::CheckRoyalties {},
-        };
+        let query_msg = QueryMsg::CheckRoyalties {};
         let query_res: CheckRoyaltiesResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
@@ -303,11 +293,9 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::RoyaltyInfo {
-                token_id: token_id.to_string(),
-                sale_price: Uint128::new(100),
-            },
+        let query_msg = QueryMsg::RoyaltyInfo {
+            token_id: token_id.to_string(),
+            sale_price: Uint128::new(100),
         };
         let query_res: RoyaltiesInfoResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();

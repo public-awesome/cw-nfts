@@ -35,12 +35,10 @@ fn setup_contract(
     DefaultOptionMetadataExtension,
     Empty,
     Empty,
-    Empty,
     DefaultOptionCollectionInfoExtension,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
@@ -65,7 +63,6 @@ fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         Option<Empty>,
@@ -134,7 +131,6 @@ fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         Option<Empty>,

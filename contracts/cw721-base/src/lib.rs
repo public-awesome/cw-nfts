@@ -47,7 +47,6 @@ pub mod entry {
             DefaultOptionMetadataExtension,
             Empty,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
         >::default();
         contract.instantiate(deps, env, info, msg, CONTRACT_NAME, CONTRACT_VERSION)
@@ -68,7 +67,6 @@ pub mod entry {
             DefaultOptionMetadataExtension,
             Empty,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
         >::default();
         contract.execute(deps, env, info, msg)
@@ -78,11 +76,10 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension>,
+        msg: Cw721QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>,
     ) -> StdResult<Binary> {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
@@ -98,7 +95,6 @@ pub mod entry {
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,

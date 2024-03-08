@@ -16,30 +16,27 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 #[cw_serde]
-pub struct Cw721Contract<
-    TMetadataResponse: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
-    TCollectionInfoExtension,
->(
+pub struct Cw721Contract<TMetadataExtension, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>(
     pub Addr,
-    pub PhantomData<TMetadataResponse>,
+    pub PhantomData<TMetadataExtension>,
     pub PhantomData<TExtensionExecuteMsg>,
     pub PhantomData<TCollectionInfoExtension>,
 );
 
 #[allow(dead_code)]
-impl<TMetadataResponse: CustomMsg, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>
-    Cw721Contract<TMetadataResponse, TExtensionExecuteMsg, TCollectionInfoExtension>
+impl<TMetadataExtension, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>
+    Cw721Contract<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>
 where
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
     }
 
-    pub fn call<TMetadata: Serialize>(
+    pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
@@ -53,7 +50,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TMetadataResponse, TCollectionInfoExtension>,
+        req: Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),

@@ -22,14 +22,12 @@ pub type DefaultOptionMetadataExtension = Option<Metadata>;
 
 pub struct Cw721Config<
     'a,
-    TMetadata,
+    TMetadataExtension,
     TCustomResponseMessage,
     TExtensionExecuteMsg,
-    TMetadataResponse,
     TCollectionInfoExtension,
 > where
-    TMetadata: Serialize + DeserializeOwned + Clone,
-    TMetadataResponse: CustomMsg,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
@@ -39,33 +37,24 @@ pub struct Cw721Config<
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info: IndexedMap<'a, &'a str, NftInfo<TMetadata>, TokenIndexes<'a, TMetadata>>,
+    pub nft_info: IndexedMap<'a, &'a str, NftInfo<TMetadataExtension>, TokenIndexes<'a, TMetadataExtension>>,
     pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<TCustomResponseMessage>,
-    pub(crate) _custom_query: PhantomData<TMetadataResponse>,
     pub(crate) _custom_execute: PhantomData<TExtensionExecuteMsg>,
 }
 
-impl<
-        TMetadata,
-        TCustomResponseMessage,
-        TExtensionExecuteMsg,
-        TMetadataResponse,
-        TCollectionInfoExtension,
-    > Default
+impl<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension> Default
     for Cw721Config<
         'static,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
@@ -80,26 +69,17 @@ where
     }
 }
 
-impl<
-        'a,
-        TMetadata,
-        TCustomResponseMessage,
-        TExtensionExecuteMsg,
-        TMetadataResponse,
-        TCollectionInfoExtension,
-    >
+impl<'a, TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension>
     Cw721Config<
         'a,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn new(
@@ -121,7 +101,6 @@ where
             withdraw_address: Item::new(withdraw_address_key),
             _custom_response: PhantomData,
             _custom_execute: PhantomData,
-            _custom_query: PhantomData,
         }
     }
 
@@ -142,12 +121,12 @@ where
     }
 }
 
-pub fn token_owner_idx<TMetadata>(_pk: &[u8], d: &NftInfo<TMetadata>) -> Addr {
+pub fn token_owner_idx<TMetadataExtension>(_pk: &[u8], d: &NftInfo<TMetadataExtension>) -> Addr {
     d.owner.clone()
 }
 
 #[cw_serde]
-pub struct NftInfo<TMetadata> {
+pub struct NftInfo<TMetadataExtension> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
@@ -159,7 +138,7 @@ pub struct NftInfo<TMetadata> {
     pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: TMetadata,
+    pub extension: TMetadataExtension,
 }
 
 #[cw_serde]
@@ -176,19 +155,19 @@ impl Approval {
     }
 }
 
-pub struct TokenIndexes<'a, TMetadata>
+pub struct TokenIndexes<'a, TMetadataExtension>
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    pub owner: MultiIndex<'a, Addr, NftInfo<TMetadata>, String>,
+    pub owner: MultiIndex<'a, Addr, NftInfo<TMetadataExtension>, String>,
 }
 
-impl<'a, TMetadata> IndexList<NftInfo<TMetadata>> for TokenIndexes<'a, TMetadata>
+impl<'a, TMetadataExtension> IndexList<NftInfo<TMetadataExtension>> for TokenIndexes<'a, TMetadataExtension>
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TMetadata>>> + '_> {
-        let v: Vec<&dyn Index<NftInfo<TMetadata>>> = vec![&self.owner];
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TMetadataExtension>>> + '_> {
+        let v: Vec<&dyn Index<NftInfo<TMetadataExtension>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }
 }

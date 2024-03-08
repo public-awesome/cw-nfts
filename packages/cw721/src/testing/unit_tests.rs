@@ -26,7 +26,6 @@ fn proper_cw2_initialization() {
         DefaultOptionMetadataExtension,
         Empty,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
     >::default()
     .instantiate(
@@ -79,7 +78,6 @@ fn proper_owner_initialization() {
         DefaultOptionMetadataExtension,
         Empty,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
     >::default()
     .instantiate(
@@ -110,7 +108,6 @@ fn use_metadata_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
@@ -198,7 +195,6 @@ fn test_migrate() {
         DefaultOptionMetadataExtension,
         Empty,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
     >::default();
     contract
@@ -232,7 +228,6 @@ fn test_migrate() {
 
     Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,

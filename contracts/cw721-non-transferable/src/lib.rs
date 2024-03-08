@@ -19,7 +19,6 @@ pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     DefaultOptionMetadataExtension,
     Empty,
     Empty,
-    Empty,
     DefaultOptionCollectionInfoExtension,
 >;
 

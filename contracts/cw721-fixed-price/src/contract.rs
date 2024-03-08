@@ -13,7 +13,7 @@ use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
 use cw721::helpers::Cw721Contract;
 use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
-use cw721::state::DefaultOptionCollectionInfoExtension;
+use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
 use cw_utils::parse_reply_instantiate_data;
 
 // version info for migration info
@@ -161,7 +161,7 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<_, Empty, Empty>::Mint {
+    let mint_msg = Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty, Empty>::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
@@ -170,9 +170,13 @@ pub fn execute_receive(
 
     match config.cw721_address.clone() {
         Some(cw721) => {
-            let callback =
-                Cw721Contract::<Empty, Empty, Empty>(cw721, PhantomData, PhantomData, PhantomData)
-                    .call(mint_msg)?;
+            let callback = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>(
+                cw721,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+            )
+            .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
 

@@ -20,16 +20,14 @@ use crate::{
 };
 
 pub trait Cw721Execute<
-    TMetadata,
+    TMetadataExtension,
     TCustomResponseMessage,
     TExtensionExecuteMsg,
-    TMetadataResponse,
     TCollectionInfoExtension,
 > where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn instantiate(
@@ -42,7 +40,7 @@ pub trait Cw721Execute<
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
-        let config = Cw721Config::<Empty, Empty, Empty, Empty, TCollectionInfoExtension>::default();
+        let config = Cw721Config::<Empty, Empty, Empty, TCollectionInfoExtension>::default();
         let collection_info = CollectionInfo {
             name: msg.name,
             symbol: msg.symbol,
@@ -82,7 +80,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadata, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
@@ -167,7 +165,7 @@ pub trait Cw721Execute<
         recipient: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        _transfer_nft::<TMetadata>(deps, &env, &info, &recipient, &token_id)?;
+        _transfer_nft::<TMetadataExtension>(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
@@ -186,7 +184,7 @@ pub trait Cw721Execute<
         msg: Binary,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         // Transfer token
-        _transfer_nft::<TMetadata>(deps, &env, &info, &contract, &token_id)?;
+        _transfer_nft::<TMetadataExtension>(deps, &env, &info, &contract, &token_id)?;
 
         let send = Cw721ReceiveMsg {
             sender: info.sender.to_string(),
@@ -212,7 +210,7 @@ pub trait Cw721Execute<
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        _update_approvals::<TMetadata>(deps, &env, &info, &spender, &token_id, true, expires)?;
+        _update_approvals::<TMetadataExtension>(deps, &env, &info, &spender, &token_id, true, expires)?;
 
         Ok(Response::new()
             .add_attribute("action", "approve")
@@ -229,7 +227,7 @@ pub trait Cw721Execute<
         spender: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        _update_approvals::<TMetadata>(deps, &env, &info, &spender, &token_id, false, None)?;
+        _update_approvals::<TMetadataExtension>(deps, &env, &info, &spender, &token_id, false, None)?;
 
         Ok(Response::new()
             .add_attribute("action", "revoke")
@@ -255,10 +253,9 @@ pub trait Cw721Execute<
         // set the operator for us
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         config
@@ -282,10 +279,9 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         config
@@ -306,10 +302,9 @@ pub trait Cw721Execute<
         token_id: String,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         let config = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         let token = config.nft_info.load(deps.storage, &token_id)?;
@@ -357,13 +352,9 @@ pub trait Cw721Execute<
             extension: msg.extension,
             updated_at: env.block.time,
         };
-        let config = Cw721Config::<
-            Empty,
-            TCustomResponseMessage,
-            Empty,
-            Empty,
-            TCollectionInfoExtension,
-        >::default();
+        let config =
+            Cw721Config::<Empty, TCustomResponseMessage, Empty, TCollectionInfoExtension>::default(
+            );
         config
             .collection_info
             .save(deps.storage, &collection_info)?;
@@ -380,7 +371,7 @@ pub trait Cw721Execute<
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TMetadata,
+        extension: TMetadataExtension,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         MINTER.assert_owner(deps.storage, &info.sender)?;
 
@@ -391,7 +382,7 @@ pub trait Cw721Execute<
             token_uri,
             extension,
         };
-        let config = Cw721Config::<TMetadata, Empty, Empty, Empty, Empty>::default();
+        let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty>::default();
         config
             .nft_info
             .update(deps.storage, &token_id, |old| match old {
@@ -443,10 +434,9 @@ pub trait Cw721Execute<
         CREATOR.assert_owner(deps.storage, sender)?;
         deps.api.addr_validate(&address)?;
         let config = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         config.withdraw_address.save(deps.storage, &address)?;
@@ -462,10 +452,9 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         CREATOR.assert_owner(storage, sender)?;
         let config = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default();
         let address = config.withdraw_address.may_load(storage)?;
@@ -486,10 +475,9 @@ pub trait Cw721Execute<
         amount: &Coin,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         let withdraw_address = Cw721Config::<
-            TMetadata,
+            TMetadataExtension,
             TCustomResponseMessage,
             TExtensionExecuteMsg,
-            TMetadataResponse,
             TCollectionInfoExtension,
         >::default()
         .withdraw_address
@@ -512,17 +500,17 @@ pub trait Cw721Execute<
 }
 
 // ------- helper cw721 functions -------
-fn _transfer_nft<TMetadata>(
+fn _transfer_nft<TMetadataExtension>(
     deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
     recipient: &str,
     token_id: &str,
-) -> Result<NftInfo<TMetadata>, Cw721ContractError>
+) -> Result<NftInfo<TMetadataExtension>, Cw721ContractError>
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    let config = Cw721Config::<TMetadata, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_send(deps.as_ref(), env, info, &token)?;
@@ -534,7 +522,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-fn _update_approvals<TMetadata>(
+fn _update_approvals<TMetadataExtension>(
     deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
@@ -543,11 +531,11 @@ fn _update_approvals<TMetadata>(
     // if add == false, remove. if add == true, remove then set with this expiration
     add: bool,
     expires: Option<Expiration>,
-) -> Result<NftInfo<TMetadata>, Cw721ContractError>
+) -> Result<NftInfo<TMetadataExtension>, Cw721ContractError>
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    let config = Cw721Config::<TMetadata, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -576,21 +564,21 @@ where
 }
 
 /// returns true if the sender can execute approve or reject on the contract
-pub fn check_can_approve<TMetadata>(
+pub fn check_can_approve<TMetadataExtension>(
     deps: Deps,
     env: &Env,
     info: &MessageInfo,
-    token: &NftInfo<TMetadata>,
+    token: &NftInfo<TMetadataExtension>,
 ) -> Result<(), Cw721ContractError>
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
     // owner can approve
     if token.owner == info.sender {
         return Ok(());
     }
     // operator can approve
-    let config = Cw721Config::<TMetadata, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty>::default();
     let op = config
         .operators
         .may_load(deps.storage, (&token.owner, &info.sender))?;
@@ -607,11 +595,11 @@ where
 }
 
 /// returns true iff the sender can transfer ownership of the token
-pub fn check_can_send<TMetadata>(
+pub fn check_can_send<TMetadataExtension>(
     deps: Deps,
     env: &Env,
     info: &MessageInfo,
-    token: &NftInfo<TMetadata>,
+    token: &NftInfo<TMetadataExtension>,
 ) -> Result<(), Cw721ContractError> {
     // owner can send
     if token.owner == info.sender {
@@ -628,7 +616,7 @@ pub fn check_can_send<TMetadata>(
     }
 
     // operator can send
-    let config = Cw721Config::<Empty, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<Empty, Empty, Empty, Empty>::default();
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
@@ -750,7 +738,6 @@ pub fn migrate_legacy_collection_info(
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Config::<
         DefaultOptionMetadataExtension,
-        Empty,
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,

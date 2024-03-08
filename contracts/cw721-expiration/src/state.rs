@@ -6,14 +6,12 @@ use serde::Serialize;
 
 pub struct Cw721ExpirationContract<
     'a,
-    TMetadata,
+    TMetadataExtension,
     TCustomResponseMessage,
     TExtensionExecuteMsg,
-    TMetadataResponse,
     TCollectionInfoExtension,
 > where
-    TMetadata: Serialize + DeserializeOwned + Clone,
-    TMetadataResponse: CustomMsg,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
@@ -21,33 +19,24 @@ pub struct Cw721ExpirationContract<
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
     pub base_contract: Cw721Contract<
         'a,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >,
 }
 
-impl<
-        TMetadata,
-        TCustomResponseMessage,
-        TExtensionExecuteMsg,
-        TMetadataResponse,
-        TCollectionInfoExtension,
-    > Default
+impl<TMetadataExtension, TCustomResponseMessage, TExtensionExecuteMsg, TCollectionInfoExtension> Default
     for Cw721ExpirationContract<
         'static,
-        TMetadata,
+        TMetadataExtension,
         TCustomResponseMessage,
         TExtensionExecuteMsg,
-        TMetadataResponse,
         TCollectionInfoExtension,
     >
 where
-    TMetadata: Serialize + DeserializeOwned + Clone,
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TExtensionExecuteMsg: CustomMsg,
-    TMetadataResponse: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
