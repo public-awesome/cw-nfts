@@ -33,13 +33,12 @@ pub struct Cw721Config<
     TExtensionExecuteMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
-    /// Note: do not use deprecated/legacy key "nft_info"!
+    /// Note: replaces deprecated/legacy key "nft_info"!
     pub collection_info: Item<'a, CollectionInfo<TCollectionInfoExtension>>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    /// Note: do not use deprecated/legacy keys "tokens" and "tokens__owner"!
     pub nft_info: IndexedMap<'a, &'a str, NftInfo<TMetadata>, TokenIndexes<'a, TMetadata>>,
     pub withdraw_address: Item<'a, String>,
 
@@ -71,11 +70,11 @@ where
 {
     fn default() -> Self {
         Self::new(
-            "collection_info", // Note: do not use deprecated/legacy key "nft_info"
+            "collection_info", // Note: replaces deprecated/legacy key "nft_info"
             "num_tokens",
             "operators",
-            "nft",        // Note: do not use deprecated/legacy key "tokens"
-            "nft__owner", // Note: do not use deprecated/legacy key "tokens__owner"
+            "tokens",
+            "tokens__owner",
             "withdraw_address",
         )
     }

@@ -1,9 +1,9 @@
 use cosmwasm_std::{
-    Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order,
-    Response, StdResult, Storage,
+    Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Response,
+    StdResult, Storage,
 };
 use cw_ownable::{none_or, Action, Ownership, OwnershipError};
-use cw_storage_plus::{IndexedMap, Item, MultiIndex};
+use cw_storage_plus::Item;
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -13,8 +13,8 @@ use crate::{
     msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg},
     receiver::Cw721ReceiveMsg,
     state::{
-        token_owner_idx, CollectionInfo, Cw721Config, DefaultOptionCollectionInfoExtension,
-        DefaultOptionMetadataExtension, NftInfo, TokenIndexes, CREATOR, MINTER,
+        CollectionInfo, Cw721Config, DefaultOptionCollectionInfoExtension,
+        DefaultOptionMetadataExtension, NftInfo, CREATOR, MINTER,
     },
     Approval,
 };
@@ -150,7 +150,6 @@ pub trait Cw721Execute<
         let response =
             migrate_legacy_minter_and_creator(deps.storage, deps.api, &env, &msg, response)?;
         let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
-        let response = migrate_legacy_tokens(deps.storage, &env, &msg, response)?;
         // ... then migrate
         let response = migrate_version(deps.storage, contract_name, contract_version, response)?;
         // ... and update creator and minter AFTER legacy migration
@@ -773,38 +772,6 @@ pub fn migrate_legacy_collection_info(
             Ok(response
                 .add_attribute("migrated collection name", legacy_collection_info.name)
                 .add_attribute("migrated collection symbol", legacy_collection_info.symbol))
-        }
-    }
-}
-
-/// Migrates only in case collection_info is not present
-pub fn migrate_legacy_tokens(
-    storage: &mut dyn Storage,
-    _env: &Env,
-    _msg: &Cw721MigrateMsg,
-    response: Response,
-) -> StdResult<Response> {
-    let contract =
-        Cw721Config::<DefaultOptionMetadataExtension, Empty, Empty, Empty, Empty>::default();
-    match contract.nft_info.is_empty(storage) {
-        false => Ok(response),
-        true => {
-            let indexes = TokenIndexes {
-                owner: MultiIndex::new(token_owner_idx, "tokens", "tokens__owner"),
-            };
-            let legacy_tokens_store: IndexedMap<
-                &str,
-                NftInfo<DefaultOptionMetadataExtension>,
-                TokenIndexes<DefaultOptionMetadataExtension>,
-            > = IndexedMap::new("tokens", indexes);
-            let keys = legacy_tokens_store
-                .keys(storage, None, None, Order::Ascending)
-                .collect::<StdResult<Vec<String>>>()?;
-            for key in keys {
-                let legacy_token = legacy_tokens_store.load(storage, &key)?;
-                contract.nft_info.save(storage, &key, &legacy_token)?;
-            }
-            Ok(response)
         }
     }
 }
