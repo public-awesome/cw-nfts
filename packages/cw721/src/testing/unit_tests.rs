@@ -3,16 +3,16 @@ use crate::{
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
     query::{Cw721Query, MAX_LIMIT},
     state::{
-        token_owner_idx, CollectionInfo, DefaultOptionCollectionInfoExtension,
-        DefaultOptionMetadataExtension, Metadata, NftInfo, TokenIndexes, CREATOR, MINTER,
+        CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension,
+        Metadata, CREATOR, MINTER,
     },
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
-    Addr, Empty, Order, StdResult,
+    Addr, Empty,
 };
 use cw2::ContractVersion;
-use cw_storage_plus::{IndexedMap, Item, MultiIndex};
+use cw_storage_plus::Item;
 use unit_tests::{contract::Cw721Contract, multi_tests::CREATOR_ADDR};
 
 use super::*;
@@ -204,15 +204,9 @@ fn test_migrate() {
     contract
         .query_collection_info(deps.as_ref(), env.clone())
         .unwrap_err();
-    // query on minter and creator store also throws NotFound Error
+    // - query in new minter and creator ownership store throws NotFound Error (in v16 it was stored outside cw_ownable, in dedicated "minter" store)
     MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
     CREATOR.get_ownership(deps.as_ref().storage).unwrap_err();
-    // - no tokens
-    let all_tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
-        .unwrap();
-    assert_eq!(all_tokens.tokens.len(), 0);
-
     // assert legacy data before migration:
     // - version
     let version = cw2::get_contract_version(deps.as_ref().storage)
@@ -225,30 +219,15 @@ fn test_migrate() {
     assert_eq!(legacy_minter, "legacy_minter");
     // - legacy collection info is set
     let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> = Item::new("nft_info");
-    let legacy_collection_info = legacy_collection_info_store
-        .load(deps.as_ref().storage)
+    let all_tokens = contract
+        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
         .unwrap();
-    assert_eq!(legacy_collection_info.name, "legacy_name");
-    assert_eq!(legacy_collection_info.symbol, "legacy_symbol");
-    // - legacy tokens are set
-    let indexes = TokenIndexes {
-        owner: MultiIndex::new(token_owner_idx, "tokens", "tokens__owner"),
-    };
-    let legacy_tokens_store: IndexedMap<
-        &str,
-        NftInfo<DefaultOptionMetadataExtension>,
-        TokenIndexes<DefaultOptionMetadataExtension>,
-    > = IndexedMap::new("tokens", indexes);
-    let keys = legacy_tokens_store
-        .keys(deps.as_ref().storage, None, None, Order::Ascending)
-        .collect::<StdResult<Vec<String>>>()
-        .unwrap();
-    assert_eq!(keys.len(), 200);
-    for key in keys {
-        let legacy_token = legacy_tokens_store
-            .load(deps.as_ref().storage, &key)
+    assert_eq!(all_tokens.tokens.len(), 200);
+    for token_id in 0..200 {
+        let token = contract
+            .query_owner_of(deps.as_ref(), env.clone(), token_id.to_string(), false)
             .unwrap();
-        assert_eq!(legacy_token.owner.as_str(), "owner");
+        assert_eq!(token.owner.as_str(), "owner");
     }
 
     Cw721Contract::<
@@ -301,13 +280,13 @@ fn test_migrate() {
         name: "legacy_name".to_string(),
         symbol: "legacy_symbol".to_string(),
         extension: None,
-        updated_at: env.block.time,
+        updated_at: env.clone().block.time,
     };
     assert_eq!(collection_info, legacy_contract_info);
 
     // assert tokens
     let all_tokens = contract
-        .query_all_tokens(deps.as_ref(), env, None, Some(MAX_LIMIT))
+        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
 
@@ -321,16 +300,15 @@ fn test_migrate() {
         .unwrap();
     assert_eq!(legacy_collection_info.name, "legacy_name");
     assert_eq!(legacy_collection_info.symbol, "legacy_symbol");
-    // - tokens
-    let keys = legacy_tokens_store
-        .keys(deps.as_ref().storage, None, None, Order::Ascending)
-        .collect::<StdResult<Vec<String>>>()
+    // - tokens are unchanged/still exist
+    let all_tokens = contract
+        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
         .unwrap();
-    assert_eq!(keys.len(), 200);
-    for key in keys {
-        let legacy_token = legacy_tokens_store
-            .load(deps.as_ref().storage, &key)
+    assert_eq!(all_tokens.tokens.len(), 200);
+    for token_id in 0..200 {
+        let token = contract
+            .query_owner_of(deps.as_ref(), env.clone(), token_id.to_string(), false)
             .unwrap();
-        assert_eq!(legacy_token.owner.as_str(), "owner");
+        assert_eq!(token.owner.as_str(), "owner");
     }
 }
