@@ -22,9 +22,13 @@ pub type DefaultOptionMetadataExtension = Option<Metadata>;
 
 pub struct Cw721Config<
     'a,
+    // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
+    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMessage,
+    // Message passed for updating metadata.
     TExtensionExecuteMsg,
+    // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,

@@ -20,7 +20,7 @@ use crate::{
 };
 
 pub trait Cw721Execute<
-    // Metadata used for mint.
+    // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMessage,

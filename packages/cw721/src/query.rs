@@ -19,8 +19,12 @@ use crate::{
 pub const DEFAULT_LIMIT: u32 = 10;
 pub const MAX_LIMIT: u32 = 1000;
 
-pub trait Cw721Query<TMetadataExtension, TCollectionInfoExtension>
-where
+pub trait Cw721Query<
+    // Metadata defined in NftInfo.
+    TMetadataExtension,
+    // Extension defined in CollectionInfo.
+    TCollectionInfoExtension,
+> where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
