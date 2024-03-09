@@ -404,6 +404,7 @@ where
         })
     }
 
+    /// No-op returning empty Binary
     fn query_extension(
         &self,
         _deps: Deps,
@@ -413,6 +414,7 @@ where
         Ok(Binary::default())
     }
 
+    /// No-op returning empty Binary
     fn query_collection_info_extension(
         &self,
         _deps: Deps,
