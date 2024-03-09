@@ -10,18 +10,18 @@ pub struct Cw721Contract<
     'a,
     TMetadataExtension,
     TCustomResponseMessage,
-    TExtensionExecuteMsg,
+    TMetadataExtensionMsg,
     TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub config: Cw721Config<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >,
 }
@@ -29,19 +29,19 @@ pub struct Cw721Contract<
 impl<
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     > Default
     for Cw721Contract<
         'static,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
@@ -55,26 +55,26 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
     Cw721Execute<
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
     for Cw721Contract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }
@@ -83,20 +83,20 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }

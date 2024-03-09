@@ -9,7 +9,7 @@ use crate::Approval;
 use cosmwasm_std::Empty;
 
 #[cw_serde]
-pub enum Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension> {
+pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension> {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
     UpdateOwnership(Action),
     UpdateMinterOwnership(Action),
@@ -75,7 +75,7 @@ pub enum Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionIn
 
     /// Extension msg
     Extension {
-        msg: TExtensionExecuteMsg,
+        msg: TMetadataExtensionMsg,
     },
 
     /// Sets address to send withdrawn fees to. Only owner can call this.

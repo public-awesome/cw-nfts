@@ -25,26 +25,26 @@ pub trait Cw721Execute<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMessage,
     // Message passed for updating metadata.
-    TExtensionExecuteMsg,
+    TMetadataExtensionMsg,
     // Message passed for updating collection info extension.
-    TCollectionInfoExtension,
+    TCollectionInfoExtensionMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     fn instantiate(
         &self,
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionInfoExtension>,
+        msg: Cw721InstantiateMsg<TCollectionInfoExtensionMsg>,
         contract_name: &str,
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
-        let config = Cw721Config::<Empty, Empty, Empty, TCollectionInfoExtension>::default();
+        let config = Cw721Config::<Empty, Empty, Empty, TCollectionInfoExtensionMsg>::default();
         let collection_info = CollectionInfo {
             name: msg.name,
             symbol: msg.symbol,
@@ -84,7 +84,11 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<
+            TMetadataExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
+        >,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
@@ -265,8 +269,8 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default();
         config
             .operators
@@ -291,8 +295,8 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default();
         config
             .operators
@@ -314,8 +318,8 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default();
         let token = config.nft_info.load(deps.storage, &token_id)?;
         check_can_send(deps.as_ref(), &env, &info, &token)?;
@@ -353,7 +357,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         info: MessageInfo,
         env: Env,
-        msg: CollectionInfoMsg<TCollectionInfoExtension>,
+        msg: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let collection_info = CollectionInfo {
@@ -363,7 +367,7 @@ pub trait Cw721Execute<
             updated_at: env.block.time,
         };
         let config =
-            Cw721Config::<Empty, TCustomResponseMessage, Empty, TCollectionInfoExtension>::default(
+            Cw721Config::<Empty, TCustomResponseMessage, Empty, TCollectionInfoExtensionMsg>::default(
             );
         config
             .collection_info
@@ -441,7 +445,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
-        _msg: TExtensionExecuteMsg,
+        _msg: TMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         Ok(Response::new().add_attribute("action", "update_metadata_extension"))
@@ -458,8 +462,8 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default();
         config.withdraw_address.save(deps.storage, &address)?;
         Ok(Response::new()
@@ -476,8 +480,8 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default();
         let address = config.withdraw_address.may_load(storage)?;
         match address {
@@ -499,8 +503,8 @@ pub trait Cw721Execute<
         let withdraw_address = Cw721Config::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
-            TCollectionInfoExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
         >::default()
         .withdraw_address
         .may_load(storage)?;

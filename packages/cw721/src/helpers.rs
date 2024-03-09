@@ -18,18 +18,18 @@ use serde::Serialize;
 #[cw_serde]
 pub struct Cw721Contract<
     TMetadataExtension,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension,
 >(
     pub Addr,
     pub PhantomData<TMetadataExtension>,
-    pub PhantomData<TExtensionExecuteMsg>,
+    pub PhantomData<TMetadataExtensionMsg>,
     pub PhantomData<TCollectionInfoExtension>,
 );
 
 #[allow(dead_code)]
-impl<TMetadataExtension, TExtensionExecuteMsg: CustomMsg, TCollectionInfoExtension>
-    Cw721Contract<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>
+impl<TMetadataExtension, TMetadataExtensionMsg: CustomMsg, TCollectionInfoExtension>
+    Cw721Contract<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
@@ -40,7 +40,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {

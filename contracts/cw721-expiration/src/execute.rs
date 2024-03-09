@@ -16,20 +16,20 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
     Cw721ExpirationContract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     // -- instantiate --
@@ -46,7 +46,7 @@ where
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
         >::default();
         contract
@@ -75,12 +75,12 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TExtensionExecuteMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
         >::default();
         match msg {

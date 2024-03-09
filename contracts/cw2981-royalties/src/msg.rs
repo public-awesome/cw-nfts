@@ -137,11 +137,9 @@ pub enum QueryMsg {
     // -- below queries, Extension and GetCollectionInfoExtension, are just dummies, since type annotations are required for
     // -- TMetadataExtension and TCollectionInfoExtension, Error:
     // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
-    /// Do not use - dummy extension query, needed for inferring type parameter during compile
     #[returns(())]
     Extension { msg: Extension },
 
-    /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
     #[returns(())]
     GetCollectionInfoExtension {
         msg: DefaultOptionCollectionInfoExtension,

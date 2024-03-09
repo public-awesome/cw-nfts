@@ -13,20 +13,20 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
     Cw721ExpirationContract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(
@@ -38,7 +38,7 @@ where
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
-            TExtensionExecuteMsg,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
         >::default();
         match msg {

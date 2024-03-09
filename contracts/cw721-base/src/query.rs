@@ -10,20 +10,20 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }

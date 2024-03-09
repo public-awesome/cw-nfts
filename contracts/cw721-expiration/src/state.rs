@@ -11,12 +11,12 @@ pub struct Cw721ExpirationContract<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMessage,
     // Message passed for updating metadata.
-    TExtensionExecuteMsg,
+    TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub expiration_days: Item<'a, u16>, // max 65535 days
@@ -25,7 +25,7 @@ pub struct Cw721ExpirationContract<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >,
 }
@@ -33,19 +33,19 @@ pub struct Cw721ExpirationContract<
 impl<
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     > Default
     for Cw721ExpirationContract<
         'static,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {

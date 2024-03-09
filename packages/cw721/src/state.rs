@@ -27,12 +27,12 @@ pub struct Cw721Config<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMessage,
     // Message passed for updating metadata.
-    TExtensionExecuteMsg,
+    TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
@@ -46,25 +46,25 @@ pub struct Cw721Config<
     pub withdraw_address: Item<'a, String>,
 
     pub(crate) _custom_response: PhantomData<TCustomResponseMessage>,
-    pub(crate) _custom_execute: PhantomData<TExtensionExecuteMsg>,
+    pub(crate) _custom_execute: PhantomData<TMetadataExtensionMsg>,
 }
 
 impl<
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     > Default
     for Cw721Config<
         'static,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
@@ -83,19 +83,19 @@ impl<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
     Cw721Config<
         'a,
         TMetadataExtension,
         TCustomResponseMessage,
-        TExtensionExecuteMsg,
+        TMetadataExtensionMsg,
         TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TExtensionExecuteMsg: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn new(
