@@ -298,8 +298,8 @@ fn test_update_collection_info() {
 
     let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
         collection_info: CollectionInfoMsg {
-            name: "new name".to_string(),
-            symbol: "NEW".to_string(),
+            name: Some("new name".to_string()),
+            symbol: Some("NEW".to_string()),
             extension: Empty {},
         },
     };
@@ -377,8 +377,8 @@ fn test_update_collection_info() {
 
     let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
         collection_info: CollectionInfoMsg {
-            name: "new name".to_string(),
-            symbol: "NEW".to_string(),
+            name: Some("new name".to_string()),
+            symbol: Some("NEW".to_string()),
             extension: Empty {},
         },
     };

@@ -316,15 +316,16 @@ impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension
         msg: &CollectionInfoExtensionMsg<RoyaltyInfo>,
     ) -> Result<Self, crate::error::Cw721ContractError> {
         let mut extension = self.clone();
+        // validate royalty before updating
+        if let Some(royalty_info) = &extension.royalty_info {
+            royalty_info.validate(msg.royalty_info.clone())?;
+        }
         extension.description = msg.description.clone().unwrap_or(self.description.clone());
         extension.image = msg.image.clone().unwrap_or(self.image.clone());
         extension.external_link = msg.external_link.clone().or(self.external_link.clone());
         extension.explicit_content = msg.explicit_content.or(self.explicit_content);
         extension.start_trading_time = msg.start_trading_time.or(self.start_trading_time);
         extension.royalty_info = msg.royalty_info.clone().or(self.royalty_info.clone());
-        if let Some(royakty_info) = &extension.royalty_info {
-            royakty_info.validate(msg.royalty_info.clone())?;
-        }
 
         // check description length, must not be empty and max 512 chars
         if extension.description.is_empty() {
@@ -389,11 +390,11 @@ impl RoyaltyInfo {
                             "Share increase cannot be greater than {MAX_SHARE_DELTA_PCT}%"
                         )));
                     }
-                    if new_royalty_info.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
-                        return Err(Cw721ContractError::InvalidRoyalties(format!(
-                            "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
-                        )));
-                    }
+                }
+                if new_royalty_info.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
+                    return Err(Cw721ContractError::InvalidRoyalties(format!(
+                        "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
+                    )));
                 }
                 Ok(())
             }

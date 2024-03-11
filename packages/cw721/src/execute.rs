@@ -389,8 +389,12 @@ pub trait Cw721Execute<
             TCollectionInfoExtensionMsg,
         >::default();
         let mut collection_info = config.collection_info.load(deps.storage)?;
-        collection_info.name = msg.name;
-        collection_info.symbol = msg.symbol;
+        if let Some(name) = msg.name {
+            collection_info.name = name;
+        }
+        if let Some(symbol) = msg.symbol {
+            collection_info.symbol = symbol;
+        }
         collection_info.extension = collection_info.extension.update(&msg.extension)?;
         config
             .collection_info

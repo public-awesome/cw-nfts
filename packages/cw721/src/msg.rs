@@ -241,8 +241,8 @@ pub enum Cw721MigrateMsg {
 
 #[cw_serde]
 pub struct CollectionInfoMsg<TCollectionInfoExtensionMsg> {
-    pub name: String,
-    pub symbol: String,
+    pub name: Option<String>,
+    pub symbol: Option<String>,
     pub extension: TCollectionInfoExtensionMsg,
 }
 
