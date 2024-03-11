@@ -18,7 +18,7 @@
       ]
     },
     "creator": {
-      "description": "The creator is the only who can update collection info.",
+      "description": "Sets the creator of collection. The creator is the only one eligible to update `CollectionInfo`.",
       "type": [
         "string",
         "null"
