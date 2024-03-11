@@ -16,26 +16,26 @@ use crate::{
 impl<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
     Cw721ExpirationContract<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension:
         Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMsg: CustomMsg,
 {
     // -- instantiate --
     pub fn instantiate(
@@ -44,16 +44,16 @@ where
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg<TCollectionInfoExtension>,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         if msg.expiration_days == 0 {
             return Err(ContractError::MinExpiration {});
         }
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         contract
             .expiration_days
@@ -86,13 +86,13 @@ where
             TMetadataExtensionMsg,
             TCollectionInfoExtensionMsg,
         >,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         match msg {
             Cw721ExecuteMsg::Mint {
@@ -140,7 +140,7 @@ where
         owner: String,
         token_uri: Option<String>,
         extension: TMetadataExtension,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let mint_timstamp = env.block.time;
         self.mint_timestamps
             .save(deps.storage, &token_id, &mint_timstamp)?;
@@ -159,7 +159,7 @@ where
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
@@ -173,7 +173,7 @@ where
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
@@ -187,7 +187,7 @@ where
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
@@ -202,7 +202,7 @@ where
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
@@ -215,7 +215,7 @@ where
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self.base_contract.burn_nft(deps, env, info, token_id)?)
     }

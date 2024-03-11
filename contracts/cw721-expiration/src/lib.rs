@@ -47,9 +47,9 @@ pub mod entry {
         let contract = Cw721ExpirationContract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default();
         contract.instantiate(deps, env, info, msg)
     }
@@ -68,9 +68,9 @@ pub mod entry {
         let contract = Cw721ExpirationContract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default();
         contract.execute(deps, env, info, msg)
     }
@@ -84,9 +84,9 @@ pub mod entry {
         let contract = Cw721ExpirationContract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default();
         contract.query(deps, env, msg)
     }

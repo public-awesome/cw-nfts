@@ -12,25 +12,25 @@ use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract}
 impl<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
     Cw721ExpirationContract<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMsg: CustomMsg,
 {
     pub fn query(
         &self,
@@ -40,10 +40,10 @@ where
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         match msg {
             // -------- msgs with `include_expired_nft` prop --------

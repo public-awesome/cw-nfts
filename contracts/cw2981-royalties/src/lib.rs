@@ -56,9 +56,9 @@ pub type Cw2981Contract<'a> = Cw721Contract<
     'a,
     Extension,
     Empty,
-    Empty,
     DefaultOptionCollectionInfoExtension,
     CollectionInfoExtensionMsg<RoyaltyInfo>,
+    Empty,
 >;
 pub type ExecuteMsg =
     cw721_base::msg::ExecuteMsg<Extension, Empty, CollectionInfoExtensionMsg<RoyaltyInfo>>;

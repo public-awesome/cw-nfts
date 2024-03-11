@@ -10,32 +10,32 @@ use crate::Cw721Contract;
 impl<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
     Cw721Execute<
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
     for Cw721Contract<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension:
         Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMsg: CustomMsg,
 {
 }

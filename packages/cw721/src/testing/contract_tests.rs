@@ -128,9 +128,9 @@ fn proper_instantiation_with_collection_info() {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
 
     let collection_info_extension = Some(CollectionInfoExtension {

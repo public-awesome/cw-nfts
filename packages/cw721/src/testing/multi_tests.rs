@@ -33,9 +33,9 @@ pub fn instantiate(
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
 }
@@ -53,9 +53,9 @@ pub fn execute(
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     contract.execute(deps, env, info, msg)
 }
@@ -68,9 +68,9 @@ pub fn query(
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     contract.query(deps, env, msg)
 }
@@ -83,9 +83,9 @@ pub fn migrate(
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }

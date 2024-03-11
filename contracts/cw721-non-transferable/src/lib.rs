@@ -22,9 +22,9 @@ pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     'a,
     DefaultOptionMetadataExtension,
     Empty,
-    Empty,
     DefaultOptionCollectionInfoExtension,
     CollectionInfoExtensionMsg<RoyaltyInfo>,
+    Empty,
 >;
 
 #[cfg(not(feature = "library"))]

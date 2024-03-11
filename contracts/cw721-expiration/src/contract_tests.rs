@@ -34,16 +34,16 @@ fn setup_contract(
     'static,
     DefaultOptionMetadataExtension,
     Empty,
-    Empty,
     DefaultOptionCollectionInfoExtension,
     CollectionInfoExtensionMsg<RoyaltyInfo>,
+    Empty,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     let msg = InstantiateMsg {
         expiration_days,
@@ -66,8 +66,8 @@ fn proper_instantiation() {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         Option<Empty>,
+        Empty,
         Empty,
     >::default();
 
@@ -135,8 +135,8 @@ fn proper_instantiation_with_collection_info() {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         Option<Empty>,
+        Empty,
         Empty,
     >::default();
 

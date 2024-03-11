@@ -163,7 +163,7 @@ pub trait Cw721Query<
         deps: Deps,
         _env: Env,
     ) -> StdResult<CollectionInfo<TCollectionInfoExtension>> {
-        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension, Empty>::default()
+        Cw721Config::<TMetadataExtension, Empty, TCollectionInfoExtension, Empty, Empty>::default()
             .collection_info
             .load(deps.storage)
     }
@@ -172,8 +172,8 @@ pub trait Cw721Query<
         let count = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .token_count(deps.storage)?;
@@ -189,8 +189,8 @@ pub trait Cw721Query<
         let info = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -211,8 +211,8 @@ pub trait Cw721Query<
         let nft_info = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -238,8 +238,8 @@ pub trait Cw721Query<
         let info = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .operators
@@ -279,8 +279,8 @@ pub trait Cw721Query<
         let res: StdResult<Vec<_>> = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .operators
@@ -306,8 +306,8 @@ pub trait Cw721Query<
         let token = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -353,8 +353,8 @@ pub trait Cw721Query<
         let token = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -387,8 +387,8 @@ pub trait Cw721Query<
         let tokens: Vec<String> = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -415,8 +415,8 @@ pub trait Cw721Query<
         let tokens: StdResult<Vec<String>> = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -438,8 +438,8 @@ pub trait Cw721Query<
         let nft_info = Cw721Config::<
             TMetadataExtension,
             Empty,
-            Empty,
             TCollectionInfoExtension,
+            Empty,
             Empty,
         >::default()
         .nft_info
@@ -477,7 +477,7 @@ pub trait Cw721Query<
     }
 
     fn query_withdraw_address(&self, deps: Deps) -> StdResult<Option<String>> {
-        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension, Empty>::default()
+        Cw721Config::<TMetadataExtension, Empty, TCollectionInfoExtension, Empty, Empty>::default()
             .withdraw_address
             .may_load(deps.storage)
     }

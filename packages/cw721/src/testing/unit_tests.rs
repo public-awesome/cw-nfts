@@ -30,9 +30,9 @@ fn proper_cw2_initialization() {
     Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default()
     .instantiate(
         deps.as_mut(),
@@ -85,9 +85,9 @@ fn proper_minter_and_creator_initialization() {
         Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -119,9 +119,9 @@ fn proper_minter_and_creator_initialization() {
         Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -153,9 +153,9 @@ fn proper_minter_and_creator_initialization() {
         Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -187,9 +187,9 @@ fn proper_minter_and_creator_initialization() {
         Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -239,9 +239,9 @@ fn proper_collection_info_initialization() {
         Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -264,9 +264,9 @@ fn proper_collection_info_initialization() {
         let collection_info = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .query_collection_info(deps.as_ref(), mock_env())
         .unwrap();
@@ -297,9 +297,9 @@ fn proper_collection_info_initialization() {
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -340,9 +340,9 @@ fn proper_collection_info_initialization() {
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -383,9 +383,9 @@ fn proper_collection_info_initialization() {
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -423,9 +423,9 @@ fn proper_collection_info_initialization() {
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -460,9 +460,9 @@ fn proper_collection_info_initialization() {
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .instantiate(
             deps.as_mut(),
@@ -514,9 +514,9 @@ fn proper_collection_info_extension_update() {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default();
         contract
             .instantiate(
@@ -603,9 +603,9 @@ fn proper_collection_info_extension_update() {
         let collection_info = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default()
         .query_collection_info(deps.as_ref(), mock_env())
         .unwrap();
@@ -652,9 +652,9 @@ fn proper_collection_info_extension_update() {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
             Empty,
-            Empty,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
         >::default();
         contract
             .instantiate(
@@ -890,9 +890,9 @@ fn use_metadata_extension() {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
 
     let info = mock_info(CREATOR_ADDR, &[]);
@@ -976,9 +976,9 @@ fn test_migrate() {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -1012,9 +1012,9 @@ fn test_migrate() {
     Cw721Contract::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default()
     .migrate(
         deps.as_mut(),

@@ -13,13 +13,13 @@ pub struct Cw721ExpirationContract<
     // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
     // Message passed for updating collection info extension.
     TCollectionInfoExtensionMsg,
+    TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
@@ -31,27 +31,27 @@ pub struct Cw721ExpirationContract<
     pub base_contract: Cw721Contract<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >,
 }
 
 impl<
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     > Default
     for Cw721ExpirationContract<
         'static,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,

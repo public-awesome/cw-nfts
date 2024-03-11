@@ -10,13 +10,13 @@ pub struct Cw721Contract<
     'a,
     // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
-    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
     TCollectionInfoExtensionMsg,
+    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
+    TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
@@ -26,27 +26,27 @@ pub struct Cw721Contract<
     pub config: Cw721Config<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >,
 }
 
 impl<
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     > Default
     for Cw721Contract<
         'static,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,

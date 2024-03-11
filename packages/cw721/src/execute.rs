@@ -29,21 +29,21 @@ pub trait Update<T>: Sized {
 pub trait Cw721Execute<
     // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
-    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
     // Message passed for updating collection info extension.
     TCollectionInfoExtensionMsg,
+    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
+    TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension:
         Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMsg: CustomMsg,
 {
     fn instantiate(
         &self,
@@ -53,14 +53,14 @@ pub trait Cw721Execute<
         msg: Cw721InstantiateMsg<TCollectionInfoExtension>,
         contract_name: &str,
         contract_version: &str,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
         let config = Cw721Config::<
-            Empty,
-            Empty,
-            Empty,
+            TMetadataExtension,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         let collection_info = CollectionInfo {
             name: msg.name,
@@ -107,7 +107,7 @@ pub trait Cw721Execute<
             TMetadataExtensionMsg,
             TCollectionInfoExtensionMsg,
         >,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
                 self.update_collection_info(deps, info, env, collection_info)
@@ -192,7 +192,7 @@ pub trait Cw721Execute<
         info: MessageInfo,
         recipient: String,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         _transfer_nft::<TMetadataExtension>(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
@@ -210,7 +210,7 @@ pub trait Cw721Execute<
         contract: String,
         token_id: String,
         msg: Binary,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         // Transfer token
         _transfer_nft::<TMetadataExtension>(deps, &env, &info, &contract, &token_id)?;
 
@@ -237,7 +237,7 @@ pub trait Cw721Execute<
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         _update_approvals::<TMetadataExtension>(
             deps, &env, &info, &spender, &token_id, true, expires,
         )?;
@@ -256,7 +256,7 @@ pub trait Cw721Execute<
         info: MessageInfo,
         spender: String,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         _update_approvals::<TMetadataExtension>(
             deps, &env, &info, &spender, &token_id, false, None,
         )?;
@@ -275,7 +275,7 @@ pub trait Cw721Execute<
         info: MessageInfo,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         // reject expired data as invalid
         let expires = expires.unwrap_or_default();
         if expires.is_expired(&env.block) {
@@ -286,10 +286,10 @@ pub trait Cw721Execute<
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         config
             .operators
@@ -309,14 +309,14 @@ pub trait Cw721Execute<
         _env: Env,
         info: MessageInfo,
         operator: String,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         config
             .operators
@@ -334,13 +334,13 @@ pub trait Cw721Execute<
         env: Env,
         info: MessageInfo,
         token_id: String,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let config = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         let token = config.nft_info.load(deps.storage, &token_id)?;
         check_can_send(deps.as_ref(), &env, &info, &token)?;
@@ -379,14 +379,14 @@ pub trait Cw721Execute<
         info: MessageInfo,
         _env: Env,
         msg: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let config = Cw721Config::<
-            Empty,
-            TCustomResponseMessage,
-            Empty,
+            TMetadataExtension,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         let mut collection_info = config.collection_info.load(deps.storage)?;
         if let Some(name) = msg.name {
@@ -419,7 +419,7 @@ pub trait Cw721Execute<
         owner: String,
         token_uri: Option<String>,
         extension: TMetadataExtension,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         MINTER.assert_owner(deps.storage, &info.sender)?;
 
         // create the token
@@ -431,10 +431,10 @@ pub trait Cw721Execute<
         };
         let config = Cw721Config::<
             TMetadataExtension,
-            Empty,
-            Empty,
+            TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         config
             .nft_info
@@ -458,7 +458,7 @@ pub trait Cw721Execute<
         env: Env,
         info: MessageInfo,
         action: Action,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let ownership =
             MINTER.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
@@ -472,7 +472,7 @@ pub trait Cw721Execute<
         env: Env,
         info: MessageInfo,
         action: Action,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let ownership =
             CREATOR.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
@@ -487,7 +487,7 @@ pub trait Cw721Execute<
         _env: Env,
         info: MessageInfo,
         _msg: TMetadataExtensionMsg,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         Ok(Response::new().add_attribute("action", "update_metadata_extension"))
     }
@@ -497,15 +497,15 @@ pub trait Cw721Execute<
         deps: DepsMut,
         sender: &Addr,
         address: String,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, sender)?;
         deps.api.addr_validate(&address)?;
         let config = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         config.withdraw_address.save(deps.storage, &address)?;
         Ok(Response::new()
@@ -517,14 +517,14 @@ pub trait Cw721Execute<
         &self,
         storage: &mut dyn Storage,
         sender: &Addr,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(storage, sender)?;
         let config = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default();
         let address = config.withdraw_address.may_load(storage)?;
         match address {
@@ -542,13 +542,13 @@ pub trait Cw721Execute<
         &self,
         storage: &mut dyn Storage,
         amount: &Coin,
-    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let withdraw_address = Cw721Config::<
             TMetadataExtension,
-            TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
             TCollectionInfoExtensionMsg,
+            TCustomResponseMsg,
         >::default()
         .withdraw_address
         .may_load(storage)?;
@@ -809,9 +809,9 @@ pub fn migrate_legacy_collection_info(
     let contract = Cw721Config::<
         DefaultOptionMetadataExtension,
         Empty,
-        Empty,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
+        Empty,
     >::default();
     match contract.collection_info.may_load(storage)? {
         Some(_) => Ok(response),

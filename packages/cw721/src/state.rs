@@ -45,14 +45,14 @@ pub struct Cw721Config<
     'a,
     // Metadata defined in NftInfo (used for mint).
     TMetadataExtension,
-    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
     // Message passed for updating collection info extension.
     TCollectionInfoExtensionMsg,
+    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
+    TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
@@ -69,25 +69,25 @@ pub struct Cw721Config<
         IndexedMap<'a, &'a str, NftInfo<TMetadataExtension>, TokenIndexes<'a, TMetadataExtension>>,
     pub withdraw_address: Item<'a, String>,
 
-    pub(crate) _custom_response: PhantomData<TCustomResponseMessage>,
     pub(crate) _custom_metadata_extension_msg: PhantomData<TMetadataExtensionMsg>,
     pub(crate) _custom_collection_info_extension_msg: PhantomData<TCollectionInfoExtensionMsg>,
+    pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
 impl<
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     > Default
     for Cw721Config<
         'static,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
@@ -110,18 +110,18 @@ where
 impl<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
     Cw721Config<
         'a,
         TMetadataExtension,
-        TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
         TCollectionInfoExtensionMsg,
+        TCustomResponseMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
@@ -146,9 +146,9 @@ where
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
-            _custom_response: PhantomData,
             _custom_metadata_extension_msg: PhantomData,
             _custom_collection_info_extension_msg: PhantomData,
+            _custom_response_msg: PhantomData,
         }
     }
 
