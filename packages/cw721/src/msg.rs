@@ -112,7 +112,7 @@ pub struct Cw721InstantiateMsg<TCollectionInfoExtension> {
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
-    /// The creator is the only who can update collection info.
+    /// Sets the creator of collection. The creator is the only one eligible to update `CollectionInfo`.
     pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,

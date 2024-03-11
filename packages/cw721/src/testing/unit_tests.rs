@@ -490,7 +490,7 @@ fn proper_collection_info_initialization() {
 }
 
 #[test]
-fn proper_collection_info_extension_update() {
+fn proper_collection_info_update() {
     // case 1: update with proper data
     {
         // initialize contract
@@ -880,6 +880,87 @@ fn proper_collection_info_extension_update() {
             Cw721ContractError::InvalidRoyalties(format!(
                 "Share increase cannot be greater than {MAX_SHARE_DELTA_PCT}%"
             ))
+        );
+    }
+    // case 3: non-creator updating data
+    {
+        // initialize contract
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let info = mock_info(CREATOR_ADDR, &[]);
+        let instantiated_extension = Some(CollectionInfoExtension {
+            description: "description".into(),
+            image: "https://moonphases.org".to_string(),
+            explicit_content: Some(true),
+            external_link: Some("https://moonphases.org".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(0)),
+            royalty_info: Some(RoyaltyInfo {
+                payment_address: Addr::unchecked("payment_address"),
+                share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+            }),
+        });
+        let contract = Cw721Contract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            Empty,
+        >::default();
+        contract
+            .instantiate(
+                deps.as_mut(),
+                env.clone(),
+                info,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: instantiated_extension.clone(),
+                    creator: None,
+                    minter: None,
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
+
+        // update collection by other user
+        let updated_extension_msg = CollectionInfoExtensionMsg {
+            description: Some("new_description".into()),
+            image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
+            explicit_content: Some(true),
+            external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(0)),
+            royalty_info: Some(RoyaltyInfo {
+                payment_address: Addr::unchecked("payment_address"),
+                share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+            }),
+        };
+        let updated_collection_info_msg = CollectionInfoMsg {
+            name: Some("new_collection_name".into()),
+            symbol: Some("new_collection_symbol".into()),
+            extension: updated_extension_msg,
+        };
+        let info_other = mock_info(OTHER_ADDR, &[]);
+        let err = contract
+            .execute(
+                deps.as_mut(),
+                env.clone(),
+                info_other,
+                Cw721ExecuteMsg::UpdateCollectionInfo {
+                    collection_info: updated_collection_info_msg,
+                },
+            )
+            .unwrap_err();
+        assert_eq!(
+            err,
+            Cw721ContractError::Ownership(cw_ownable::OwnershipError::NotOwner)
         );
     }
 }
