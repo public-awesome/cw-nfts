@@ -507,10 +507,6 @@
     },
     "CollectionInfoMsg_for_Nullable_CollectionInfoExtension_for_RoyaltyInfo": {
       "type": "object",
-      "required": [
-        "name",
-        "symbol"
-      ],
       "properties": {
         "extension": {
           "anyOf": [
@@ -523,10 +519,16 @@
           ]
         },
         "name": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "symbol": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
