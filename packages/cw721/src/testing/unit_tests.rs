@@ -1,3 +1,5 @@
+use std::f32::MIN;
+
 use crate::{
     execute::Cw721Execute,
     msg::{CollectionInfoExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg},
@@ -14,7 +16,7 @@ use cosmwasm_std::{
 };
 use cw2::ContractVersion;
 use cw_storage_plus::Item;
-use unit_tests::{contract::Cw721Contract, multi_tests::CREATOR_ADDR};
+use unit_tests::{contract::Cw721Contract, multi_tests::{CREATOR_ADDR, OTHER_ADDR, MINTER_ADDR}};
 
 use super::*;
 
@@ -72,38 +74,143 @@ fn proper_cw2_initialization() {
 }
 
 #[test]
-fn proper_owner_initialization() {
-    let mut deps = mock_dependencies();
+fn proper_minter_and_creator_initialization() {
+    // case 1: sender is used in case minter and creator is not set
+    {
+        let mut deps = mock_dependencies();
 
-    let info_owner = mock_info("owner", &[]);
-    Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
-    >::default()
-    .instantiate(
-        deps.as_mut(),
-        mock_env(),
-        info_owner.clone(),
-        Cw721InstantiateMsg {
-            name: "collection_name".into(),
-            symbol: "collection_symbol".into(),
-            collection_info_extension: None,
-            creator: None,
-            minter: None,
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap();
+        let info_minter_and_creator = mock_info("minter_and_creator", &[]);
+        Cw721Contract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
+        >::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            info_minter_and_creator.clone(),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: None,
+                minter: None,
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
 
-    let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
-    assert_eq!(minter, Some(info_owner.sender));
-    let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
-    assert_eq!(creator, Some(Addr::unchecked("owner")));
+        let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(minter, Some(info_minter_and_creator.sender.clone()));
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(creator, Some(info_minter_and_creator.sender));
+    }
+    // case 2: minter and creator are set
+    {
+        let mut deps = mock_dependencies();
+
+        let info = mock_info(OTHER_ADDR, &[]);
+        Cw721Contract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
+        >::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            info.clone(),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+        let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(creator, Some(Addr::unchecked(CREATOR_ADDR.to_string())));
+    }
+    // case 3: sender is minter and creator is set
+    {
+        let mut deps = mock_dependencies();
+
+        let info = mock_info(MINTER_ADDR, &[]);
+        Cw721Contract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
+        >::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            info.clone(),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: None,
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+        let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(minter, Some(info.sender.clone()));
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(creator, Some(Addr::unchecked(CREATOR_ADDR.to_string())));
+    }
+    // case 4: sender is creator and minter is set
+    {
+        let mut deps = mock_dependencies();
+
+        let info = mock_info(CREATOR_ADDR, &[]);
+        Cw721Contract::<
+            DefaultOptionMetadataExtension,
+            Empty,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
+        >::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            info.clone(),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: None,
+                minter: Some(MINTER_ADDR.into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+        let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
+        assert_eq!(creator, Some(info.sender));
+    }
 }
 
 #[test]
