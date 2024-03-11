@@ -134,9 +134,6 @@ pub enum QueryMsg {
     #[returns(Option<String>)]
     GetWithdrawAddress {},
 
-    // -- below queries, Extension and GetCollectionInfoExtension, are just dummies, since type annotations are required for
-    // -- TMetadataExtension and TCollectionInfoExtension, Error:
-    // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
     #[returns(())]
     Extension { msg: Extension },
 

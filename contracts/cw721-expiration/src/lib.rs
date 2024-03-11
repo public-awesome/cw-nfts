@@ -31,8 +31,9 @@ pub mod entry {
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
-        msg::Cw721ExecuteMsg,
+        msg::{CollectionInfoExtensionMsg, Cw721ExecuteMsg},
         state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+        RoyaltyInfo,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -48,6 +49,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.instantiate(deps, env, info, msg)
     }
@@ -60,7 +62,7 @@ pub mod entry {
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
             Empty,
-            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
@@ -68,6 +70,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.execute(deps, env, info, msg)
     }
@@ -83,6 +86,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.query(deps, env, msg)
     }
@@ -98,7 +102,9 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
-    use cw721::state::DefaultOptionCollectionInfoExtension;
+    use cw721::{
+        msg::CollectionInfoExtensionMsg, state::DefaultOptionCollectionInfoExtension, RoyaltyInfo,
+    };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
 
@@ -159,6 +165,7 @@ mod tests {
                 Empty,
                 Empty,
                 DefaultOptionCollectionInfoExtension,
+                CollectionInfoExtensionMsg<RoyaltyInfo>,
             >::default()
             .expiration_days
             .load(deps.as_ref().storage)

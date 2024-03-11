@@ -1,7 +1,8 @@
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721::{
-    execute::Cw721Execute,
+    execute::{Cw721Execute, Update},
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+    state::Validate,
     Expiration,
 };
 use serde::de::DeserializeOwned;
@@ -18,6 +19,7 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     >
     Cw721ExpirationContract<
         'a,
@@ -25,12 +27,15 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionInfoExtension:
+        Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
+    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     // -- instantiate --
     pub fn instantiate(
@@ -48,6 +53,7 @@ where
             TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
+            TCollectionInfoExtensionMsg,
         >::default();
         contract
             .expiration_days
@@ -75,13 +81,18 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<
+            TMetadataExtension,
+            TMetadataExtensionMsg,
+            TCollectionInfoExtensionMsg,
+        >,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
             TMetadataExtensionMsg,
             TCollectionInfoExtension,
+            TCollectionInfoExtensionMsg,
         >::default();
         match msg {
             Cw721ExecuteMsg::Mint {

@@ -16,10 +16,12 @@ pub struct Cw721Contract<
     TMetadataExtensionMsg,
     // Extension defined in CollectionInfo.
     TCollectionInfoExtension,
+    TCollectionInfoExtensionMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     pub config: Cw721Config<
         'a,
@@ -27,6 +29,7 @@ pub struct Cw721Contract<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     >,
 }
 
@@ -35,6 +38,7 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     > Default
     for Cw721Contract<
         'static,
@@ -42,11 +46,13 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self {

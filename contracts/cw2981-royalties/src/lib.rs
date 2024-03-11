@@ -2,7 +2,9 @@ pub mod error;
 pub mod msg;
 pub mod query;
 
-use cw721::state::DefaultOptionCollectionInfoExtension;
+use cw721::{
+    msg::CollectionInfoExtensionMsg, state::DefaultOptionCollectionInfoExtension, RoyaltyInfo,
+};
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
@@ -50,10 +52,16 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> =
-    Cw721Contract<'a, Extension, Empty, Empty, DefaultOptionCollectionInfoExtension>;
+pub type Cw2981Contract<'a> = Cw721Contract<
+    'a,
+    Extension,
+    Empty,
+    Empty,
+    DefaultOptionCollectionInfoExtension,
+    CollectionInfoExtensionMsg<RoyaltyInfo>,
+>;
 pub type ExecuteMsg =
-    cw721_base::msg::ExecuteMsg<Extension, Empty, DefaultOptionCollectionInfoExtension>;
+    cw721_base::msg::ExecuteMsg<Extension, Empty, CollectionInfoExtensionMsg<RoyaltyInfo>>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {

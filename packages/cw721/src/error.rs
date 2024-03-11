@@ -1,9 +1,13 @@
 use cosmwasm_std::StdError;
 use cw_ownable::OwnershipError;
 use thiserror::Error;
+use url::ParseError;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum Cw721ContractError {
+    #[error(transparent)]
+    ParseError(#[from] ParseError),
+
     #[error(transparent)]
     Std(#[from] StdError),
 
@@ -24,4 +28,13 @@ pub enum Cw721ContractError {
 
     #[error("No withdraw address set")]
     NoWithdrawAddress {},
+
+    #[error("Collection description must not be empty")]
+    CollectionDescriptionEmpty {},
+
+    #[error("Collection description too long. Max length is 512 characters.")]
+    CollectionDescriptionTooLong {},
+
+    #[error("InvalidRoyalties: {0}")]
+    InvalidRoyalties(String),
 }

@@ -8,11 +8,12 @@ use cosmwasm_std::{
 
 use cw721::error::Cw721ContractError;
 use cw721::msg::{
-    ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
-    OwnerOfResponse, TokensResponse,
+    ApprovalResponse, CollectionInfoExtensionMsg, Cw721ExecuteMsg, NftInfoResponse,
+    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
 use cw721::state::{CollectionInfo, DefaultOptionCollectionInfoExtension, CREATOR, MINTER};
+use cw721::RoyaltyInfo;
 use cw721::{query::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
@@ -35,12 +36,14 @@ fn setup_contract(
     Empty,
     Empty,
     DefaultOptionCollectionInfoExtension,
+    CollectionInfoExtensionMsg<RoyaltyInfo>,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     let msg = InstantiateMsg {
         expiration_days,
@@ -65,6 +68,7 @@ fn proper_instantiation() {
         Empty,
         Empty,
         Option<Empty>,
+        Empty,
     >::default();
 
     let msg = InstantiateMsg {
@@ -133,6 +137,7 @@ fn proper_instantiation_with_collection_info() {
         Empty,
         Empty,
         Option<Empty>,
+        Empty,
     >::default();
 
     let msg = InstantiateMsg {

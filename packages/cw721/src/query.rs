@@ -163,15 +163,20 @@ pub trait Cw721Query<
         deps: Deps,
         _env: Env,
     ) -> StdResult<CollectionInfo<TCollectionInfoExtension>> {
-        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension, Empty>::default()
             .collection_info
             .load(deps.storage)
     }
 
     fn query_num_tokens(&self, deps: Deps, _env: Env) -> StdResult<NumTokensResponse> {
-        let count =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .token_count(deps.storage)?;
+        let count = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .token_count(deps.storage)?;
         Ok(NumTokensResponse { count })
     }
 
@@ -181,10 +186,15 @@ pub trait Cw721Query<
         _env: Env,
         token_id: String,
     ) -> StdResult<NftInfoResponse<TMetadataExtension>> {
-        let info =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .load(deps.storage, &token_id)?;
+        let info = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
         Ok(NftInfoResponse {
             token_uri: info.token_uri,
             extension: info.extension,
@@ -198,10 +208,15 @@ pub trait Cw721Query<
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<OwnerOfResponse> {
-        let nft_info =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .load(deps.storage, &token_id)?;
+        let nft_info = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
         Ok(OwnerOfResponse {
             owner: nft_info.owner.to_string(),
             approvals: humanize_approvals(&env.block, &nft_info, include_expired_approval),
@@ -220,10 +235,15 @@ pub trait Cw721Query<
         let owner_addr = deps.api.addr_validate(&owner)?;
         let operator_addr = deps.api.addr_validate(&operator)?;
 
-        let info =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .operators
-                .may_load(deps.storage, (&owner_addr, &operator_addr))?;
+        let info = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .operators
+        .may_load(deps.storage, (&owner_addr, &operator_addr))?;
 
         if let Some(expires) = info {
             if !include_expired_approval && expires.is_expired(&env.block) {
@@ -256,19 +276,22 @@ pub trait Cw721Query<
         let start = start_addr.as_ref().map(Bound::exclusive);
 
         let owner_addr = deps.api.addr_validate(&owner)?;
-        let res: StdResult<Vec<_>> =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .operators
-                .prefix(&owner_addr)
-                .range(deps.storage, start, None, Order::Ascending)
-                .filter(|r| {
-                    include_expired_approval
-                        || r.is_err()
-                        || !r.as_ref().unwrap().1.is_expired(&env.block)
-                })
-                .take(limit)
-                .map(parse_approval)
-                .collect();
+        let res: StdResult<Vec<_>> = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .operators
+        .prefix(&owner_addr)
+        .range(deps.storage, start, None, Order::Ascending)
+        .filter(|r| {
+            include_expired_approval || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
+        })
+        .take(limit)
+        .map(parse_approval)
+        .collect();
         Ok(OperatorsResponse { operators: res? })
     }
 
@@ -280,10 +303,15 @@ pub trait Cw721Query<
         spender: String,
         include_expired_approval: bool,
     ) -> StdResult<ApprovalResponse> {
-        let token =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .load(deps.storage, &token_id)?;
+        let token = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
 
         // token owner has absolute approval
         if token.owner == spender {
@@ -322,10 +350,15 @@ pub trait Cw721Query<
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<ApprovalsResponse> {
-        let token =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .load(deps.storage, &token_id)?;
+        let token = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
         let approvals: Vec<_> = token
             .approvals
             .into_iter()
@@ -351,15 +384,20 @@ pub trait Cw721Query<
         let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
         let owner_addr = deps.api.addr_validate(&owner)?;
-        let tokens: Vec<String> =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .idx
-                .owner
-                .prefix(owner_addr)
-                .keys(deps.storage, start, None, Order::Ascending)
-                .take(limit)
-                .collect::<StdResult<Vec<_>>>()?;
+        let tokens: Vec<String> = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .idx
+        .owner
+        .prefix(owner_addr)
+        .keys(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .collect::<StdResult<Vec<_>>>()?;
 
         Ok(TokensResponse { tokens })
     }
@@ -374,13 +412,18 @@ pub trait Cw721Query<
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
         let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
-        let tokens: StdResult<Vec<String>> =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .range(deps.storage, start, None, Order::Ascending)
-                .take(limit)
-                .map(|item| item.map(|(k, _)| k))
-                .collect();
+        let tokens: StdResult<Vec<String>> = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| item.map(|(k, _)| k))
+        .collect();
 
         Ok(TokensResponse { tokens: tokens? })
     }
@@ -392,10 +435,15 @@ pub trait Cw721Query<
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<AllNftInfoResponse<TMetadataExtension>> {
-        let nft_info =
-            Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
-                .nft_info
-                .load(deps.storage, &token_id)?;
+        let nft_info = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+        >::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
         Ok(AllNftInfoResponse {
             access: OwnerOfResponse {
                 owner: nft_info.owner.to_string(),
@@ -429,7 +477,7 @@ pub trait Cw721Query<
     }
 
     fn query_withdraw_address(&self, deps: Deps) -> StdResult<Option<String>> {
-        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension>::default()
+        Cw721Config::<TMetadataExtension, Empty, Empty, TCollectionInfoExtension, Empty>::default()
             .withdraw_address
             .may_load(deps.storage)
     }

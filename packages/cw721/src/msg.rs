@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Binary, Coin};
+use cosmwasm_std::{Addr, Binary, Coin, Timestamp};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
 
@@ -9,7 +9,14 @@ use crate::Approval;
 use cosmwasm_std::Empty;
 
 #[cw_serde]
-pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension> {
+pub enum Cw721ExecuteMsg<
+    // Metadata defined in NftInfo (used for mint).
+    TMetadataExtension,
+    // Message passed for updating metadata.
+    TMetadataExtensionMsg,
+    // Message passed for updating collection info extension.
+    TCollectionInfoExtensionMsg,
+> {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
     UpdateOwnership(Action),
     UpdateMinterOwnership(Action),
@@ -17,7 +24,7 @@ pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionI
 
     /// Update the collection, can only called by the contract creator
     UpdateCollectionInfo {
-        collection_info: CollectionInfoMsg<TCollectionInfoExtension>,
+        collection_info: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
     },
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft {
@@ -233,10 +240,20 @@ pub enum Cw721MigrateMsg {
 }
 
 #[cw_serde]
-pub struct CollectionInfoMsg<TCollectionInfoExtension> {
+pub struct CollectionInfoMsg<TCollectionInfoExtensionMsg> {
     pub name: String,
     pub symbol: String,
-    pub extension: TCollectionInfoExtension,
+    pub extension: TCollectionInfoExtensionMsg,
+}
+
+#[cw_serde]
+pub struct CollectionInfoExtensionMsg<TRoyaltyInfo> {
+    pub description: Option<String>,
+    pub image: Option<String>,
+    pub external_link: Option<String>,
+    pub explicit_content: Option<bool>,
+    pub start_trading_time: Option<Timestamp>,
+    pub royalty_info: Option<TRoyaltyInfo>,
 }
 
 #[cw_serde]

@@ -2,11 +2,12 @@ use crate::{
     error::Cw721ContractError,
     execute::Cw721Execute,
     msg::{
-        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
-        OwnerOfResponse,
+        CollectionInfoExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
+        Cw721QueryMsg, MinterResponse, OwnerOfResponse,
     },
     query::Cw721Query,
     state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    RoyaltyInfo,
 };
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
@@ -34,6 +35,7 @@ pub fn instantiate(
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
 }
@@ -45,7 +47,7 @@ pub fn execute(
     msg: Cw721ExecuteMsg<
         DefaultOptionMetadataExtension,
         Empty,
-        DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
@@ -53,6 +55,7 @@ pub fn execute(
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     contract.execute(deps, env, info, msg)
 }
@@ -67,6 +70,7 @@ pub fn query(
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     contract.query(deps, env, msg)
 }
@@ -81,6 +85,7 @@ pub fn migrate(
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }

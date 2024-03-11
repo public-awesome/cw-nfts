@@ -30,6 +30,7 @@ cw-utils        = "^1.0"
 schemars        = "^0.8"
 serde           = { version = "1.0.152", default-features = false, features = ["derive"] }
 thiserror       = "^1.0"
+url             = "^2.5"
 
 [profile.release.package.cw721-base]
 codegen-units = 1

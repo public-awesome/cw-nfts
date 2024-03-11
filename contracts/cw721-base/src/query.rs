@@ -12,6 +12,7 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
     for Cw721Contract<
         'a,
@@ -19,11 +20,13 @@ impl<
         TCustomResponseMessage,
         TMetadataExtensionMsg,
         TCollectionInfoExtension,
+        TCollectionInfoExtensionMsg,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
 }

@@ -1,6 +1,10 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
+use cw721::{
+    msg::CollectionInfoExtensionMsg,
+    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    RoyaltyInfo,
+};
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
     Cw721Contract,
@@ -20,6 +24,7 @@ pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     Empty,
     Empty,
     DefaultOptionCollectionInfoExtension,
+    CollectionInfoExtensionMsg<RoyaltyInfo>,
 >;
 
 #[cfg(not(feature = "library"))]
@@ -85,7 +90,7 @@ pub mod entry {
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
             Empty,
-            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;

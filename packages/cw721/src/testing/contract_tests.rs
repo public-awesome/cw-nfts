@@ -8,7 +8,8 @@ use cosmwasm_std::{
 
 use crate::error::Cw721ContractError;
 use crate::msg::{
-    ApprovalResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+    ApprovalResponse, CollectionInfoExtensionMsg, NftInfoResponse, OperatorResponse,
+    OperatorsResponse, OwnerOfResponse,
 };
 use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
@@ -29,7 +30,7 @@ const SYMBOL: &str = "MGK";
 
 fn setup_contract(
     deps: DepsMut<'_>,
-) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty, Empty> {
+) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty, Empty, Empty> {
     let contract = Cw721Contract::default();
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
@@ -57,7 +58,8 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty, Empty>::default();
+    let contract =
+        Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty, Empty, Empty>::default();
 
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
@@ -128,13 +130,14 @@ fn proper_instantiation_with_collection_info() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
 
     let collection_info_extension = Some(CollectionInfoExtension {
         description: "description".to_string(),
-        image: "image".to_string(),
+        image: "https://moonphases.org".to_string(),
         explicit_content: Some(true),
-        external_link: Some("external_link".to_string()),
+        external_link: Some("https://moonphases.org/".to_string()),
         start_trading_time: Some(Timestamp::from_seconds(0)),
         royalty_info: Some(RoyaltyInfo {
             payment_address: Addr::unchecked("payment_address"),

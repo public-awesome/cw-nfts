@@ -30,9 +30,13 @@ pub mod entry {
     use cw721::{
         error::Cw721ContractError,
         execute::Cw721Execute,
-        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
+        msg::{
+            CollectionInfoExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
+            Cw721QueryMsg,
+        },
         query::Cw721Query,
         state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+        RoyaltyInfo,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -48,6 +52,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.instantiate(deps, env, info, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
@@ -60,7 +65,7 @@ pub mod entry {
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
             Empty,
-            DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
@@ -68,6 +73,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.execute(deps, env, info, msg)
     }
@@ -83,6 +89,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.query(deps, env, msg)
     }
@@ -98,6 +105,7 @@ pub mod entry {
             Empty,
             Empty,
             DefaultOptionCollectionInfoExtension,
+            CollectionInfoExtensionMsg<RoyaltyInfo>,
         >::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }

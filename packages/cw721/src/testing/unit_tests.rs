@@ -1,11 +1,12 @@
 use crate::{
     execute::Cw721Execute,
-    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+    msg::{CollectionInfoExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg},
     query::{Cw721Query, MAX_LIMIT},
     state::{
         CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension,
         Metadata, CREATOR, MINTER,
     },
+    RoyaltyInfo,
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
@@ -27,6 +28,7 @@ fn proper_cw2_initialization() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default()
     .instantiate(
         deps.as_mut(),
@@ -79,6 +81,7 @@ fn proper_owner_initialization() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default()
     .instantiate(
         deps.as_mut(),
@@ -111,6 +114,7 @@ fn use_metadata_extension() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
 
     let info = mock_info(CREATOR_ADDR, &[]);
@@ -196,6 +200,7 @@ fn test_migrate() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default();
     contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -231,6 +236,7 @@ fn test_migrate() {
         Empty,
         Empty,
         DefaultOptionCollectionInfoExtension,
+        CollectionInfoExtensionMsg<RoyaltyInfo>,
     >::default()
     .migrate(
         deps.as_mut(),
