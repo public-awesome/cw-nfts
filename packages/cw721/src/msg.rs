@@ -24,7 +24,7 @@ pub enum Cw721ExecuteMsg<
     UpdateCreatorOwnership(Action),
 
     /// The creator is the only one eligible to update `CollectionInfo`.
-    UpdateCollectionInfo {
+    UpdateCollectionMetadata {
         collection_info: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
     },
     /// Transfer is a base message to move a token to another account without triggering actions
@@ -82,13 +82,13 @@ pub enum Cw721ExecuteMsg<
     },
 
     /// Metadata msg
-    #[deprecated(since = "0.19.0", note = "Please use UpdateMetadata instead")]
-    /// Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!
+    #[deprecated(since = "0.19.0", note = "Please use UpdateNftMetadata instead")]
+    /// Deprecated: use UpdateNftMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!
     Extension {
         msg: TMetadataExtensionMsg,
     },
     /// The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).
-    UpdateMetadata {
+    UpdateNftMetadata {
         token_id: String,
         extension: TMetadataExtensionMsg,
     },

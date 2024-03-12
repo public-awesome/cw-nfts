@@ -546,7 +546,7 @@ fn test_update_collection_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
+    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionMetadata {
         collection_info: CollectionInfoMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),
@@ -625,7 +625,7 @@ fn test_update_collection_info() {
     .unwrap();
     assert_eq!(creator_ownership.owner, Some(random_info.sender.clone()));
 
-    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
+    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionMetadata {
         collection_info: CollectionInfoMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),

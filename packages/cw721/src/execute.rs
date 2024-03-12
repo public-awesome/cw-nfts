@@ -135,7 +135,7 @@ pub trait Cw721Execute<
         >,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
-            Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
+            Cw721ExecuteMsg::UpdateCollectionMetadata { collection_info } => {
                 self.update_collection_info(deps, info, env, collection_info)
             }
             Cw721ExecuteMsg::Mint {
@@ -180,7 +180,7 @@ pub trait Cw721Execute<
             Cw721ExecuteMsg::Extension { msg } => {
                 self.update_legacy_extension(deps, env, info, msg)
             }
-            Cw721ExecuteMsg::UpdateMetadata {
+            Cw721ExecuteMsg::UpdateNftMetadata {
                 token_id,
                 extension,
             } => self.update_metadata(deps, env, info, token_id, extension),

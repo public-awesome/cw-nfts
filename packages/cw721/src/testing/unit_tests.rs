@@ -561,7 +561,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: empty_collection_info_msg,
                 },
             )
@@ -599,7 +599,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info,
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -705,7 +705,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -737,7 +737,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -774,7 +774,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -809,7 +809,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -844,7 +844,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info.clone(),
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -881,7 +881,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info,
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
@@ -964,7 +964,7 @@ fn proper_collection_info_update() {
                 deps.as_mut(),
                 env.clone(),
                 info_other,
-                Cw721ExecuteMsg::UpdateCollectionInfo {
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_info: updated_collection_info_msg,
                 },
             )
