@@ -17,13 +17,38 @@ use crate::{
     receiver::Cw721ReceiveMsg,
     state::{
         CollectionInfo, Cw721Config, DefaultOptionCollectionInfoExtension,
-        DefaultOptionMetadataExtension, NftInfo, Validate, CREATOR, MINTER,
+        DefaultOptionMetadataExtension, EmptyMsg, NftInfo, CREATOR, MINTER,
     },
     Approval, RoyaltyInfo,
 };
 
+pub trait Validate {
+    fn validate(&self) -> Result<(), Cw721ContractError>;
+}
+
+impl Validate for Empty {
+    fn validate(&self) -> Result<(), Cw721ContractError> {
+        Ok(())
+    }
+}
+
 pub trait Update<T>: Sized {
     fn update(&self, msg: &T) -> Result<Self, Cw721ContractError>;
+}
+
+impl Update<EmptyMsg> for Empty {
+    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+        Ok(Empty::default())
+    }
+}
+
+impl Update<EmptyMsg> for Option<Empty> {
+    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+        match self {
+            Some(ext) => Ok(Some(ext.clone())),
+            None => Ok(Some(Empty::default())),
+        }
+    }
 }
 
 pub trait Cw721Execute<

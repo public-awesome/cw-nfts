@@ -1,8 +1,7 @@
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721::{
-    execute::{Cw721Execute, Update},
+    execute::{Cw721Execute, Update, Validate},
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    state::Validate,
     Expiration,
 };
 use serde::de::DeserializeOwned;

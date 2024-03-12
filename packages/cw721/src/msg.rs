@@ -2,10 +2,8 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Binary, Coin, Timestamp};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
-use url::Url;
 
-use crate::error::Cw721ContractError;
-use crate::state::{CollectionInfo, Trait, Validate};
+use crate::state::CollectionInfo;
 use crate::Approval;
 
 use cosmwasm_std::Empty;

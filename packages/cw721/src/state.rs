@@ -10,7 +10,7 @@ use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
-use crate::execute::Update;
+use crate::execute::{Update, Validate};
 use crate::msg::CollectionInfoExtensionMsg;
 
 /// Creator owns this contract and can update collection info!
@@ -73,31 +73,6 @@ pub struct Cw721Config<
     pub(crate) _custom_metadata_extension_msg: PhantomData<TMetadataExtensionMsg>,
     pub(crate) _custom_collection_info_extension_msg: PhantomData<TCollectionInfoExtensionMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
-}
-
-pub trait Validate {
-    fn validate(&self) -> Result<(), Cw721ContractError>;
-}
-
-impl Validate for Empty {
-    fn validate(&self) -> Result<(), Cw721ContractError> {
-        Ok(())
-    }
-}
-
-impl Update<EmptyMsg> for Empty {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
-        Ok(Empty::default())
-    }
-}
-
-impl Update<EmptyMsg> for Option<Empty> {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
-        match self {
-            Some(ext) => Ok(Some(ext.clone())),
-            None => Ok(Some(Empty::default())),
-        }
-    }
 }
 
 impl<

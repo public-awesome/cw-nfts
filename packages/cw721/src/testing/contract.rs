@@ -2,9 +2,9 @@ use cosmwasm_std::CustomMsg;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::execute::{Cw721Execute, Update};
+use crate::execute::{Cw721Execute, Update, Validate};
 use crate::query::Cw721Query;
-use crate::state::{Cw721Config, Validate};
+use crate::state::Cw721Config;
 
 pub struct Cw721Contract<
     'a,
