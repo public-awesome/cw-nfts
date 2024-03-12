@@ -180,10 +180,11 @@ pub trait Cw721Execute<
             Cw721ExecuteMsg::Extension { msg } => {
                 self.update_legacy_extension(deps, env, info, msg)
             }
-            Cw721ExecuteMsg::UpdateNftMetadata {
+            Cw721ExecuteMsg::UpdateNftInfo {
                 token_id,
+                token_uri,
                 extension,
-            } => self.update_metadata(deps, env, info, token_id, extension),
+            } => self.update_nft_info(deps, env, info, token_id, token_uri, extension),
             Cw721ExecuteMsg::SetWithdrawAddress { address } => {
                 self.set_withdraw_address(deps, &info.sender, address)
             }
@@ -522,12 +523,15 @@ pub trait Cw721Execute<
         panic!("deprecated. pls use update_metadata instead.")
     }
 
-    fn update_metadata(
+    /// The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`).
+    /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
+    fn update_nft_info(
         &self,
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
         token_id: String,
+        token_uri: Option<String>,
         msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
@@ -539,6 +543,8 @@ pub trait Cw721Execute<
             Empty,
         >::default();
         let mut nft_info = contract.nft_info.load(deps.storage, &token_id)?;
+        nft_info.token_uri = token_uri;
+        nft_info.validate()?;
         nft_info.extension = nft_info.extension.update(&msg)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")

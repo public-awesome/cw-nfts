@@ -20,6 +20,7 @@ use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
+use url::{form_urlencoded::Parse, ParseError};
 
 use super::contract::Cw721Contract;
 
@@ -1155,8 +1156,9 @@ fn test_update_nft_metadata() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftMetadata {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
+                token_uri: None,
                 extension: NftMetadataMsg {
                     name: Some("".to_string()),
                     description: None,
@@ -1176,13 +1178,44 @@ fn test_update_nft_metadata() {
         .unwrap();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
+    // update invalid token uri
+    let err: Cw721ContractError = app
+        .execute_contract(
+            creator.clone(),
+            cw721.clone(),
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+                token_id: "1".to_string(),
+                token_uri: Some("invalid".to_string()),
+                extension: NftMetadataMsg {
+                    name: None,
+                    description: None,
+                    image: None,
+                    image_data: None,
+                    external_url: None,
+                    attributes: None,
+                    background_color: None,
+                    animation_url: None,
+                    youtube_url: None,
+                },
+            },
+            &[],
+        )
+        .unwrap_err()
+        .downcast()
+        .unwrap();
+    assert_eq!(
+        err,
+        Cw721ContractError::ParseError(ParseError::RelativeUrlWithoutBase)
+    );
+
     // update empty name
     let err: Cw721ContractError = app
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftMetadata {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
+                token_uri: None,
                 extension: NftMetadataMsg {
                     name: Some("".to_string()),
                     description: None,

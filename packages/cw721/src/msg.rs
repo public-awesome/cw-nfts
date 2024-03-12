@@ -87,9 +87,11 @@ pub enum Cw721ExecuteMsg<
     Extension {
         msg: TNftMetadataExtensionMsg,
     },
-    /// The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).
-    UpdateNftMetadata {
+    /// The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`).
+    /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
+    UpdateNftInfo {
         token_id: String,
+        token_uri: Option<String>,
         extension: TNftMetadataExtensionMsg,
     },
 
