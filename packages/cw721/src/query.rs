@@ -140,7 +140,8 @@ pub trait Cw721Query<
         }
     }
 
-    #[deprecated(since = "0.19.0", note = "Please use minter_ownership instead")]
+    #[deprecated(since = "0.19.0", note = "Please use query_minter_ownership instead")]
+    /// Deprecated: use query_minter_ownership instead! Will be removed in next release!
     fn query_minter(&self, storage: &dyn Storage) -> StdResult<MinterResponse> {
         let minter = MINTER
             .get_ownership(storage)?

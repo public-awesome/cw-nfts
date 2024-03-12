@@ -3,6 +3,7 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
+      "description": "Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!",
       "deprecated": true,
       "type": "object",
       "required": [
@@ -302,7 +303,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Metadata msg Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts.",
+      "description": "Metadata msg Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!",
       "deprecated": true,
       "type": "object",
       "required": [

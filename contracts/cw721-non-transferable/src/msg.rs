@@ -40,11 +40,13 @@ pub enum QueryMsg {
     },
     NumTokens {},
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
+    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
     ContractInfo {},
 
     GetCollectionInfo {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
     Minter {},
 
     GetMinterOwnership {},

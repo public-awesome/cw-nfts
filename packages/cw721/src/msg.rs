@@ -18,6 +18,7 @@ pub enum Cw721ExecuteMsg<
     TCollectionInfoExtensionMsg,
 > {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
+    /// Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!
     UpdateOwnership(Action),
     UpdateMinterOwnership(Action),
     UpdateCreatorOwnership(Action),
@@ -82,7 +83,7 @@ pub enum Cw721ExecuteMsg<
 
     /// Metadata msg
     #[deprecated(since = "0.19.0", note = "Please use UpdateMetadata instead")]
-    /// Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts.
+    /// Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!
     Extension {
         msg: TMetadataExtensionMsg,
     },
@@ -170,6 +171,7 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
 
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
     #[returns(CollectionInfo<Empty>)]
+    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
@@ -179,11 +181,13 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
+    /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
     Ownership {},
 
     /// Return the minter
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
+    /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
     Minter {},
 
     #[returns(Ownership<Addr>)]
