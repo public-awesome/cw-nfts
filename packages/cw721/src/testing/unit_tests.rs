@@ -29,7 +29,7 @@ use super::*;
 
 /// Make sure cw2 version info is properly initialized during instantiation.
 #[test]
-fn proper_cw2_initialization() {
+fn test_instantiation_with_proper_version() {
     let mut deps = mock_dependencies();
 
     Cw721Contract::<
@@ -81,7 +81,7 @@ fn proper_cw2_initialization() {
 }
 
 #[test]
-fn proper_minter_and_creator_initialization() {
+fn test_instantiation_with_proper_minter_and_creator() {
     // case 1: sender is used in case minter and creator is not set
     {
         let mut deps = mock_dependencies();
@@ -221,7 +221,7 @@ fn proper_minter_and_creator_initialization() {
 }
 
 #[test]
-fn proper_collection_metadata_initialization() {
+fn test_instantiation_with_collection_metadata() {
     // case 1: extension set with proper data
     {
         let mut deps = mock_dependencies();
@@ -500,7 +500,7 @@ fn proper_collection_metadata_initialization() {
 }
 
 #[test]
-fn proper_collection_metadata_update() {
+fn test_collection_metadata_update() {
     // case 1: update with proper data
     {
         // initialize contract
@@ -981,7 +981,7 @@ fn proper_collection_metadata_update() {
 }
 
 #[test]
-fn use_metadata_extension() {
+fn test_nft_mint_with_metadata_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,

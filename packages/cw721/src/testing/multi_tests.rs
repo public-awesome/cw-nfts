@@ -7,7 +7,8 @@ use crate::{
     },
     query::Cw721Query,
     state::{
-        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadataMsg,
+        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadata,
+        NftMetadataMsg, Trait,
     },
     RoyaltyInfo,
 };
@@ -15,6 +16,7 @@ use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
     StdResult, WasmMsg,
 };
+use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
@@ -138,6 +140,16 @@ fn query_owner(querier: QuerierWrapper, cw721: &Addr, token_id: String) -> Addr 
         )
         .unwrap();
     Addr::unchecked(resp.owner)
+}
+
+fn query_nft_info(
+    querier: QuerierWrapper,
+    cw721: &Addr,
+    token_id: String,
+) -> NftInfoResponse<Option<NftMetadata>> {
+    querier
+        .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty, Empty>::NftInfo { token_id })
+        .unwrap()
 }
 
 fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: String) {
@@ -1073,4 +1085,120 @@ fn test_instantiate_016_msg() {
         .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty, Empty>::GetWithdrawAddress {})
         .unwrap();
     assert!(withdraw_addr.is_none());
+}
+
+#[test]
+fn test_update_nft_metadata() {
+    // --- setup ---
+    let mut app = App::default();
+    let admin = Addr::unchecked("admin");
+    let code_id = app.store_code(cw721_base_latest_contract());
+    let creator = Addr::unchecked(CREATOR_ADDR);
+    let cw721 = app
+        .instantiate_contract(
+            code_id,
+            creator.clone(),
+            &Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtension> {
+                name: "collection".to_string(),
+                symbol: "symbol".to_string(),
+                minter: Some(MINTER_ADDR.to_string()),
+                creator: None, // in case of none, sender is creator
+                collection_metadata_extension: None,
+                withdraw_address: None,
+            },
+            &[],
+            "cw721-base",
+            Some(admin.to_string()),
+        )
+        .unwrap();
+    // mint
+    let minter = Addr::unchecked(MINTER_ADDR);
+    let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
+    let nft_metadata = NftMetadata {
+        image: Some("ipfs://foo.bar/image.png".to_string()),
+        image_data: Some("image data".to_string()),
+        external_url: Some("https://github.com".to_string()),
+        description: Some("description".to_string()),
+        name: Some("name".to_string()),
+        attributes: Some(vec![Trait {
+            trait_type: "trait_type".to_string(),
+            value: "value".to_string(),
+            display_type: Some("display_type".to_string()),
+        }]),
+        background_color: Some("background_color".to_string()),
+        animation_url: Some("ssl://animation_url".to_string()),
+        youtube_url: Some("file://youtube_url".to_string()),
+    };
+    app.execute_contract(
+        minter,
+        cw721.clone(),
+        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::Mint {
+            token_id: "1".to_string(),
+            owner: nft_owner.to_string(),
+            token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
+            extension: Some(nft_metadata.clone()),
+        },
+        &[],
+    )
+    .unwrap();
+
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(nft_info.extension, Some(nft_metadata.clone()));
+
+    // nft owner cant update - only creator is allowed
+    let err: Cw721ContractError = app
+        .execute_contract(
+            nft_owner.clone(),
+            cw721.clone(),
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftMetadata {
+                token_id: "1".to_string(),
+                extension: NftMetadataMsg {
+                    name: Some("".to_string()),
+                    description: None,
+                    image: None,
+                    image_data: None,
+                    external_url: None,
+                    attributes: None,
+                    background_color: None,
+                    animation_url: None,
+                    youtube_url: None,
+                },
+            },
+            &[],
+        )
+        .unwrap_err()
+        .downcast()
+        .unwrap();
+    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+
+    // update empty name
+    let err: Cw721ContractError = app
+        .execute_contract(
+            creator.clone(),
+            cw721.clone(),
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftMetadata {
+                token_id: "1".to_string(),
+                extension: NftMetadataMsg {
+                    name: Some("".to_string()),
+                    description: None,
+                    image: None,
+                    image_data: None,
+                    external_url: None,
+                    attributes: None,
+                    background_color: None,
+                    animation_url: None,
+                    youtube_url: None,
+                },
+            },
+            &[],
+        )
+        .unwrap_err()
+        .downcast()
+        .unwrap();
+    assert_eq!(err, Cw721ContractError::MetadataNameEmpty {});
 }

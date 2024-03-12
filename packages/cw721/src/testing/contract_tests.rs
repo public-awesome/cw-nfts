@@ -57,7 +57,7 @@ fn setup_contract(
 }
 
 #[test]
-fn proper_instantiation() {
+fn test_instantiate() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
@@ -129,7 +129,7 @@ fn proper_instantiation() {
 }
 
 #[test]
-fn proper_instantiation_with_collection_metadata() {
+fn test_instantiate_with_collection_metadata() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
@@ -212,7 +212,7 @@ fn proper_instantiation_with_collection_metadata() {
 }
 
 #[test]
-fn minting() {
+fn test_mint() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
@@ -313,7 +313,7 @@ fn minting() {
 }
 
 #[test]
-fn mint_with_metadata() {
+fn test_mint_with_metadata() {
     // case 1: mint with valid metadata
     {
         let mut deps = mock_dependencies();
@@ -761,7 +761,7 @@ fn test_update_minter() {
 }
 
 #[test]
-fn burning() {
+fn test_burn() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
@@ -815,7 +815,7 @@ fn burning() {
 }
 
 #[test]
-fn transferring_nft() {
+fn test_transfer_nft() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
@@ -869,7 +869,7 @@ fn transferring_nft() {
 }
 
 #[test]
-fn sending_nft() {
+fn test_send_nft() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
@@ -935,7 +935,7 @@ fn sending_nft() {
 }
 
 #[test]
-fn approving_revoking() {
+fn test_approve_revoke() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
@@ -1079,7 +1079,7 @@ fn approving_revoking() {
 }
 
 #[test]
-fn approving_all_revoking_all() {
+fn test_approve_all_revoke_all() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
