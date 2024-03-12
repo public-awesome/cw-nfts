@@ -40,7 +40,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Update the collection, can only called by the contract creator",
+      "description": "The creator is the only one eligible to update `CollectionInfo`.",
       "type": "object",
       "required": [
         "update_collection_info"
@@ -302,7 +302,8 @@
       "additionalProperties": false
     },
     {
-      "description": "Extension msg",
+      "description": "Metadata msg Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts.",
+      "deprecated": true,
       "type": "object",
       "required": [
         "extension"
@@ -316,6 +317,32 @@
           "properties": {
             "msg": {
               "$ref": "#/definitions/Empty"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).",
+      "type": "object",
+      "required": [
+        "update_metadata"
+      ],
+      "properties": {
+        "update_metadata": {
+          "type": "object",
+          "required": [
+            "extension",
+            "token_id"
+          ],
+          "properties": {
+            "extension": {
+              "$ref": "#/definitions/Empty"
+            },
+            "token_id": {
+              "type": "string"
             }
           },
           "additionalProperties": false

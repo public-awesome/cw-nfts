@@ -5,7 +5,8 @@ use crate::{
     query::{Cw721Query, MAX_LIMIT},
     state::{
         CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension,
-        Metadata, CREATOR, MAX_ROYALTY_SHARE_PCT, MAX_SHARE_DELTA_PCT, MINTER,
+        Metadata, MetadataMsg, CREATOR, MAX_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_PCT,
+        MAX_SHARE_DELTA_PCT, MINTER,
     },
     CollectionInfoExtension, RoyaltyInfo,
 };
@@ -29,7 +30,7 @@ fn proper_cw2_initialization() {
 
     Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -84,7 +85,7 @@ fn proper_minter_and_creator_initialization() {
         let info_minter_and_creator = mock_info("minter_and_creator", &[]);
         Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -118,7 +119,7 @@ fn proper_minter_and_creator_initialization() {
         let info = mock_info(OTHER_ADDR, &[]);
         Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -152,7 +153,7 @@ fn proper_minter_and_creator_initialization() {
         let info = mock_info(MINTER_ADDR, &[]);
         Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -186,7 +187,7 @@ fn proper_minter_and_creator_initialization() {
         let info = mock_info(CREATOR_ADDR, &[]);
         Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -238,7 +239,7 @@ fn proper_collection_info_initialization() {
         });
         Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -296,7 +297,7 @@ fn proper_collection_info_initialization() {
         });
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -339,7 +340,7 @@ fn proper_collection_info_initialization() {
         });
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -382,7 +383,7 @@ fn proper_collection_info_initialization() {
         });
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -422,7 +423,7 @@ fn proper_collection_info_initialization() {
         });
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -443,7 +444,12 @@ fn proper_collection_info_initialization() {
             "contract_version",
         )
         .unwrap_err();
-        assert_eq!(err, Cw721ContractError::CollectionDescriptionTooLong {});
+        assert_eq!(
+            err,
+            Cw721ContractError::CollectionDescriptionTooLong {
+                max_length: MAX_DESCRIPTION_LENGTH
+            }
+        );
 
         // royalty share too high
         let extension = Some(CollectionInfoExtension {
@@ -459,7 +465,7 @@ fn proper_collection_info_initialization() {
         });
         let err = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -513,7 +519,7 @@ fn proper_collection_info_update() {
         });
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -651,7 +657,7 @@ fn proper_collection_info_update() {
         });
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -736,7 +742,12 @@ fn proper_collection_info_update() {
                 },
             )
             .unwrap_err();
-        assert_eq!(err, Cw721ContractError::CollectionDescriptionTooLong {});
+        assert_eq!(
+            err,
+            Cw721ContractError::CollectionDescriptionTooLong {
+                max_length: MAX_DESCRIPTION_LENGTH
+            }
+        );
 
         // invalid image url
         let updated_extension_msg = CollectionInfoExtensionMsg {
@@ -904,7 +915,7 @@ fn proper_collection_info_update() {
         });
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -970,7 +981,7 @@ fn use_metadata_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -1092,7 +1103,7 @@ fn test_migrate() {
 
     Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,

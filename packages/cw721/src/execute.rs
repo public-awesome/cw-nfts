@@ -38,8 +38,9 @@ pub trait Cw721Execute<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtension:
+        Serialize + DeserializeOwned + Clone + Update<TMetadataExtensionMsg> + Validate,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension:
         Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
@@ -150,9 +151,14 @@ pub trait Cw721Execute<
             Cw721ExecuteMsg::UpdateCreatorOwnership(action) => {
                 self.update_creator_ownership(deps, env, info, action)
             }
+            #[allow(deprecated)]
             Cw721ExecuteMsg::Extension { msg } => {
-                self.update_metadata_extension(deps, env, info, msg)
+                self.update_legacy_extension(deps, env, info, msg)
             }
+            Cw721ExecuteMsg::UpdateMetadata {
+                token_id,
+                extension,
+            } => self.update_metadata(deps, env, info, token_id, extension),
             Cw721ExecuteMsg::SetWithdrawAddress { address } => {
                 self.set_withdraw_address(deps, &info.sender, address)
             }
@@ -421,7 +427,6 @@ pub trait Cw721Execute<
         extension: TMetadataExtension,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         MINTER.assert_owner(deps.storage, &info.sender)?;
-
         // create the token
         let token = NftInfo {
             owner: deps.api.addr_validate(&owner)?,
@@ -429,6 +434,7 @@ pub trait Cw721Execute<
             token_uri,
             extension,
         };
+        token.validate()?;
         let config = Cw721Config::<
             TMetadataExtension,
             TMetadataExtensionMsg,
@@ -481,15 +487,37 @@ pub trait Cw721Execute<
     }
 
     /// Allows creator to update onchain metadata. For now this is a no-op.
-    fn update_metadata_extension(
+    fn update_legacy_extension(
+        &self,
+        _deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        _msg: TMetadataExtensionMsg,
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
+        panic!("deprecated. pls use update_metadata instead.")
+    }
+
+    fn update_metadata(
         &self,
         deps: DepsMut,
         _env: Env,
         info: MessageInfo,
-        _msg: TMetadataExtensionMsg,
+        token_id: String,
+        msg: TMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
-        Ok(Response::new().add_attribute("action", "update_metadata_extension"))
+        let contract = Cw721Config::<
+            TMetadataExtension,
+            Empty,
+            TCollectionInfoExtension,
+            Empty,
+            Empty,
+        >::default();
+        let mut nft_info = contract.nft_info.load(deps.storage, &token_id)?;
+        nft_info.extension = nft_info.extension.update(&msg)?;
+        Ok(Response::new()
+            .add_attribute("action", "update_metadata")
+            .add_attribute("token_id", token_id))
     }
 
     fn set_withdraw_address(

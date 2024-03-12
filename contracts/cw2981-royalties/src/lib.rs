@@ -3,14 +3,18 @@ pub mod msg;
 pub mod query;
 
 use cw721::{
-    msg::CollectionInfoExtensionMsg, state::DefaultOptionCollectionInfoExtension, RoyaltyInfo,
+    execute::Update,
+    msg::CollectionInfoExtensionMsg,
+    state::{DefaultOptionCollectionInfoExtension, Validate},
+    RoyaltyInfo,
 };
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Empty};
 pub use cw721_base::{
-    execute::Cw721Execute, msg::InstantiateMsg, query::Cw721Query, Cw721Contract,
+    error::ContractError as Cw721ContractError, execute::Cw721Execute, msg::InstantiateMsg,
+    query::Cw721Query, Cw721Contract,
 };
 
 use crate::error::ContractError;
@@ -18,6 +22,24 @@ use crate::error::ContractError;
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub type DefaultOptionMetadataExtensionWithRoyalty = Option<MetadataWithRoyalty>;
+
+pub type MintExtension = Option<DefaultOptionMetadataExtensionWithRoyalty>;
+
+pub type Cw2981Contract<'a> = Cw721Contract<
+    'a,
+    DefaultOptionMetadataExtensionWithRoyalty,
+    MetadataWithRoyaltyMsg,
+    DefaultOptionCollectionInfoExtension,
+    CollectionInfoExtensionMsg<RoyaltyInfo>,
+    Empty,
+>;
+pub type ExecuteMsg = cw721_base::msg::ExecuteMsg<
+    DefaultOptionMetadataExtensionWithRoyalty,
+    MetadataWithRoyaltyMsg,
+    CollectionInfoExtensionMsg<RoyaltyInfo>,
+>;
 
 #[cw_serde]
 pub struct Trait {
@@ -29,7 +51,7 @@ pub struct Trait {
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
 #[derive(Default)]
-pub struct Metadata {
+pub struct MetadataWithRoyalty {
     pub image: Option<String>,
     pub image_data: Option<String>,
     pub external_url: Option<String>,
@@ -48,20 +70,46 @@ pub struct Metadata {
     pub royalty_payment_address: Option<String>,
 }
 
-pub type Extension = Option<Metadata>;
+pub type MetadataWithRoyaltyMsg = MetadataWithRoyalty;
 
-pub type MintExtension = Option<Extension>;
+impl Update<MetadataWithRoyaltyMsg> for MetadataWithRoyalty {
+    fn update(&self, msg: &MetadataWithRoyaltyMsg) -> Result<Self, Cw721ContractError> {
+        msg.validate()?;
+        let mut metadata = self.clone();
+        metadata.image = msg.image.clone().or(self.image.clone());
+        metadata.image_data = msg.image_data.clone().or(self.image_data.clone());
+        metadata.external_url = msg.external_url.clone().or(self.external_url.clone());
+        metadata.description = msg.description.clone().or(self.description.clone());
+        metadata.name = msg.name.clone().or(self.name.clone());
+        metadata.attributes = msg.attributes.clone().or(self.attributes.clone());
+        metadata.background_color = msg
+            .background_color
+            .clone()
+            .or(self.background_color.clone());
+        metadata.animation_url = msg.animation_url.clone().or(self.animation_url.clone());
+        metadata.youtube_url = msg.youtube_url.clone().or(self.youtube_url.clone());
+        Ok(metadata)
+    }
+}
 
-pub type Cw2981Contract<'a> = Cw721Contract<
-    'a,
-    Extension,
-    Empty,
-    DefaultOptionCollectionInfoExtension,
-    CollectionInfoExtensionMsg<RoyaltyInfo>,
-    Empty,
->;
-pub type ExecuteMsg =
-    cw721_base::msg::ExecuteMsg<Extension, Empty, CollectionInfoExtensionMsg<RoyaltyInfo>>;
+impl Update<MetadataWithRoyaltyMsg> for Option<MetadataWithRoyalty> {
+    fn update(&self, msg: &MetadataWithRoyaltyMsg) -> Result<Self, Cw721ContractError> {
+        match self {
+            Some(metadata) => Ok(Some(metadata.update(msg)?)),
+            None => {
+                let metadata = msg.clone();
+                metadata.validate()?;
+                Ok(Some(metadata))
+            }
+        }
+    }
+}
+
+impl Validate for MetadataWithRoyalty {
+    fn validate(&self) -> Result<(), Cw721ContractError> {
+        Ok(())
+    }
+}
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -98,7 +146,7 @@ pub mod entry {
     ) -> Result<Response, ContractError> {
         if let ExecuteMsg::Mint {
             extension:
-                Some(Metadata {
+                Some(MetadataWithRoyalty {
                     royalty_percentage: Some(royalty_percentage),
                     ..
                 }),
@@ -159,10 +207,10 @@ mod tests {
 
         let token_id = "Enterprise";
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension = Some(Metadata {
+        let extension = Some(MetadataWithRoyalty {
             description: Some("Spaceship with Warp Drive".into()),
             name: Some("Starship USS Enterprise".to_string()),
-            ..Metadata::default()
+            ..MetadataWithRoyalty::default()
         });
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
@@ -201,11 +249,11 @@ mod tests {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
+            extension: Some(MetadataWithRoyalty {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
                 royalty_percentage: Some(101),
-                ..Metadata::default()
+                ..MetadataWithRoyalty::default()
             }),
         };
         // mint will return StdError
@@ -234,10 +282,10 @@ mod tests {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
+            extension: Some(MetadataWithRoyalty {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
-                ..Metadata::default()
+                ..MetadataWithRoyalty::default()
             }),
         };
         entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
@@ -277,12 +325,12 @@ mod tests {
             token_id: token_id.to_string(),
             owner: owner.into(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-            extension: Some(Metadata {
+            extension: Some(MetadataWithRoyalty {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
                 royalty_payment_address: Some("jeanluc".to_string()),
                 royalty_percentage: Some(10),
-                ..Metadata::default()
+                ..MetadataWithRoyalty::default()
             }),
         };
         entry::execute(deps.as_mut(), mock_env(), info.clone(), exec_msg).unwrap();
@@ -317,12 +365,12 @@ mod tests {
             token_id: voyager_token_id.to_string(),
             owner: owner.into(),
             token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
-            extension: Some(Metadata {
+            extension: Some(MetadataWithRoyalty {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Voyager".to_string()),
                 royalty_payment_address: Some("janeway".to_string()),
                 royalty_percentage: Some(4),
-                ..Metadata::default()
+                ..MetadataWithRoyalty::default()
             }),
         };
         entry::execute(deps.as_mut(), mock_env(), info, voyager_exec_msg).unwrap();

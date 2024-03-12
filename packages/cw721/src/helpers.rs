@@ -18,7 +18,7 @@ use serde::Serialize;
 #[cw_serde]
 pub struct Cw721Contract<
     TMetadataExtension,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension,
 >(
     pub Addr,
@@ -28,8 +28,11 @@ pub struct Cw721Contract<
 );
 
 #[allow(dead_code)]
-impl<TMetadataExtension, TMetadataExtensionMsg: CustomMsg, TCollectionInfoExtension>
-    Cw721Contract<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>
+impl<
+        TMetadataExtension,
+        TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+        TCollectionInfoExtension,
+    > Cw721Contract<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,

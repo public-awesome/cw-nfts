@@ -32,7 +32,9 @@ pub mod entry {
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
         msg::{CollectionInfoExtensionMsg, Cw721ExecuteMsg},
-        state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+        state::{
+            DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg,
+        },
         RoyaltyInfo,
     };
 
@@ -46,7 +48,7 @@ pub mod entry {
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -61,13 +63,13 @@ pub mod entry {
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,

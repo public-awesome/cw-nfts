@@ -32,9 +32,30 @@ pub enum Cw721ContractError {
     #[error("Collection description must not be empty")]
     CollectionDescriptionEmpty {},
 
-    #[error("Collection description too long. Max length is 512 characters.")]
-    CollectionDescriptionTooLong {},
+    #[error("Collection description too long. Max length is {max_length} characters.")]
+    CollectionDescriptionTooLong { max_length: u32 },
 
     #[error("InvalidRoyalties: {0}")]
     InvalidRoyalties(String),
+
+    #[error("Image data in metadata must not be empty")]
+    MetadataImageDataEmpty {},
+
+    #[error("Description in metadata must not be empty")]
+    MetadataDescriptionEmpty {},
+
+    #[error("Name in metadata must not be empty")]
+    MetadataNameEmpty {},
+
+    #[error("Background color in metadata must not be empty")]
+    MetadataBackgroundColorEmpty {},
+
+    #[error("Trait type in metadata must not be empty")]
+    TraitTypeEmpty {},
+
+    #[error("Trait value in metadata must not be empty")]
+    TraitValueEmpty {},
+
+    #[error("Trait display type in metadata must not be empty")]
+    TraitDisplayTypeEmpty {},
 }

@@ -30,8 +30,9 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtension:
+        Serialize + DeserializeOwned + Clone + Update<TMetadataExtensionMsg> + Validate,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension:
         Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,

@@ -22,7 +22,7 @@ pub struct Cw721ExpirationContract<
     TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
@@ -55,7 +55,7 @@ impl<
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {

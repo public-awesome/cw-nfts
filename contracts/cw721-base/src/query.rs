@@ -24,7 +24,7 @@ impl<
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCustomResponseMsg: CustomMsg,

@@ -2,8 +2,10 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Binary, Coin, Timestamp};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
+use url::Url;
 
-use crate::state::CollectionInfo;
+use crate::error::Cw721ContractError;
+use crate::state::{CollectionInfo, Trait, Validate};
 use crate::Approval;
 
 use cosmwasm_std::Empty;
@@ -22,7 +24,7 @@ pub enum Cw721ExecuteMsg<
     UpdateMinterOwnership(Action),
     UpdateCreatorOwnership(Action),
 
-    /// Update the collection, can only called by the contract creator
+    /// The creator is the only one eligible to update `CollectionInfo`.
     UpdateCollectionInfo {
         collection_info: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
     },
@@ -80,9 +82,16 @@ pub enum Cw721ExecuteMsg<
         token_id: String,
     },
 
-    /// Extension msg
+    /// Metadata msg
+    #[deprecated(since = "0.19.0", note = "Please use UpdateMetadata instead")]
+    /// Deprecated: use UpdateMetadata instead! In previous release it was a no-op for customization in other contracts.
     Extension {
         msg: TMetadataExtensionMsg,
+    },
+    /// The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).
+    UpdateMetadata {
+        token_id: String,
+        extension: TMetadataExtensionMsg,
     },
 
     /// Sets address to send withdrawn fees to. Only owner can call this.

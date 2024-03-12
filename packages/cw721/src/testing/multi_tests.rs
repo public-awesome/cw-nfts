@@ -6,7 +6,7 @@ use crate::{
         Cw721QueryMsg, MinterResponse, OwnerOfResponse,
     },
     query::Cw721Query,
-    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg},
     RoyaltyInfo,
 };
 use cosmwasm_std::{
@@ -32,7 +32,7 @@ pub fn instantiate(
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -46,13 +46,13 @@ pub fn execute(
     info: MessageInfo,
     msg: Cw721ExecuteMsg<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
     >,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -82,7 +82,7 @@ pub fn migrate(
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,

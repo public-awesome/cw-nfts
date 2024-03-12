@@ -1,5 +1,3 @@
-use cosmwasm_std::CustomMsg;
-
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::state::*;
 
@@ -19,7 +17,7 @@ pub struct Cw721Contract<
     TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
@@ -50,7 +48,7 @@ impl<
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {

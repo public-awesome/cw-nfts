@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, Decimal, Empty, StdResult, Storage, Timestamp};
+use cosmwasm_std::{Addr, BlockInfo, Decimal, Empty, StdResult, Storage, Timestamp};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
@@ -27,6 +27,7 @@ pub type DefaultOptionMetadataExtension = Option<Metadata>;
 
 // explicit type for better distinction.
 pub type EmptyMsg = Empty;
+pub type MetadataMsg = Metadata;
 
 // ----------------------
 // NOTE: below are max restrictions for default CollectionInfoExtension
@@ -55,7 +56,7 @@ pub struct Cw721Config<
     TCustomResponseMsg,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
@@ -72,6 +73,31 @@ pub struct Cw721Config<
     pub(crate) _custom_metadata_extension_msg: PhantomData<TMetadataExtensionMsg>,
     pub(crate) _custom_collection_info_extension_msg: PhantomData<TCollectionInfoExtensionMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
+}
+
+pub trait Validate {
+    fn validate(&self) -> Result<(), Cw721ContractError>;
+}
+
+impl Validate for Empty {
+    fn validate(&self) -> Result<(), Cw721ContractError> {
+        Ok(())
+    }
+}
+
+impl Update<EmptyMsg> for Empty {
+    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+        Ok(Empty::default())
+    }
+}
+
+impl Update<EmptyMsg> for Option<Empty> {
+    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+        match self {
+            Some(ext) => Ok(Some(ext.clone())),
+            None => Ok(Some(Empty::default())),
+        }
+    }
 }
 
 impl<
@@ -91,7 +117,7 @@ impl<
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
@@ -125,7 +151,7 @@ impl<
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: CustomMsg,
+    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
     TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
@@ -189,6 +215,27 @@ pub struct NftInfo<TMetadataExtension> {
     pub extension: TMetadataExtension,
 }
 
+impl Update<NftInfo<Metadata>> for NftInfo<Metadata> {
+    fn update(&self, msg: &NftInfo<Metadata>) -> Result<Self, crate::error::Cw721ContractError> {
+        msg.validate()?;
+        Ok(msg.clone())
+    }
+}
+
+impl<TMetadataExtension> Validate for NftInfo<TMetadataExtension>
+where
+    TMetadataExtension: Validate,
+{
+    fn validate(&self) -> Result<(), Cw721ContractError> {
+        // validate token_uri is a URL
+        if let Some(token_uri) = &self.token_uri {
+            Url::parse(token_uri)?;
+        }
+        // validate extension
+        self.extension.validate()
+    }
+}
+
 #[cw_serde]
 pub struct Approval {
     /// Account that can transfer/send the token
@@ -241,26 +288,20 @@ pub struct CollectionInfoExtension<TRoyaltyInfo> {
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
-pub trait Validate {
-    fn validate(&self) -> Result<(), Cw721ContractError>;
-}
-
-impl Validate for Empty {
-    fn validate(&self) -> Result<(), Cw721ContractError> {
-        Ok(())
-    }
-}
-
-impl Validate for Option<Empty> {
-    fn validate(&self) -> Result<(), Cw721ContractError> {
-        match self {
-            Some(_) => Ok(()),
-            None => Ok(()),
+impl From<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension<RoyaltyInfo> {
+    fn from(ext: CollectionInfoExtensionMsg<RoyaltyInfo>) -> Self {
+        Self {
+            description: ext.description.unwrap_or_default(),
+            image: ext.image.unwrap_or_default(),
+            external_link: ext.external_link,
+            explicit_content: ext.explicit_content,
+            start_trading_time: ext.start_trading_time,
+            royalty_info: ext.royalty_info,
         }
     }
 }
 
-impl<TRoyaltyInfo> Validate for CollectionInfoExtension<TRoyaltyInfo> {
+impl Validate for CollectionInfoExtension<RoyaltyInfo> {
     /// Validates only extension, not royalty info!
     fn validate(&self) -> Result<(), Cw721ContractError> {
         // check description length, must not be empty and max 512 chars
@@ -268,7 +309,9 @@ impl<TRoyaltyInfo> Validate for CollectionInfoExtension<TRoyaltyInfo> {
             return Err(Cw721ContractError::CollectionDescriptionEmpty {});
         }
         if self.description.len() > MAX_DESCRIPTION_LENGTH as usize {
-            return Err(Cw721ContractError::CollectionDescriptionTooLong {});
+            return Err(Cw721ContractError::CollectionDescriptionTooLong {
+                max_length: MAX_DESCRIPTION_LENGTH,
+            });
         }
 
         // check images are URLs
@@ -276,36 +319,24 @@ impl<TRoyaltyInfo> Validate for CollectionInfoExtension<TRoyaltyInfo> {
         if self.external_link.as_ref().is_some() {
             Url::parse(self.external_link.as_ref().unwrap())?;
         }
+        // validate royalty info
+        self.royalty_info
+            .as_ref()
+            .map_or(Ok(()), |r| r.validate(None))?;
 
         Ok(())
     }
 }
 
-impl Validate for Option<CollectionInfoExtension<RoyaltyInfo>> {
+impl<T> Validate for Option<T>
+where
+    T: Validate,
+{
     fn validate(&self) -> Result<(), Cw721ContractError> {
         match self {
-            Some(ext) => {
-                ext.validate()?;
-                ext.royalty_info
-                    .as_ref()
-                    .map_or(Ok(()), |r| r.validate(None))
-            }
+            Some(ext) => ext.validate(),
+            // no extension, nothing to validate
             None => Ok(()),
-        }
-    }
-}
-
-impl Update<EmptyMsg> for Empty {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
-        Ok(Empty::default())
-    }
-}
-
-impl Update<EmptyMsg> for Option<Empty> {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
-        match self {
-            Some(ext) => Ok(Some(ext.clone())),
-            None => Ok(Some(Empty::default())),
         }
     }
 }
@@ -326,45 +357,29 @@ impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension
         extension.explicit_content = msg.explicit_content.or(self.explicit_content);
         extension.start_trading_time = msg.start_trading_time.or(self.start_trading_time);
         extension.royalty_info = msg.royalty_info.clone().or(self.royalty_info.clone());
-
-        // check description length, must not be empty and max 512 chars
-        if extension.description.is_empty() {
-            return Err(crate::error::Cw721ContractError::CollectionDescriptionEmpty {});
-        }
-        if extension.description.len() > MAX_DESCRIPTION_LENGTH as usize {
-            return Err(crate::error::Cw721ContractError::CollectionDescriptionTooLong {});
-        }
-
-        // check images are URLs
-        Url::parse(&extension.image)?;
-        if extension.external_link.as_ref().is_some() {
-            Url::parse(extension.external_link.as_ref().unwrap())?;
-        }
+        extension.validate()?;
 
         Ok(extension)
     }
 }
 
-impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>>
-    for Option<CollectionInfoExtension<RoyaltyInfo>>
-{
+impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for DefaultOptionCollectionInfoExtension {
     fn update(
         &self,
         msg: &CollectionInfoExtensionMsg<RoyaltyInfo>,
     ) -> Result<Self, crate::error::Cw721ContractError> {
         match self {
+            // update extension
             Some(ext) => {
                 let updated = ext.update(msg)?;
                 Ok(Some(updated))
             }
-            None => Ok(Some(CollectionInfoExtension {
-                description: msg.description.clone().unwrap_or_default(),
-                image: msg.image.clone().unwrap_or_default(),
-                external_link: msg.external_link.clone(),
-                explicit_content: msg.explicit_content,
-                start_trading_time: msg.start_trading_time,
-                royalty_info: msg.royalty_info.clone(),
-            })),
+            // create extension
+            None => {
+                let extension: CollectionInfoExtension<RoyaltyInfo> = From::from(msg.clone());
+                extension.validate()?;
+                Ok(Some(extension))
+            }
         }
     }
 }
@@ -376,12 +391,14 @@ pub struct RoyaltyInfo {
 }
 
 impl RoyaltyInfo {
+    // Compares the new royalty info with the current one and checks if the share is valid.
     pub fn validate(
         &self,
         new_royalty_info: Option<RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
         match new_royalty_info {
             Some(new_royalty_info) => {
+                // check max share delta
                 if self.share < new_royalty_info.share {
                     let share_delta = new_royalty_info.share.abs_diff(self.share);
 
@@ -391,6 +408,7 @@ impl RoyaltyInfo {
                         )));
                     }
                 }
+                // check max share
                 if new_royalty_info.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
                     return Err(Cw721ContractError::InvalidRoyalties(format!(
                         "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
@@ -398,6 +416,7 @@ impl RoyaltyInfo {
                 }
                 Ok(())
             }
+            // There is no new royalty info, so we only need to check if the share is valid.
             None => {
                 if self.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
                     return Err(Cw721ContractError::InvalidRoyalties(format!(
@@ -423,6 +442,99 @@ pub struct Metadata {
     pub background_color: Option<String>,
     pub animation_url: Option<String>,
     pub youtube_url: Option<String>,
+}
+
+impl Validate for Metadata {
+    fn validate(&self) -> Result<(), Cw721ContractError> {
+        // check URLs
+        if let Some(image) = &self.image {
+            Url::parse(image)?;
+        }
+        if let Some(url) = &self.external_url {
+            Url::parse(url)?;
+        }
+        if let Some(animation_url) = &self.animation_url {
+            Url::parse(animation_url)?;
+        }
+        if let Some(youtube_url) = &self.youtube_url {
+            Url::parse(youtube_url)?;
+        }
+        // Strings must not be empty
+        if let Some(image_data) = &self.image_data {
+            if image_data.is_empty() {
+                return Err(Cw721ContractError::MetadataImageDataEmpty {});
+            }
+        }
+        if let Some(desc) = &self.description {
+            if desc.is_empty() {
+                return Err(Cw721ContractError::MetadataDescriptionEmpty {});
+            }
+        }
+        if let Some(name) = &self.name {
+            if name.is_empty() {
+                return Err(Cw721ContractError::MetadataNameEmpty {});
+            }
+        }
+        if let Some(background_color) = &self.background_color {
+            if background_color.is_empty() {
+                return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
+            }
+        }
+        // check traits
+        if let Some(attributes) = &self.attributes {
+            for attribute in attributes {
+                if attribute.trait_type.is_empty() {
+                    return Err(Cw721ContractError::TraitTypeEmpty {});
+                }
+                if attribute.value.is_empty() {
+                    return Err(Cw721ContractError::TraitValueEmpty {});
+                }
+                if let Some(display_type) = &attribute.display_type {
+                    if display_type.is_empty() {
+                        return Err(Cw721ContractError::TraitDisplayTypeEmpty {});
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Update<MetadataMsg> for Metadata {
+    fn update(&self, msg: &MetadataMsg) -> Result<Self, Cw721ContractError> {
+        msg.validate()?;
+        let mut metadata = self.clone();
+        metadata.image = msg.image.clone().or(self.image.clone());
+        metadata.image_data = msg.image_data.clone().or(self.image_data.clone());
+        metadata.external_url = msg.external_url.clone().or(self.external_url.clone());
+        metadata.description = msg.description.clone().or(self.description.clone());
+        metadata.name = msg.name.clone().or(self.name.clone());
+        metadata.attributes = msg.attributes.clone().or(self.attributes.clone());
+        metadata.background_color = msg
+            .background_color
+            .clone()
+            .or(self.background_color.clone());
+        metadata.animation_url = msg.animation_url.clone().or(self.animation_url.clone());
+        metadata.youtube_url = msg.youtube_url.clone().or(self.youtube_url.clone());
+        Ok(metadata)
+    }
+}
+
+impl Update<MetadataMsg> for DefaultOptionMetadataExtension {
+    fn update(&self, msg: &MetadataMsg) -> Result<Self, crate::error::Cw721ContractError> {
+        match self {
+            // update metadata
+            Some(ext) => {
+                let updated = ext.update(msg)?;
+                Ok(Some(updated))
+            }
+            // create metadata
+            None => {
+                msg.validate()?;
+                Ok(Some(msg.clone()))
+            }
+        }
+    }
 }
 
 #[cw_serde]

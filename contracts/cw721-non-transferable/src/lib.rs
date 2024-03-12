@@ -2,7 +2,7 @@ pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
 use cw721::{
     msg::CollectionInfoExtensionMsg,
-    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg},
     RoyaltyInfo,
 };
 pub use cw721_base::{
@@ -21,7 +21,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     'a,
     DefaultOptionMetadataExtension,
-    Empty,
+    MetadataMsg,
     DefaultOptionCollectionInfoExtension,
     CollectionInfoExtensionMsg<RoyaltyInfo>,
     Empty,
@@ -89,7 +89,7 @@ pub mod entry {
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, Cw721ContractError> {

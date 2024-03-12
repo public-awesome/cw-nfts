@@ -35,7 +35,9 @@ pub mod entry {
             Cw721QueryMsg,
         },
         query::Cw721Query,
-        state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+        state::{
+            DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg,
+        },
         RoyaltyInfo,
     };
 
@@ -49,7 +51,7 @@ pub mod entry {
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -64,13 +66,13 @@ pub mod entry {
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,
@@ -102,7 +104,7 @@ pub mod entry {
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionMetadataExtension,
-            Empty,
+            MetadataMsg,
             DefaultOptionCollectionInfoExtension,
             CollectionInfoExtensionMsg<RoyaltyInfo>,
             Empty,

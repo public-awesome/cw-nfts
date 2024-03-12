@@ -1,4 +1,4 @@
-use crate::Extension;
+use crate::DefaultOptionMetadataExtensionWithRoyalty;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Empty, Uint128};
 use cw721::{msg::Cw721QueryMsg, state::DefaultOptionCollectionInfoExtension};
@@ -98,12 +98,12 @@ pub enum QueryMsg {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(NftInfoResponse<Extension>)]
+    #[returns(NftInfoResponse<DefaultOptionMetadataExtensionWithRoyalty>)]
     NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(AllNftInfoResponse<Extension>)]
+    #[returns(AllNftInfoResponse<DefaultOptionMetadataExtensionWithRoyalty>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -135,7 +135,9 @@ pub enum QueryMsg {
     GetWithdrawAddress {},
 
     #[returns(())]
-    Extension { msg: Extension },
+    Extension {
+        msg: DefaultOptionMetadataExtensionWithRoyalty,
+    },
 
     #[returns(())]
     GetCollectionInfoExtension {
@@ -143,8 +145,18 @@ pub enum QueryMsg {
     },
 }
 
-impl From<QueryMsg> for Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExtension> {
-    fn from(msg: QueryMsg) -> Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExtension> {
+impl From<QueryMsg>
+    for Cw721QueryMsg<
+        DefaultOptionMetadataExtensionWithRoyalty,
+        DefaultOptionCollectionInfoExtension,
+    >
+{
+    fn from(
+        msg: QueryMsg,
+    ) -> Cw721QueryMsg<
+        DefaultOptionMetadataExtensionWithRoyalty,
+        DefaultOptionCollectionInfoExtension,
+    > {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,

@@ -12,7 +12,9 @@ use cw721::msg::{
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{CollectionInfo, DefaultOptionCollectionInfoExtension, CREATOR, MINTER};
+use cw721::state::{
+    CollectionInfo, DefaultOptionCollectionInfoExtension, MetadataMsg, CREATOR, MINTER,
+};
 use cw721::RoyaltyInfo;
 use cw721::{query::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
@@ -33,14 +35,14 @@ fn setup_contract(
 ) -> Cw721ExpirationContract<
     'static,
     DefaultOptionMetadataExtension,
-    Empty,
+    MetadataMsg,
     DefaultOptionCollectionInfoExtension,
     CollectionInfoExtensionMsg<RoyaltyInfo>,
     Empty,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         DefaultOptionCollectionInfoExtension,
         CollectionInfoExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -65,7 +67,7 @@ fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         Option<Empty>,
         Empty,
         Empty,
@@ -134,7 +136,7 @@ fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionMetadataExtension,
-        Empty,
+        MetadataMsg,
         Option<Empty>,
         Empty,
         Empty,
