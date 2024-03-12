@@ -139,16 +139,16 @@ pub enum QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     #[returns(Ownership<Addr>)]
     Ownership {},
 
+    /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    #[returns(MinterResponse)]
+    Minter {},
+
     #[returns(Ownership<Addr>)]
     GetMinterOwnership {},
 
     #[returns(Ownership<Addr>)]
     GetCreatorOwnership {},
-
-    /// Return the minter
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
-    #[returns(MinterResponse)]
-    Minter {},
 
     /// Extension query
     #[returns(())]

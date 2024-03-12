@@ -41,8 +41,14 @@ pub enum QueryMsg {
     NumTokens {},
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
     ContractInfo {},
+
     GetCollectionInfo {},
+
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    Minter {},
+
     GetMinterOwnership {},
+
     GetCreatorOwnership {},
 
     NftInfo {
@@ -61,8 +67,6 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
-    Minter {},
 
     GetWithdrawAddress {},
 }

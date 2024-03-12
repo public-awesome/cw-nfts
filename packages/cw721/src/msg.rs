@@ -181,6 +181,11 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     #[returns(Ownership<Addr>)]
     Ownership {},
 
+    /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    #[returns(MinterResponse)]
+    Minter {},
+
     #[returns(Ownership<Addr>)]
     GetMinterOwnership {},
 
@@ -217,11 +222,6 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-
-    /// Return the minter
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
-    #[returns(MinterResponse)]
-    Minter {},
 
     #[returns(Option<String>)]
     GetWithdrawAddress {},
