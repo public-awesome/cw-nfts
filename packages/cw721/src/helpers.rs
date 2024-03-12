@@ -9,8 +9,7 @@ use crate::state::CollectionMetadata;
 use crate::Approval;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, CustomMsg, Empty, QuerierWrapper, StdResult, WasmMsg,
-    WasmQuery,
+    to_json_binary, Addr, CosmosMsg, Empty, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;

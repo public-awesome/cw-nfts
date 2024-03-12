@@ -546,6 +546,7 @@ pub trait Cw721Execute<
         nft_info.token_uri = token_uri;
         nft_info.validate()?;
         nft_info.extension = nft_info.extension.update(&msg)?;
+        contract.nft_info.save(deps.storage, &token_id, &nft_info)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")
             .add_attribute("token_id", token_id))
