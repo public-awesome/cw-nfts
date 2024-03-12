@@ -3,6 +3,7 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
+      "description": "Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!",
       "deprecated": true,
       "type": "object",
       "required": [
@@ -40,20 +41,20 @@
       "additionalProperties": false
     },
     {
-      "description": "Update the collection, can only called by the contract creator",
+      "description": "The creator is the only one eligible to update `CollectionMetadata`.",
       "type": "object",
       "required": [
-        "update_collection_info"
+        "update_collection_metadata"
       ],
       "properties": {
-        "update_collection_info": {
+        "update_collection_metadata": {
           "type": "object",
           "required": [
-            "collection_info"
+            "collection_metadata"
           ],
           "properties": {
-            "collection_info": {
-              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionInfoExtension_for_RoyaltyInfo"
+            "collection_metadata": {
+              "$ref": "#/definitions/CollectionNftMetadataMsg_for_Nullable_CollectionMetadataExtension_for_RoyaltyInfo"
             }
           },
           "additionalProperties": false
@@ -251,7 +252,7 @@
               "description": "Any custom extension used by this contract",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Metadata"
+                  "$ref": "#/definitions/NftMetadata"
                 },
                 {
                   "type": "null"
@@ -302,7 +303,8 @@
       "additionalProperties": false
     },
     {
-      "description": "Extension msg",
+      "description": "Metadata msg Deprecated: use UpdateNftMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!",
+      "deprecated": true,
       "type": "object",
       "required": [
         "extension"
@@ -316,6 +318,32 @@
           "properties": {
             "msg": {
               "$ref": "#/definitions/Empty"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).",
+      "type": "object",
+      "required": [
+        "update_nft_metadata"
+      ],
+      "properties": {
+        "update_nft_metadata": {
+          "type": "object",
+          "required": [
+            "extension",
+            "token_id"
+          ],
+          "properties": {
+            "extension": {
+              "$ref": "#/definitions/Empty"
+            },
+            "token_id": {
+              "type": "string"
             }
           },
           "additionalProperties": false
@@ -457,7 +485,7 @@
         }
       }
     },
-    "CollectionInfoExtension_for_RoyaltyInfo": {
+    "CollectionMetadataExtension_for_RoyaltyInfo": {
       "type": "object",
       "required": [
         "description",
@@ -505,17 +533,13 @@
       },
       "additionalProperties": false
     },
-    "CollectionInfoMsg_for_Nullable_CollectionInfoExtension_for_RoyaltyInfo": {
+    "CollectionNftMetadataMsg_for_Nullable_CollectionMetadataExtension_for_RoyaltyInfo": {
       "type": "object",
-      "required": [
-        "name",
-        "symbol"
-      ],
       "properties": {
         "extension": {
           "anyOf": [
             {
-              "$ref": "#/definitions/CollectionInfoExtension_for_RoyaltyInfo"
+              "$ref": "#/definitions/CollectionMetadataExtension_for_RoyaltyInfo"
             },
             {
               "type": "null"
@@ -523,10 +547,16 @@
           ]
         },
         "name": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "symbol": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -586,7 +616,7 @@
         }
       ]
     },
-    "Metadata": {
+    "NftMetadata": {
       "type": "object",
       "properties": {
         "animation_url": {

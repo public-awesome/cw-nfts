@@ -8,12 +8,12 @@ use cosmwasm_std::{
 
 use cw721::error::Cw721ContractError;
 use cw721::msg::{
-    ApprovalResponse, CollectionInfoExtensionMsg, Cw721ExecuteMsg, NftInfoResponse,
+    ApprovalResponse, CollectionMetadataExtensionMsg, Cw721ExecuteMsg, NftInfoResponse,
     OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
 use cw721::state::{
-    CollectionInfo, DefaultOptionCollectionInfoExtension, MetadataMsg, CREATOR, MINTER,
+    CollectionMetadata, DefaultOptionCollectionMetadataExtension, NftMetadataMsg, CREATOR, MINTER,
 };
 use cw721::RoyaltyInfo;
 use cw721::{query::Cw721Query, Approval, Expiration};
@@ -21,7 +21,7 @@ use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionMetadataExtension,
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionNftMetadataExtension,
 };
 
 const MINTER_ADDR: &str = "minter";
@@ -34,24 +34,24 @@ fn setup_contract(
     expiration_days: u16,
 ) -> Cw721ExpirationContract<
     'static,
-    DefaultOptionMetadataExtension,
-    MetadataMsg,
-    DefaultOptionCollectionInfoExtension,
-    CollectionInfoExtensionMsg<RoyaltyInfo>,
+    DefaultOptionNftMetadataExtension,
+    NftMetadataMsg,
+    DefaultOptionCollectionMetadataExtension,
+    CollectionMetadataExtensionMsg<RoyaltyInfo>,
     Empty,
 > {
     let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: None,
+        collection_metadata_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
@@ -66,8 +66,8 @@ fn setup_contract(
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
         Option<Empty>,
         Empty,
         Empty,
@@ -77,7 +77,7 @@ fn proper_instantiation() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Some(Empty {}),
+        collection_metadata_extension: Some(Empty {}),
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -96,13 +96,13 @@ fn proper_instantiation() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_info = contract
+    let collection_metadata = contract
         .base_contract
-        .query_collection_info(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), env.clone())
         .unwrap();
     assert_eq!(
-        collection_info,
-        CollectionInfo {
+        collection_metadata,
+        CollectionMetadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: Some(Empty {}),
@@ -132,11 +132,11 @@ fn proper_instantiation() {
 }
 
 #[test]
-fn proper_instantiation_with_collection_info() {
+fn proper_instantiation_with_collection_metadata() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
         Option<Empty>,
         Empty,
         Empty,
@@ -146,7 +146,7 @@ fn proper_instantiation_with_collection_info() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Some(Empty {}),
+        collection_metadata_extension: Some(Empty {}),
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -165,13 +165,13 @@ fn proper_instantiation_with_collection_info() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_info = contract
+    let collection_metadata = contract
         .base_contract
-        .query_collection_info(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), env.clone())
         .unwrap();
     assert_eq!(
-        collection_info,
-        CollectionInfo {
+        collection_metadata,
+        CollectionMetadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: Some(Empty {}),
@@ -250,7 +250,7 @@ fn test_mint() {
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<DefaultOptionMetadataExtension> {
+        NftInfoResponse::<DefaultOptionNftMetadataExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }

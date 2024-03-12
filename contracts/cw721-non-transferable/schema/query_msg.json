@@ -155,7 +155,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Deprecated: use GetCollectionInfo instead! Will be removed in next release!",
+      "description": "Deprecated: use GetCollectionMetadata instead! Will be removed in next release!",
       "deprecated": true,
       "type": "object",
       "required": [
@@ -172,10 +172,10 @@
     {
       "type": "object",
       "required": [
-        "get_collection_info"
+        "get_collection_metadata"
       ],
       "properties": {
-        "get_collection_info": {
+        "get_collection_metadata": {
           "type": "object",
           "additionalProperties": false
         }

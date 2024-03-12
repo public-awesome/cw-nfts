@@ -16,7 +16,7 @@ pub struct Config {
     pub name: String,
     pub symbol: String,
     pub token_uri: String,
-    pub extension: DefaultOptionMetadataExtension,
+    pub extension: DefaultOptionNftMetadataExtension,
     pub unused_token_id: u32,
 }
 

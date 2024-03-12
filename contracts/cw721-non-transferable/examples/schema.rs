@@ -4,7 +4,8 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
 
 use cosmwasm_std::Empty;
-use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
+use cw721::state::{DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension};
+#[allow(deprecated)]
 use cw721_non_transferable::{
     msg::{ExecuteMsg, MigrateMsg},
     InstantiateMsg, QueryMsg,
@@ -18,13 +19,17 @@ fn main() {
 
     // entry points - generate always with title for avoiding name suffixes like "..._empty_for_..." due to generics
     export_schema_with_title(
-        &schema_for!(InstantiateMsg<DefaultOptionCollectionInfoExtension>),
+        &schema_for!(InstantiateMsg<DefaultOptionCollectionMetadataExtension>),
         &out_dir,
         "InstantiateMsg",
     );
     export_schema_with_title(
         &schema_for!(
-            ExecuteMsg::<DefaultOptionMetadataExtension, Empty, DefaultOptionCollectionInfoExtension>
+            ExecuteMsg::<
+                DefaultOptionNftMetadataExtension,
+                Empty,
+                DefaultOptionCollectionMetadataExtension,
+            >
         ),
         &out_dir,
         "ExecuteMsg",

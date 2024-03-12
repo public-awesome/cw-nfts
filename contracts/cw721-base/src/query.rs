@@ -8,25 +8,25 @@ use crate::Cw721Contract;
 
 impl<
         'a,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
-    > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
+    > Cw721Query<TNftMetadataExtension, TCollectionMetadataExtension>
     for Cw721Contract<
         'a,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCustomResponseMsg: CustomMsg,
 {
 }

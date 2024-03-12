@@ -8,7 +8,7 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
-use cw721::state::DefaultOptionMetadataExtension;
+use cw721::state::DefaultOptionNftMetadataExtension;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
@@ -16,7 +16,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type MinterResponse = cw721::msg::MinterResponse;
 
-pub type NftInfo = cw721::state::NftInfo<DefaultOptionMetadataExtension>;
+pub type NftInfo = cw721::state::NftInfo<DefaultOptionNftMetadataExtension>;
 
 pub mod entry {
     use crate::{
@@ -31,9 +31,10 @@ pub mod entry {
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
-        msg::{CollectionInfoExtensionMsg, Cw721ExecuteMsg},
+        msg::{CollectionMetadataExtensionMsg, Cw721ExecuteMsg},
         state::{
-            DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg,
+            DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
+            NftMetadataMsg,
         },
         RoyaltyInfo,
     };
@@ -44,13 +45,13 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
+        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
-            MetadataMsg,
-            DefaultOptionCollectionInfoExtension,
-            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtension,
+            NftMetadataMsg,
+            DefaultOptionCollectionMetadataExtension,
+            CollectionMetadataExtensionMsg<RoyaltyInfo>,
             Empty,
         >::default();
         contract.instantiate(deps, env, info, msg)
@@ -62,16 +63,16 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionMetadataExtension,
-            MetadataMsg,
-            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtension,
+            NftMetadataMsg,
+            CollectionMetadataExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
-            MetadataMsg,
-            DefaultOptionCollectionInfoExtension,
-            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtension,
+            NftMetadataMsg,
+            DefaultOptionCollectionMetadataExtension,
+            CollectionMetadataExtensionMsg<RoyaltyInfo>,
             Empty,
         >::default();
         contract.execute(deps, env, info, msg)
@@ -81,13 +82,13 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>,
+        msg: QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
+            DefaultOptionNftMetadataExtension,
             Empty,
-            DefaultOptionCollectionInfoExtension,
-            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtension,
+            CollectionMetadataExtensionMsg<RoyaltyInfo>,
             Empty,
         >::default();
         contract.query(deps, env, msg)
@@ -105,7 +106,8 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
     use cw721::{
-        msg::CollectionInfoExtensionMsg, state::DefaultOptionCollectionInfoExtension, RoyaltyInfo,
+        msg::CollectionMetadataExtensionMsg, state::DefaultOptionCollectionMetadataExtension,
+        RoyaltyInfo,
     };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
@@ -125,7 +127,7 @@ mod tests {
                 expiration_days: 0,
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_info_extension: None,
+                collection_metadata_extension: None,
                 minter: Some("minter".into()),
                 creator: Some("creator".into()),
                 withdraw_address: None,
@@ -143,7 +145,7 @@ mod tests {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                collection_info_extension: None,
+                collection_metadata_extension: None,
                 minter: Some("minter".into()),
                 creator: Some("creator".into()),
                 withdraw_address: None,
@@ -163,11 +165,11 @@ mod tests {
         assert_eq!(
             1,
             Cw721ExpirationContract::<
-                DefaultOptionMetadataExtension,
+                DefaultOptionNftMetadataExtension,
                 Empty,
                 Empty,
-                DefaultOptionCollectionInfoExtension,
-                CollectionInfoExtensionMsg<RoyaltyInfo>,
+                DefaultOptionCollectionMetadataExtension,
+                CollectionMetadataExtensionMsg<RoyaltyInfo>,
             >::default()
             .expiration_days
             .load(deps.as_ref().storage)

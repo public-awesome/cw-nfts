@@ -2,11 +2,13 @@ use crate::{
     error::Cw721ContractError,
     execute::Cw721Execute,
     msg::{
-        CollectionInfoExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
+        CollectionMetadataExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
         Cw721QueryMsg, MinterResponse, OwnerOfResponse,
     },
     query::Cw721Query,
-    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg},
+    state::{
+        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadataMsg,
+    },
     RoyaltyInfo,
 };
 use cosmwasm_std::{
@@ -28,13 +30,13 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>,
+    msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
     contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
@@ -45,16 +47,16 @@ pub fn execute(
     env: Env,
     info: MessageInfo,
     msg: Cw721ExecuteMsg<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
     >,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
     contract.execute(deps, env, info, msg)
@@ -63,13 +65,13 @@ pub fn execute(
 pub fn query(
     deps: Deps,
     env: Env,
-    msg: Cw721QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>,
+    msg: Cw721QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>,
 ) -> StdResult<Binary> {
     let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
+        DefaultOptionNftMetadataExtension,
         Empty,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
     contract.query(deps, env, msg)
@@ -81,10 +83,10 @@ pub fn migrate(
     msg: Cw721MigrateMsg,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        MetadataMsg,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionNftMetadataExtension,
+        NftMetadataMsg,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
@@ -189,12 +191,12 @@ fn test_operator() {
         .instantiate_contract(
             code_id,
             other.clone(),
-            &Cw721InstantiateMsg::<DefaultOptionCollectionInfoExtension> {
+            &Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
                 minter: Some(MINTER_ADDR.to_string()),
                 creator: Some(CREATOR_ADDR.to_string()),
-                collection_info_extension: None,
+                collection_metadata_extension: None,
                 withdraw_address: None,
             },
             &[],

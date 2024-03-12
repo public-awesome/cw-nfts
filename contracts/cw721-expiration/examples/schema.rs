@@ -1,9 +1,10 @@
+use std::{env::current_dir, fs::create_dir_all};
+
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
 use cosmwasm_std::Empty;
-use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
+use cw721::state::{DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension};
+
 use cw721_expiration::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use std::env::current_dir;
-use std::fs::create_dir_all;
 
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -13,19 +14,23 @@ fn main() {
 
     // entry points - generate always with title for avoiding name suffixes like "..._empty_for_..." due to generics
     export_schema_with_title(
-        &schema_for!(InstantiateMsg<DefaultOptionCollectionInfoExtension>),
+        &schema_for!(InstantiateMsg<DefaultOptionCollectionMetadataExtension>),
         &out_dir,
         "InstantiateMsg",
     );
     export_schema_with_title(
         &schema_for!(
-            ExecuteMsg::<DefaultOptionMetadataExtension, Empty, DefaultOptionCollectionInfoExtension>
+            ExecuteMsg::<
+                DefaultOptionNftMetadataExtension,
+                Empty,
+                DefaultOptionCollectionMetadataExtension,
+            >
         ),
         &out_dir,
         "ExecuteMsg",
     );
     export_schema_with_title(
-        &schema_for!(QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>),
+        &schema_for!(QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>),
         &out_dir,
         "QueryMsg",
     );

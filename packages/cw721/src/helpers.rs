@@ -5,7 +5,7 @@ use crate::msg::{
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
-use crate::state::CollectionInfo;
+use crate::state::CollectionMetadata;
 use crate::Approval;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
@@ -17,25 +17,25 @@ use serde::Serialize;
 
 #[cw_serde]
 pub struct Cw721Contract<
-    TMetadataExtension,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension,
+    TNftMetadataExtension,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension,
 >(
     pub Addr,
-    pub PhantomData<TMetadataExtension>,
-    pub PhantomData<TMetadataExtensionMsg>,
-    pub PhantomData<TCollectionInfoExtension>,
+    pub PhantomData<TNftMetadataExtension>,
+    pub PhantomData<TNftMetadataExtensionMsg>,
+    pub PhantomData<TCollectionMetadataExtension>,
 );
 
 #[allow(dead_code)]
 impl<
-        TMetadataExtension,
-        TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-        TCollectionInfoExtension,
-    > Cw721Contract<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+        TCollectionMetadataExtension,
+    > Cw721Contract<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -43,7 +43,11 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+        >,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
@@ -57,7 +61,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension>,
+        req: Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -137,11 +141,11 @@ where
     }
 
     /// With metadata extension
-    pub fn collection_info<U: DeserializeOwned>(
+    pub fn collection_metadata<U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-    ) -> StdResult<CollectionInfo<U>> {
-        let req = Cw721QueryMsg::GetCollectionInfo {};
+    ) -> StdResult<CollectionMetadata<U>> {
+        let req = Cw721QueryMsg::GetCollectionMetadata {};
         self.query(querier, req)
     }
 
@@ -200,7 +204,7 @@ where
 
     /// returns true if the contract supports the metadata extension
     pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
-        self.collection_info::<Empty>(querier).is_ok()
+        self.collection_metadata::<Empty>(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension

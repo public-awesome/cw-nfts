@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Binary, Coin, Timestamp};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
 
-use crate::state::CollectionInfo;
+use crate::state::CollectionMetadata;
 use crate::Approval;
 
 use cosmwasm_std::Empty;
@@ -11,11 +11,11 @@ use cosmwasm_std::Empty;
 #[cw_serde]
 pub enum Cw721ExecuteMsg<
     // Metadata defined in NftInfo (used for mint).
-    TMetadataExtension,
+    TNftMetadataExtension,
     // Message passed for updating metadata.
-    TMetadataExtensionMsg,
+    TNftMetadataExtensionMsg,
     // Message passed for updating collection info extension.
-    TCollectionInfoExtensionMsg,
+    TCollectionMetadataExtensionMsg,
 > {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
     /// Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!
@@ -23,9 +23,9 @@ pub enum Cw721ExecuteMsg<
     UpdateMinterOwnership(Action),
     UpdateCreatorOwnership(Action),
 
-    /// The creator is the only one eligible to update `CollectionInfo`.
+    /// The creator is the only one eligible to update `CollectionMetadata`.
     UpdateCollectionMetadata {
-        collection_info: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
+        collection_metadata: CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg>,
     },
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft {
@@ -73,7 +73,7 @@ pub enum Cw721ExecuteMsg<
         /// Metadata JSON Schema
         token_uri: Option<String>,
         /// Any custom extension used by this contract
-        extension: TMetadataExtension,
+        extension: TNftMetadataExtension,
     },
 
     /// Burn an NFT the sender has access to
@@ -85,12 +85,12 @@ pub enum Cw721ExecuteMsg<
     #[deprecated(since = "0.19.0", note = "Please use UpdateNftMetadata instead")]
     /// Deprecated: use UpdateNftMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!
     Extension {
-        msg: TMetadataExtensionMsg,
+        msg: TNftMetadataExtensionMsg,
     },
     /// The creator is the only one eligible to update NFT onchain metadata (`NftInfo.extension`).
     UpdateNftMetadata {
         token_id: String,
-        extension: TMetadataExtensionMsg,
+        extension: TNftMetadataExtensionMsg,
     },
 
     /// Sets address to send withdrawn fees to. Only owner can call this.
@@ -107,20 +107,20 @@ pub enum Cw721ExecuteMsg<
 }
 
 #[cw_serde]
-pub struct Cw721InstantiateMsg<TCollectionInfoExtension> {
-    /// Name of the NFT contract
+pub struct Cw721InstantiateMsg<TCollectionMetadataExtension> {
+    /// Name of the collection metadata
     pub name: String,
-    /// Symbol of the NFT contract
+    /// Symbol of the collection metadata
     pub symbol: String,
-
-    pub collection_info_extension: TCollectionInfoExtension,
+    /// Optional extension of the collection metadata
+    pub collection_metadata_extension: TCollectionMetadataExtension,
 
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
-    /// Sets the creator of collection. The creator is the only one eligible to update `CollectionInfo`.
+    /// Sets the creator of collection. The creator is the only one eligible to update `CollectionMetadata`.
     pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,
@@ -128,7 +128,7 @@ pub struct Cw721InstantiateMsg<TCollectionInfoExtension> {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
+pub enum Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {
@@ -169,15 +169,15 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     #[returns(NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
-    #[returns(CollectionInfo<Empty>)]
-    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
+    #[returns(CollectionMetadata<Empty>)]
+    /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionInfo<TCollectionInfoExtension>)]
-    GetCollectionInfo {},
+    #[returns(CollectionMetadata<TCollectionMetadataExtension>)]
+    GetCollectionMetadata {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
@@ -199,12 +199,12 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(NftInfoResponse<TMetadataExtension>)]
+    #[returns(NftInfoResponse<TNftMetadataExtension>)]
     NftInfo { token_id: String },
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(AllNftInfoResponse<TMetadataExtension>)]
+    #[returns(AllNftInfoResponse<TNftMetadataExtension>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -230,16 +230,16 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     #[returns(Option<String>)]
     GetWithdrawAddress {},
 
-    // -- below queries, Extension and GetCollectionInfoExtension, are just dummies, since type annotations are required for
-    // -- TMetadataExtension and TCollectionInfoExtension, Error:
-    // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
+    // -- below queries, Extension and GetCollectionMetadataExtension, are just dummies, since type annotations are required for
+    // -- TNftMetadataExtension and TCollectionMetadataExtension, Error:
+    // -- "type annotations needed: cannot infer type for type parameter `TNftMetadataExtension` declared on the enum `Cw721QueryMsg`"
     /// Do not use - dummy extension query, needed for inferring type parameter during compile
     #[returns(())]
-    Extension { msg: TMetadataExtension },
+    Extension { msg: TNftMetadataExtension },
 
     /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
     #[returns(())]
-    GetCollectionInfoExtension { msg: TCollectionInfoExtension },
+    GetCollectionMetadataExtension { msg: TCollectionMetadataExtension },
 }
 
 #[cw_serde]
@@ -251,14 +251,14 @@ pub enum Cw721MigrateMsg {
 }
 
 #[cw_serde]
-pub struct CollectionInfoMsg<TCollectionInfoExtensionMsg> {
+pub struct CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg> {
     pub name: Option<String>,
     pub symbol: Option<String>,
-    pub extension: TCollectionInfoExtensionMsg,
+    pub extension: TCollectionMetadataExtensionMsg,
 }
 
 #[cw_serde]
-pub struct CollectionInfoExtensionMsg<TRoyaltyInfo> {
+pub struct CollectionMetadataExtensionMsg<TRoyaltyInfo> {
     pub description: Option<String>,
     pub image: Option<String>,
     pub external_link: Option<String>,
@@ -301,21 +301,21 @@ pub struct NumTokensResponse {
 }
 
 #[cw_serde]
-pub struct NftInfoResponse<TMetadataExtension> {
+pub struct NftInfoResponse<TNftMetadataExtension> {
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: TMetadataExtension,
+    pub extension: TNftMetadataExtension,
 }
 
 #[cw_serde]
-pub struct AllNftInfoResponse<TMetadataExtension> {
+pub struct AllNftInfoResponse<TNftMetadataExtension> {
     /// Who can transfer the token
     pub access: OwnerOfResponse,
     /// Data on the token itself,
-    pub info: NftInfoResponse<TMetadataExtension>,
+    pub info: NftInfoResponse<TNftMetadataExtension>,
 }
 
 #[cw_serde]

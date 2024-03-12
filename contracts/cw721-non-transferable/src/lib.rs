@@ -1,8 +1,10 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
 use cw721::{
-    msg::CollectionInfoExtensionMsg,
-    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, MetadataMsg},
+    msg::CollectionMetadataExtensionMsg,
+    state::{
+        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadataMsg,
+    },
     RoyaltyInfo,
 };
 pub use cw721_base::{
@@ -20,10 +22,10 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     'a,
-    DefaultOptionMetadataExtension,
-    MetadataMsg,
-    DefaultOptionCollectionInfoExtension,
-    CollectionInfoExtensionMsg<RoyaltyInfo>,
+    DefaultOptionNftMetadataExtension,
+    NftMetadataMsg,
+    DefaultOptionCollectionMetadataExtension,
+    CollectionMetadataExtensionMsg<RoyaltyInfo>,
     Empty,
 >;
 
@@ -45,7 +47,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
+        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
     ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
@@ -60,7 +62,7 @@ pub mod entry {
         let cw721_base_instantiate_msg = Cw721InstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
-            collection_info_extension: msg.collection_info_extension,
+            collection_metadata_extension: msg.collection_metadata_extension,
             minter: msg.minter,
             creator: msg.creator,
             withdraw_address: msg.withdraw_address,
@@ -88,9 +90,9 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionMetadataExtension,
-            MetadataMsg,
-            CollectionInfoExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtension,
+            NftMetadataMsg,
+            CollectionMetadataExtensionMsg<RoyaltyInfo>,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;

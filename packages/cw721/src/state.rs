@@ -11,7 +11,7 @@ use url::Url;
 
 use crate::error::Cw721ContractError;
 use crate::execute::{Update, Validate};
-use crate::msg::CollectionInfoExtensionMsg;
+use crate::msg::CollectionMetadataExtensionMsg;
 
 /// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
@@ -21,84 +21,91 @@ pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
-/// Default CollectionInfoExtension with RoyaltyInfo
-pub type DefaultOptionCollectionInfoExtension = Option<CollectionInfoExtension<RoyaltyInfo>>;
-pub type DefaultOptionMetadataExtension = Option<Metadata>;
+/// Default CollectionMetadataExtension using `Option<CollectionMetadataExtension<RoyaltyInfo>>`
+pub type DefaultOptionCollectionMetadataExtension =
+    Option<CollectionMetadataExtension<RoyaltyInfo>>;
+/// Default NftMetadataExtension using `Option<NftMetadata>`.
+pub type DefaultOptionNftMetadataExtension = Option<NftMetadata>;
 
 // explicit type for better distinction.
 pub type EmptyMsg = Empty;
-pub type MetadataMsg = Metadata;
+pub type NftMetadataMsg = NftMetadata;
 
 // ----------------------
-// NOTE: below are max restrictions for default CollectionInfoExtension
+// NOTE: below are max restrictions for default CollectionMetadataExtension
 // This may be quite restrictive and may be increased in the future.
-// Custom contracts may also provide a custom CollectionInfoExtension.
+// Custom contracts may also provide a custom CollectionMetadataExtension.
 
 /// Maximum length of the description field in the collection info.
-pub const MAX_DESCRIPTION_LENGTH: u32 = 512;
-/// Max increase/decrease of of royalty share percentage
-pub const MAX_SHARE_DELTA_PCT: u64 = 2;
-/// Max royalty share percentage
+pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
+/// Max increase/decrease of of royalty share percentage.
+pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
+/// Max royalty share percentage.
 pub const MAX_ROYALTY_SHARE_PCT: u64 = 10;
 // ----------------------
 
 pub struct Cw721Config<
     'a,
     // Metadata defined in NftInfo (used for mint).
-    TMetadataExtension,
+    TNftMetadataExtension,
     // Message passed for updating metadata.
-    TMetadataExtensionMsg,
-    // Extension defined in CollectionInfo.
-    TCollectionInfoExtension,
+    TNftMetadataExtensionMsg,
+    // Extension defined in CollectionMetadata.
+    TCollectionMetadataExtension,
     // Message passed for updating collection info extension.
-    TCollectionInfoExtensionMsg,
+    TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
-    pub collection_info: Item<'a, CollectionInfo<TCollectionInfoExtension>>,
+    pub collection_metadata: Item<'a, CollectionMetadata<TCollectionMetadataExtension>>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info:
-        IndexedMap<'a, &'a str, NftInfo<TMetadataExtension>, TokenIndexes<'a, TMetadataExtension>>,
+    pub nft_info: IndexedMap<
+        'a,
+        &'a str,
+        NftInfo<TNftMetadataExtension>,
+        TokenIndexes<'a, TNftMetadataExtension>,
+    >,
     pub withdraw_address: Item<'a, String>,
 
-    pub(crate) _custom_metadata_extension_msg: PhantomData<TMetadataExtensionMsg>,
-    pub(crate) _custom_collection_info_extension_msg: PhantomData<TCollectionInfoExtensionMsg>,
+    pub(crate) _custom_metadata_extension_msg: PhantomData<TNftMetadataExtensionMsg>,
+    pub(crate) _custom_collection_metadata_extension_msg:
+        PhantomData<TCollectionMetadataExtensionMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
 impl<
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     > Default
     for Cw721Config<
         'static,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self::new(
-            "collection_info", // Note: replaces deprecated/legacy key "nft_info"
+            "collection_metadata", // Note: replaces deprecated/legacy key "nft_info"
             "num_tokens",
             "operators",
             "tokens",
@@ -110,28 +117,28 @@ where
 
 impl<
         'a,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
     Cw721Config<
         'a,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     fn new(
-        collection_info_key: &'a str,
+        collection_metadata_key: &'a str,
         token_count_key: &'a str,
         operator_key: &'a str,
         nft_info_key: &'a str,
@@ -142,13 +149,13 @@ where
             owner: MultiIndex::new(token_owner_idx, nft_info_key, nft_info_owner_key),
         };
         Self {
-            collection_info: Item::new(collection_info_key),
+            collection_metadata: Item::new(collection_metadata_key),
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
             _custom_metadata_extension_msg: PhantomData,
-            _custom_collection_info_extension_msg: PhantomData,
+            _custom_collection_metadata_extension_msg: PhantomData,
             _custom_response_msg: PhantomData,
         }
     }
@@ -170,12 +177,15 @@ where
     }
 }
 
-pub fn token_owner_idx<TMetadataExtension>(_pk: &[u8], d: &NftInfo<TMetadataExtension>) -> Addr {
+pub fn token_owner_idx<TNftMetadataExtension>(
+    _pk: &[u8],
+    d: &NftInfo<TNftMetadataExtension>,
+) -> Addr {
     d.owner.clone()
 }
 
 #[cw_serde]
-pub struct NftInfo<TMetadataExtension> {
+pub struct NftInfo<TNftMetadataExtension> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
@@ -187,19 +197,19 @@ pub struct NftInfo<TMetadataExtension> {
     pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: TMetadataExtension,
+    pub extension: TNftMetadataExtension,
 }
 
-impl Update<NftInfo<Metadata>> for NftInfo<Metadata> {
-    fn update(&self, msg: &NftInfo<Metadata>) -> Result<Self, crate::error::Cw721ContractError> {
+impl Update<NftInfo<NftMetadata>> for NftInfo<NftMetadata> {
+    fn update(&self, msg: &NftInfo<NftMetadata>) -> Result<Self, crate::error::Cw721ContractError> {
         msg.validate()?;
         Ok(msg.clone())
     }
 }
 
-impl<TMetadataExtension> Validate for NftInfo<TMetadataExtension>
+impl<TNftMetadataExtension> Validate for NftInfo<TNftMetadataExtension>
 where
-    TMetadataExtension: Validate,
+    TNftMetadataExtension: Validate,
 {
     fn validate(&self) -> Result<(), Cw721ContractError> {
         // validate token_uri is a URL
@@ -225,36 +235,36 @@ impl Approval {
     }
 }
 
-pub struct TokenIndexes<'a, TMetadataExtension>
+pub struct TokenIndexes<'a, TNftMetadataExtension>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    pub owner: MultiIndex<'a, Addr, NftInfo<TMetadataExtension>, String>,
+    pub owner: MultiIndex<'a, Addr, NftInfo<TNftMetadataExtension>, String>,
 }
 
-impl<'a, TMetadataExtension> IndexList<NftInfo<TMetadataExtension>>
-    for TokenIndexes<'a, TMetadataExtension>
+impl<'a, TNftMetadataExtension> IndexList<NftInfo<TNftMetadataExtension>>
+    for TokenIndexes<'a, TNftMetadataExtension>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
     fn get_indexes(
         &'_ self,
-    ) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TMetadataExtension>>> + '_> {
-        let v: Vec<&dyn Index<NftInfo<TMetadataExtension>>> = vec![&self.owner];
+    ) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TNftMetadataExtension>>> + '_> {
+        let v: Vec<&dyn Index<NftInfo<TNftMetadataExtension>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }
 }
 
 #[cw_serde]
-pub struct CollectionInfo<TCollectionInfoExtension> {
+pub struct CollectionMetadata<TCollectionMetadataExtension> {
     pub name: String,
     pub symbol: String,
-    pub extension: TCollectionInfoExtension,
+    pub extension: TCollectionMetadataExtension,
     pub updated_at: Timestamp,
 }
 
 #[cw_serde]
-pub struct CollectionInfoExtension<TRoyaltyInfo> {
+pub struct CollectionMetadataExtension<TRoyaltyInfo> {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
@@ -263,8 +273,10 @@ pub struct CollectionInfoExtension<TRoyaltyInfo> {
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
-impl From<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension<RoyaltyInfo> {
-    fn from(ext: CollectionInfoExtensionMsg<RoyaltyInfo>) -> Self {
+impl From<CollectionMetadataExtensionMsg<RoyaltyInfo>>
+    for CollectionMetadataExtension<RoyaltyInfo>
+{
+    fn from(ext: CollectionMetadataExtensionMsg<RoyaltyInfo>) -> Self {
         Self {
             description: ext.description.unwrap_or_default(),
             image: ext.image.unwrap_or_default(),
@@ -276,16 +288,16 @@ impl From<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension<R
     }
 }
 
-impl Validate for CollectionInfoExtension<RoyaltyInfo> {
+impl Validate for CollectionMetadataExtension<RoyaltyInfo> {
     /// Validates only extension, not royalty info!
     fn validate(&self) -> Result<(), Cw721ContractError> {
         // check description length, must not be empty and max 512 chars
         if self.description.is_empty() {
             return Err(Cw721ContractError::CollectionDescriptionEmpty {});
         }
-        if self.description.len() > MAX_DESCRIPTION_LENGTH as usize {
+        if self.description.len() > MAX_COLLECTION_DESCRIPTION_LENGTH as usize {
             return Err(Cw721ContractError::CollectionDescriptionTooLong {
-                max_length: MAX_DESCRIPTION_LENGTH,
+                max_length: MAX_COLLECTION_DESCRIPTION_LENGTH,
             });
         }
 
@@ -316,10 +328,12 @@ where
     }
 }
 
-impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension<RoyaltyInfo> {
+impl Update<CollectionMetadataExtensionMsg<RoyaltyInfo>>
+    for CollectionMetadataExtension<RoyaltyInfo>
+{
     fn update(
         &self,
-        msg: &CollectionInfoExtensionMsg<RoyaltyInfo>,
+        msg: &CollectionMetadataExtensionMsg<RoyaltyInfo>,
     ) -> Result<Self, crate::error::Cw721ContractError> {
         let mut extension = self.clone();
         // validate royalty before updating
@@ -338,10 +352,12 @@ impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for CollectionInfoExtension
     }
 }
 
-impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for DefaultOptionCollectionInfoExtension {
+impl Update<CollectionMetadataExtensionMsg<RoyaltyInfo>>
+    for DefaultOptionCollectionMetadataExtension
+{
     fn update(
         &self,
-        msg: &CollectionInfoExtensionMsg<RoyaltyInfo>,
+        msg: &CollectionMetadataExtensionMsg<RoyaltyInfo>,
     ) -> Result<Self, crate::error::Cw721ContractError> {
         match self {
             // update extension
@@ -351,7 +367,7 @@ impl Update<CollectionInfoExtensionMsg<RoyaltyInfo>> for DefaultOptionCollection
             }
             // create extension
             None => {
-                let extension: CollectionInfoExtension<RoyaltyInfo> = From::from(msg.clone());
+                let extension: CollectionMetadataExtension<RoyaltyInfo> = From::from(msg.clone());
                 extension.validate()?;
                 Ok(Some(extension))
             }
@@ -377,9 +393,9 @@ impl RoyaltyInfo {
                 if self.share < new_royalty_info.share {
                     let share_delta = new_royalty_info.share.abs_diff(self.share);
 
-                    if share_delta > Decimal::percent(MAX_SHARE_DELTA_PCT) {
+                    if share_delta > Decimal::percent(MAX_ROYALTY_SHARE_DELTA_PCT) {
                         return Err(Cw721ContractError::InvalidRoyalties(format!(
-                            "Share increase cannot be greater than {MAX_SHARE_DELTA_PCT}%"
+                            "Share increase cannot be greater than {MAX_ROYALTY_SHARE_DELTA_PCT}%"
                         )));
                     }
                 }
@@ -407,7 +423,7 @@ impl RoyaltyInfo {
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
 #[derive(Default)]
-pub struct Metadata {
+pub struct NftMetadata {
     pub image: Option<String>,
     pub image_data: Option<String>,
     pub external_url: Option<String>,
@@ -419,7 +435,7 @@ pub struct Metadata {
     pub youtube_url: Option<String>,
 }
 
-impl Validate for Metadata {
+impl Validate for NftMetadata {
     fn validate(&self) -> Result<(), Cw721ContractError> {
         // check URLs
         if let Some(image) = &self.image {
@@ -475,8 +491,8 @@ impl Validate for Metadata {
     }
 }
 
-impl Update<MetadataMsg> for Metadata {
-    fn update(&self, msg: &MetadataMsg) -> Result<Self, Cw721ContractError> {
+impl Update<NftMetadataMsg> for NftMetadata {
+    fn update(&self, msg: &NftMetadataMsg) -> Result<Self, Cw721ContractError> {
         msg.validate()?;
         let mut metadata = self.clone();
         metadata.image = msg.image.clone().or(self.image.clone());
@@ -495,8 +511,8 @@ impl Update<MetadataMsg> for Metadata {
     }
 }
 
-impl Update<MetadataMsg> for DefaultOptionMetadataExtension {
-    fn update(&self, msg: &MetadataMsg) -> Result<Self, crate::error::Cw721ContractError> {
+impl Update<NftMetadataMsg> for DefaultOptionNftMetadataExtension {
+    fn update(&self, msg: &NftMetadataMsg) -> Result<Self, crate::error::Cw721ContractError> {
         match self {
             // update metadata
             Some(ext) => {

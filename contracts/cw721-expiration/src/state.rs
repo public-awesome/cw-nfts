@@ -11,53 +11,53 @@ use serde::Serialize;
 pub struct Cw721ExpirationContract<
     'a,
     // Metadata defined in NftInfo (used for mint).
-    TMetadataExtension,
+    TNftMetadataExtension,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     // Message passed for updating metadata.
-    TMetadataExtensionMsg,
-    // Extension defined in CollectionInfo.
-    TCollectionInfoExtension,
+    TNftMetadataExtensionMsg,
+    // Extension defined in CollectionMetadata.
+    TCollectionMetadataExtension,
     // Message passed for updating collection info extension.
-    TCollectionInfoExtensionMsg,
+    TCollectionMetadataExtensionMsg,
     TCustomResponseMsg,
 > where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
     pub base_contract: Cw721Contract<
         'a,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >,
 }
 
 impl<
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     > Default
     for Cw721ExpirationContract<
         'static,
-        TMetadataExtension,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-        TCollectionInfoExtensionMsg,
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self {

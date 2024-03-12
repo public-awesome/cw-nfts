@@ -11,13 +11,13 @@ use serde::Serialize;
 use crate::{
     error::Cw721ContractError,
     msg::{
-        CollectionInfoExtensionMsg, CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg,
-        Cw721MigrateMsg,
+        CollectionMetadataExtensionMsg, CollectionNftMetadataMsg, Cw721ExecuteMsg,
+        Cw721InstantiateMsg, Cw721MigrateMsg,
     },
     receiver::Cw721ReceiveMsg,
     state::{
-        CollectionInfo, Cw721Config, DefaultOptionCollectionInfoExtension,
-        DefaultOptionMetadataExtension, EmptyMsg, NftInfo, CREATOR, MINTER,
+        CollectionMetadata, Cw721Config, DefaultOptionCollectionMetadataExtension,
+        DefaultOptionNftMetadataExtension, EmptyMsg, NftInfo, CREATOR, MINTER,
     },
     Approval, RoyaltyInfo,
 };
@@ -53,22 +53,22 @@ impl Update<EmptyMsg> for Option<Empty> {
 
 pub trait Cw721Execute<
     // Metadata defined in NftInfo (used for mint).
-    TMetadataExtension,
+    TNftMetadataExtension,
     // Message passed for updating metadata.
-    TMetadataExtensionMsg,
-    // Extension defined in CollectionInfo.
-    TCollectionInfoExtension,
+    TNftMetadataExtensionMsg,
+    // Extension defined in CollectionMetadata.
+    TCollectionMetadataExtension,
     // Message passed for updating collection info extension.
-    TCollectionInfoExtensionMsg,
+    TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TMetadataExtensionMsg> + Validate,
-    TMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension:
-        Serialize + DeserializeOwned + Clone + Update<TCollectionInfoExtensionMsg> + Validate,
-    TCollectionInfoExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension:
+        Serialize + DeserializeOwned + Clone + Update<TNftMetadataExtensionMsg> + Validate,
+    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtension:
+        Serialize + DeserializeOwned + Clone + Update<TCollectionMetadataExtensionMsg> + Validate,
+    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
     TCustomResponseMsg: CustomMsg,
 {
     fn instantiate(
@@ -76,28 +76,28 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionInfoExtension>,
+        msg: Cw721InstantiateMsg<TCollectionMetadataExtension>,
         contract_name: &str,
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let collection_info = CollectionInfo {
+        let collection_metadata = CollectionMetadata {
             name: msg.name,
             symbol: msg.symbol,
-            extension: msg.collection_info_extension,
+            extension: msg.collection_metadata_extension,
             updated_at: env.block.time,
         };
-        collection_info.extension.validate()?;
+        collection_metadata.extension.validate()?;
         config
-            .collection_info
-            .save(deps.storage, &collection_info)?;
+            .collection_metadata
+            .save(deps.storage, &collection_metadata)?;
 
         // use info.sender if None is passed
         let minter: &str = match msg.minter.as_deref() {
@@ -129,15 +129,15 @@ pub trait Cw721Execute<
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtensionMsg,
         >,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
-            Cw721ExecuteMsg::UpdateCollectionMetadata { collection_info } => {
-                self.update_collection_info(deps, info, env, collection_info)
-            }
+            Cw721ExecuteMsg::UpdateCollectionMetadata {
+                collection_metadata,
+            } => self.update_collection_metadata(deps, info, env, collection_metadata),
             Cw721ExecuteMsg::Mint {
                 token_id,
                 owner,
@@ -206,7 +206,7 @@ pub trait Cw721Execute<
         // first migrate legacy data ...
         let response =
             migrate_legacy_minter_and_creator(deps.storage, deps.api, &env, &msg, response)?;
-        let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
+        let response = migrate_legacy_collection_metadata(deps.storage, &env, &msg, response)?;
         // ... then migrate
         let response = migrate_version(deps.storage, contract_name, contract_version, response)?;
         // ... and update creator and minter AFTER legacy migration
@@ -224,7 +224,7 @@ pub trait Cw721Execute<
         recipient: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        _transfer_nft::<TMetadataExtension>(deps, &env, &info, &recipient, &token_id)?;
+        _transfer_nft::<TNftMetadataExtension>(deps, &env, &info, &recipient, &token_id)?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
@@ -243,7 +243,7 @@ pub trait Cw721Execute<
         msg: Binary,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         // Transfer token
-        _transfer_nft::<TMetadataExtension>(deps, &env, &info, &contract, &token_id)?;
+        _transfer_nft::<TNftMetadataExtension>(deps, &env, &info, &contract, &token_id)?;
 
         let send = Cw721ReceiveMsg {
             sender: info.sender.to_string(),
@@ -269,7 +269,7 @@ pub trait Cw721Execute<
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        _update_approvals::<TMetadataExtension>(
+        _update_approvals::<TNftMetadataExtension>(
             deps, &env, &info, &spender, &token_id, true, expires,
         )?;
 
@@ -288,7 +288,7 @@ pub trait Cw721Execute<
         spender: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        _update_approvals::<TMetadataExtension>(
+        _update_approvals::<TNftMetadataExtension>(
             deps, &env, &info, &spender, &token_id, false, None,
         )?;
 
@@ -316,10 +316,10 @@ pub trait Cw721Execute<
         // set the operator for us
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         config
@@ -343,10 +343,10 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         config
@@ -367,10 +367,10 @@ pub trait Cw721Execute<
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         let token = config.nft_info.load(deps.storage, &token_id)?;
@@ -404,43 +404,43 @@ pub trait Cw721Execute<
         MINTER.initialize_owner(storage, api, minter)
     }
 
-    fn update_collection_info(
+    fn update_collection_metadata(
         &self,
         deps: DepsMut,
         info: MessageInfo,
         _env: Env,
-        msg: CollectionInfoMsg<TCollectionInfoExtensionMsg>,
+        msg: CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let mut collection_info = config.collection_info.load(deps.storage)?;
+        let mut collection_metadata = config.collection_metadata.load(deps.storage)?;
         if let Some(name) = msg.name {
-            collection_info.name = name;
+            collection_metadata.name = name;
         }
         if let Some(symbol) = msg.symbol {
-            collection_info.symbol = symbol;
+            collection_metadata.symbol = symbol;
         }
-        collection_info.extension = collection_info.extension.update(&msg.extension)?;
+        collection_metadata.extension = collection_metadata.extension.update(&msg.extension)?;
         config
-            .collection_info
-            .save(deps.storage, &collection_info)?;
+            .collection_metadata
+            .save(deps.storage, &collection_metadata)?;
 
         Ok(Response::new()
-            .add_attribute("action", "update_collection_info")
+            .add_attribute("action", "update_collection_metadata")
             .add_attribute("sender", info.sender))
     }
 
-    // fn update_collection_info_extension(
+    // fn update_collection_metadata_extension(
     //     &self,
-    //     extension: TCollectionInfoExtension,
-    //     msg: &TCollectionInfoExtensionMsg,
-    // ) -> Result<TCollectionInfoExtension, Cw721ContractError>;
+    //     extension: TCollectionMetadataExtension,
+    //     msg: &TCollectionMetadataExtensionMsg,
+    // ) -> Result<TCollectionMetadataExtension, Cw721ContractError>;
 
     fn mint(
         &self,
@@ -449,7 +449,7 @@ pub trait Cw721Execute<
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TMetadataExtension,
+        extension: TNftMetadataExtension,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         MINTER.assert_owner(deps.storage, &info.sender)?;
         // create the token
@@ -461,10 +461,10 @@ pub trait Cw721Execute<
         };
         token.validate()?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         config
@@ -517,7 +517,7 @@ pub trait Cw721Execute<
         _deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        _msg: TMetadataExtensionMsg,
+        _msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         panic!("deprecated. pls use update_metadata instead.")
     }
@@ -528,13 +528,13 @@ pub trait Cw721Execute<
         _env: Env,
         info: MessageInfo,
         token_id: String,
-        msg: TMetadataExtensionMsg,
+        msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let contract = Cw721Config::<
-            TMetadataExtension,
+            TNftMetadataExtension,
             Empty,
-            TCollectionInfoExtension,
+            TCollectionMetadataExtension,
             Empty,
             Empty,
         >::default();
@@ -554,10 +554,10 @@ pub trait Cw721Execute<
         CREATOR.assert_owner(deps.storage, sender)?;
         deps.api.addr_validate(&address)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         config.withdraw_address.save(deps.storage, &address)?;
@@ -573,10 +573,10 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(storage, sender)?;
         let config = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
         let address = config.withdraw_address.may_load(storage)?;
@@ -597,10 +597,10 @@ pub trait Cw721Execute<
         amount: &Coin,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let withdraw_address = Cw721Config::<
-            TMetadataExtension,
-            TMetadataExtensionMsg,
-            TCollectionInfoExtension,
-            TCollectionInfoExtensionMsg,
+            TNftMetadataExtension,
+            TNftMetadataExtensionMsg,
+            TCollectionMetadataExtension,
+            TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default()
         .withdraw_address
@@ -623,17 +623,17 @@ pub trait Cw721Execute<
 }
 
 // ------- helper cw721 functions -------
-fn _transfer_nft<TMetadataExtension>(
+fn _transfer_nft<TNftMetadataExtension>(
     deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
     recipient: &str,
     token_id: &str,
-) -> Result<NftInfo<TMetadataExtension>, Cw721ContractError>
+) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_send(deps.as_ref(), env, info, &token)?;
@@ -645,7 +645,7 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-fn _update_approvals<TMetadataExtension>(
+fn _update_approvals<TNftMetadataExtension>(
     deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
@@ -654,11 +654,11 @@ fn _update_approvals<TMetadataExtension>(
     // if add == false, remove. if add == true, remove then set with this expiration
     add: bool,
     expires: Option<Expiration>,
-) -> Result<NftInfo<TMetadataExtension>, Cw721ContractError>
+) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
-    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -687,21 +687,21 @@ where
 }
 
 /// returns true if the sender can execute approve or reject on the contract
-pub fn check_can_approve<TMetadataExtension>(
+pub fn check_can_approve<TNftMetadataExtension>(
     deps: Deps,
     env: &Env,
     info: &MessageInfo,
-    token: &NftInfo<TMetadataExtension>,
+    token: &NftInfo<TNftMetadataExtension>,
 ) -> Result<(), Cw721ContractError>
 where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
 {
     // owner can approve
     if token.owner == info.sender {
         return Ok(());
     }
     // operator can approve
-    let config = Cw721Config::<TMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
     let op = config
         .operators
         .may_load(deps.storage, (&token.owner, &info.sender))?;
@@ -718,11 +718,11 @@ where
 }
 
 /// returns true iff the sender can transfer ownership of the token
-pub fn check_can_send<TMetadataExtension>(
+pub fn check_can_send<TNftMetadataExtension>(
     deps: Deps,
     env: &Env,
     info: &MessageInfo,
-    token: &NftInfo<TMetadataExtension>,
+    token: &NftInfo<TNftMetadataExtension>,
 ) -> Result<(), Cw721ContractError> {
     // owner can send
     if token.owner == info.sender {
@@ -852,37 +852,42 @@ pub fn migrate_legacy_minter_and_creator(
     Ok(response.add_attribute("creator_and_minter", none_or(creator_and_minter.as_ref())))
 }
 
-/// Migrates only in case collection_info is not present
-pub fn migrate_legacy_collection_info(
+/// Migrates only in case collection_metadata is not present
+pub fn migrate_legacy_collection_metadata(
     storage: &mut dyn Storage,
     env: &Env,
     _msg: &Cw721MigrateMsg,
     response: Response,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Config::<
-        DefaultOptionMetadataExtension,
+        DefaultOptionNftMetadataExtension,
         Empty,
-        DefaultOptionCollectionInfoExtension,
-        CollectionInfoExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtension,
+        CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
-    match contract.collection_info.may_load(storage)? {
+    match contract.collection_metadata.may_load(storage)? {
         Some(_) => Ok(response),
         None => {
             // contract info is legacy collection info
-            let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
+            let legacy_collection_metadata_store: Item<cw721_016::ContractInfoResponse> =
                 Item::new("nft_info");
-            let legacy_collection_info = legacy_collection_info_store.load(storage)?;
-            let collection_info = CollectionInfo {
-                name: legacy_collection_info.name.clone(),
-                symbol: legacy_collection_info.symbol.clone(),
+            let legacy_collection_metadata = legacy_collection_metadata_store.load(storage)?;
+            let collection_metadata = CollectionMetadata {
+                name: legacy_collection_metadata.name.clone(),
+                symbol: legacy_collection_metadata.symbol.clone(),
                 extension: None,
                 updated_at: env.block.time,
             };
-            contract.collection_info.save(storage, &collection_info)?;
+            contract
+                .collection_metadata
+                .save(storage, &collection_metadata)?;
             Ok(response
-                .add_attribute("migrated collection name", legacy_collection_info.name)
-                .add_attribute("migrated collection symbol", legacy_collection_info.symbol))
+                .add_attribute("migrated collection name", legacy_collection_metadata.name)
+                .add_attribute(
+                    "migrated collection symbol",
+                    legacy_collection_metadata.symbol,
+                ))
         }
     }
 }
