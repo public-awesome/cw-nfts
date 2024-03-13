@@ -23,27 +23,35 @@ use crate::{
 };
 
 pub trait Validate {
-    fn validate(&self) -> Result<(), Cw721ContractError>;
+    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError>;
 }
 
 impl Validate for Empty {
-    fn validate(&self) -> Result<(), Cw721ContractError> {
+    fn validate(&self, _deps: Deps) -> Result<(), Cw721ContractError> {
         Ok(())
     }
 }
 
 pub trait Update<T>: Sized {
-    fn update(&self, msg: &T) -> Result<Self, Cw721ContractError>;
+    fn update(&self, deps: Deps, msg: &T) -> Result<Self, Cw721ContractError>;
 }
 
 impl Update<EmptyMsg> for Empty {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+    fn update(
+        &self,
+        _deps: Deps,
+        _msg: &EmptyMsg,
+    ) -> Result<Self, crate::error::Cw721ContractError> {
         Ok(Empty::default())
     }
 }
 
 impl Update<EmptyMsg> for Option<Empty> {
-    fn update(&self, _msg: &EmptyMsg) -> Result<Self, crate::error::Cw721ContractError> {
+    fn update(
+        &self,
+        _deps: Deps,
+        _msg: &EmptyMsg,
+    ) -> Result<Self, crate::error::Cw721ContractError> {
         match self {
             Some(ext) => Ok(Some(ext.clone())),
             None => Ok(Some(Empty::default())),
@@ -94,7 +102,7 @@ pub trait Cw721Execute<
             extension: msg.collection_metadata_extension,
             updated_at: env.block.time,
         };
-        collection_metadata.extension.validate()?;
+        collection_metadata.extension.validate(deps.as_ref())?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -427,7 +435,9 @@ pub trait Cw721Execute<
         if let Some(symbol) = msg.symbol {
             collection_metadata.symbol = symbol;
         }
-        collection_metadata.extension = collection_metadata.extension.update(&msg.extension)?;
+        collection_metadata.extension = collection_metadata
+            .extension
+            .update(deps.as_ref(), &msg.extension)?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -460,7 +470,7 @@ pub trait Cw721Execute<
             token_uri: token_uri.clone(),
             extension,
         };
-        token.validate()?;
+        token.validate(deps.as_ref())?;
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
@@ -548,8 +558,8 @@ pub trait Cw721Execute<
         >::default();
         let mut nft_info = contract.nft_info.load(deps.storage, &token_id)?;
         nft_info.token_uri = token_uri;
-        nft_info.validate()?;
-        nft_info.extension = nft_info.extension.update(&msg)?;
+        nft_info.validate(deps.as_ref())?;
+        nft_info.extension = nft_info.extension.update(deps.as_ref(), &msg)?;
         contract.nft_info.save(deps.storage, &token_id, &nft_info)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")
