@@ -235,11 +235,17 @@ pub enum Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension> {
     // -- below queries, Extension and GetCollectionMetadataExtension, are just dummies, since type annotations are required for
     // -- TNftMetadataExtension and TCollectionMetadataExtension, Error:
     // -- "type annotations needed: cannot infer type for type parameter `TNftMetadataExtension` declared on the enum `Cw721QueryMsg`"
-    /// Do not use - dummy extension query, needed for inferring type parameter during compile
+    /// Use NftInfo instead.
+    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile.
+    ///
+    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
     #[returns(())]
     Extension { msg: TNftMetadataExtension },
 
-    /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
+    /// Use GetCollectionMetadata instead.
+    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
+    ///
+    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
     #[returns(())]
     GetCollectionMetadataExtension { msg: TCollectionMetadataExtension },
 }

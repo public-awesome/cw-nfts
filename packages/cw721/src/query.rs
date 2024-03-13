@@ -457,7 +457,10 @@ pub trait Cw721Query<
         })
     }
 
-    /// No-op returning empty Binary
+    /// Use NftInfo instead.
+    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile.
+    ///
+    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
     fn query_extension(
         &self,
         _deps: Deps,
@@ -467,7 +470,10 @@ pub trait Cw721Query<
         Ok(Binary::default())
     }
 
-    /// No-op returning empty Binary
+    /// Use GetCollectionMetadata instead.
+    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
+    ///
+    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
     fn query_collection_metadata_extension(
         &self,
         _deps: Deps,
