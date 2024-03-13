@@ -131,9 +131,9 @@ pub struct Cw721InstantiateMsg<TCollectionMetadataExtension> {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum Cw721QueryMsg<
-    // Type of metadata extension defined in `NftInfo` and `AllNftInfo`.
+    // Return type of NFT metadata defined in `NftInfo` and `AllNftInfo`.
     TNftMetadataExtension,
-    // Type of metadata extension message defined in `GetCollectionMetadata`.
+    // Return type of collection metadata extension defined in `GetCollectionMetadata`.
     TCollectionMetadataExtension,
 > {
     /// Return the owner of the given token, error if token does not exist
