@@ -130,7 +130,12 @@ pub struct Cw721InstantiateMsg<TCollectionMetadataExtension> {
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension> {
+pub enum Cw721QueryMsg<
+    // Type of metadata extension defined in `NftInfo` and `AllNftInfo`.
+    TNftMetadataExtension,
+    // Type of metadata extension message defined in `GetCollectionMetadata`.
+    TCollectionMetadataExtension,
+> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {
@@ -236,16 +241,20 @@ pub enum Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension> {
     // -- TNftMetadataExtension and TCollectionMetadataExtension, Error:
     // -- "type annotations needed: cannot infer type for type parameter `TNftMetadataExtension` declared on the enum `Cw721QueryMsg`"
     /// Use NftInfo instead.
-    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile.
+    /// No-op / NFT metadata query returning empty binary, needed for inferring type parameter during compile.
     ///
     /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
     #[returns(())]
+    #[deprecated(since = "0.19.0", note = "Please use GetNftMetadata instead")]
     Extension { msg: TNftMetadataExtension },
 
+    #[returns(())]
+    GetNftMetadata { msg: TNftMetadataExtension },
+
     /// Use GetCollectionMetadata instead.
-    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
+    /// No-op / collection metadata extension query returning empty binary, needed for inferring type parameter during compile
     ///
-    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
+    /// Note: it may be extended in case there are use cases e.g. for specific collection metadata query.
     #[returns(())]
     GetCollectionMetadataExtension { msg: TCollectionMetadataExtension },
 }

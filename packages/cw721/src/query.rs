@@ -128,8 +128,12 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCreatorOwnership {} => {
                 to_json_binary(&self.query_creator_ownership(deps.storage)?)
             }
+            #[allow(deprecated)]
             Cw721QueryMsg::Extension { msg } => {
-                to_json_binary(&self.query_extension(deps, env, msg)?)
+                to_json_binary(&self.query_nft_metadata(deps, env, msg)?)
+            }
+            Cw721QueryMsg::GetNftMetadata { msg } => {
+                to_json_binary(&self.query_nft_metadata(deps, env, msg)?)
             }
             Cw721QueryMsg::GetCollectionMetadataExtension { msg } => {
                 to_json_binary(&self.query_collection_metadata_extension(deps, env, msg)?)
@@ -461,7 +465,7 @@ pub trait Cw721Query<
     /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile.
     ///
     /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
-    fn query_extension(
+    fn query_nft_metadata(
         &self,
         _deps: Deps,
         _env: Env,
