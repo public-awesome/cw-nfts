@@ -4,6 +4,9 @@ pub use cw721::state::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
+#[deprecated(since = "0.19.0", note = "Please use `NftInfo`")]
+pub type TokenInfo<TNftMetadataExtension> = NftInfo<TNftMetadataExtension>;
+
 pub struct Cw721Contract<
     'a,
     // Metadata defined in NftInfo (used for mint).
