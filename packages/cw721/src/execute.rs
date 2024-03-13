@@ -457,7 +457,7 @@ pub trait Cw721Execute<
         let token = NftInfo {
             owner: deps.api.addr_validate(&owner)?,
             approvals: vec![],
-            token_uri,
+            token_uri: token_uri.clone(),
             extension,
         };
         token.validate()?;
@@ -477,11 +477,15 @@ pub trait Cw721Execute<
 
         config.increment_tokens(deps.storage)?;
 
-        Ok(Response::new()
+        let mut res = Response::new()
             .add_attribute("action", "mint")
             .add_attribute("minter", info.sender)
             .add_attribute("owner", owner)
-            .add_attribute("token_id", token_id))
+            .add_attribute("token_id", token_id);
+        if let Some(token_uri) = token_uri {
+            res = res.add_attribute("token_uri", token_uri);
+        }
+        Ok(res)
     }
 
     fn update_minter_ownership(

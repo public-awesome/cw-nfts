@@ -6,6 +6,7 @@ pub mod state;
 
 pub use crate::state::Cw721Contract;
 
+use cw721::state::DefaultOptionNftMetadataExtension;
 // These types are re-exported so that contracts interacting with this
 // one don't need a direct dependency on cw_ownable to use the API.
 //
@@ -19,6 +20,12 @@ use cosmwasm_std::Empty;
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[deprecated(
+    since = "0.19.0",
+    note = "Please use `DefaultOptionNftMetadataExtension` instead"
+)]
+pub type Extension = DefaultOptionNftMetadataExtension;
 
 pub mod entry {
 
