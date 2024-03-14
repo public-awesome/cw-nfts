@@ -6,14 +6,14 @@ use cosmwasm_std::{
     from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
-use cw721::error::Cw721ContractError;
-use cw721::msg::{
+use cw721_base::error::Cw721ContractError;
+use cw721_base::msg::{
     ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
     OwnerOfResponse, TokensResponse,
 };
-use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{CollectionMetadata, CREATOR, MINTER};
-use cw721::{query::Cw721Query, Approval, Expiration};
+use cw721_base::receiver::Cw721ReceiveMsg;
+use cw721_base::state::{CollectionMetadata, CREATOR, MINTER};
+use cw721_base::{query::Cw721Query, Approval, Expiration};
 use cw721_base::{
     DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
     DefaultOptionNftMetadataExtensionMsg,
@@ -995,7 +995,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(
         res,
         OperatorsResponse {
-            operators: vec![cw721::Approval {
+            operators: vec![cw721_base::Approval {
                 spender: Addr::unchecked("operator"),
                 expires: Expiration::Never {}
             }]
@@ -1028,7 +1028,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(
         res,
         OperatorsResponse {
-            operators: vec![cw721::Approval {
+            operators: vec![cw721_base::Approval {
                 spender: Addr::unchecked("buddy"),
                 expires: buddy_expires,
             }]
@@ -1048,7 +1048,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(
         res,
         OperatorsResponse {
-            operators: vec![cw721::Approval {
+            operators: vec![cw721_base::Approval {
                 spender: Addr::unchecked("operator"),
                 expires: Expiration::Never {}
             }]
@@ -1090,7 +1090,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(
         res,
         OperatorsResponse {
-            operators: vec![cw721::Approval {
+            operators: vec![cw721_base::Approval {
                 spender: Addr::unchecked("buddy"),
                 expires: buddy_expires,
             }]

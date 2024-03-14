@@ -1,5 +1,5 @@
 use cosmwasm_std::Timestamp;
-use cw721::error::Cw721ContractError;
+use cw721_base::error::Cw721ContractError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]

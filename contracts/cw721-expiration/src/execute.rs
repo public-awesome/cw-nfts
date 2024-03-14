@@ -1,5 +1,5 @@
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
-use cw721::{
+use cw721_base::{
     execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
     Expiration, StateFactory,

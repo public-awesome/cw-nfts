@@ -8,15 +8,15 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
-use cw721::DefaultOptionNftMetadataExtension;
+use cw721_base::DefaultOptionNftMetadataExtension;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type MinterResponse = cw721::msg::MinterResponse;
+pub type MinterResponse = cw721_base::msg::MinterResponse;
 
-pub type NftInfo = cw721::state::NftInfo<DefaultOptionNftMetadataExtension>;
+pub type NftInfo = cw721_base::state::NftInfo<DefaultOptionNftMetadataExtension>;
 
 pub mod entry {
     use crate::{
@@ -30,7 +30,7 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721::{
+    use cw721_base::{
         msg::{CollectionMetadataExtensionMsg, Cw721ExecuteMsg},
         DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
         DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
@@ -101,7 +101,7 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
-    use cw721::{
+    use cw721_base::{
         msg::CollectionMetadataExtensionMsg, DefaultOptionCollectionMetadataExtension, RoyaltyInfo,
     };
 

@@ -1,9 +1,9 @@
 use cosmwasm_std::{to_json_binary, Binary, CustomMsg, Deps, Env, StdResult};
-use cw721::msg::{
+use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721::query::Cw721Query;
+use cw721_base::query::Cw721Query;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
