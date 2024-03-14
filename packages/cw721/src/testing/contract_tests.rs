@@ -13,12 +13,12 @@ use crate::msg::{
 };
 use crate::msg::{CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
-use crate::state::{
-    CollectionMetadata, DefaultOptionCollectionMetadataExtension,
+use crate::state::{CollectionMetadata, NftMetadata, Trait, CREATOR, MINTER};
+use crate::{
+    execute::Cw721Execute, query::Cw721Query, Approval, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg, NftMetadata, Trait, CREATOR, MINTER,
+    DefaultOptionNftMetadataExtensionMsg, Expiration,
 };
-use crate::{execute::Cw721Execute, query::Cw721Query, Approval, Expiration};
 use crate::{CollectionMetadataExtension, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 

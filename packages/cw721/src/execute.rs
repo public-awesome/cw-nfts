@@ -15,11 +15,9 @@ use crate::{
         Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
     },
     receiver::Cw721ReceiveMsg,
-    state::{
-        CollectionMetadata, Cw721Config, DefaultOptionCollectionMetadataExtension,
-        DefaultOptionNftMetadataExtension, NftInfo, CREATOR, MINTER,
-    },
-    Approval, RoyaltyInfo, StateFactory,
+    state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
+    Approval, DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
+    RoyaltyInfo, StateFactory,
 };
 
 pub trait Cw721Execute<

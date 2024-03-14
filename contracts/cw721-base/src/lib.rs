@@ -5,8 +5,8 @@ pub mod query;
 pub mod state;
 
 pub use crate::state::Cw721Contract;
+pub use cw721::*;
 
-use cw721::state::DefaultOptionNftMetadataExtension;
 // These types are re-exported so that contracts interacting with this
 // one don't need a direct dependency on cw_ownable to use the API.
 //
@@ -39,10 +39,8 @@ pub mod entry {
         execute::Cw721Execute,
         msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
         query::Cw721Query,
-        state::{
-            DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-            DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
-        },
+        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
     };
 
     // This makes a conscious choice on the various generics used by the contract

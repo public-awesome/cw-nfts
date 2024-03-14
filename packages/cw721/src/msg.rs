@@ -600,7 +600,7 @@ where
         }
         // validate extension
         // current is a nested option in option, so we need to flatten it
-        let current_extension = current.and_then(|c| Some(&c.extension));
+        let current_extension = current.map(|c| &c.extension);
         self.extension
             .validate(deps, env, info, current_extension)?;
         Ok(())

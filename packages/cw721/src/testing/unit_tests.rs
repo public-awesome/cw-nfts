@@ -7,13 +7,12 @@ use crate::{
     },
     query::{Cw721Query, MAX_LIMIT},
     state::{
-        CollectionMetadata, DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg, NftMetadata, CREATOR,
-        MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
-        MINTER,
+        CollectionMetadata, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+        MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
-    CollectionMetadataExtension, RoyaltyInfo,
+    CollectionMetadataExtension, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
@@ -582,7 +581,7 @@ fn test_collection_metadata_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
-                payment_address: deps.api.addr_validate("payment_address".into()).unwrap(),
+                payment_address: deps.api.addr_validate("payment_address").unwrap(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()

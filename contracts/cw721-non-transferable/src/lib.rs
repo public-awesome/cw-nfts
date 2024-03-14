@@ -1,6 +1,6 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::state::{
+use cw721::{
     DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
     DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
 };
@@ -38,7 +38,7 @@ pub mod entry {
     use cw721::error::Cw721ContractError;
     use cw721::execute::Cw721Execute;
     use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
-    use cw721::state::{
+    use cw721::{
         DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
     };
 

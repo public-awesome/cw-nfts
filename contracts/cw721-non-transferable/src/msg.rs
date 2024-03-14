@@ -1,9 +1,10 @@
 use cosmwasm_schema::cw_serde;
+
 // expose to all others using contract, so others dont need to import cw721
-pub use cw721::msg::{
-    Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, Cw721QueryMsg, *,
+pub use cw721::{
+    msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, Cw721QueryMsg},
+    DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, *,
 };
-use cw721::state::{DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension};
 
 #[cw_serde]
 pub struct InstantiateMsg<TCollectionMetadataExtension> {

@@ -11,10 +11,9 @@ use cw721::{
         NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
-    state::{
-        CollectionMetadata, DefaultOptionCollectionMetadataExtension,
-        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
-    },
+    state::CollectionMetadata,
+    DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg,
 };
 fn main() {
     let mut out_dir = current_dir().unwrap();

@@ -8,7 +8,7 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
-use cw721::state::DefaultOptionNftMetadataExtension;
+use cw721::DefaultOptionNftMetadataExtension;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
@@ -32,11 +32,8 @@ pub mod entry {
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
         msg::{CollectionMetadataExtensionMsg, Cw721ExecuteMsg},
-        state::{
-            DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-            DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
-        },
-        RoyaltyInfo,
+        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -105,8 +102,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
     use cw721::{
-        msg::CollectionMetadataExtensionMsg, state::DefaultOptionCollectionMetadataExtension,
-        RoyaltyInfo,
+        msg::CollectionMetadataExtensionMsg, DefaultOptionCollectionMetadataExtension, RoyaltyInfo,
     };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};

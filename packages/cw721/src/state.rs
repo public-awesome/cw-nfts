@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, Decimal, Deps, Empty, StdResult, Storage, Timestamp};
+use cosmwasm_std::{Addr, BlockInfo, Decimal, Deps, StdResult, Storage, Timestamp};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
@@ -10,8 +10,7 @@ use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
-use crate::msg::{CollectionMetadataExtensionMsg, RoyaltyInfoResponse};
-use crate::StateFactory;
+use crate::{NftMetadataMsg, StateFactory};
 
 /// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
@@ -20,20 +19,6 @@ use crate::StateFactory;
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
-
-/// Default CollectionMetadataExtension using `Option<CollectionMetadataExtension<RoyaltyInfo>>`
-pub type DefaultOptionCollectionMetadataExtension =
-    Option<CollectionMetadataExtension<RoyaltyInfo>>;
-pub type DefaultOptionCollectionMetadataExtensionMsg =
-    Option<CollectionMetadataExtensionMsg<RoyaltyInfoResponse>>;
-/// Default NftMetadataExtension using `Option<NftMetadata>`.
-pub type DefaultOptionNftMetadataExtension = Option<NftMetadata>;
-pub type DefaultOptionNftMetadataExtensionMsg = Option<NftMetadataMsg>;
-
-// explicit type for better distinction.
-pub type NftMetadataMsg = NftMetadata;
-#[deprecated(since = "0.19.0", note = "Please use `NftMetadata` instead")]
-pub type MetaData = NftMetadata;
 
 // ----------------------
 // NOTE: below are max restrictions for default CollectionMetadataExtension

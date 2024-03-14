@@ -6,11 +6,9 @@ use crate::{
         Cw721QueryMsg, MinterResponse, NumTokensResponse, OwnerOfResponse,
     },
     query::Cw721Query,
-    state::{
-        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, NftMetadata,
-        NftMetadataMsg, Trait,
-    },
+    state::{NftMetadata, Trait},
+    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, NftMetadataMsg,
     RoyaltyInfo,
 };
 use cosmwasm_std::{

@@ -9,11 +9,23 @@ pub mod state;
 use cosmwasm_std::{Deps, Empty, Env, MessageInfo};
 pub use cw_utils::Expiration;
 use error::Cw721ContractError;
+use msg::{CollectionMetadataExtensionMsg, RoyaltyInfoResponse};
+use state::NftMetadata;
 pub use state::{Approval, CollectionMetadataExtension, RoyaltyInfo};
 
-#[cfg(test)]
-pub mod testing;
+/// Default CollectionMetadataExtension using `Option<CollectionMetadataExtension<RoyaltyInfo>>`
+pub type DefaultOptionCollectionMetadataExtension =
+    Option<CollectionMetadataExtension<RoyaltyInfo>>;
+pub type DefaultOptionCollectionMetadataExtensionMsg =
+    Option<CollectionMetadataExtensionMsg<RoyaltyInfoResponse>>;
+/// Default NftMetadataExtension using `Option<NftMetadata>`.
+pub type DefaultOptionNftMetadataExtension = Option<NftMetadata>;
+pub type DefaultOptionNftMetadataExtensionMsg = Option<NftMetadataMsg>;
 
+// explicit type for better distinction.
+pub type NftMetadataMsg = NftMetadata;
+#[deprecated(since = "0.19.0", note = "Please use `NftMetadata` instead")]
+pub type MetaData = NftMetadata;
 pub trait StateFactory<S> {
     fn create(
         &self,
@@ -52,3 +64,6 @@ impl StateFactory<Empty> for Empty {
         Ok(())
     }
 }
+
+#[cfg(test)]
+pub mod testing;

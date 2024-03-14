@@ -1,10 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use cw20::Cw20ReceiveMsg;
-use cw721::state::DefaultOptionNftMetadataExtension;
+use cw721::DefaultOptionNftMetadataExtension;
 
 #[cw_serde]
-pub struct InstantiateMsg<TCollectionMetadataExtension> {
+pub struct InstantiateMsg<TCollectionMetadataExtensionMsg> {
     pub owner: Addr,
     pub max_tokens: u32,
     pub unit_price: Uint128,
@@ -13,7 +13,7 @@ pub struct InstantiateMsg<TCollectionMetadataExtension> {
     /// Symbol of the collection metadata
     pub symbol: String,
     /// Optional extension of the collection metadata
-    pub collection_metadata_extension: TCollectionMetadataExtension,
+    pub collection_metadata_extension: TCollectionMetadataExtensionMsg,
     pub token_code_id: u64,
     pub cw20_address: Addr,
     pub token_uri: String,

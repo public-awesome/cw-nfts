@@ -12,12 +12,12 @@ use cw721::msg::{
     OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{
-    CollectionMetadata, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg, CREATOR,
-    MINTER,
-};
+use cw721::state::{CollectionMetadata, CREATOR, MINTER};
 use cw721::{query::Cw721Query, Approval, Expiration};
+use cw721_base::{
+    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionNftMetadataExtensionMsg,
+};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;

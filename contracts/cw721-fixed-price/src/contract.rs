@@ -13,7 +13,7 @@ use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
 use cw721::helpers::Cw721Contract;
 use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
-use cw721::state::{
+use cw721::{
     DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg,
 };
@@ -193,7 +193,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
     use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
-    use cw721::state::DefaultOptionNftMetadataExtensionMsg;
+    use cw721::DefaultOptionNftMetadataExtensionMsg;
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
