@@ -1,17 +1,25 @@
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Binary, Coin, Timestamp};
+use cosmwasm_std::{Addr, Binary, Coin, Decimal, Deps, Env, MessageInfo, Timestamp};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
+use url::Url;
 
-use crate::state::CollectionMetadata;
-use crate::Approval;
+use crate::error::Cw721ContractError;
+use crate::state::{
+    CollectionMetadata, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg, NftInfo, MAX_COLLECTION_DESCRIPTION_LENGTH,
+    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
+};
+use crate::{Approval, CollectionMetadataExtension, RoyaltyInfo, StateFactory};
 
 use cosmwasm_std::Empty;
 
 #[cw_serde]
 pub enum Cw721ExecuteMsg<
-    // Metadata defined in NftInfo (used for mint).
-    TNftMetadataExtension,
     // Message passed for updating metadata.
     TNftMetadataExtensionMsg,
     // Message passed for updating collection info extension.
@@ -25,7 +33,7 @@ pub enum Cw721ExecuteMsg<
 
     /// The creator is the only one eligible to update `CollectionMetadata`.
     UpdateCollectionMetadata {
-        collection_metadata: CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg>,
+        collection_metadata: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
     },
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft {
@@ -73,7 +81,7 @@ pub enum Cw721ExecuteMsg<
         /// Metadata JSON Schema
         token_uri: Option<String>,
         /// Any custom extension used by this contract
-        extension: TNftMetadataExtension,
+        extension: TNftMetadataExtensionMsg,
     },
 
     /// Burn an NFT the sender has access to
@@ -109,13 +117,13 @@ pub enum Cw721ExecuteMsg<
 }
 
 #[cw_serde]
-pub struct Cw721InstantiateMsg<TCollectionMetadataExtension> {
+pub struct Cw721InstantiateMsg<TCollectionMetadataExtensionMsg> {
     /// Name of the collection metadata
     pub name: String,
     /// Symbol of the collection metadata
     pub symbol: String,
     /// Optional extension of the collection metadata
-    pub collection_metadata_extension: TCollectionMetadataExtension,
+    pub collection_metadata_extension: TCollectionMetadataExtensionMsg,
 
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
@@ -268,20 +276,235 @@ pub enum Cw721MigrateMsg {
 }
 
 #[cw_serde]
-pub struct CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg> {
+pub struct CollectionMetadataMsg<TCollectionMetadataExtensionMsg> {
     pub name: Option<String>,
     pub symbol: Option<String>,
     pub extension: TCollectionMetadataExtensionMsg,
 }
 
 #[cw_serde]
-pub struct CollectionMetadataExtensionMsg<TRoyaltyInfo> {
+pub struct CollectionMetadataExtensionMsg<TRoyaltyInfoResponse> {
     pub description: Option<String>,
     pub image: Option<String>,
     pub external_link: Option<String>,
     pub explicit_content: Option<bool>,
     pub start_trading_time: Option<Timestamp>,
-    pub royalty_info: Option<TRoyaltyInfo>,
+    pub royalty_info: Option<TRoyaltyInfoResponse>,
+}
+
+impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
+    for CollectionMetadataExtensionMsg<RoyaltyInfoResponse>
+{
+    fn create(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
+    ) -> Result<CollectionMetadataExtension<RoyaltyInfo>, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        match current {
+            // Some: update existing metadata
+            Some(current) => {
+                let mut updated = current.clone();
+                if let Some(description) = &self.description {
+                    updated.description = description.clone();
+                }
+                if let Some(image) = &self.image {
+                    updated.image = image.clone();
+                }
+                if let Some(external_link) = &self.external_link {
+                    updated.external_link = Some(external_link.clone());
+                }
+                if let Some(explicit_content) = self.explicit_content {
+                    updated.explicit_content = Some(explicit_content);
+                }
+                if let Some(start_trading_time) = self.start_trading_time {
+                    updated.start_trading_time = Some(start_trading_time);
+                }
+                if let Some(royalty_info_response) = &self.royalty_info {
+                    match current.royalty_info.clone() {
+                        // Some: existing royalty info for update
+                        Some(current_royalty_info) => {
+                            updated.royalty_info = Some(royalty_info_response.create(
+                                deps,
+                                env,
+                                info,
+                                Some(&current_royalty_info),
+                            )?);
+                        }
+                        // None: no royalty info, so create new
+                        None => {
+                            updated.royalty_info =
+                                Some(royalty_info_response.create(deps, env, info, None)?);
+                        }
+                    }
+                }
+                Ok(updated)
+            }
+            // None: create new metadata
+            None => {
+                let royalty_info = match &self.royalty_info {
+                    // new royalty info
+                    Some(royalty_info) => Some(royalty_info.create(deps, env, info, None)?),
+                    // current royalty is none and new royalty is none
+                    None => None,
+                };
+                let new = CollectionMetadataExtension {
+                    description: self.description.clone().unwrap_or_default(),
+                    image: self.image.clone().unwrap_or_default(),
+                    external_link: self.external_link.clone(),
+                    explicit_content: self.explicit_content,
+                    start_trading_time: self.start_trading_time,
+                    royalty_info,
+                };
+                Ok(new)
+            }
+        }
+    }
+
+    fn validate(
+        &self,
+        _deps: Deps,
+        _env: &Env,
+        _info: &MessageInfo,
+        _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
+    ) -> Result<(), Cw721ContractError> {
+        // check description length, must not be empty and max 512 chars
+        if let Some(description) = &self.description {
+            if description.is_empty() {
+                return Err(Cw721ContractError::CollectionDescriptionEmpty {});
+            }
+            if description.len() > MAX_COLLECTION_DESCRIPTION_LENGTH as usize {
+                return Err(Cw721ContractError::CollectionDescriptionTooLong {
+                    max_length: MAX_COLLECTION_DESCRIPTION_LENGTH,
+                });
+            }
+        }
+
+        // check images are URLs
+        if let Some(image) = &self.image {
+            Url::parse(image)?;
+        }
+        if let Some(external_link) = &self.external_link {
+            Url::parse(external_link)?;
+        }
+        // no need to check royalty info, as it is checked during creation of RoyaltyInfo
+        Ok(())
+    }
+}
+
+impl StateFactory<DefaultOptionCollectionMetadataExtension>
+    for DefaultOptionCollectionMetadataExtensionMsg
+{
+    fn create(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&DefaultOptionCollectionMetadataExtension>,
+    ) -> Result<DefaultOptionCollectionMetadataExtension, Cw721ContractError> {
+        // no msg, so no validation needed
+        if self.is_none() {
+            return Ok(None);
+        }
+        let msg = self.clone().unwrap();
+        // current is a nested option in option, so we need to flatten it
+        let current = current.and_then(|c| c.as_ref());
+        let created_or_updated = msg.create(deps, env, info, current)?;
+        Ok(Some(created_or_updated))
+    }
+
+    fn validate(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&DefaultOptionCollectionMetadataExtension>,
+    ) -> Result<(), Cw721ContractError> {
+        // no msg, so no validation needed
+        if self.is_none() {
+            return Ok(());
+        }
+        let msg = self.clone().unwrap();
+        // current is a nested option in option, so we need to unwrap and then match it
+        // current is a nested option in option, so we need to flatten it
+        let current = current.and_then(|c| c.as_ref());
+        msg.validate(deps, env, info, current)
+    }
+}
+
+#[cw_serde]
+// This is both: a query response, and incoming message during instantiation and execution.
+pub struct RoyaltyInfoResponse {
+    pub payment_address: String,
+    pub share: Decimal,
+}
+
+impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
+    fn create(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&RoyaltyInfo>,
+    ) -> Result<RoyaltyInfo, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        match current {
+            // Some: update existing royalty info
+            Some(current) => {
+                let mut updated = current.clone();
+                updated.payment_address = deps.api.addr_validate(self.payment_address.as_str())?;
+                updated.share = self.share;
+                Ok(updated)
+            }
+            // None: create new royalty info
+            None => {
+                let new = RoyaltyInfo {
+                    payment_address: deps.api.addr_validate(self.payment_address.as_str())?,
+                    share: self.share,
+                };
+                Ok(new)
+            }
+        }
+    }
+
+    fn validate(
+        &self,
+        _deps: Deps,
+        _env: &Env,
+        _info: &MessageInfo,
+        current: Option<&RoyaltyInfo>,
+    ) -> Result<(), Cw721ContractError> {
+        if let Some(current_royalty_info) = current {
+            // check max share delta
+            if current_royalty_info.share < self.share {
+                let share_delta = self.share.abs_diff(current_royalty_info.share);
+
+                if share_delta > Decimal::percent(MAX_ROYALTY_SHARE_DELTA_PCT) {
+                    return Err(Cw721ContractError::InvalidRoyalties(format!(
+                        "Share increase cannot be greater than {MAX_ROYALTY_SHARE_DELTA_PCT}%"
+                    )));
+                }
+            }
+        }
+        // check max share
+        if self.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
+            return Err(Cw721ContractError::InvalidRoyalties(format!(
+                "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
+            )));
+        }
+        Ok(())
+    }
+}
+
+impl From<RoyaltyInfo> for RoyaltyInfoResponse {
+    fn from(royalty_info: RoyaltyInfo) -> Self {
+        Self {
+            payment_address: royalty_info.payment_address.to_string(),
+            share: royalty_info.share,
+        }
+    }
 }
 
 #[cw_serde]
@@ -348,4 +571,118 @@ pub struct TokensResponse {
 #[cw_serde]
 pub struct MinterResponse {
     pub minter: Option<String>,
+}
+
+#[cw_serde]
+pub struct NftInfoMsg<TNftMetadataExtensionMsg> {
+    /// The owner of the newly minted NFT
+    pub owner: String,
+    /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
+    pub approvals: Vec<Approval>,
+
+    /// Universal resource identifier for this NFT
+    /// Should point to a JSON file that conforms to the ERC721
+    /// Metadata JSON Schema
+    pub token_uri: Option<String>,
+
+    /// You can add any custom metadata here when you extend cw721-base
+    pub extension: TNftMetadataExtensionMsg,
+}
+
+impl<TNftMetadataExtension, TNftMetadataExtensionMsg> StateFactory<NftInfo<TNftMetadataExtension>>
+    for NftInfoMsg<TNftMetadataExtensionMsg>
+where
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+{
+    fn create(
+        &self,
+        deps: Deps,
+        env: &cosmwasm_std::Env,
+        info: &cosmwasm_std::MessageInfo,
+        optional_current: Option<&NftInfo<TNftMetadataExtension>>,
+    ) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError> {
+        self.validate(deps, env, info, optional_current)?;
+        match optional_current {
+            // Some: update only token uri and extension in existing NFT (but not owner and approvals)
+            Some(current) => {
+                let mut updated = current.clone();
+                if let Some(token_uri) = &self.token_uri {
+                    updated.token_uri = Some(token_uri.clone());
+                }
+                // update extension
+                let current_extension = optional_current.map(|c| &c.extension);
+                updated.extension = self.extension.create(deps, env, info, current_extension)?;
+                Ok(updated)
+            }
+            // None: create new NFT, note: msg is of same type, so we can clone it
+            None => {
+                let extension = self.extension.create(deps, env, info, None)?;
+                Ok(NftInfo {
+                    owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
+                    approvals: vec![],
+                    token_uri: self.token_uri.clone(),
+                    extension,
+                })
+            }
+        }
+    }
+
+    fn validate(
+        &self,
+        deps: Deps,
+        env: &cosmwasm_std::Env,
+        info: &cosmwasm_std::MessageInfo,
+        current: Option<&NftInfo<TNftMetadataExtension>>,
+    ) -> Result<(), Cw721ContractError> {
+        // validate token_uri is a URL
+        if let Some(token_uri) = &self.token_uri {
+            Url::parse(token_uri)?;
+        }
+        // validate extension
+        // current is a nested option in option, so we need to flatten it
+        let current_extension = current.and_then(|c| Some(&c.extension));
+        self.extension
+            .validate(deps, env, info, current_extension)?;
+        Ok(())
+    }
+}
+
+impl StateFactory<DefaultOptionNftMetadataExtension> for DefaultOptionNftMetadataExtensionMsg {
+    fn create(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&DefaultOptionNftMetadataExtension>,
+    ) -> Result<DefaultOptionNftMetadataExtension, Cw721ContractError> {
+        // no msg, so no validation needed
+        if self.is_none() {
+            return Ok(None);
+        }
+        let msg = self.clone().unwrap();
+        // current is a nested option in option, so we need to flatten it
+        let current = current.and_then(|c| c.as_ref());
+        let created_or_updated = msg.create(deps, env, info, current)?;
+        Ok(Some(created_or_updated))
+    }
+
+    fn validate(
+        &self,
+        deps: Deps,
+        env: &Env,
+        info: &MessageInfo,
+        current: Option<&DefaultOptionNftMetadataExtension>,
+    ) -> Result<(), Cw721ContractError> {
+        // no msg, so no validation needed
+        if self.is_none() {
+            return Ok(());
+        }
+        let msg = self.clone().unwrap();
+        // current is a nested option in option, so we need to unwrap and then match it
+        // current is a nested option in option, so we need to flatten it
+        let current = current.and_then(|c| c.as_ref());
+        msg.validate(deps, env, info, current)
+    }
 }

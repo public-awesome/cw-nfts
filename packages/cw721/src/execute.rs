@@ -11,53 +11,16 @@ use serde::Serialize;
 use crate::{
     error::Cw721ContractError,
     msg::{
-        CollectionMetadataExtensionMsg, CollectionNftMetadataMsg, Cw721ExecuteMsg,
-        Cw721InstantiateMsg, Cw721MigrateMsg,
+        CollectionMetadataExtensionMsg, CollectionMetadataMsg, Cw721ExecuteMsg,
+        Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
     },
     receiver::Cw721ReceiveMsg,
     state::{
         CollectionMetadata, Cw721Config, DefaultOptionCollectionMetadataExtension,
-        DefaultOptionNftMetadataExtension, EmptyMsg, NftInfo, CREATOR, MINTER,
+        DefaultOptionNftMetadataExtension, NftInfo, CREATOR, MINTER,
     },
-    Approval, RoyaltyInfo,
+    Approval, RoyaltyInfo, StateFactory,
 };
-
-pub trait Validate {
-    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError>;
-}
-
-impl Validate for Empty {
-    fn validate(&self, _deps: Deps) -> Result<(), Cw721ContractError> {
-        Ok(())
-    }
-}
-
-pub trait Update<T>: Sized {
-    fn update(&self, deps: Deps, msg: &T) -> Result<Self, Cw721ContractError>;
-}
-
-impl Update<EmptyMsg> for Empty {
-    fn update(
-        &self,
-        _deps: Deps,
-        _msg: &EmptyMsg,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        Ok(Empty::default())
-    }
-}
-
-impl Update<EmptyMsg> for Option<Empty> {
-    fn update(
-        &self,
-        _deps: Deps,
-        _msg: &EmptyMsg,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        match self {
-            Some(ext) => Ok(Some(ext.clone())),
-            None => Ok(Some(Empty::default())),
-        }
-    }
-}
 
 pub trait Cw721Execute<
     // Metadata defined in NftInfo (used for mint).
@@ -71,12 +34,12 @@ pub trait Cw721Execute<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TNftMetadataExtensionMsg> + Validate,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TCollectionMetadataExtensionMsg> + Validate,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     fn instantiate(
@@ -84,7 +47,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionMetadataExtension>,
+        msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
         contract_name: &str,
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
@@ -96,13 +59,16 @@ pub trait Cw721Execute<
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
+        let collection_metadata_extension =
+            msg.collection_metadata_extension
+                .create(deps.as_ref(), &env, &info, None)?;
         let collection_metadata = CollectionMetadata {
             name: msg.name,
             symbol: msg.symbol,
-            extension: msg.collection_metadata_extension,
+            extension: collection_metadata_extension,
             updated_at: env.block.time,
         };
-        collection_metadata.extension.validate(deps.as_ref())?;
+        collection_metadata.validate(deps.as_ref(), &env, &info)?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -136,11 +102,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtensionMsg,
-        >,
+        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionMetadata {
@@ -151,7 +113,7 @@ pub trait Cw721Execute<
                 owner,
                 token_uri,
                 extension,
-            } => self.mint(deps, info, token_id, owner, token_uri, extension),
+            } => self.mint(deps, env, info, token_id, owner, token_uri, extension),
             Cw721ExecuteMsg::Approve {
                 spender,
                 token_id,
@@ -417,8 +379,8 @@ pub trait Cw721Execute<
         &self,
         deps: DepsMut,
         info: MessageInfo,
-        _env: Env,
-        msg: CollectionNftMetadataMsg<TCollectionMetadataExtensionMsg>,
+        env: Env,
+        msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let config = Cw721Config::<
@@ -435,9 +397,12 @@ pub trait Cw721Execute<
         if let Some(symbol) = msg.symbol {
             collection_metadata.symbol = symbol;
         }
-        collection_metadata.extension = collection_metadata
-            .extension
-            .update(deps.as_ref(), &msg.extension)?;
+        collection_metadata.extension = msg.extension.create(
+            deps.as_ref(),
+            &env,
+            &info,
+            Some(&collection_metadata.extension),
+        )?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -447,30 +412,26 @@ pub trait Cw721Execute<
             .add_attribute("sender", info.sender))
     }
 
-    // fn update_collection_metadata_extension(
-    //     &self,
-    //     extension: TCollectionMetadataExtension,
-    //     msg: &TCollectionMetadataExtensionMsg,
-    // ) -> Result<TCollectionMetadataExtension, Cw721ContractError>;
-
+    #[allow(clippy::too_many_arguments)]
     fn mint(
         &self,
         deps: DepsMut,
+        env: Env,
         info: MessageInfo,
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TNftMetadataExtension,
+        extension: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         MINTER.assert_owner(deps.storage, &info.sender)?;
         // create the token
-        let token = NftInfo {
-            owner: deps.api.addr_validate(&owner)?,
+        let token_msg = NftInfoMsg {
+            owner: owner.clone(),
             approvals: vec![],
             token_uri: token_uri.clone(),
             extension,
         };
-        token.validate(deps.as_ref())?;
+        let token = token_msg.create(deps.as_ref(), &env, &info, None)?;
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
@@ -542,7 +503,7 @@ pub trait Cw721Execute<
     fn update_nft_info(
         &self,
         deps: DepsMut,
-        _env: Env,
+        env: Env,
         info: MessageInfo,
         token_id: String,
         token_uri: Option<String>,
@@ -556,11 +517,15 @@ pub trait Cw721Execute<
             Empty,
             Empty,
         >::default();
-        let mut nft_info = contract.nft_info.load(deps.storage, &token_id)?;
-        nft_info.token_uri = token_uri;
-        nft_info.validate(deps.as_ref())?;
-        nft_info.extension = nft_info.extension.update(deps.as_ref(), &msg)?;
-        contract.nft_info.save(deps.storage, &token_id, &nft_info)?;
+        let current_nft_info = contract.nft_info.load(deps.storage, &token_id)?;
+        let nft_info_msg = NftInfoMsg {
+            owner: current_nft_info.owner.to_string(),
+            approvals: current_nft_info.approvals.clone(),
+            token_uri: token_uri.clone(),
+            extension: msg,
+        };
+        let updated = nft_info_msg.create(deps.as_ref(), &env, &info, Some(&current_nft_info))?;
+        contract.nft_info.save(deps.storage, &token_id, &updated)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")
             .add_attribute("token_id", token_id))

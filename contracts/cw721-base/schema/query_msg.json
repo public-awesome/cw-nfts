@@ -396,7 +396,8 @@
       "additionalProperties": false
     },
     {
-      "description": "Do not use - dummy extension query, needed for inferring type parameter during compile",
+      "description": "Use NftInfo instead. No-op / NFT metadata query returning empty binary, needed for inferring type parameter during compile.\n\nNote: it may be extended in case there are use cases e.g. for specific NFT metadata query.",
+      "deprecated": true,
       "type": "object",
       "required": [
         "extension"
@@ -422,7 +423,32 @@
       "additionalProperties": false
     },
     {
-      "description": "Do not use - dummy collection info extension query, needed for inferring type parameter during compile",
+      "type": "object",
+      "required": [
+        "get_nft_metadata"
+      ],
+      "properties": {
+        "get_nft_metadata": {
+          "type": "object",
+          "properties": {
+            "msg": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/NftMetadata"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Use GetCollectionMetadata instead. No-op / collection metadata extension query returning empty binary, needed for inferring type parameter during compile\n\nNote: it may be extended in case there are use cases e.g. for specific collection metadata query.",
       "type": "object",
       "required": [
         "get_collection_metadata_extension"

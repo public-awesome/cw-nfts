@@ -2,9 +2,10 @@ use cosmwasm_std::CustomMsg;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::execute::{Cw721Execute, Update, Validate};
+use crate::execute::Cw721Execute;
 use crate::query::Cw721Query;
 use crate::state::Cw721Config;
+use crate::StateFactory;
 
 pub struct Cw721Contract<
     'a,
@@ -86,12 +87,12 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TNftMetadataExtensionMsg> + Validate,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TCollectionMetadataExtensionMsg> + Validate,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
 }

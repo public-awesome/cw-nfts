@@ -10,8 +10,8 @@ use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
-use crate::execute::{Update, Validate};
-use crate::msg::CollectionMetadataExtensionMsg;
+use crate::msg::{CollectionMetadataExtensionMsg, RoyaltyInfoResponse};
+use crate::StateFactory;
 
 /// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
@@ -24,12 +24,16 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 /// Default CollectionMetadataExtension using `Option<CollectionMetadataExtension<RoyaltyInfo>>`
 pub type DefaultOptionCollectionMetadataExtension =
     Option<CollectionMetadataExtension<RoyaltyInfo>>;
+pub type DefaultOptionCollectionMetadataExtensionMsg =
+    Option<CollectionMetadataExtensionMsg<RoyaltyInfoResponse>>;
 /// Default NftMetadataExtension using `Option<NftMetadata>`.
 pub type DefaultOptionNftMetadataExtension = Option<NftMetadata>;
+pub type DefaultOptionNftMetadataExtensionMsg = Option<NftMetadataMsg>;
 
 // explicit type for better distinction.
-pub type EmptyMsg = Empty;
 pub type NftMetadataMsg = NftMetadata;
+#[deprecated(since = "0.19.0", note = "Please use `NftMetadata` instead")]
+pub type MetaData = NftMetadata;
 
 // ----------------------
 // NOTE: below are max restrictions for default CollectionMetadataExtension
@@ -200,31 +204,6 @@ pub struct NftInfo<TNftMetadataExtension> {
     pub extension: TNftMetadataExtension,
 }
 
-impl Update<NftInfo<NftMetadata>> for NftInfo<NftMetadata> {
-    fn update(
-        &self,
-        deps: Deps,
-        msg: &NftInfo<NftMetadata>,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        msg.validate(deps)?;
-        Ok(msg.clone())
-    }
-}
-
-impl<TNftMetadataExtension> Validate for NftInfo<TNftMetadataExtension>
-where
-    TNftMetadataExtension: Validate,
-{
-    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError> {
-        // validate token_uri is a URL
-        if let Some(token_uri) = &self.token_uri {
-            Url::parse(token_uri)?;
-        }
-        // validate extension
-        self.extension.validate(deps)
-    }
-}
-
 #[cw_serde]
 pub struct Approval {
     /// Account that can transfer/send the token
@@ -267,6 +246,24 @@ pub struct CollectionMetadata<TCollectionMetadataExtension> {
     pub updated_at: Timestamp,
 }
 
+impl<TCollectionMetadataExtension> CollectionMetadata<TCollectionMetadataExtension> {
+    pub fn validate(
+        &self,
+        _deps: Deps,
+        _env: &cosmwasm_std::Env,
+        _info: &cosmwasm_std::MessageInfo,
+    ) -> Result<(), Cw721ContractError> {
+        // make sure the name and symbol are not empty
+        if self.name.is_empty() {
+            return Err(Cw721ContractError::CollectionNameEmpty {});
+        }
+        if self.symbol.is_empty() {
+            return Err(Cw721ContractError::CollectionSymbolEmpty {});
+        }
+        Ok(())
+    }
+}
+
 #[cw_serde]
 pub struct CollectionMetadataExtension<TRoyaltyInfo> {
     pub description: String,
@@ -277,157 +274,10 @@ pub struct CollectionMetadataExtension<TRoyaltyInfo> {
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
-impl From<CollectionMetadataExtensionMsg<RoyaltyInfo>>
-    for CollectionMetadataExtension<RoyaltyInfo>
-{
-    fn from(ext: CollectionMetadataExtensionMsg<RoyaltyInfo>) -> Self {
-        Self {
-            description: ext.description.unwrap_or_default(),
-            image: ext.image.unwrap_or_default(),
-            external_link: ext.external_link,
-            explicit_content: ext.explicit_content,
-            start_trading_time: ext.start_trading_time,
-            royalty_info: ext.royalty_info,
-        }
-    }
-}
-
-impl Validate for CollectionMetadataExtension<RoyaltyInfo> {
-    /// Validates only extension, not royalty info!
-    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError> {
-        // check description length, must not be empty and max 512 chars
-        if self.description.is_empty() {
-            return Err(Cw721ContractError::CollectionDescriptionEmpty {});
-        }
-        if self.description.len() > MAX_COLLECTION_DESCRIPTION_LENGTH as usize {
-            return Err(Cw721ContractError::CollectionDescriptionTooLong {
-                max_length: MAX_COLLECTION_DESCRIPTION_LENGTH,
-            });
-        }
-
-        // check images are URLs
-        Url::parse(&self.image)?;
-        if self.external_link.as_ref().is_some() {
-            Url::parse(self.external_link.as_ref().unwrap())?;
-        }
-        // validate royalty info
-        self.royalty_info
-            .as_ref()
-            .map_or(Ok(()), |r| r.validate(deps, None))?;
-
-        Ok(())
-    }
-}
-
-impl<T> Validate for Option<T>
-where
-    T: Validate,
-{
-    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError> {
-        match self {
-            Some(ext) => ext.validate(deps),
-            // no extension, nothing to validate
-            None => Ok(()),
-        }
-    }
-}
-
-impl Update<CollectionMetadataExtensionMsg<RoyaltyInfo>>
-    for CollectionMetadataExtension<RoyaltyInfo>
-{
-    fn update(
-        &self,
-        deps: Deps,
-        msg: &CollectionMetadataExtensionMsg<RoyaltyInfo>,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        let mut extension = self.clone();
-        // validate royalty before updating
-        if let Some(royalty_info) = &extension.royalty_info {
-            royalty_info.validate(deps, msg.royalty_info.clone())?;
-        }
-        extension.description = msg.description.clone().unwrap_or(self.description.clone());
-        extension.image = msg.image.clone().unwrap_or(self.image.clone());
-        extension.external_link = msg.external_link.clone().or(self.external_link.clone());
-        extension.explicit_content = msg.explicit_content.or(self.explicit_content);
-        extension.start_trading_time = msg.start_trading_time.or(self.start_trading_time);
-        extension.royalty_info = msg.royalty_info.clone().or(self.royalty_info.clone());
-        extension.validate(deps)?;
-
-        Ok(extension)
-    }
-}
-
-impl Update<CollectionMetadataExtensionMsg<RoyaltyInfo>>
-    for DefaultOptionCollectionMetadataExtension
-{
-    fn update(
-        &self,
-        deps: Deps,
-        msg: &CollectionMetadataExtensionMsg<RoyaltyInfo>,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        match self {
-            // update extension
-            Some(ext) => {
-                let updated = ext.update(deps, msg)?;
-                Ok(Some(updated))
-            }
-            // create extension
-            None => {
-                let extension: CollectionMetadataExtension<RoyaltyInfo> = From::from(msg.clone());
-                extension.validate(deps)?;
-                Ok(Some(extension))
-            }
-        }
-    }
-}
-
 #[cw_serde]
 pub struct RoyaltyInfo {
     pub payment_address: Addr,
     pub share: Decimal,
-}
-
-impl RoyaltyInfo {
-    // Compares the new royalty info with the current one and checks if the share is valid.
-    pub fn validate(
-        &self,
-        deps: Deps,
-        new_royalty_info: Option<RoyaltyInfo>,
-    ) -> Result<(), Cw721ContractError> {
-        match new_royalty_info {
-            Some(new_royalty_info) => {
-                deps.api
-                    .addr_validate(&new_royalty_info.payment_address.to_string())?;
-                // check max share delta
-                if self.share < new_royalty_info.share {
-                    let share_delta = new_royalty_info.share.abs_diff(self.share);
-
-                    if share_delta > Decimal::percent(MAX_ROYALTY_SHARE_DELTA_PCT) {
-                        return Err(Cw721ContractError::InvalidRoyalties(format!(
-                            "Share increase cannot be greater than {MAX_ROYALTY_SHARE_DELTA_PCT}%"
-                        )));
-                    }
-                }
-                // check max share
-                if new_royalty_info.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
-                    return Err(Cw721ContractError::InvalidRoyalties(format!(
-                        "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
-                    )));
-                }
-                Ok(())
-            }
-            // There is no new royalty info, so we only need to check if the share is valid.
-            None => {
-                deps.api.addr_validate(&self.payment_address.to_string())?;
-                if self.share > Decimal::percent(MAX_ROYALTY_SHARE_PCT) {
-                    return Err(Cw721ContractError::InvalidRoyalties(format!(
-                        "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
-                    )));
-                }
-                Ok(())
-            }
-        }
-    }
 }
 
 // see: https://docs.opensea.io/docs/metadata-standards
@@ -445,8 +295,60 @@ pub struct NftMetadata {
     pub youtube_url: Option<String>,
 }
 
-impl Validate for NftMetadata {
-    fn validate(&self, deps: Deps) -> Result<(), Cw721ContractError> {
+impl StateFactory<NftMetadata> for NftMetadataMsg {
+    fn create(
+        &self,
+        deps: Deps,
+        env: &cosmwasm_std::Env,
+        info: &cosmwasm_std::MessageInfo,
+        current: Option<&NftMetadata>,
+    ) -> Result<NftMetadata, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        match current {
+            // Some: update existing metadata
+            Some(current) => {
+                let mut updated = current.clone();
+                if let Some(image) = &self.image {
+                    updated.image = Some(image.clone());
+                }
+                if let Some(image_data) = &self.image_data {
+                    updated.image_data = Some(image_data.clone());
+                }
+                if let Some(external_url) = &self.external_url {
+                    updated.external_url = Some(external_url.clone());
+                }
+                if let Some(description) = &self.description {
+                    updated.description = Some(description.clone());
+                }
+                if let Some(name) = &self.name {
+                    updated.name = Some(name.clone());
+                }
+                if let Some(attributes) = &self.attributes {
+                    updated.attributes = Some(attributes.clone());
+                }
+                if let Some(background_color) = &self.background_color {
+                    updated.background_color = Some(background_color.clone());
+                }
+                if let Some(animation_url) = &self.animation_url {
+                    updated.animation_url = Some(animation_url.clone());
+                }
+                if let Some(youtube_url) = &self.youtube_url {
+                    updated.youtube_url = Some(youtube_url.clone());
+                }
+                Ok(updated)
+            }
+            // None: create new metadata, note: msg is of same type as metadata, so we can clone it
+            None => Ok(self.clone()),
+        }
+    }
+
+    fn validate(
+        &self,
+        _deps: Deps,
+        _env: &cosmwasm_std::Env,
+        _info: &cosmwasm_std::MessageInfo,
+        _current: Option<&NftMetadata>,
+    ) -> Result<(), Cw721ContractError> {
         // check URLs
         if let Some(image) = &self.image {
             Url::parse(image)?;
@@ -498,47 +400,6 @@ impl Validate for NftMetadata {
             }
         }
         Ok(())
-    }
-}
-
-impl Update<NftMetadataMsg> for NftMetadata {
-    fn update(&self, deps: Deps, msg: &NftMetadataMsg) -> Result<Self, Cw721ContractError> {
-        msg.validate(deps)?;
-        let mut metadata = self.clone();
-        metadata.image = msg.image.clone().or(self.image.clone());
-        metadata.image_data = msg.image_data.clone().or(self.image_data.clone());
-        metadata.external_url = msg.external_url.clone().or(self.external_url.clone());
-        metadata.description = msg.description.clone().or(self.description.clone());
-        metadata.name = msg.name.clone().or(self.name.clone());
-        metadata.attributes = msg.attributes.clone().or(self.attributes.clone());
-        metadata.background_color = msg
-            .background_color
-            .clone()
-            .or(self.background_color.clone());
-        metadata.animation_url = msg.animation_url.clone().or(self.animation_url.clone());
-        metadata.youtube_url = msg.youtube_url.clone().or(self.youtube_url.clone());
-        Ok(metadata)
-    }
-}
-
-impl Update<NftMetadataMsg> for DefaultOptionNftMetadataExtension {
-    fn update(
-        &self,
-        deps: Deps,
-        msg: &NftMetadataMsg,
-    ) -> Result<Self, crate::error::Cw721ContractError> {
-        match self {
-            // update metadata
-            Some(ext) => {
-                let updated = ext.update(deps, msg)?;
-                Ok(Some(updated))
-            }
-            // create metadata
-            None => {
-                msg.validate(deps)?;
-                Ok(Some(msg.clone()))
-            }
-        }
     }
 }
 

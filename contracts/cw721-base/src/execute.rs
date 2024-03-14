@@ -1,6 +1,7 @@
 use cosmwasm_std::CustomMsg;
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::execute::*;
+use cw721::StateFactory;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -30,12 +31,12 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TNftMetadataExtensionMsg> + Validate,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TCollectionMetadataExtensionMsg> + Validate,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
 }

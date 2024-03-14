@@ -33,8 +33,8 @@ pub mod entry {
     use cw721::{
         msg::{CollectionMetadataExtensionMsg, Cw721ExecuteMsg},
         state::{
-            DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
         },
         RoyaltyInfo,
     };
@@ -45,13 +45,13 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
+        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.instantiate(deps, env, info, msg)
@@ -63,16 +63,15 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
         >,
     ) -> Result<Response, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.execute(deps, env, info, msg)
@@ -143,8 +142,8 @@ mod tests {
             mock_info("mrt", &[]),
             InstantiateMsg {
                 expiration_days: 1,
-                name: "".into(),
-                symbol: "".into(),
+                name: "name".into(),
+                symbol: "symbol".into(),
                 collection_metadata_extension: None,
                 minter: Some("minter".into()),
                 creator: Some("creator".into()),
@@ -152,7 +151,6 @@ mod tests {
             },
         )
         .unwrap();
-
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(
             version,

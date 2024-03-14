@@ -1,11 +1,8 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::{
-    msg::CollectionMetadataExtensionMsg,
-    state::{
-        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadataMsg,
-    },
-    RoyaltyInfo,
+use cw721::state::{
+    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
 };
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
@@ -23,9 +20,9 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     'a,
     DefaultOptionNftMetadataExtension,
-    NftMetadataMsg,
+    DefaultOptionNftMetadataExtensionMsg,
     DefaultOptionCollectionMetadataExtension,
-    CollectionMetadataExtensionMsg<RoyaltyInfo>,
+    DefaultOptionCollectionMetadataExtensionMsg,
     Empty,
 >;
 
@@ -41,13 +38,16 @@ pub mod entry {
     use cw721::error::Cw721ContractError;
     use cw721::execute::Cw721Execute;
     use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+    use cw721::state::{
+        DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
+    };
 
     #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
+        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
@@ -90,9 +90,8 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;
@@ -113,7 +112,7 @@ pub mod entry {
                     token_uri,
                     extension,
                 } => Cw721NonTransferableContract::default()
-                    .mint(deps, info, token_id, owner, token_uri, extension),
+                    .mint(deps, env, info, token_id, owner, token_uri, extension),
                 _ => Err(Cw721ContractError::Ownership(
                     cw721_base::OwnershipError::NotOwner,
                 )),

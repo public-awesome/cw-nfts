@@ -37,16 +37,12 @@ pub mod entry {
     use cw721::{
         error::Cw721ContractError,
         execute::Cw721Execute,
-        msg::{
-            CollectionMetadataExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
-            Cw721QueryMsg,
-        },
+        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
         query::Cw721Query,
         state::{
-            DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
         },
-        RoyaltyInfo,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -55,13 +51,13 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
+        msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.instantiate(deps, env, info, msg, CONTRACT_NAME, CONTRACT_VERSION)
@@ -73,16 +69,15 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
         >,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.execute(deps, env, info, msg)
@@ -99,9 +94,9 @@ pub mod entry {
     ) -> StdResult<Binary> {
         let contract = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            Empty,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.query(deps, env, msg)
@@ -115,9 +110,9 @@ pub mod entry {
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            NftMetadataMsg,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)

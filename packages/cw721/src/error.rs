@@ -29,6 +29,12 @@ pub enum Cw721ContractError {
     #[error("No withdraw address set")]
     NoWithdrawAddress {},
 
+    #[error("Collection name must not be empty")]
+    CollectionNameEmpty {},
+
+    #[error("Collection symbol must not be empty")]
+    CollectionSymbolEmpty {},
+
     #[error("Collection description must not be empty")]
     CollectionDescriptionEmpty {},
 

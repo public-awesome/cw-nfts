@@ -7,7 +7,8 @@ use crate::{
     },
     query::Cw721Query,
     state::{
-        DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, NftMetadata,
+        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, NftMetadata,
         NftMetadataMsg, Trait,
     },
     RoyaltyInfo,
@@ -33,13 +34,13 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtension>,
+    msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
@@ -51,15 +52,14 @@ pub fn execute(
     info: MessageInfo,
     msg: Cw721ExecuteMsg<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
     >,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     contract.execute(deps, env, info, msg)
@@ -72,7 +72,7 @@ pub fn query(
 ) -> StdResult<Binary> {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
-        Empty,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
         CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
@@ -87,9 +87,9 @@ pub fn migrate(
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
@@ -157,7 +157,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
             token_id: token_id.clone(),
             owner: sender.to_string(),
             token_uri: None,
@@ -173,7 +173,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
             recipient: "burner".to_string(),
             token_id: token_id.clone(),
         },
@@ -187,7 +187,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         Addr::unchecked("burner"),
         cw721,
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Burn { token_id },
+        &Cw721ExecuteMsg::<Empty, Empty>::Burn { token_id },
         &[],
     )
     .unwrap();
@@ -223,7 +223,7 @@ fn test_operator() {
     app.execute_contract(
         minter,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: None,
@@ -238,7 +238,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::ApproveAll {
+        &Cw721ExecuteMsg::<Empty, Empty>::ApproveAll {
             operator: other.to_string(),
             expires: Some(Expiration::Never {}),
         },
@@ -250,7 +250,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -274,7 +274,7 @@ fn test_operator() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -289,7 +289,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -313,7 +313,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -338,7 +338,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -350,7 +350,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::RevokeAll {
+        &Cw721ExecuteMsg::<Empty, Empty>::RevokeAll {
             operator: other.to_string(),
         },
         &[],
@@ -362,7 +362,7 @@ fn test_operator() {
         .execute_contract(
             other.clone(),
             cw721,
-            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -433,7 +433,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -548,7 +548,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -658,7 +658,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -773,7 +773,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -883,7 +883,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -998,7 +998,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -1133,7 +1133,7 @@ fn test_update_nft_metadata() {
     app.execute_contract(
         minter,
         cw721.clone(),
-        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::Mint {
+        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
@@ -1156,10 +1156,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: Some("".to_string()),
                     description: None,
                     image: None,
@@ -1169,7 +1169,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1183,10 +1183,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: Some("invalid".to_string()),
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1196,7 +1196,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1213,10 +1213,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: Some("invalid".to_string()),
@@ -1226,7 +1226,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1243,10 +1243,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1256,7 +1256,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1273,10 +1273,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1286,7 +1286,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: Some("invalid".to_string()),
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1303,10 +1303,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1316,7 +1316,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: Some("invalid".to_string()),
-                },
+                }),
             },
             &[],
         )
@@ -1333,10 +1333,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1346,7 +1346,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1360,10 +1360,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: Some("".to_string()),
                     image: None,
@@ -1373,7 +1373,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1387,10 +1387,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: Some("".to_string()),
                     description: None,
                     image: None,
@@ -1400,7 +1400,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1414,10 +1414,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1427,7 +1427,7 @@ fn test_update_nft_metadata() {
                     background_color: Some("".to_string()),
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1441,10 +1441,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1458,7 +1458,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1472,10 +1472,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1489,7 +1489,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1503,10 +1503,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
-                extension: NftMetadataMsg {
+                extension: Some(NftMetadataMsg {
                     name: None,
                     description: None,
                     image: None,
@@ -1520,7 +1520,7 @@ fn test_update_nft_metadata() {
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
-                },
+                }),
             },
             &[],
         )
@@ -1548,10 +1548,10 @@ fn test_update_nft_metadata() {
     app.execute_contract(
         creator.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtension, NftMetadataMsg, Empty>::UpdateNftInfo {
+        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
             token_id: "1".to_string(),
             token_uri: Some("ipfs://foo.bar/metadata2.json".to_string()),
-            extension: new_nft_metadata.clone(),
+            extension: Some(new_nft_metadata.clone()),
         },
         &[],
     )

@@ -1,8 +1,8 @@
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721::{
-    execute::{Cw721Execute, Update, Validate},
+    execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    Expiration,
+    Expiration, StateFactory,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -29,12 +29,12 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TNftMetadataExtensionMsg> + Validate,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension:
-        Serialize + DeserializeOwned + Clone + Update<TCollectionMetadataExtensionMsg> + Validate,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCollectionMetadataExtensionMsg:
+        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     // -- instantiate --
@@ -43,7 +43,7 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<TCollectionMetadataExtension>,
+        msg: InstantiateMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         if msg.expiration_days == 0 {
             return Err(ContractError::MinExpiration {});
@@ -81,11 +81,7 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtensionMsg,
-        >,
+        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TNftMetadataExtension,
@@ -139,14 +135,14 @@ where
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TNftMetadataExtension,
+        extension: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let mint_timstamp = env.block.time;
         self.mint_timestamps
             .save(deps.storage, &token_id, &mint_timstamp)?;
         let res = self
             .base_contract
-            .mint(deps, info, token_id, owner, token_uri, extension)?
+            .mint(deps, env, info, token_id, owner, token_uri, extension)?
             .add_attribute("mint_timestamp", mint_timstamp.to_string());
         Ok(res)
     }

@@ -1,8 +1,10 @@
 use std::{env::current_dir, fs::create_dir_all};
 
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
-use cosmwasm_std::Empty;
-use cw721::state::{DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension};
+use cw721::state::{
+    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
+};
 
 use cw721_expiration::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
@@ -21,9 +23,8 @@ fn main() {
     export_schema_with_title(
         &schema_for!(
             ExecuteMsg::<
-                DefaultOptionNftMetadataExtension,
-                Empty,
-                DefaultOptionCollectionMetadataExtension,
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
             >
         ),
         &out_dir,

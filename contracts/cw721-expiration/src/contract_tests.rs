@@ -8,14 +8,15 @@ use cosmwasm_std::{
 
 use cw721::error::Cw721ContractError;
 use cw721::msg::{
-    ApprovalResponse, CollectionMetadataExtensionMsg, Cw721ExecuteMsg, NftInfoResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
 use cw721::state::{
-    CollectionMetadata, DefaultOptionCollectionMetadataExtension, NftMetadataMsg, CREATOR, MINTER,
+    CollectionMetadata, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg, CREATOR,
+    MINTER,
 };
-use cw721::RoyaltyInfo;
 use cw721::{query::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
@@ -35,16 +36,16 @@ fn setup_contract(
 ) -> Cw721ExpirationContract<
     'static,
     DefaultOptionNftMetadataExtension,
-    NftMetadataMsg,
+    DefaultOptionNftMetadataExtensionMsg,
     DefaultOptionCollectionMetadataExtension,
-    CollectionMetadataExtensionMsg<RoyaltyInfo>,
+    DefaultOptionCollectionMetadataExtensionMsg,
     Empty,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     let msg = InstantiateMsg {
@@ -67,9 +68,9 @@ fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
-        Option<Empty>,
-        Empty,
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
 
@@ -77,7 +78,7 @@ fn proper_instantiation() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: Some(Empty {}),
+        collection_metadata_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -105,7 +106,7 @@ fn proper_instantiation() {
         CollectionMetadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Some(Empty {}),
+            extension: None,
             updated_at: env.block.time,
         }
     );
@@ -136,9 +137,9 @@ fn proper_instantiation_with_collection_metadata() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
         DefaultOptionNftMetadataExtension,
-        NftMetadataMsg,
-        Option<Empty>,
-        Empty,
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
 
@@ -146,7 +147,7 @@ fn proper_instantiation_with_collection_metadata() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: Some(Empty {}),
+        collection_metadata_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -174,7 +175,7 @@ fn proper_instantiation_with_collection_metadata() {
         CollectionMetadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Some(Empty {}),
+            extension: None,
             updated_at: env.block.time,
         }
     );

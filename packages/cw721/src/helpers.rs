@@ -42,11 +42,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
-        >,
+        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtension>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
