@@ -9,10 +9,8 @@ use url::Url;
 
 use crate::error::Cw721ContractError;
 use crate::state::{
-    CollectionMetadata, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg, NftInfo, MAX_COLLECTION_DESCRIPTION_LENGTH,
-    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
+    CollectionMetadata, NftInfo, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
+    MAX_ROYALTY_SHARE_PCT,
 };
 use crate::{Approval, CollectionMetadataExtension, RoyaltyInfo, StateFactory};
 
@@ -394,46 +392,6 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
     }
 }
 
-impl StateFactory<DefaultOptionCollectionMetadataExtension>
-    for DefaultOptionCollectionMetadataExtensionMsg
-{
-    fn create(
-        &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
-        current: Option<&DefaultOptionCollectionMetadataExtension>,
-    ) -> Result<DefaultOptionCollectionMetadataExtension, Cw721ContractError> {
-        // no msg, so no validation needed
-        if self.is_none() {
-            return Ok(None);
-        }
-        let msg = self.clone().unwrap();
-        // current is a nested option in option, so we need to flatten it
-        let current = current.and_then(|c| c.as_ref());
-        let created_or_updated = msg.create(deps, env, info, current)?;
-        Ok(Some(created_or_updated))
-    }
-
-    fn validate(
-        &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
-        current: Option<&DefaultOptionCollectionMetadataExtension>,
-    ) -> Result<(), Cw721ContractError> {
-        // no msg, so no validation needed
-        if self.is_none() {
-            return Ok(());
-        }
-        let msg = self.clone().unwrap();
-        // current is a nested option in option, so we need to unwrap and then match it
-        // current is a nested option in option, so we need to flatten it
-        let current = current.and_then(|c| c.as_ref());
-        msg.validate(deps, env, info, current)
-    }
-}
-
 #[cw_serde]
 // This is both: a query response, and incoming message during instantiation and execution.
 pub struct RoyaltyInfoResponse {
@@ -649,14 +607,18 @@ where
     }
 }
 
-impl StateFactory<DefaultOptionNftMetadataExtension> for DefaultOptionNftMetadataExtensionMsg {
+impl<TMsg, TState> StateFactory<Option<TState>> for Option<TMsg>
+where
+    TState: Serialize + DeserializeOwned + Clone,
+    TMsg: Serialize + DeserializeOwned + Clone + StateFactory<TState>,
+{
     fn create(
         &self,
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        current: Option<&DefaultOptionNftMetadataExtension>,
-    ) -> Result<DefaultOptionNftMetadataExtension, Cw721ContractError> {
+        current: Option<&Option<TState>>,
+    ) -> Result<Option<TState>, Cw721ContractError> {
         // no msg, so no validation needed
         if self.is_none() {
             return Ok(None);
@@ -673,7 +635,7 @@ impl StateFactory<DefaultOptionNftMetadataExtension> for DefaultOptionNftMetadat
         deps: Deps,
         env: &Env,
         info: &MessageInfo,
-        current: Option<&DefaultOptionNftMetadataExtension>,
+        current: Option<&Option<TState>>,
     ) -> Result<(), Cw721ContractError> {
         // no msg, so no validation needed
         if self.is_none() {
