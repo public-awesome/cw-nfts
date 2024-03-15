@@ -17,7 +17,7 @@ use crate::error::Cw721ContractError;
 /// This will be removed once the `CustomMsg` trait is moved to the `cosmwasm_std` crate: https://github.com/CosmWasm/cosmwasm/issues/2056
 pub trait Cw721CustomMsg: Serialize + Clone + Debug + PartialEq + JsonSchema {}
 
-pub trait Cw721State: Serialize + DeserializeOwned + Clone {}
+pub trait Cw721State: Serialize + DeserializeOwned + Clone + Debug {}
 
 impl Cw721State for Empty {}
 impl<T> Cw721State for Option<T> where T: Cw721State {}
