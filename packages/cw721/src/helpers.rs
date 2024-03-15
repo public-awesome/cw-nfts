@@ -6,18 +6,18 @@ use crate::msg::{
 };
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
 use crate::state::CollectionMetadata;
+use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::Approval;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, Empty, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 #[cw_serde]
 pub struct Cw721Contract<
     TNftMetadataExtension,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg,
     TCollectionMetadataExtension,
 >(
     pub Addr,
@@ -27,14 +27,12 @@ pub struct Cw721Contract<
 );
 
 #[allow(dead_code)]
-impl<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-        TCollectionMetadataExtension,
-    > Cw721Contract<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
+impl<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
+    Cw721Contract<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TNftMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()

@@ -5,12 +5,11 @@ use cosmwasm_std::{Addr, BlockInfo, Decimal, Deps, StdResult, Storage, Timestamp
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
-use crate::{NftMetadataMsg, StateFactory};
+use crate::traits::{Cw721CustomMsg, Cw721State};
+use crate::{traits::StateFactory, NftMetadataMsg};
 
 /// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
@@ -46,10 +45,10 @@ pub struct Cw721Config<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
     pub collection_metadata: Item<'a, CollectionMetadata<TCollectionMetadataExtension>>,
@@ -87,10 +86,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self::new(
@@ -121,10 +120,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn new(
         collection_metadata_key: &'a str,
@@ -205,7 +204,7 @@ impl Approval {
 
 pub struct TokenIndexes<'a, TNftMetadataExtension>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     pub owner: MultiIndex<'a, Addr, NftInfo<TNftMetadataExtension>, String>,
 }
@@ -213,7 +212,7 @@ where
 impl<'a, TNftMetadataExtension> IndexList<NftInfo<TNftMetadataExtension>>
     for TokenIndexes<'a, TNftMetadataExtension>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     fn get_indexes(
         &'_ self,
@@ -259,11 +258,16 @@ pub struct CollectionMetadataExtension<TRoyaltyInfo> {
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
+impl Cw721State for CollectionMetadataExtension<RoyaltyInfo> {}
+
 #[cw_serde]
 pub struct RoyaltyInfo {
     pub payment_address: Addr,
     pub share: Decimal,
 }
+
+impl Cw721State for RoyaltyInfo {}
+impl Cw721CustomMsg for RoyaltyInfo {}
 
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
@@ -279,6 +283,9 @@ pub struct NftMetadata {
     pub animation_url: Option<String>,
     pub youtube_url: Option<String>,
 }
+
+impl Cw721State for NftMetadata {}
+impl Cw721CustomMsg for NftMetadata {}
 
 impl StateFactory<NftMetadata> for NftMetadataMsg {
     fn create(

@@ -1,15 +1,14 @@
+use crate::{
+    error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract, CONTRACT_NAME,
+    CONTRACT_VERSION,
+};
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721_base::{
     execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    Expiration, StateFactory,
-};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
-use crate::{
-    error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract, CONTRACT_NAME,
-    CONTRACT_VERSION,
+    traits::StateFactory,
+    traits::{Cw721CustomMsg, Cw721State},
+    Expiration,
 };
 
 impl<
@@ -29,12 +28,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     // -- instantiate --

@@ -4,8 +4,6 @@ use cosmwasm_std::{
 use cw_ownable::Ownership;
 use cw_storage_plus::Bound;
 use cw_utils::{maybe_addr, Expiration};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use crate::{
     msg::{
@@ -14,6 +12,7 @@ use crate::{
         TokensResponse,
     },
     state::{Approval, CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
+    traits::Cw721State,
 };
 
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -25,8 +24,8 @@ pub trait Cw721Query<
     // Extension defined in CollectionMetadata.
     TCollectionMetadataExtension,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State,
 {
     fn query(
         &self,
@@ -504,7 +503,7 @@ pub fn humanize_approvals<TNftMetadataExtension>(
     include_expired_approval: bool,
 ) -> Vec<Approval>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     nft_info
         .approvals

@@ -1,11 +1,10 @@
 use cosmwasm_std::CustomMsg;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use crate::execute::Cw721Execute;
 use crate::query::Cw721Query;
 use crate::state::Cw721Config;
-use crate::StateFactory;
+use crate::traits::StateFactory;
+use crate::traits::{Cw721CustomMsg, Cw721State};
 
 pub struct Cw721Contract<
     'a,
@@ -20,10 +19,10 @@ pub struct Cw721Contract<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     pub config: Cw721Config<
         'a,
@@ -51,10 +50,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self {
@@ -87,12 +86,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
 }
@@ -114,10 +111,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
 }

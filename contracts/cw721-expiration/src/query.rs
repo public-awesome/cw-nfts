@@ -4,8 +4,7 @@ use cw721_base::msg::{
     TokensResponse,
 };
 use cw721_base::query::Cw721Query;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use cw721_base::traits::{Cw721CustomMsg, Cw721State};
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
@@ -26,10 +25,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
     pub fn query(

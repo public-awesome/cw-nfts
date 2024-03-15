@@ -161,9 +161,9 @@ mod tests {
             Cw721ExpirationContract::<
                 DefaultOptionNftMetadataExtension,
                 Empty,
-                Empty,
                 DefaultOptionCollectionMetadataExtension,
                 CollectionMetadataExtensionMsg<RoyaltyInfo>,
+                Empty,
             >::default()
             .expiration_days
             .load(deps.as_ref().storage)

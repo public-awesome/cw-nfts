@@ -1,12 +1,7 @@
 use cosmwasm_std::Timestamp;
-
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721::state::*;
-
+use cw721_base::traits::{Cw721CustomMsg, Cw721State};
 use cw721_base::Cw721Contract;
 use cw_storage_plus::{Item, Map};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 pub struct Cw721ExpirationContract<
     'a,
@@ -21,10 +16,10 @@ pub struct Cw721ExpirationContract<
     TCollectionMetadataExtensionMsg,
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
@@ -54,10 +49,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self {

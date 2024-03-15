@@ -1,8 +1,6 @@
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::state::*;
-
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use cw721::traits::{Cw721CustomMsg, Cw721State};
 
 #[deprecated(since = "0.19.0", note = "Please use `NftInfo`")]
 pub type TokenInfo<TNftMetadataExtension> = NftInfo<TNftMetadataExtension>;
@@ -19,10 +17,10 @@ pub struct Cw721Contract<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     pub config: Cw721Config<
         'a,
@@ -50,10 +48,10 @@ impl<
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self {

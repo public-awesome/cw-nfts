@@ -1,6 +1,3 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Binary, Coin, Decimal, Deps, Env, MessageInfo, Timestamp};
 use cw_ownable::{Action, Ownership};
@@ -12,7 +9,8 @@ use crate::state::{
     CollectionMetadata, NftInfo, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
     MAX_ROYALTY_SHARE_PCT,
 };
-use crate::{Approval, CollectionMetadataExtension, RoyaltyInfo, StateFactory};
+use crate::traits::{Cw721CustomMsg, Cw721State};
+use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, RoyaltyInfo};
 
 use cosmwasm_std::Empty;
 
@@ -290,6 +288,11 @@ pub struct CollectionMetadataExtensionMsg<TRoyaltyInfoResponse> {
     pub royalty_info: Option<TRoyaltyInfoResponse>,
 }
 
+impl<TRoyaltyInfoResponse> Cw721CustomMsg for CollectionMetadataExtensionMsg<TRoyaltyInfoResponse> where
+    TRoyaltyInfoResponse: Cw721CustomMsg
+{
+}
+
 impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
     for CollectionMetadataExtensionMsg<RoyaltyInfoResponse>
 {
@@ -398,6 +401,8 @@ pub struct RoyaltyInfoResponse {
     pub payment_address: String,
     pub share: Decimal,
 }
+
+impl Cw721CustomMsg for RoyaltyInfoResponse {}
 
 impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
     fn create(
@@ -550,9 +555,8 @@ pub struct NftInfoMsg<TNftMetadataExtensionMsg> {
 impl<TNftMetadataExtension, TNftMetadataExtensionMsg> StateFactory<NftInfo<TNftMetadataExtension>>
     for NftInfoMsg<TNftMetadataExtensionMsg>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
 {
     fn create(
         &self,
@@ -609,8 +613,8 @@ where
 
 impl<TMsg, TState> StateFactory<Option<TState>> for Option<TMsg>
 where
-    TState: Serialize + DeserializeOwned + Clone,
-    TMsg: Serialize + DeserializeOwned + Clone + StateFactory<TState>,
+    TState: Cw721State,
+    TMsg: Cw721CustomMsg + StateFactory<TState>,
 {
     fn create(
         &self,

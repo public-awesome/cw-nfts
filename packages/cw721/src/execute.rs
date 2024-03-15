@@ -5,8 +5,6 @@ use cosmwasm_std::{
 use cw_ownable::{none_or, Action, Ownership, OwnershipError};
 use cw_storage_plus::Item;
 use cw_utils::Expiration;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use crate::{
     error::Cw721ContractError,
@@ -16,8 +14,10 @@ use crate::{
     },
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
+    traits::StateFactory,
+    traits::{Cw721CustomMsg, Cw721State},
     Approval, DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-    RoyaltyInfo, StateFactory,
+    RoyaltyInfo,
 };
 
 pub trait Cw721Execute<
@@ -32,12 +32,10 @@ pub trait Cw721Execute<
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TNftMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionMetadataExtensionMsg:
-        Serialize + DeserializeOwned + Clone + StateFactory<TCollectionMetadataExtension>,
+    TNftMetadataExtension: Cw721State,
+    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     fn instantiate(
@@ -615,7 +613,7 @@ fn _transfer_nft<TNftMetadataExtension>(
     token_id: &str,
 ) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
@@ -640,7 +638,7 @@ fn _update_approvals<TNftMetadataExtension>(
     expires: Option<Expiration>,
 ) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
@@ -678,7 +676,7 @@ pub fn check_can_approve<TNftMetadataExtension>(
     token: &NftInfo<TNftMetadataExtension>,
 ) -> Result<(), Cw721ContractError>
 where
-    TNftMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TNftMetadataExtension: Cw721State,
 {
     // owner can approve
     if token.owner == info.sender {
