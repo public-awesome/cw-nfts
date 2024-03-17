@@ -52,8 +52,8 @@ fn setup_contract(
     let res = contract
         .instantiate(
             deps,
-            mock_env(),
-            info,
+            &mock_env(),
+            &info,
             msg,
             "contract_name",
             "contract_version",
@@ -89,8 +89,8 @@ fn test_instantiate() {
     let res = contract
         .instantiate(
             deps.as_mut(),
-            env.clone(),
-            info,
+            &env,
+            &info,
             msg,
             "contract_name",
             "contract_version",
@@ -176,15 +176,15 @@ fn test_instantiate_with_collection_metadata() {
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
-    let collection_metadata = mock_info("creator", &[]);
+    let info = mock_info("creator", &[]);
     let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
         .instantiate(
             deps.as_mut(),
-            env.clone(),
-            collection_metadata,
+            &env,
+            &info,
             msg,
             "contract_name",
             "contract_version",
@@ -246,7 +246,7 @@ fn test_mint() {
     let env = mock_env();
     let info_minter = mock_info(MINTER_ADDR, &[]);
     let err = contract
-        .execute(deps.as_mut(), env.clone(), info_minter, mint_msg)
+        .execute(deps.as_mut(), &env, &info_minter, mint_msg)
         .unwrap_err();
     assert_eq!(
         err,
@@ -263,14 +263,14 @@ fn test_mint() {
         extension: None,
     };
     let err = contract
-        .execute(deps.as_mut(), env.clone(), info_random, mint_msg.clone())
+        .execute(deps.as_mut(), &env, &info_random, mint_msg.clone())
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // minter can mint
     let info_minter = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(deps.as_mut(), env.clone(), info_minter, mint_msg)
+        .execute(deps.as_mut(), &env, &info_minter, mint_msg)
         .unwrap();
 
     // ensure num tokens increases
@@ -318,7 +318,7 @@ fn test_mint() {
 
     let allowed = mock_info(MINTER_ADDR, &[]);
     let err = contract
-        .execute(deps.as_mut(), mock_env(), allowed, mint_msg2)
+        .execute(deps.as_mut(), &mock_env(), &allowed, mint_msg2)
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Claimed {});
 
@@ -363,7 +363,7 @@ fn test_mint_with_metadata() {
         let info_minter = mock_info(MINTER_ADDR, &[]);
         let env = mock_env();
         contract
-            .execute(deps.as_mut(), env.clone(), info_minter, mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap();
     }
     // case 2: mint with invalid metadata
@@ -402,7 +402,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -418,7 +418,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -434,7 +434,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -450,7 +450,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -467,7 +467,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataImageDataEmpty {});
         // empty description
@@ -480,7 +480,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataDescriptionEmpty {});
         // empty name
@@ -493,7 +493,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataNameEmpty {});
         // empty background color
@@ -506,7 +506,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataBackgroundColorEmpty {});
 
@@ -524,7 +524,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitTypeEmpty {});
         // trait value empty
@@ -541,7 +541,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitValueEmpty {});
         // display type empty
@@ -558,7 +558,7 @@ fn test_mint_with_metadata() {
             extension: Some(metadata.clone()),
         };
         let err = contract
-            .execute(deps.as_mut(), env.clone(), info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitDisplayTypeEmpty {});
     }
@@ -582,8 +582,8 @@ fn test_update_collection_metadata() {
     let _ = contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
+            &mock_env(),
+            &creator_info,
             update_collection_metadata_msg,
         )
         .unwrap();
@@ -593,8 +593,8 @@ fn test_update_collection_metadata() {
     contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
+            &mock_env(),
+            &creator_info,
             Cw721ExecuteMsg::UpdateCreatorOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
@@ -629,8 +629,8 @@ fn test_update_collection_metadata() {
     contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            random_info.clone(),
+            &mock_env(),
+            &random_info,
             Cw721ExecuteMsg::UpdateCreatorOwnership(Action::AcceptOwnership),
         )
         .unwrap();
@@ -660,8 +660,8 @@ fn test_update_collection_metadata() {
     let err: Cw721ContractError = contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            creator_info,
+            &mock_env(),
+            &creator_info,
             update_collection_metadata_msg.clone(),
         )
         .unwrap_err();
@@ -671,8 +671,8 @@ fn test_update_collection_metadata() {
     let _ = contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            random_info,
+            &mock_env(),
+            &random_info,
             update_collection_metadata_msg,
         )
         .unwrap();
@@ -696,7 +696,7 @@ fn test_update_minter() {
     // Minter can mint
     let minter_info = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(deps.as_mut(), mock_env(), minter_info.clone(), mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter_info.clone(), mint_msg)
         .unwrap();
 
     // Update the owner to "random". The new owner should be able to
@@ -704,8 +704,8 @@ fn test_update_minter() {
     contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            minter_info.clone(),
+            &mock_env(),
+            &minter_info,
             Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
@@ -740,8 +740,8 @@ fn test_update_minter() {
     contract
         .execute(
             deps.as_mut(),
-            mock_env(),
-            random_info.clone(),
+            &mock_env(),
+            &random_info,
             Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
         )
         .unwrap();
@@ -768,13 +768,13 @@ fn test_update_minter() {
 
     // Old owner can not mint.
     let err: Cw721ContractError = contract
-        .execute(deps.as_mut(), mock_env(), minter_info, mint_msg.clone())
+        .execute(deps.as_mut(), &mock_env(), &minter_info, mint_msg.clone())
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // New owner can mint.
     let _ = contract
-        .execute(deps.as_mut(), mock_env(), random_info, mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &random_info, mint_msg)
         .unwrap();
 }
 
@@ -798,20 +798,20 @@ fn test_burn() {
     // mint some NFT
     let allowed = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(deps.as_mut(), mock_env(), allowed.clone(), mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &allowed.clone(), mint_msg)
         .unwrap();
 
     // random not allowed to burn
     let random = mock_info("random", &[]);
     let env = mock_env();
     let err = contract
-        .execute(deps.as_mut(), env.clone(), random, burn_msg.clone())
+        .execute(deps.as_mut(), &env, &random, burn_msg.clone())
         .unwrap_err();
 
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     let _ = contract
-        .execute(deps.as_mut(), env.clone(), allowed, burn_msg)
+        .execute(deps.as_mut(), &env, &allowed, burn_msg)
         .unwrap();
 
     // ensure num tokens decreases
@@ -850,7 +850,7 @@ fn test_transfer_nft() {
 
     let minter = mock_info(MINTER_ADDR, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg)
         .unwrap();
 
     // random cannot transfer
@@ -861,7 +861,7 @@ fn test_transfer_nft() {
     };
 
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, transfer_msg)
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
@@ -873,7 +873,7 @@ fn test_transfer_nft() {
     };
 
     let res = contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, transfer_msg)
         .unwrap();
 
     assert_eq!(
@@ -904,7 +904,7 @@ fn test_send_nft() {
 
     let minter = mock_info(MINTER_ADDR, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg)
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
@@ -917,14 +917,14 @@ fn test_send_nft() {
 
     let random = mock_info("random", &[]);
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, send_msg.clone())
+        .execute(deps.as_mut(), &mock_env(), &random, send_msg.clone())
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // but owner can
     let random = mock_info("venus", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), random, send_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, send_msg)
         .unwrap();
 
     let payload = Cw721ReceiveMsg {
@@ -970,7 +970,7 @@ fn test_approve_revoke() {
 
     let minter = mock_info(MINTER_ADDR, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter, mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg)
         .unwrap();
 
     // token owner shows in approval query
@@ -1001,7 +1001,7 @@ fn test_approve_revoke() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner, approve_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, approve_msg)
         .unwrap();
     assert_eq!(
         res,
@@ -1039,7 +1039,7 @@ fn test_approve_revoke() {
         token_id: token_id.clone(),
     };
     contract
-        .execute(deps.as_mut(), mock_env(), random, transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, transfer_msg)
         .unwrap();
 
     // Approvals are removed / cleared
@@ -1069,7 +1069,7 @@ fn test_approve_revoke() {
     };
     let owner = mock_info("person", &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, approve_msg)
         .unwrap();
 
     let revoke_msg = Cw721ExecuteMsg::Revoke {
@@ -1077,7 +1077,7 @@ fn test_approve_revoke() {
         token_id,
     };
     contract
-        .execute(deps.as_mut(), mock_env(), owner, revoke_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, revoke_msg)
         .unwrap();
 
     // Approvals are now removed / cleared
@@ -1117,7 +1117,7 @@ fn test_approve_all_revoke_all() {
 
     let minter = mock_info(MINTER_ADDR, &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg1)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg1)
         .unwrap();
 
     let mint_msg2 = Cw721ExecuteMsg::Mint {
@@ -1129,7 +1129,7 @@ fn test_approve_all_revoke_all() {
 
     let env = mock_env();
     contract
-        .execute(deps.as_mut(), env.clone(), minter, mint_msg2)
+        .execute(deps.as_mut(), &env, &minter, mint_msg2)
         .unwrap();
 
     // paginate the token_ids
@@ -1151,7 +1151,7 @@ fn test_approve_all_revoke_all() {
     };
     let owner = mock_info("demeter", &[]);
     let res = contract
-        .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, approve_all_msg)
         .unwrap();
     assert_eq!(
         res,
@@ -1168,7 +1168,7 @@ fn test_approve_all_revoke_all() {
         token_id: token_id1,
     };
     contract
-        .execute(deps.as_mut(), mock_env(), random.clone(), transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &random.clone(), transfer_msg)
         .unwrap();
 
     // random can now send
@@ -1185,7 +1185,7 @@ fn test_approve_all_revoke_all() {
         msg: to_json_binary(&msg).unwrap(),
     };
     contract
-        .execute(deps.as_mut(), mock_env(), random, send_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, send_msg)
         .unwrap();
 
     // Approve_all, revoke_all, and check for empty, to test revoke_all
@@ -1196,7 +1196,7 @@ fn test_approve_all_revoke_all() {
     // person is now the owner of the tokens
     let owner = mock_info("person", &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, approve_all_msg)
         .unwrap();
 
     // query for operator should return approval
@@ -1260,7 +1260,7 @@ fn test_approve_all_revoke_all() {
     };
     let owner = mock_info("person", &[]);
     contract
-        .execute(deps.as_mut(), mock_env(), owner.clone(), approve_all_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, approve_all_msg)
         .unwrap();
 
     // and paginate queries
@@ -1307,7 +1307,7 @@ fn test_approve_all_revoke_all() {
         operator: String::from("operator"),
     };
     contract
-        .execute(deps.as_mut(), mock_env(), owner, revoke_all_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner, revoke_all_msg)
         .unwrap();
 
     // query for operator should return error
@@ -1499,7 +1499,7 @@ fn query_tokens_by_owner() {
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg)
         .unwrap();
 
     let mint_msg = Cw721ExecuteMsg::Mint {
@@ -1509,7 +1509,7 @@ fn query_tokens_by_owner() {
         extension: None,
     };
     contract
-        .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &minter, mint_msg)
         .unwrap();
 
     let mint_msg = Cw721ExecuteMsg::Mint {
@@ -1520,7 +1520,7 @@ fn query_tokens_by_owner() {
     };
     let env = mock_env();
     contract
-        .execute(deps.as_mut(), env.clone(), minter, mint_msg)
+        .execute(deps.as_mut(), &env, &minter, mint_msg)
         .unwrap();
 
     // get all tokens in order:

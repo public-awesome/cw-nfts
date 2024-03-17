@@ -41,8 +41,8 @@ pub trait Cw721Execute<
     fn instantiate(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
         contract_name: &str,
         contract_version: &str,
@@ -57,14 +57,14 @@ pub trait Cw721Execute<
         >::default();
         let collection_metadata_extension =
             msg.collection_metadata_extension
-                .create(deps.as_ref(), &env, &info, None)?;
+                .create(deps.as_ref(), env, info, None)?;
         let collection_metadata = CollectionMetadata {
-            name: msg.name,
-            symbol: msg.symbol,
+            name: msg.name.clone(),
+            symbol: msg.symbol.clone(),
             extension: collection_metadata_extension,
             updated_at: env.block.time,
         };
-        collection_metadata.validate(deps.as_ref(), &env, &info)?;
+        collection_metadata.validate(deps.as_ref(), env, info)?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -83,7 +83,7 @@ pub trait Cw721Execute<
         };
         self.initialize_creator(deps.storage, deps.api, Some(creator))?;
 
-        if let Some(withdraw_address) = msg.withdraw_address {
+        if let Some(withdraw_address) = msg.withdraw_address.clone() {
             let creator = deps.api.addr_validate(creator)?;
             self.set_withdraw_address(deps, &creator, withdraw_address)?;
         }
@@ -96,8 +96,8 @@ pub trait Cw721Execute<
     fn execute(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
@@ -186,16 +186,16 @@ pub trait Cw721Execute<
     fn transfer_nft(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         recipient: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        _transfer_nft::<TNftMetadataExtension>(deps, &env, &info, &recipient, &token_id)?;
+        _transfer_nft::<TNftMetadataExtension>(deps, env, info, &recipient, &token_id)?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("recipient", recipient)
             .add_attribute("token_id", token_id))
     }
@@ -203,14 +203,14 @@ pub trait Cw721Execute<
     fn send_nft(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         contract: String,
         token_id: String,
         msg: Binary,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         // Transfer token
-        _transfer_nft::<TNftMetadataExtension>(deps, &env, &info, &contract, &token_id)?;
+        _transfer_nft::<TNftMetadataExtension>(deps, env, info, &contract, &token_id)?;
 
         let send = Cw721ReceiveMsg {
             sender: info.sender.to_string(),
@@ -222,7 +222,7 @@ pub trait Cw721Execute<
         Ok(Response::new()
             .add_message(send.into_cosmos_msg(contract.clone())?)
             .add_attribute("action", "send_nft")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("recipient", contract)
             .add_attribute("token_id", token_id))
     }
@@ -230,19 +230,19 @@ pub trait Cw721Execute<
     fn approve(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         spender: String,
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         _update_approvals::<TNftMetadataExtension>(
-            deps, &env, &info, &spender, &token_id, true, expires,
+            deps, env, info, &spender, &token_id, true, expires,
         )?;
 
         Ok(Response::new()
             .add_attribute("action", "approve")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("spender", spender)
             .add_attribute("token_id", token_id))
     }
@@ -250,18 +250,18 @@ pub trait Cw721Execute<
     fn revoke(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         spender: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         _update_approvals::<TNftMetadataExtension>(
-            deps, &env, &info, &spender, &token_id, false, None,
+            deps, env, info, &spender, &token_id, false, None,
         )?;
 
         Ok(Response::new()
             .add_attribute("action", "revoke")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("spender", spender)
             .add_attribute("token_id", token_id))
     }
@@ -269,8 +269,8 @@ pub trait Cw721Execute<
     fn approve_all(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         operator: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
@@ -297,15 +297,15 @@ pub trait Cw721Execute<
 
         Ok(Response::new()
             .add_attribute("action", "approve_all")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("operator", operator))
     }
 
     fn revoke_all(
         &self,
         deps: DepsMut,
-        _env: Env,
-        info: MessageInfo,
+        _env: &Env,
+        info: &MessageInfo,
         operator: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let operator_addr = deps.api.addr_validate(&operator)?;
@@ -322,15 +322,15 @@ pub trait Cw721Execute<
 
         Ok(Response::new()
             .add_attribute("action", "revoke_all")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("operator", operator))
     }
 
     fn burn_nft(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let config = Cw721Config::<
@@ -341,14 +341,14 @@ pub trait Cw721Execute<
             TCustomResponseMsg,
         >::default();
         let token = config.nft_info.load(deps.storage, &token_id)?;
-        check_can_send(deps.as_ref(), &env, &info, &token)?;
+        check_can_send(deps.as_ref(), env, info, &token)?;
 
         config.nft_info.remove(deps.storage, &token_id)?;
         config.decrement_tokens(deps.storage)?;
 
         Ok(Response::new()
             .add_attribute("action", "burn")
-            .add_attribute("sender", info.sender)
+            .add_attribute("sender", info.sender.to_string())
             .add_attribute("token_id", token_id))
     }
 
@@ -374,8 +374,8 @@ pub trait Cw721Execute<
     fn update_collection_metadata(
         &self,
         deps: DepsMut,
-        info: MessageInfo,
-        env: Env,
+        info: &MessageInfo,
+        env: &Env,
         msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         CREATOR.assert_owner(deps.storage, &info.sender)?;
@@ -395,8 +395,8 @@ pub trait Cw721Execute<
         }
         collection_metadata.extension = msg.extension.create(
             deps.as_ref(),
-            &env,
-            &info,
+            env,
+            info,
             Some(&collection_metadata.extension),
         )?;
         config
@@ -405,15 +405,15 @@ pub trait Cw721Execute<
 
         Ok(Response::new()
             .add_attribute("action", "update_collection_metadata")
-            .add_attribute("sender", info.sender))
+            .add_attribute("sender", info.sender.to_string()))
     }
 
     #[allow(clippy::too_many_arguments)]
     fn mint(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         token_id: String,
         owner: String,
         token_uri: Option<String>,
@@ -427,7 +427,7 @@ pub trait Cw721Execute<
             token_uri: token_uri.clone(),
             extension,
         };
-        let token = token_msg.create(deps.as_ref(), &env, &info, None)?;
+        let token = token_msg.create(deps.as_ref(), env, info, None)?;
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
@@ -446,7 +446,7 @@ pub trait Cw721Execute<
 
         let mut res = Response::new()
             .add_attribute("action", "mint")
-            .add_attribute("minter", info.sender)
+            .add_attribute("minter", info.sender.to_string())
             .add_attribute("owner", owner)
             .add_attribute("token_id", token_id);
         if let Some(token_uri) = token_uri {
@@ -458,28 +458,28 @@ pub trait Cw721Execute<
     fn update_minter_ownership(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         action: Action,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let ownership =
             MINTER.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
-            .add_attribute("update_minter_ownership", info.sender)
+            .add_attribute("update_minter_ownership", info.sender.to_string())
             .add_attributes(ownership.into_attributes()))
     }
 
     fn update_creator_ownership(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         action: Action,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let ownership =
             CREATOR.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
-            .add_attribute("update_creator_ownership", info.sender)
+            .add_attribute("update_creator_ownership", info.sender.to_string())
             .add_attributes(ownership.into_attributes()))
     }
 
@@ -487,8 +487,8 @@ pub trait Cw721Execute<
     fn update_legacy_extension(
         &self,
         _deps: DepsMut,
-        _env: Env,
-        _info: MessageInfo,
+        _env: &Env,
+        _info: &MessageInfo,
         _msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         panic!("deprecated. pls use update_metadata instead.")
@@ -499,8 +499,8 @@ pub trait Cw721Execute<
     fn update_nft_info(
         &self,
         deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
+        env: &Env,
+        info: &MessageInfo,
         token_id: String,
         token_uri: Option<String>,
         msg: TNftMetadataExtensionMsg,
@@ -520,7 +520,7 @@ pub trait Cw721Execute<
             token_uri: token_uri.clone(),
             extension: msg,
         };
-        let updated = nft_info_msg.create(deps.as_ref(), &env, &info, Some(&current_nft_info))?;
+        let updated = nft_info_msg.create(deps.as_ref(), env, info, Some(&current_nft_info))?;
         contract.nft_info.save(deps.storage, &token_id, &updated)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")

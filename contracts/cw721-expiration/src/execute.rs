@@ -57,8 +57,8 @@ where
             .save(deps.storage, &msg.expiration_days)?;
         Ok(contract.base_contract.instantiate(
             deps,
-            env,
-            info,
+            &env,
+            &info,
             Cw721InstantiateMsg {
                 name: msg.name,
                 symbol: msg.symbol,
@@ -117,7 +117,7 @@ where
                 contract.burn_nft_include_nft_expired(deps, env, info, token_id)
             }
             _ => {
-                let response = contract.base_contract.execute(deps, env, info, msg)?;
+                let response = contract.base_contract.execute(deps, &env, &info, msg)?;
                 Ok(response)
             }
         }
@@ -139,7 +139,7 @@ where
             .save(deps.storage, &token_id, &mint_timstamp)?;
         let res = self
             .base_contract
-            .mint(deps, env, info, token_id, owner, token_uri, extension)?
+            .mint(deps, &env, &info, token_id, owner, token_uri, extension)?
             .add_attribute("mint_timestamp", mint_timstamp.to_string());
         Ok(res)
     }
@@ -156,7 +156,7 @@ where
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
-            .approve(deps, env, info, spender, token_id, expires)?)
+            .approve(deps, &env, &info, spender, token_id, expires)?)
     }
 
     pub fn revoke_include_nft_expired(
@@ -170,7 +170,7 @@ where
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
-            .revoke(deps, env, info, spender, token_id)?)
+            .revoke(deps, &env, &info, spender, token_id)?)
     }
 
     pub fn transfer_nft_include_nft_expired(
@@ -184,7 +184,7 @@ where
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
-            .transfer_nft(deps, env, info, recipient, token_id)?)
+            .transfer_nft(deps, &env, &info, recipient, token_id)?)
     }
 
     pub fn send_nft_include_nft_expired(
@@ -199,7 +199,7 @@ where
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self
             .base_contract
-            .send_nft(deps, env, info, contract, token_id, msg)?)
+            .send_nft(deps, &env, &info, contract, token_id, msg)?)
     }
 
     pub fn burn_nft_include_nft_expired(
@@ -210,6 +210,6 @@ where
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
-        Ok(self.base_contract.burn_nft(deps, env, info, token_id)?)
+        Ok(self.base_contract.burn_nft(deps, &env, &info, token_id)?)
     }
 }

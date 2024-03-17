@@ -41,8 +41,8 @@ fn test_instantiation() {
     >::default()
     .instantiate(
         deps.as_mut(),
-        mock_env(),
-        mock_info("mr-t", &[]),
+        &mock_env(),
+        &mock_info("mr-t", &[]),
         Cw721InstantiateMsg {
             name: "".into(),
             symbol: "collection_symbol".into(),
@@ -67,8 +67,8 @@ fn test_instantiation() {
     >::default()
     .instantiate(
         deps.as_mut(),
-        mock_env(),
-        mock_info("mr-t", &[]),
+        &mock_env(),
+        &mock_info("mr-t", &[]),
         Cw721InstantiateMsg {
             name: "collection_name".into(),
             symbol: "".into(),
@@ -92,8 +92,8 @@ fn test_instantiation() {
     >::default()
     .instantiate(
         deps.as_mut(),
-        mock_env(),
-        mock_info("larry", &[]),
+        &mock_env(),
+        &mock_info("larry", &[]),
         Cw721InstantiateMsg {
             name: "collection_name".into(),
             symbol: "collection_symbol".into(),
@@ -149,8 +149,8 @@ fn test_instantiation_with_proper_minter_and_creator() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info_minter_and_creator.clone(),
+            &mock_env(),
+            &info_minter_and_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -183,8 +183,8 @@ fn test_instantiation_with_proper_minter_and_creator() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -217,8 +217,8 @@ fn test_instantiation_with_proper_minter_and_creator() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -251,8 +251,8 @@ fn test_instantiation_with_proper_minter_and_creator() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -317,8 +317,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -375,8 +375,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -418,8 +418,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -461,8 +461,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -501,8 +501,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -543,8 +543,8 @@ fn test_instantiation_with_collection_metadata() {
         >::default()
         .instantiate(
             deps.as_mut(),
-            mock_env(),
-            info.clone(),
+            &mock_env(),
+            &info,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
@@ -612,8 +612,8 @@ fn test_collection_metadata_update() {
         contract
             .instantiate(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
@@ -644,8 +644,8 @@ fn test_collection_metadata_update() {
         contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: empty_collection_metadata_msg,
                 },
@@ -685,8 +685,8 @@ fn test_collection_metadata_update() {
         contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info,
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -753,8 +753,8 @@ fn test_collection_metadata_update() {
         contract
             .instantiate(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
@@ -791,8 +791,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -823,8 +823,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -860,8 +860,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -895,8 +895,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -930,8 +930,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info.clone(),
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -967,8 +967,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info,
+                &env,
+                &info,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -1011,8 +1011,8 @@ fn test_collection_metadata_update() {
         contract
             .instantiate(
                 deps.as_mut(),
-                env.clone(),
-                info,
+                &env,
+                &info,
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
@@ -1050,8 +1050,8 @@ fn test_collection_metadata_update() {
         let err = contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
-                info_other,
+                &env,
+                &info_other,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -1088,8 +1088,8 @@ fn test_nft_mint_with_metadata_extension() {
     contract
         .instantiate(
             deps.as_mut(),
-            env.clone(),
-            info.clone(),
+            &env,
+            &info,
             init_msg,
             "contract_name",
             "contract_version",
@@ -1110,7 +1110,7 @@ fn test_nft_mint_with_metadata_extension() {
         extension: extension.clone(),
     };
     contract
-        .execute(deps.as_mut(), env.clone(), info, exec_msg)
+        .execute(deps.as_mut(), &env, &info, exec_msg)
         .unwrap();
 
     let res = contract

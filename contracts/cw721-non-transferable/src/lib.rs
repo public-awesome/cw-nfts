@@ -70,8 +70,8 @@ pub mod entry {
 
         Cw721NonTransferableContract::default().instantiate(
             deps.branch(),
-            env,
-            info,
+            &env,
+            &info,
             cw721_base_instantiate_msg,
             "contract_name",
             "contract_version",
@@ -112,7 +112,7 @@ pub mod entry {
                     token_uri,
                     extension,
                 } => Cw721NonTransferableContract::default()
-                    .mint(deps, env, info, token_id, owner, token_uri, extension),
+                    .mint(deps, &env, &info, token_id, owner, token_uri, extension),
                 _ => Err(Cw721ContractError::Ownership(
                     cw721_base::OwnershipError::NotOwner,
                 )),

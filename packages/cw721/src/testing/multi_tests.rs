@@ -41,7 +41,7 @@ pub fn instantiate(
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
-    contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
+    contract.instantiate(deps, &env, &info, msg, "contract_name", "contract_version")
 }
 
 pub fn execute(
@@ -60,7 +60,7 @@ pub fn execute(
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
-    contract.execute(deps, env, info, msg)
+    contract.execute(deps, &env, &info, msg)
 }
 
 pub fn query(
