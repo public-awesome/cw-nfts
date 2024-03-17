@@ -9,8 +9,8 @@ pub mod traits;
 
 pub use cw_utils::Expiration;
 use msg::{CollectionMetadataExtensionMsg, RoyaltyInfoResponse};
-use state::NftMetadata;
 pub use state::{Approval, CollectionMetadataExtension, RoyaltyInfo};
+use state::{CollectionMetadata, NftMetadata};
 
 /// Default CollectionMetadataExtension using `Option<CollectionMetadataExtension<RoyaltyInfo>>`
 pub type DefaultOptionCollectionMetadataExtension =
@@ -25,5 +25,10 @@ pub type DefaultOptionNftMetadataExtensionMsg = Option<NftMetadataMsg>;
 pub type NftMetadataMsg = NftMetadata;
 #[deprecated(since = "0.19.0", note = "Please use `NftMetadata` instead")]
 pub type MetaData = NftMetadata;
+#[deprecated(
+    since = "0.19.0",
+    note = "Please use `CollectionMetadata<DefaultOptionCollectionMetadataExtension>` instead"
+)]
+pub type ContractInfoResponse = CollectionMetadata<DefaultOptionCollectionMetadataExtension>;
 #[cfg(test)]
 pub mod testing;

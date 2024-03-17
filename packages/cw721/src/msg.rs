@@ -12,8 +12,6 @@ use crate::state::{
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, RoyaltyInfo};
 
-use cosmwasm_std::Empty;
-
 #[cw_serde]
 pub enum Cw721ExecuteMsg<
     // Message passed for updating metadata.
@@ -181,7 +179,7 @@ pub enum Cw721QueryMsg<
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
-    #[returns(CollectionMetadata<Empty>)]
+    #[returns(CollectionMetadata<TCollectionMetadataExtension>)]
     /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
     ContractInfo {},
 
