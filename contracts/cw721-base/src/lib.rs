@@ -97,7 +97,7 @@ pub mod entry {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
-        contract.query(deps, env, msg)
+        contract.query(deps, &env, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]

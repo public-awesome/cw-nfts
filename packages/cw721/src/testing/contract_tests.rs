@@ -111,7 +111,7 @@ fn test_instantiate() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         collection_metadata,
@@ -130,14 +130,12 @@ fn test_instantiate() {
         .unwrap();
     assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
 
-    let count = contract
-        .query_num_tokens(deps.as_ref(), env.clone())
-        .unwrap();
+    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
     assert_eq!(0, count.count);
 
     // list the token_ids
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env, None, None)
+        .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
@@ -205,7 +203,7 @@ fn test_instantiate_with_collection_metadata() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         info,
@@ -224,14 +222,12 @@ fn test_instantiate_with_collection_metadata() {
         .unwrap();
     assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
 
-    let count = contract
-        .query_num_tokens(deps.as_ref(), env.clone())
-        .unwrap();
+    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
     assert_eq!(0, count.count);
 
     // list the token_ids
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env, None, None)
+        .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
@@ -281,19 +277,17 @@ fn test_mint() {
         .unwrap();
 
     // ensure num tokens increases
-    let count = contract
-        .query_num_tokens(deps.as_ref(), env.clone())
-        .unwrap();
+    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
     assert_eq!(1, count.count);
 
     // unknown nft returns error
     let _ = contract
-        .query_nft_info(deps.as_ref(), env.clone(), "unknown".to_string())
+        .query_nft_info(deps.as_ref(), &env, "unknown".to_string())
         .unwrap_err();
 
     // this nft info is correct
     let info = contract
-        .query_nft_info(deps.as_ref(), env.clone(), token_id.clone())
+        .query_nft_info(deps.as_ref(), &env, token_id.clone())
         .unwrap();
     assert_eq!(
         info,
@@ -305,7 +299,7 @@ fn test_mint() {
 
     // owner info is correct
     let owner = contract
-        .query_owner_of(deps.as_ref(), mock_env(), token_id.clone(), true)
+        .query_owner_of(deps.as_ref(), &mock_env(), token_id.clone(), true)
         .unwrap();
     assert_eq!(
         owner,
@@ -331,7 +325,7 @@ fn test_mint() {
 
     // list the token_ids
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env, None, None)
+        .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
@@ -615,7 +609,7 @@ fn test_update_collection_metadata() {
         contract
             .query(
                 deps.as_ref(),
-                mock_env(),
+                &mock_env(),
                 Cw721QueryMsg::GetCreatorOwnership {},
             )
             .unwrap(),
@@ -647,7 +641,7 @@ fn test_update_collection_metadata() {
         contract
             .query(
                 deps.as_ref(),
-                mock_env(),
+                &mock_env(),
                 Cw721QueryMsg::GetCreatorOwnership {},
             )
             .unwrap(),
@@ -726,7 +720,7 @@ fn test_update_minter() {
         contract
             .query(
                 deps.as_ref(),
-                mock_env(),
+                &mock_env(),
                 Cw721QueryMsg::GetMinterOwnership {},
             )
             .unwrap(),
@@ -758,7 +752,7 @@ fn test_update_minter() {
         contract
             .query(
                 deps.as_ref(),
-                mock_env(),
+                &mock_env(),
                 Cw721QueryMsg::GetMinterOwnership {},
             )
             .unwrap(),
@@ -822,19 +816,17 @@ fn test_burn() {
         .unwrap();
 
     // ensure num tokens decreases
-    let count = contract
-        .query_num_tokens(deps.as_ref(), env.clone())
-        .unwrap();
+    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
     assert_eq!(0, count.count);
 
     // trying to get nft returns error
     let _ = contract
-        .query_nft_info(deps.as_ref(), env.clone(), "petrify".to_string())
+        .query_nft_info(deps.as_ref(), &env, "petrify".to_string())
         .unwrap_err();
 
     // list the token_ids
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env, None, None)
+        .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert!(tokens.tokens.is_empty());
 }
@@ -984,7 +976,7 @@ fn test_approve_revoke() {
     let res = contract
         .query_approval(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             token_id.clone(),
             String::from("demeter"),
             false,
@@ -1023,7 +1015,7 @@ fn test_approve_revoke() {
     let res = contract
         .query_approval(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             token_id.clone(),
             String::from("random"),
             true,
@@ -1056,7 +1048,7 @@ fn test_approve_revoke() {
     };
     let res: OwnerOfResponse = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), query_msg.clone())
+            .query(deps.as_ref(), &mock_env(), query_msg.clone())
             .unwrap(),
     )
     .unwrap();
@@ -1090,7 +1082,7 @@ fn test_approve_revoke() {
     // Approvals are now removed / cleared
     let res: OwnerOfResponse = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), query_msg)
+            .query(deps.as_ref(), &mock_env(), query_msg)
             .unwrap(),
     )
     .unwrap();
@@ -1141,12 +1133,12 @@ fn test_approve_all_revoke_all() {
 
     // paginate the token_ids
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(1))
+        .query_all_tokens(deps.as_ref(), &env, None, Some(1))
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id1.clone()], tokens.tokens);
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env, Some(token_id1.clone()), Some(3))
+        .query_all_tokens(deps.as_ref(), &env, Some(token_id1.clone()), Some(3))
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id2.clone()], tokens.tokens);
@@ -1210,7 +1202,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operator(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             String::from("operator"),
             true,
@@ -1229,7 +1221,7 @@ fn test_approve_all_revoke_all() {
     // query for other should throw error
     let res = contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("other"),
         true,
@@ -1242,7 +1234,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -1274,7 +1266,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -1293,7 +1285,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             Some(String::from("buddy")),
@@ -1320,7 +1312,7 @@ fn test_approve_all_revoke_all() {
     // query for operator should return error
     let res = contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("operator"),
         true,
@@ -1334,7 +1326,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             false,
             None,
@@ -1357,7 +1349,7 @@ fn test_approve_all_revoke_all() {
     let res = contract
         .query_operators(
             deps.as_ref(),
-            late_env.clone(),
+            &late_env,
             String::from("person"),
             false,
             None,
@@ -1369,7 +1361,7 @@ fn test_approve_all_revoke_all() {
     // query operator should also return error
     let res = contract.query_operator(
         deps.as_ref(),
-        late_env,
+        &late_env,
         String::from("person"),
         String::from("buddy"),
         false,
@@ -1533,16 +1525,16 @@ fn query_tokens_by_owner() {
     // get all tokens in order:
     let expected = vec![token_id1.clone(), token_id2.clone(), token_id3.clone()];
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, None)
+        .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(&expected, &tokens.tokens);
     // paginate
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(2))
+        .query_all_tokens(deps.as_ref(), &env, None, Some(2))
         .unwrap();
     assert_eq!(&expected[..2], &tokens.tokens[..]);
     let tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), Some(expected[1].clone()), None)
+        .query_all_tokens(deps.as_ref(), &env, Some(expected[1].clone()), None)
         .unwrap();
     assert_eq!(&expected[2..], &tokens.tokens[..]);
 
@@ -1551,23 +1543,23 @@ fn query_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .query_tokens(deps.as_ref(), env.clone(), demeter.clone(), None, None)
+        .query_tokens(deps.as_ref(), &env, demeter.clone(), None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
-        .query_tokens(deps.as_ref(), env.clone(), ceres, None, None)
+        .query_tokens(deps.as_ref(), &env, ceres, None, None)
         .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .query_tokens(deps.as_ref(), env.clone(), demeter.clone(), None, Some(1))
+        .query_tokens(deps.as_ref(), &env, demeter.clone(), None, Some(1))
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
         .query_tokens(
             deps.as_ref(),
-            env,
+            &env,
             demeter,
             Some(by_demeter[0].clone()),
             Some(3),

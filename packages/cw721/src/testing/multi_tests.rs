@@ -75,7 +75,7 @@ pub fn query(
         CollectionMetadataExtensionMsg<RoyaltyInfo>,
         Empty,
     >::default();
-    contract.query(deps, env, msg)
+    contract.query(deps, &env, msg)
 }
 
 pub fn migrate(

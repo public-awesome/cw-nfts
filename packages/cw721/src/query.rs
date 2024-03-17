@@ -30,7 +30,7 @@ pub trait Cw721Query<
     fn query(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         msg: Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension>,
     ) -> StdResult<Binary> {
         match msg {
@@ -165,14 +165,14 @@ pub trait Cw721Query<
     fn query_collection_metadata(
         &self,
         deps: Deps,
-        _env: Env,
+        _env: &Env,
     ) -> StdResult<CollectionMetadata<TCollectionMetadataExtension>> {
         Cw721Config::<TNftMetadataExtension, Empty, TCollectionMetadataExtension, Empty, Empty>::default()
             .collection_metadata
             .load(deps.storage)
     }
 
-    fn query_num_tokens(&self, deps: Deps, _env: Env) -> StdResult<NumTokensResponse> {
+    fn query_num_tokens(&self, deps: Deps, _env: &Env) -> StdResult<NumTokensResponse> {
         let count = Cw721Config::<
             TNftMetadataExtension,
             Empty,
@@ -187,7 +187,7 @@ pub trait Cw721Query<
     fn query_nft_info(
         &self,
         deps: Deps,
-        _env: Env,
+        _env: &Env,
         token_id: String,
     ) -> StdResult<NftInfoResponse<TNftMetadataExtension>> {
         let info = Cw721Config::<
@@ -208,7 +208,7 @@ pub trait Cw721Query<
     fn query_owner_of(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<OwnerOfResponse> {
@@ -231,7 +231,7 @@ pub trait Cw721Query<
     fn query_operator(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         owner: String,
         operator: String,
         include_expired_approval: bool,
@@ -269,7 +269,7 @@ pub trait Cw721Query<
     fn query_operators(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         owner: String,
         include_expired_approval: bool,
         start_after: Option<String>,
@@ -302,7 +302,7 @@ pub trait Cw721Query<
     fn query_approval(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         token_id: String,
         spender: String,
         include_expired_approval: bool,
@@ -350,7 +350,7 @@ pub trait Cw721Query<
     fn query_approvals(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<ApprovalsResponse> {
@@ -379,7 +379,7 @@ pub trait Cw721Query<
     fn query_tokens(
         &self,
         deps: Deps,
-        _env: Env,
+        _env: &Env,
         owner: String,
         start_after: Option<String>,
         limit: Option<u32>,
@@ -409,7 +409,7 @@ pub trait Cw721Query<
     fn query_all_tokens(
         &self,
         deps: Deps,
-        _env: Env,
+        _env: &Env,
         start_after: Option<String>,
         limit: Option<u32>,
     ) -> StdResult<TokensResponse> {
@@ -435,7 +435,7 @@ pub trait Cw721Query<
     fn query_all_nft_info(
         &self,
         deps: Deps,
-        env: Env,
+        env: &Env,
         token_id: String,
         include_expired_approval: bool,
     ) -> StdResult<AllNftInfoResponse<TNftMetadataExtension>> {
@@ -467,7 +467,7 @@ pub trait Cw721Query<
     fn query_nft_metadata(
         &self,
         _deps: Deps,
-        _env: Env,
+        _env: &Env,
         _msg: TNftMetadataExtension,
     ) -> StdResult<Binary> {
         Ok(Binary::default())
@@ -480,7 +480,7 @@ pub trait Cw721Query<
     fn query_collection_metadata_extension(
         &self,
         _deps: Deps,
-        _env: Env,
+        _env: &Env,
         _msg: TCollectionMetadataExtension,
     ) -> StdResult<Binary> {
         Ok(Binary::default())

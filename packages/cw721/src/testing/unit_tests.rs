@@ -340,7 +340,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata(deps.as_ref(), mock_env())
+        .query_collection_metadata(deps.as_ref(), &mock_env())
         .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -653,7 +653,7 @@ fn test_collection_metadata_update() {
             .unwrap();
         // validate data
         let collection_metadata = contract
-            .query_collection_metadata(deps.as_ref(), mock_env())
+            .query_collection_metadata(deps.as_ref(), &mock_env())
             .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -701,7 +701,7 @@ fn test_collection_metadata_update() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata(deps.as_ref(), mock_env())
+        .query_collection_metadata(deps.as_ref(), &mock_env())
         .unwrap();
         assert_eq!(collection_metadata.name, "new_collection_name");
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
@@ -1114,7 +1114,7 @@ fn test_nft_mint_with_metadata_extension() {
         .unwrap();
 
     let res = contract
-        .query_nft_info(deps.as_ref(), env, token_id.into())
+        .query_nft_info(deps.as_ref(), &env, token_id.into())
         .unwrap();
     assert_eq!(res.token_uri, token_uri);
     assert_eq!(res.extension, extension);
@@ -1161,7 +1161,7 @@ fn test_migrate() {
         Empty,
     >::default();
     contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap_err();
     // - query in new minter and creator ownership store throws NotFound Error (in v16 it was stored outside cw_ownable, in dedicated "minter" store)
     MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
@@ -1180,12 +1180,12 @@ fn test_migrate() {
     let legacy_collection_metadata_store: Item<cw721_016::ContractInfoResponse> =
         Item::new("nft_info");
     let all_tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
+        .query_all_tokens(deps.as_ref(), &env, None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
     for token_id in 0..200 {
         let token = contract
-            .query_owner_of(deps.as_ref(), env.clone(), token_id.to_string(), false)
+            .query_owner_of(deps.as_ref(), &env, token_id.to_string(), false)
             .unwrap();
         assert_eq!(token.owner.as_str(), "owner");
     }
@@ -1234,7 +1234,7 @@ fn test_migrate() {
 
     // assert collection info
     let collection_metadata = contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
     let legacy_contract_info = CollectionMetadata {
         name: "legacy_name".to_string(),
@@ -1246,7 +1246,7 @@ fn test_migrate() {
 
     // assert tokens
     let all_tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
+        .query_all_tokens(deps.as_ref(), &env, None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
 
@@ -1262,12 +1262,12 @@ fn test_migrate() {
     assert_eq!(legacy_collection_metadata.symbol, "legacy_symbol");
     // - tokens are unchanged/still exist
     let all_tokens = contract
-        .query_all_tokens(deps.as_ref(), env.clone(), None, Some(MAX_LIMIT))
+        .query_all_tokens(deps.as_ref(), &env, None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
     for token_id in 0..200 {
         let token = contract
-            .query_owner_of(deps.as_ref(), env.clone(), token_id.to_string(), false)
+            .query_owner_of(deps.as_ref(), &env, token_id.to_string(), false)
             .unwrap();
         assert_eq!(token.owner.as_str(), "owner");
     }

@@ -99,7 +99,7 @@ fn proper_instantiation() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         collection_metadata,
@@ -121,7 +121,7 @@ fn proper_instantiation() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -168,7 +168,7 @@ fn proper_instantiation_with_collection_metadata() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata(deps.as_ref(), env.clone())
+        .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         collection_metadata,
@@ -190,7 +190,7 @@ fn proper_instantiation_with_collection_metadata() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -236,7 +236,7 @@ fn test_mint() {
     // ensure num tokens increases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(1, count.count);
 
@@ -443,7 +443,7 @@ fn test_burn() {
     // ensure num tokens decreases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -952,7 +952,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operator(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             String::from("operator"),
             true,
@@ -971,7 +971,7 @@ fn test_approve_all_revoke_all() {
     // query for other should throw error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("other"),
         true,
@@ -985,7 +985,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -1018,7 +1018,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -1038,7 +1038,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             Some(String::from("buddy")),
@@ -1065,7 +1065,7 @@ fn test_approve_all_revoke_all() {
     // query for operator should return error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("operator"),
         true,
@@ -1080,7 +1080,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             false,
             None,
@@ -1104,7 +1104,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            late_env.clone(),
+            &late_env,
             String::from("person"),
             false,
             None,
@@ -1116,7 +1116,7 @@ fn test_approve_all_revoke_all() {
     // query operator should also return error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        late_env,
+        &late_env,
         String::from("person"),
         String::from("buddy"),
         false,

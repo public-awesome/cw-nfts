@@ -146,7 +146,7 @@ where
                 include_expired: include_expired_approval,
             } => Ok(to_json_binary(&contract.base_contract.query_operator(
                 deps,
-                env,
+                &env,
                 owner,
                 operator,
                 include_expired_approval.unwrap_or(false),
@@ -158,25 +158,25 @@ where
                 limit,
             } => Ok(to_json_binary(&contract.base_contract.query_operators(
                 deps,
-                env,
+                &env,
                 owner,
                 include_expired.unwrap_or(false),
                 start_after,
                 limit,
             )?)?),
             QueryMsg::NumTokens {} => Ok(to_json_binary(
-                &contract.base_contract.query_num_tokens(deps, env)?,
+                &contract.base_contract.query_num_tokens(deps, &env)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata(deps, env)?,
+                    .query_collection_metadata(deps, &env)?,
             )?),
             QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata(deps, env)?,
+                    .query_collection_metadata(deps, &env)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::Ownership {} => Ok(to_json_binary(
@@ -199,12 +199,12 @@ where
                 &contract.base_contract.query_minter(deps.storage)?,
             )?),
             QueryMsg::Extension { msg } => Ok(to_json_binary(
-                &contract.base_contract.query_nft_metadata(deps, env, msg)?,
+                &contract.base_contract.query_nft_metadata(deps, &env, msg)?,
             )?),
             QueryMsg::GetCollectionMetadataExtension { msg } => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_extension(deps, env, msg)?,
+                    .query_collection_metadata_extension(deps, &env, msg)?,
             )?),
             QueryMsg::GetWithdrawAddress {} => Ok(to_json_binary(
                 &contract.base_contract.query_withdraw_address(deps)?,
@@ -222,7 +222,7 @@ where
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
-        Ok(self.base_contract.query_nft_info(deps, env, token_id)?)
+        Ok(self.base_contract.query_nft_info(deps, &env, token_id)?)
     }
 
     pub fn query_owner_of_include_expired_nft(
@@ -238,7 +238,7 @@ where
         }
         Ok(self
             .base_contract
-            .query_owner_of(deps, env, token_id, include_expired_approval)?)
+            .query_owner_of(deps, &env, token_id, include_expired_approval)?)
     }
 
     pub fn query_approval_include_expired_nft(
@@ -255,7 +255,7 @@ where
         }
         Ok(self.base_contract.query_approval(
             deps,
-            env,
+            &env,
             token_id,
             spender,
             include_expired_approval,
@@ -276,7 +276,7 @@ where
         }
         Ok(self
             .base_contract
-            .query_approvals(deps, env, token_id, include_expired_approval)?)
+            .query_approvals(deps, &env, token_id, include_expired_approval)?)
     }
 
     pub fn query_tokens_include_expired_nft(
@@ -288,9 +288,9 @@ where
         limit: Option<u32>,
         include_expired_nft: bool,
     ) -> StdResult<TokensResponse> {
-        let tokens =
-            self.base_contract
-                .query_tokens(deps, env.clone(), owner, start_after, limit)?;
+        let tokens = self
+            .base_contract
+            .query_tokens(deps, &env, owner, start_after, limit)?;
         if include_expired_nft {
             return Ok(tokens);
         }
@@ -315,7 +315,7 @@ where
     ) -> Result<TokensResponse, ContractError> {
         let tokens = self
             .base_contract
-            .query_all_tokens(deps, env.clone(), start_after, limit)?;
+            .query_all_tokens(deps, &env, start_after, limit)?;
         if include_expired_nft {
             return Ok(tokens);
         }
@@ -343,7 +343,7 @@ where
         }
         Ok(self
             .base_contract
-            .query_all_nft_info(deps, env, token_id, include_expired_approval)?)
+            .query_all_nft_info(deps, &env, token_id, include_expired_approval)?)
     }
 
     // --- helpers ---
