@@ -6,16 +6,16 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
     StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
-use cw721::helpers::Cw721Contract;
+use cw721::helpers::Cw721Helper;
 use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
 use cw721::{
-    DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
+    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -164,7 +164,10 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::Mint {
+    let mint_msg = Cw721ExecuteMsg::<
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtensionMsg,
+    >::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
@@ -173,11 +176,12 @@ pub fn execute_receive(
 
     match config.cw721_address.clone() {
         Some(cw721) => {
-            let callback = Cw721Contract::<
+            let callback = Cw721Helper::<
                 DefaultOptionNftMetadataExtension,
                 DefaultOptionNftMetadataExtensionMsg,
-                Empty,
-            >(cw721, PhantomData, PhantomData, PhantomData)
+                DefaultOptionCollectionMetadataExtension,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >(cw721, PhantomData, PhantomData, PhantomData, PhantomData)
             .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
@@ -392,7 +396,10 @@ mod tests {
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let mint_msg = Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::Mint {
+        let mint_msg = Cw721ExecuteMsg::<
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
+        >::Mint {
             token_id: String::from("0"),
             owner: String::from("minter"),
             token_uri: Some(String::from("https://ipfs.io/ipfs/Q")),

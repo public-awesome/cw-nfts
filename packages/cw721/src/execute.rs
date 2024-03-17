@@ -508,9 +508,9 @@ pub trait Cw721Execute<
         CREATOR.assert_owner(deps.storage, &info.sender)?;
         let contract = Cw721Config::<
             TNftMetadataExtension,
-            Empty,
+            TNftMetadataExtensionMsg,
             TCollectionMetadataExtension,
-            Empty,
+            TCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         let current_nft_info = contract.nft_info.load(deps.storage, &token_id)?;

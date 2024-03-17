@@ -35,15 +35,22 @@ fn setup_contract(
     'static,
     DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg,
-    Empty,
-    Empty,
+    DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg,
     Empty,
 > {
-    let contract = Cw721Contract::default();
-    let msg = Cw721InstantiateMsg {
+    let contract: Cw721Contract<
+        'static,
+        DefaultOptionNftMetadataExtension,
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg,
+        Empty,
+    > = Cw721Contract::default();
+    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: Empty {},
+        collection_metadata_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
@@ -69,15 +76,15 @@ fn test_instantiate() {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
         DefaultOptionNftMetadataExtensionMsg,
-        Empty,
-        Empty,
+        DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
 
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: Empty {},
+        collection_metadata_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -111,7 +118,7 @@ fn test_instantiate() {
         CollectionMetadata {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Empty {},
+            extension: None,
             updated_at: env.block.time
         }
     );
@@ -573,7 +580,7 @@ fn test_update_collection_metadata() {
         collection_metadata: CollectionMetadataMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),
-            extension: Empty {},
+            extension: None,
         },
     };
 
@@ -652,7 +659,7 @@ fn test_update_collection_metadata() {
         collection_metadata: CollectionMetadataMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),
-            extension: Empty {},
+            extension: None,
         },
     };
 

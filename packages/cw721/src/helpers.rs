@@ -7,32 +7,57 @@ use crate::msg::{
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
 use crate::state::CollectionMetadata;
 use crate::traits::{Cw721CustomMsg, Cw721State};
-use crate::Approval;
+use crate::{
+    Approval, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg,
+};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     to_json_binary, Addr, CosmosMsg, Empty, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use serde::de::DeserializeOwned;
 
+#[deprecated(since = "0.19.0", note = "Please use `Cw721Helper` instead")]
+pub type Cw721Contract = Cw721Helper<
+    DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg,
+    DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg,
+>;
+
 #[cw_serde]
-pub struct Cw721Contract<
+pub struct Cw721Helper<
     TNftMetadataExtension,
     TNftMetadataExtensionMsg,
     TCollectionMetadataExtension,
+    TCollectionMetadataExtensionMsg,
 >(
     pub Addr,
     pub PhantomData<TNftMetadataExtension>,
     pub PhantomData<TNftMetadataExtensionMsg>,
     pub PhantomData<TCollectionMetadataExtension>,
+    pub PhantomData<TCollectionMetadataExtensionMsg>,
 );
 
 #[allow(dead_code)]
-impl<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
-    Cw721Contract<TNftMetadataExtension, TNftMetadataExtensionMsg, TCollectionMetadataExtension>
+impl<
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
+    >
+    Cw721Helper<
+        TNftMetadataExtension,
+        TNftMetadataExtensionMsg,
+        TCollectionMetadataExtension,
+        TCollectionMetadataExtensionMsg,
+    >
 where
     TNftMetadataExtensionMsg: Cw721CustomMsg,
     TNftMetadataExtension: Cw721State,
     TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -40,7 +65,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtension>,
+        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
