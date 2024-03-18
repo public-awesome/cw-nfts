@@ -55,6 +55,8 @@ pub trait Cw721Execute<
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
+
+        // ---- update collection metadata before(!) creator and minter is set ----
         let collectin_metadata_msg = CollectionMetadataMsg {
             name: Some(msg.name),
             symbol: Some(msg.symbol),
@@ -65,6 +67,7 @@ pub trait Cw721Execute<
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
 
+        // ---- set minter and creator ----
         // use info.sender if None is passed
         let minter: &str = match msg.minter.as_deref() {
             Some(minter) => minter,
@@ -374,7 +377,6 @@ pub trait Cw721Execute<
         env: &Env,
         msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        CREATOR.assert_owner(deps.storage, &info.sender)?;
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,

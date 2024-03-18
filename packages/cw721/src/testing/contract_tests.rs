@@ -666,7 +666,7 @@ fn test_update_collection_metadata() {
             update_collection_metadata_msg.clone(),
         )
         .unwrap_err();
-    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
 
     // New owner can update.
     let _ = contract

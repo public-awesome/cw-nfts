@@ -20,6 +20,9 @@ pub enum Cw721ContractError {
     #[error("token_id already claimed")]
     Claimed {},
 
+    #[error("Caller is not collection creator")]
+    NotCollectionCreator {},
+
     #[error("Cannot set approval that is already expired")]
     Expired {},
 

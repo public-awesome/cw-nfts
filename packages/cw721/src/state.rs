@@ -279,11 +279,20 @@ where
 
     fn validate(
         &self,
-        _deps: Deps,
+        deps: Deps,
         _env: &cosmwasm_std::Env,
-        _info: &cosmwasm_std::MessageInfo,
+        info: &cosmwasm_std::MessageInfo,
         _current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
+        // collection metadata can only be updated by the creator
+        // - case 1: skip in case of init, since there is no creator yet
+        let creator_initialized = CREATOR.item.may_load(deps.storage)?;
+        // - case 2: check if sender is creator
+        if creator_initialized.is_some()
+            && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
+        {
+            return Err(Cw721ContractError::NotCollectionCreator {});
+        }
         // make sure the name and symbol are not empty
         if self.name.is_some() && self.name.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionNameEmpty {});

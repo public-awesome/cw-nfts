@@ -6,8 +6,8 @@ use url::Url;
 
 use crate::error::Cw721ContractError;
 use crate::state::{
-    CollectionMetadata, NftInfo, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
-    MAX_ROYALTY_SHARE_PCT,
+    CollectionMetadata, NftInfo, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, RoyaltyInfo};
@@ -364,11 +364,20 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
 
     fn validate(
         &self,
-        _deps: Deps,
+        deps: Deps,
         _env: &Env,
-        _info: &MessageInfo,
+        info: &MessageInfo,
         _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
+        // collection metadata can only be updated by the creator
+        // - case 1: skip in case of init, since there is no creator yet
+        let creator_initialized = CREATOR.item.may_load(deps.storage)?;
+        // - case 2: check if sender is creator
+        if creator_initialized.is_some()
+            && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
+        {
+            return Err(Cw721ContractError::NotCollectionCreator {});
+        }
         // check description length, must not be empty and max 512 chars
         if let Some(description) = &self.description {
             if description.is_empty() {

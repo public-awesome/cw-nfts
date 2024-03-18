@@ -1057,10 +1057,7 @@ fn test_collection_metadata_update() {
                 },
             )
             .unwrap_err();
-        assert_eq!(
-            err,
-            Cw721ContractError::Ownership(cw_ownable::OwnershipError::NotOwner)
-        );
+        assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
     }
 }
 
