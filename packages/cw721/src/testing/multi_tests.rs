@@ -72,7 +72,7 @@ pub fn query(
         DefaultOptionNftMetadataExtension,
         DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     contract.query(deps, &env, msg)

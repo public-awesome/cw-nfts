@@ -82,9 +82,9 @@ pub mod entry {
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionNftMetadataExtension,
-            Empty,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
-            CollectionMetadataExtensionMsg<RoyaltyInfo>,
+            DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
         contract.query(deps, env, msg)
@@ -102,7 +102,9 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
     use cw721_base::{
-        msg::CollectionMetadataExtensionMsg, DefaultOptionCollectionMetadataExtension, RoyaltyInfo,
+        msg::CollectionMetadataExtensionMsg, DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
+        RoyaltyInfo,
     };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
@@ -160,9 +162,9 @@ mod tests {
             1,
             Cw721ExpirationContract::<
                 DefaultOptionNftMetadataExtension,
-                Empty,
+                DefaultOptionNftMetadataExtensionMsg,
                 DefaultOptionCollectionMetadataExtension,
-                CollectionMetadataExtensionMsg<RoyaltyInfo>,
+                DefaultOptionCollectionMetadataExtensionMsg,
                 Empty,
             >::default()
             .expiration_days

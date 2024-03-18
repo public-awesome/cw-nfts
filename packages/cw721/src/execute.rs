@@ -14,10 +14,10 @@ use crate::{
     },
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
-    traits::StateFactory,
-    traits::{Cw721CustomMsg, Cw721State},
-    Approval, DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-    RoyaltyInfo,
+    traits::{Cw721CustomMsg, Cw721State, StateFactory},
+    Approval, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
+    DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
 };
 
 pub trait Cw721Execute<
@@ -830,9 +830,9 @@ pub fn migrate_legacy_collection_metadata(
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Config::<
         DefaultOptionNftMetadataExtension,
-        Empty,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
-        CollectionMetadataExtensionMsg<RoyaltyInfo>,
+        DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
     match contract.collection_metadata.may_load(storage)? {
