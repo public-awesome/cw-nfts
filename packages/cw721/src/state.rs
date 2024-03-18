@@ -288,7 +288,8 @@ where
         // - case 1: skip in case of init, since there is no creator yet
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
         // - case 2: check if sender is creator
-        if creator_initialized.is_some()
+        if (self.name.is_some() || self.symbol.is_some())
+            && creator_initialized.is_some()
             && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
         {
             return Err(Cw721ContractError::NotCollectionCreator {});

@@ -7,7 +7,7 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::state::{
     CollectionMetadata, NftInfo, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
-    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
+    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, RoyaltyInfo};
@@ -369,11 +369,22 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         info: &MessageInfo,
         _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
-        // collection metadata can only be updated by the creator
-        // - case 1: skip in case of init, since there is no creator yet
+        // start trading time can only be updated by minter
+        let minter_initialized = MINTER.item.may_load(deps.storage)?;
+        if self.start_trading_time.is_some()
+            && minter_initialized.is_some()
+            && MINTER.assert_owner(deps.storage, &info.sender).is_err()
+        {
+            return Err(Cw721ContractError::NotMinter {});
+        }
+        // all other props collection metadata extension can only be updated by the creator
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
-        // - case 2: check if sender is creator
-        if creator_initialized.is_some()
+        if (self.description.is_some()
+            || self.image.is_some()
+            || self.external_link.is_some()
+            || self.explicit_content.is_some()
+            || self.royalty_info.is_some())
+            && creator_initialized.is_some()
             && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
         {
             return Err(Cw721ContractError::NotCollectionCreator {});

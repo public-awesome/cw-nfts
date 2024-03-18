@@ -279,12 +279,13 @@ fn test_instantiation_with_collection_metadata() {
     {
         let mut deps = mock_dependencies();
 
-        let info = mock_info(CREATOR_ADDR, &[]);
+        let info_creator = mock_info(CREATOR_ADDR, &[]);
         let extension = Some(CollectionMetadataExtension {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            // no minter owner assertion on start trading time, so even creator can change this here
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
                 payment_address: Addr::unchecked("payment_address"),
@@ -318,13 +319,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -351,7 +352,7 @@ fn test_instantiation_with_collection_metadata() {
         // invalid image
         let mut deps = mock_dependencies();
 
-        let info = mock_info(CREATOR_ADDR, &[]);
+        let info_creator = mock_info(CREATOR_ADDR, &[]);
         let extension_msg = Some(CollectionMetadataExtensionMsg {
             description: Some("description".into()),
             image: Some("invalid_url".to_string()),
@@ -376,13 +377,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -419,13 +420,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -462,13 +463,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -502,13 +503,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -544,13 +545,13 @@ fn test_instantiation_with_collection_metadata() {
         .instantiate(
             deps.as_mut(),
             &mock_env(),
-            &info,
+            &info_creator,
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_metadata_extension: extension_msg.clone(),
-                creator: None,
-                minter: None,
+                creator: Some(CREATOR_ADDR.into()),
+                minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -573,7 +574,7 @@ fn test_collection_metadata_update() {
         // initialize contract
         let mut deps = mock_dependencies();
         let env = mock_env();
-        let info = mock_info(CREATOR_ADDR, &[]);
+        let info_creator = mock_info(CREATOR_ADDR, &[]);
         let expected_instantiated_extension = Some(CollectionMetadataExtension {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
@@ -613,13 +614,13 @@ fn test_collection_metadata_update() {
             .instantiate(
                 deps.as_mut(),
                 &env,
-                &info,
+                &info_creator,
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_metadata_extension: instantiated_extension_msg.clone(),
-                    creator: None,
-                    minter: None,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -645,7 +646,7 @@ fn test_collection_metadata_update() {
             .execute(
                 deps.as_mut(),
                 &env,
-                &info,
+                &info_creator,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: empty_collection_metadata_msg,
                 },
@@ -662,13 +663,13 @@ fn test_collection_metadata_update() {
             expected_instantiated_extension
         );
 
-        // update collection with proper data
+        // update collection with proper data by creator
         let updated_extension_msg = CollectionMetadataExtensionMsg {
             description: Some("new_description".into()),
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
-            start_trading_time: Some(Timestamp::from_seconds(0)),
+            start_trading_time: None, // start trading time belongs to minter - not creator!
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: "payment_address".into(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
@@ -686,7 +687,7 @@ fn test_collection_metadata_update() {
             .execute(
                 deps.as_mut(),
                 &env,
-                &info,
+                &info_creator,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
                     collection_metadata: updated_collection_metadata_msg,
                 },
@@ -713,6 +714,61 @@ fn test_collection_metadata_update() {
                 explicit_content: Some(true),
                 external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
                 start_trading_time: Some(Timestamp::from_seconds(0)),
+                royalty_info: Some(RoyaltyInfo {
+                    payment_address: Addr::unchecked("payment_address"),
+                    share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
+                        .to_string()
+                        .parse()
+                        .unwrap(),
+                }),
+            })
+        );
+
+        // update start trading time by minter
+        let updated_extension_msg = CollectionMetadataExtensionMsg {
+            description: None,
+            image: None,
+            explicit_content: None,
+            external_link: None,
+            start_trading_time: Some(Timestamp::from_seconds(1)),
+            royalty_info: None,
+        };
+        let updated_collection_metadata_msg = CollectionMetadataMsg {
+            name: None,
+            symbol: None,
+            extension: Some(updated_extension_msg),
+        };
+        let info_minter = mock_info(MINTER_ADDR, &[]);
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_minter,
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
+                    collection_metadata: updated_collection_metadata_msg,
+                },
+            )
+            .unwrap();
+        // validate data
+        let collection_metadata = Cw721Contract::<
+            DefaultOptionNftMetadataExtension,
+            Empty,
+            DefaultOptionCollectionMetadataExtension,
+            DefaultOptionCollectionMetadataExtensionMsg,
+            Empty,
+        >::default()
+        .query_collection_metadata(deps.as_ref(), &mock_env())
+        .unwrap();
+        assert_eq!(collection_metadata.name, "new_collection_name");
+        assert_eq!(collection_metadata.symbol, "new_collection_symbol");
+        assert_eq!(
+            collection_metadata.extension,
+            Some(CollectionMetadataExtension {
+                description: "new_description".into(),
+                image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
+                explicit_content: Some(true),
+                external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+                start_trading_time: Some(Timestamp::from_seconds(1)),
                 royalty_info: Some(RoyaltyInfo {
                     payment_address: Addr::unchecked("payment_address"),
                     share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
@@ -1032,7 +1088,7 @@ fn test_collection_metadata_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
-            start_trading_time: Some(Timestamp::from_seconds(0)),
+            start_trading_time: None,
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: "payment_address".into(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
@@ -1058,6 +1114,78 @@ fn test_collection_metadata_update() {
             )
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+    }
+    // case 4: non-minter updating data
+    {
+        // initialize contract
+        let mut deps = mock_dependencies();
+        let env = mock_env();
+        let info = mock_info(CREATOR_ADDR, &[]);
+        let instantiated_extension = Some(CollectionMetadataExtensionMsg {
+            description: Some("description".into()),
+            image: Some("https://moonphases.org".to_string()),
+            explicit_content: Some(true),
+            external_link: Some("https://moonphases.org".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(0)),
+            royalty_info: Some(RoyaltyInfoResponse {
+                payment_address: "payment_address".into(),
+                share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
+                    .to_string()
+                    .parse()
+                    .unwrap(),
+            }),
+        });
+        let contract = Cw721Contract::<
+            DefaultOptionNftMetadataExtension,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtension,
+            DefaultOptionCollectionMetadataExtensionMsg,
+            Empty,
+        >::default();
+        contract
+            .instantiate(
+                deps.as_mut(),
+                &env,
+                &info,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_metadata_extension: instantiated_extension.clone(),
+                    creator: None,
+                    minter: None,
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
+
+        // update collection by other user
+        let updated_extension_msg = CollectionMetadataExtensionMsg {
+            description: None,
+            image: None,
+            explicit_content: None,
+            external_link: None,
+            start_trading_time: Some(Timestamp::from_seconds(0)),
+            royalty_info: None,
+        };
+        let updated_collection_metadata_msg = CollectionMetadataMsg {
+            name: None,
+            symbol: None,
+            extension: Some(updated_extension_msg),
+        };
+        let info_other = mock_info(OTHER_ADDR, &[]);
+        let err = contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_other,
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
+                    collection_metadata: updated_collection_metadata_msg,
+                },
+            )
+            .unwrap_err();
+        assert_eq!(err, Cw721ContractError::NotMinter {});
     }
 }
 
