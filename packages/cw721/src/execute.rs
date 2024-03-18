@@ -9,15 +9,14 @@ use cw_utils::Expiration;
 use crate::{
     error::Cw721ContractError,
     msg::{
-        CollectionMetadataExtensionMsg, CollectionMetadataMsg, Cw721ExecuteMsg,
-        Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
+        CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
     },
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
     traits::{Cw721CustomMsg, Cw721State, StateFactory},
     Approval, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
+    DefaultOptionNftMetadataExtensionMsg,
 };
 
 pub trait Cw721Execute<

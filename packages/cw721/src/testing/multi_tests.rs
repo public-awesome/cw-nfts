@@ -2,14 +2,13 @@ use crate::{
     error::Cw721ContractError,
     execute::Cw721Execute,
     msg::{
-        CollectionMetadataExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
-        Cw721QueryMsg, MinterResponse, NumTokensResponse, OwnerOfResponse,
+        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
+        NumTokensResponse, OwnerOfResponse,
     },
     query::Cw721Query,
     state::{NftMetadata, Trait},
     DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
     DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, NftMetadataMsg,
-    RoyaltyInfo,
 };
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
