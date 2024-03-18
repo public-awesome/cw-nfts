@@ -102,9 +102,8 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
     use cw721_base::{
-        msg::CollectionMetadataExtensionMsg, DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
-        RoyaltyInfo,
+        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionNftMetadataExtensionMsg,
     };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};

@@ -131,7 +131,10 @@ fn query_owner(querier: QuerierWrapper, cw721: &Addr, token_id: String) -> Addr 
     let resp: OwnerOfResponse = querier
         .query_wasm_smart(
             cw721,
-            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::OwnerOf {
                 token_id,
                 include_expired: None,
             },
@@ -146,7 +149,15 @@ fn query_nft_info(
     token_id: String,
 ) -> NftInfoResponse<Option<NftMetadata>> {
     querier
-        .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty, Empty>::NftInfo { token_id })
+        .query_wasm_smart(
+            cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::NftInfo {
+                token_id,
+            },
+        )
         .unwrap()
 }
 
@@ -259,7 +270,10 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -298,7 +312,10 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -322,7 +339,10 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -455,7 +475,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
@@ -464,7 +490,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, legacy_creator_and_minter.to_string());
 
@@ -473,7 +505,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(
@@ -486,7 +521,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
@@ -566,7 +604,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
@@ -575,7 +619,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, minter.to_string());
 
@@ -584,7 +634,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
@@ -595,7 +648,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
@@ -680,7 +736,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
@@ -689,7 +751,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
@@ -698,7 +766,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(
@@ -711,7 +782,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
@@ -791,7 +865,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
@@ -800,7 +880,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
@@ -809,7 +895,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
@@ -820,7 +909,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
@@ -905,7 +997,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
@@ -914,7 +1012,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
@@ -923,7 +1027,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(
@@ -936,7 +1043,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
@@ -1016,7 +1126,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
@@ -1025,7 +1141,13 @@ fn test_migration_legacy_to_latest() {
         #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
@@ -1034,7 +1156,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
             )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
@@ -1045,7 +1170,10 @@ fn test_migration_legacy_to_latest() {
             .wrap()
             .query_wasm_smart(
                 &cw721,
-                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
             )
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
@@ -1080,7 +1208,13 @@ fn test_instantiate_016_msg() {
     // assert withdraw address is None
     let withdraw_addr: Option<String> = app
         .wrap()
-        .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty, Empty>::GetWithdrawAddress {})
+        .query_wasm_smart(
+            cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::GetWithdrawAddress {},
+        )
         .unwrap();
     assert!(withdraw_addr.is_none());
 }
@@ -1130,7 +1264,10 @@ fn test_update_nft_metadata() {
     app.execute_contract(
         minter,
         cw721.clone(),
-        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::Mint {
+        &Cw721ExecuteMsg::<
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
+        >::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
@@ -1153,7 +1290,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1180,7 +1320,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: Some("invalid".to_string()),
                 extension: Some(NftMetadataMsg {
@@ -1210,7 +1353,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1240,7 +1386,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1270,7 +1419,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1300,7 +1452,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1330,7 +1485,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1357,7 +1515,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1384,7 +1545,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1411,7 +1575,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1438,7 +1605,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1469,7 +1639,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1500,7 +1673,10 @@ fn test_update_nft_metadata() {
         .execute_contract(
             creator.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+            &Cw721ExecuteMsg::<
+                DefaultOptionNftMetadataExtensionMsg,
+                DefaultOptionCollectionMetadataExtensionMsg,
+            >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
@@ -1545,7 +1721,10 @@ fn test_update_nft_metadata() {
     app.execute_contract(
         creator.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<DefaultOptionNftMetadataExtensionMsg, Empty>::UpdateNftInfo {
+        &Cw721ExecuteMsg::<
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtensionMsg,
+        >::UpdateNftInfo {
             token_id: "1".to_string(),
             token_uri: Some("ipfs://foo.bar/metadata2.json".to_string()),
             extension: Some(new_nft_metadata.clone()),
@@ -1563,7 +1742,13 @@ fn test_update_nft_metadata() {
     // check num tokens
     let num_tokens: NumTokensResponse = app
         .wrap()
-        .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::NumTokens {})
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionNftMetadataExtension,
+                DefaultOptionCollectionMetadataExtension,
+            >::NumTokens {},
+        )
         .unwrap();
     assert_eq!(num_tokens.count, 1);
 }

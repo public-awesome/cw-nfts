@@ -336,7 +336,7 @@ fn test_instantiation_with_collection_metadata() {
         // validate data
         let collection_metadata = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            Empty,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
@@ -697,7 +697,7 @@ fn test_collection_metadata_update() {
         // validate data
         let collection_metadata = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            Empty,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
@@ -752,7 +752,7 @@ fn test_collection_metadata_update() {
         // validate data
         let collection_metadata = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
-            Empty,
+            DefaultOptionNftMetadataExtensionMsg,
             DefaultOptionCollectionMetadataExtension,
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
@@ -1280,7 +1280,7 @@ fn test_migrate() {
     MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
-        Empty,
+        DefaultOptionNftMetadataExtensionMsg,
         DefaultOptionCollectionMetadataExtension,
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
