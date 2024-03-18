@@ -55,16 +55,12 @@ pub trait Cw721Execute<
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let collection_metadata_extension =
-            msg.collection_metadata_extension
-                .create(deps.as_ref(), env, info, None)?;
-        let collection_metadata = CollectionMetadata {
-            name: msg.name.clone(),
-            symbol: msg.symbol.clone(),
-            extension: collection_metadata_extension,
-            updated_at: env.block.time,
+        let collectin_metadata_msg = CollectionMetadataMsg {
+            name: Some(msg.name),
+            symbol: Some(msg.symbol),
+            extension: msg.collection_metadata_extension,
         };
-        collection_metadata.validate(deps.as_ref(), env, info)?;
+        let collection_metadata = collectin_metadata_msg.create(deps.as_ref(), env, info, None)?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -386,19 +382,8 @@ pub trait Cw721Execute<
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let mut collection_metadata = config.collection_metadata.load(deps.storage)?;
-        if let Some(name) = msg.name {
-            collection_metadata.name = name;
-        }
-        if let Some(symbol) = msg.symbol {
-            collection_metadata.symbol = symbol;
-        }
-        collection_metadata.extension = msg.extension.create(
-            deps.as_ref(),
-            env,
-            info,
-            Some(&collection_metadata.extension),
-        )?;
+        let current = config.collection_metadata.load(deps.storage)?;
+        let collection_metadata = msg.create(deps.as_ref(), env, info, Some(&current))?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;

@@ -8,6 +8,7 @@ use cw_utils::Expiration;
 use url::Url;
 
 use crate::error::Cw721ContractError;
+use crate::msg::CollectionMetadataMsg;
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, NftMetadataMsg};
 
@@ -230,18 +231,64 @@ pub struct CollectionMetadata<TCollectionMetadataExtension> {
     pub updated_at: Timestamp,
 }
 
-impl<TCollectionMetadataExtension> CollectionMetadata<TCollectionMetadataExtension> {
-    pub fn validate(
+impl<TCollectionMetadataExtension, TCollectionMetadataExtensionMsg>
+    StateFactory<CollectionMetadata<TCollectionMetadataExtension>>
+    for CollectionMetadataMsg<TCollectionMetadataExtensionMsg>
+where
+    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
+{
+    fn create(
+        &self,
+        deps: Deps,
+        env: &cosmwasm_std::Env,
+        info: &cosmwasm_std::MessageInfo,
+        current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
+    ) -> Result<CollectionMetadata<TCollectionMetadataExtension>, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        match current {
+            // Some: update existing metadata
+            Some(current) => {
+                let mut updated = current.clone();
+                if let Some(name) = &self.name {
+                    updated.name = name.clone();
+                }
+                if let Some(symbol) = &self.symbol {
+                    updated.symbol = symbol.clone();
+                }
+                let current_extension = current.extension.clone();
+                let updated_extension =
+                    self.extension
+                        .create(deps, env, info, Some(&current_extension))?;
+                updated.extension = updated_extension;
+                Ok(updated)
+            }
+            // None: create new metadata
+            None => {
+                let extension = self.extension.create(deps, env, info, None)?;
+                let new = CollectionMetadata {
+                    name: self.name.clone().unwrap(),
+                    symbol: self.symbol.clone().unwrap(),
+                    extension,
+                    updated_at: env.block.time,
+                };
+                Ok(new)
+            }
+        }
+    }
+
+    fn validate(
         &self,
         _deps: Deps,
         _env: &cosmwasm_std::Env,
         _info: &cosmwasm_std::MessageInfo,
+        _current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
         // make sure the name and symbol are not empty
-        if self.name.is_empty() {
+        if self.name.is_some() && self.name.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionNameEmpty {});
         }
-        if self.symbol.is_empty() {
+        if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
         }
         Ok(())
