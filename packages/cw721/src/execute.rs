@@ -26,7 +26,7 @@ pub trait Cw721Execute<
     TNftMetadataExtensionMsg,
     // Extension defined in CollectionMetadata.
     TCollectionMetadataExtension,
-    // Message passed for updating collection info extension.
+    // Message passed for updating collection metadata extension.
     TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
@@ -779,7 +779,7 @@ pub fn migrate_minter(
 
 /// Migrates only in case ownership is not present
 /// !!! Important note here: !!!
-/// - creator owns the contract and can update collection info
+/// - creator owns the contract and can update collection metadata
 /// - minter can mint new tokens
 ///
 /// Before v0.19.0 there were confusing naming conventions:
@@ -837,7 +837,7 @@ pub fn migrate_legacy_collection_metadata(
     match contract.collection_metadata.may_load(storage)? {
         Some(_) => Ok(response),
         None => {
-            // contract info is legacy collection info
+            // contract info is legacy collection metadata
             let legacy_collection_metadata_store: Item<cw721_016::ContractInfoResponse> =
                 Item::new("nft_info");
             let legacy_collection_metadata = legacy_collection_metadata_store.load(storage)?;

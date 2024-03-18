@@ -578,7 +578,7 @@ fn test_update_collection_metadata() {
         },
     };
 
-    // Creator can update collection info
+    // Creator can update collection metadata
     let creator_info = mock_info(CREATOR_ADDR, &[]);
     let _ = contract
         .execute(

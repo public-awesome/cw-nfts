@@ -12,7 +12,7 @@ use crate::msg::CollectionMetadataMsg;
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, NftMetadataMsg};
 
-/// Creator owns this contract and can update collection info!
+/// Creator owns this contract and can update collection metadata!
 /// !!! Important note here: !!!
 /// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
 /// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
@@ -25,7 +25,7 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 // This may be quite restrictive and may be increased in the future.
 // Custom contracts may also provide a custom CollectionMetadataExtension.
 
-/// Maximum length of the description field in the collection info.
+/// Maximum length of the description field in the collection metadata.
 pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
 /// Max increase/decrease of of royalty share percentage.
 pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
@@ -41,7 +41,7 @@ pub struct Cw721Config<
     TNftMetadataExtensionMsg,
     // Extension defined in CollectionMetadata.
     TCollectionMetadataExtension,
-    // Message passed for updating collection info extension.
+    // Message passed for updating collection metadata extension.
     TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,

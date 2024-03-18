@@ -12,7 +12,7 @@ pub struct Cw721ExpirationContract<
     TNftMetadataExtensionMsg,
     // Extension defined in CollectionMetadata.
     TCollectionMetadataExtension,
-    // Message passed for updating collection info extension.
+    // Message passed for updating collection metadata extension.
     TCollectionMetadataExtensionMsg,
     TCustomResponseMsg,
 > where

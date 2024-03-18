@@ -1276,7 +1276,7 @@ fn test_migrate() {
     }
 
     // assert new data before migration:
-    // - ownership and collection info throws NotFound Error
+    // - ownership and collection metadata throws NotFound Error
     MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
@@ -1301,7 +1301,7 @@ fn test_migrate() {
     let legacy_minter_store: Item<Addr> = Item::new("minter");
     let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
     assert_eq!(legacy_minter, "legacy_minter");
-    // - legacy collection info is set
+    // - legacy collection metadata is set
     let legacy_collection_metadata_store: Item<cw721_016::ContractInfoResponse> =
         Item::new("nft_info");
     let all_tokens = contract
@@ -1357,7 +1357,7 @@ fn test_migrate() {
         .map(|a| a.into_string());
     assert_eq!(creator_ownership, Some("legacy_minter".to_string()));
 
-    // assert collection info
+    // assert collection metadata
     let collection_metadata = contract
         .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
@@ -1379,7 +1379,7 @@ fn test_migrate() {
     // - minter
     let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
     assert_eq!(legacy_minter, "legacy_minter");
-    // - collection info
+    // - collection metadata
     let legacy_collection_metadata = legacy_collection_metadata_store
         .load(deps.as_ref().storage)
         .unwrap();

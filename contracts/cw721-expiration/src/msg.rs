@@ -25,7 +25,7 @@ pub struct InstantiateMsg<TCollectionMetadataExtension> {
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
-    /// The creator is the only who can update collection info.
+    /// The creator is the only who can update collection metadata.
     pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,

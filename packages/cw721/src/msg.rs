@@ -16,7 +16,7 @@ use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, Royalty
 pub enum Cw721ExecuteMsg<
     // Message passed for updating metadata.
     TNftMetadataExtensionMsg,
-    // Message passed for updating collection info extension.
+    // Message passed for updating collection metadata extension.
     TCollectionMetadataExtensionMsg,
 > {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
