@@ -133,13 +133,13 @@ pub trait Cw721Execute<
             Cw721ExecuteMsg::Burn { token_id } => self.burn_nft(deps, env, info, token_id),
             #[allow(deprecated)]
             Cw721ExecuteMsg::UpdateOwnership(action) => {
-                self.update_minter_ownership(deps, env, info, action)
+                self.update_minter_ownership(deps.api, deps.storage, env, info, action)
             }
             Cw721ExecuteMsg::UpdateMinterOwnership(action) => {
-                self.update_minter_ownership(deps, env, info, action)
+                self.update_minter_ownership(deps.api, deps.storage, env, info, action)
             }
             Cw721ExecuteMsg::UpdateCreatorOwnership(action) => {
-                self.update_creator_ownership(deps, env, info, action)
+                self.update_creator_ownership(deps.api, deps.storage, env, info, action)
             }
             #[allow(deprecated)]
             Cw721ExecuteMsg::Extension { msg } => {
@@ -444,13 +444,13 @@ pub trait Cw721Execute<
 
     fn update_minter_ownership(
         &self,
-        deps: DepsMut,
+        api: &dyn Api,
+        storage: &mut dyn Storage,
         env: &Env,
         info: &MessageInfo,
         action: Action,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        let ownership =
-            MINTER.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
+        let ownership = MINTER.update_ownership(api, storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
             .add_attribute("update_minter_ownership", info.sender.to_string())
             .add_attributes(ownership.into_attributes()))
@@ -458,13 +458,13 @@ pub trait Cw721Execute<
 
     fn update_creator_ownership(
         &self,
-        deps: DepsMut,
+        api: &dyn Api,
+        storage: &mut dyn Storage,
         env: &Env,
         info: &MessageInfo,
         action: Action,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        let ownership =
-            CREATOR.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
+        let ownership = CREATOR.update_ownership(api, storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
             .add_attribute("update_creator_ownership", info.sender.to_string())
             .add_attributes(ownership.into_attributes()))
