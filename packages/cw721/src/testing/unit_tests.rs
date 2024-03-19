@@ -1393,6 +1393,7 @@ fn test_nft_mint() {
 fn test_migrate() {
     let mut deps = mock_dependencies();
 
+    // instantiate v16 contract
     let env = mock_env();
     use cw721_base_016 as v16;
     v16::entry::instantiate(
@@ -1407,7 +1408,7 @@ fn test_migrate() {
     )
     .unwrap();
 
-    // mint 200 NFTs before migration
+    // mint 200 NFTs before migration - using v16 contract
     for i in 0..200 {
         let info = mock_info("legacy_minter", &[]);
         let msg = v16::ExecuteMsg::Mint(v16::msg::MintMsg {
@@ -1420,7 +1421,7 @@ fn test_migrate() {
     }
 
     // assert new data before migration:
-    // - ownership and collection metadata throws NotFound Error
+    // - minter, creator, and collection metadata throws NotFound Error
     MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
@@ -1448,10 +1449,17 @@ fn test_migrate() {
     // - legacy collection metadata is set
     let legacy_collection_metadata_store: Item<cw721_016::ContractInfoResponse> =
         Item::new("nft_info");
+    let legacy_collection_metadata = legacy_collection_metadata_store
+        .load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(legacy_collection_metadata.name, "legacy_name");
+    assert_eq!(legacy_collection_metadata.symbol, "legacy_symbol");
+    // 200 NFTs still exist
     let all_tokens = contract
         .query_all_tokens(deps.as_ref(), &env, None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
+    // NFTs have proper owner
     for token_id in 0..200 {
         let token = contract
             .query_owner_of(deps.as_ref(), &env, token_id.to_string(), false)
@@ -1459,6 +1467,7 @@ fn test_migrate() {
         assert_eq!(token.owner.as_str(), "owner");
     }
 
+    // migrate
     Cw721Contract::<
         DefaultOptionNftMetadataExtension,
         DefaultOptionNftMetadataExtensionMsg,
@@ -1474,16 +1483,15 @@ fn test_migrate() {
             creator: None,
         },
         "contract_name",
-        "contract_version",
+        "new_contract_version",
     )
     .unwrap();
 
-    // version
+    // assert version has changed
     let version = cw2::get_contract_version(deps.as_ref().storage)
         .unwrap()
         .version;
-    assert_eq!(version, "contract_version");
-    assert_ne!(version, "0.16.0");
+    assert_eq!(version, "new_contract_version");
 
     // assert minter ownership
     let minter_ownership = MINTER
@@ -1523,7 +1531,7 @@ fn test_migrate() {
     // - minter
     let legacy_minter = legacy_minter_store.load(deps.as_ref().storage).unwrap();
     assert_eq!(legacy_minter, "legacy_minter");
-    // - collection metadata
+    // - legacy collection metadata
     let legacy_collection_metadata = legacy_collection_metadata_store
         .load(deps.as_ref().storage)
         .unwrap();

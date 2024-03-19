@@ -97,6 +97,16 @@ fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
+fn cw721_base_015_contract() -> Box<dyn Contract<Empty>> {
+    use cw721_base_015 as v15;
+    let contract = ContractWrapper::new(
+        v15::entry::execute,
+        v15::entry::instantiate,
+        v15::entry::query,
+    );
+    Box::new(contract)
+}
+
 fn cw721_base_016_contract() -> Box<dyn Contract<Empty>> {
     use cw721_base_016 as v16;
     let contract = ContractWrapper::new(
@@ -395,7 +405,268 @@ fn test_operator() {
 /// can be minted, transferred, and burnred after migration.
 #[test]
 fn test_migration_legacy_to_latest() {
-    // case 1: migrate from v0.16 to latest by using existing minter addr
+    // v0.15 migration by using existing minter addr
+    {
+        use cw721_base_015 as v15;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_016 = app.store_code(cw721_base_015_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_016,
+                legacy_creator_and_minter.clone(),
+                &v15::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin,
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
+                    minter: None,
+                    creator: None,
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
+
+        // non-minter user cant mint
+        let other = Addr::unchecked(OTHER_ADDR);
+        let err: Cw721ContractError = app
+            .execute_contract(
+                other.clone(),
+                cw721.clone(),
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: other.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, Cw721ContractError::NotMinter {});
+
+        // legacy minter can still mint
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // check new mint query response works.
+        #[allow(deprecated)]
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
+            .unwrap();
+        assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        #[allow(deprecated)]
+        let m: v15::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
+            .unwrap();
+        assert_eq!(m.minter, legacy_creator_and_minter.to_string());
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
+    }
+    // v0.15 migration by providing new creator and minter addr
+    {
+        use cw721_base_015 as v15;
+        let mut app = App::default();
+        let admin = Addr::unchecked("admin");
+
+        let code_id_015 = app.store_code(cw721_base_015_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_015,
+                legacy_creator_and_minter.clone(),
+                &v15::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: legacy_creator_and_minter.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        mint_transfer_and_burn(
+            &mut app,
+            cw721.clone(),
+            legacy_creator_and_minter.clone(),
+            "1".to_string(),
+        );
+
+        // migrate
+        app.execute(
+            admin,
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
+                    minter: Some(MINTER_ADDR.to_string()),
+                    creator: Some(CREATOR_ADDR.to_string()),
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
+
+        // legacy minter user cant mint
+        let err: Cw721ContractError = app
+            .execute_contract(
+                legacy_creator_and_minter.clone(),
+                cw721.clone(),
+                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                    token_id: "1".to_string(),
+                    owner: legacy_creator_and_minter.to_string(),
+                    token_uri: None,
+                    extension: Empty::default(),
+                },
+                &[],
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(err, Cw721ContractError::NotMinter {});
+
+        // new minter can mint
+        let minter = Addr::unchecked(MINTER_ADDR);
+        mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
+
+        // check new mint query response works.
+        #[allow(deprecated)]
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
+            .unwrap();
+        assert_eq!(m.minter, Some(minter.to_string()));
+
+        // check that the new response is backwards compatable when minter
+        // is not None.
+        #[allow(deprecated)]
+        let m: v15::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::Minter {},
+            )
+            .unwrap();
+        assert_eq!(m.minter, minter.to_string());
+
+        // check minter ownership query works
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
+        assert_eq!(minter_ownership.owner, Some(minter));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionNftMetadataExtension,
+                    DefaultOptionCollectionMetadataExtension,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
+    }
+    // v0.16 migration by using existing minter addr
     {
         use cw721_base_016 as v16;
         let mut app = App::default();
@@ -529,7 +800,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
-    // case 2: migrate from v0.16 to latest by providing new creator and minter addr
+    // v0.16 migration by providing new creator and minter addr
     {
         use cw721_base_016 as v16;
         let mut app = App::default();
@@ -656,7 +927,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
-    // case 3: migrate from v0.17 to latest by using existing minter addr
+    // v0.17 migration by using existing minter addr
     {
         use cw721_base_017 as v17;
         let mut app = App::default();
@@ -790,7 +1061,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
-    // case 4: migrate from v0.17 to latest by providing new creator and minter addr
+    // v0.17 migration by providing new creator and minter addr
     {
         use cw721_base_017 as v17;
         let mut app = App::default();
@@ -917,7 +1188,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
-    // case 5: migrate from v0.18 to latest by using existing minter addr
+    // v0.18 migration by using existing minter addr
     {
         use cw721_base_018 as v18;
         let mut app = App::default();
@@ -1051,7 +1322,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
-    // case 6: migrate from v0.18 to latest by providing new creator and minter addr
+    // v0.18 migration by providing new creator and minter addr
     {
         use cw721_base_018 as v18;
         let mut app = App::default();

@@ -32,5 +32,3 @@ cw721           = { workspace = true }
 serde           = { workspace = true }
 
 [dev-dependencies]
-cw721-017       = { workspace = true }
-cw721-018       = { workspace = true }

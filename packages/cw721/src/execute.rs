@@ -812,7 +812,7 @@ pub fn migrate_legacy_minter_and_creator(
     // in v0.17/18 cw_ownable::OWNERSHIP was used for minter, now it is used for creator
     let ownership_previously_used_as_minter = CREATOR.item.may_load(storage)?;
     let creator_and_minter = match ownership_previously_used_as_minter {
-        // v0.18 migration
+        // v0.17/18 ownership migration
         Some(ownership) => {
             // owner is used for both: creator and minter
             // since it is already set for creator, we only need to migrate minter
@@ -820,7 +820,7 @@ pub fn migrate_legacy_minter_and_creator(
             MINTER.initialize_owner(storage, api, owner.as_deref())?;
             owner
         }
-        // v0.17 and older migration
+        // migration below v0.17
         None => {
             let legacy_minter_store: Item<Addr> = Item::new("minter");
             let legacy_minter = legacy_minter_store.load(storage)?;
