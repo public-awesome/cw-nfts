@@ -222,10 +222,7 @@ fn test_mint() {
     let err = contract
         .execute(deps.as_mut(), env.clone(), random, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(
-        err,
-        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
-    );
+    assert_eq!(err, ContractError::Cw721(Cw721ContractError::NotMinter {}));
 
     // minter can mint
     let allowed = mock_info(MINTER_ADDR, &[]);
@@ -388,10 +385,7 @@ fn test_update_minter() {
     let err: ContractError = contract
         .execute(deps.as_mut(), mock_env(), minter_info, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(
-        err,
-        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
-    );
+    assert_eq!(err, ContractError::Cw721(Cw721ContractError::NotMinter {}));
 
     // New owner can mint.
     let _ = contract

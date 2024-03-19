@@ -268,7 +268,7 @@ fn test_mint() {
     let err = contract
         .execute(deps.as_mut(), &env, &info_random, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(err, Cw721ContractError::NotMinter {});
 
     // minter can mint
     let info_minter = mock_info(MINTER_ADDR, &[]);
@@ -695,9 +695,14 @@ fn test_update_minter() {
     };
 
     // Minter can mint
-    let minter_info = mock_info(MINTER_ADDR, &[]);
+    let current_minter_info = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(deps.as_mut(), &mock_env(), &minter_info.clone(), mint_msg)
+        .execute(
+            deps.as_mut(),
+            &mock_env(),
+            &current_minter_info.clone(),
+            mint_msg,
+        )
         .unwrap();
 
     // Update the owner to "random". The new owner should be able to
@@ -706,7 +711,7 @@ fn test_update_minter() {
         .execute(
             deps.as_mut(),
             &mock_env(),
-            &minter_info,
+            &current_minter_info,
             Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
@@ -737,12 +742,12 @@ fn test_update_minter() {
     );
 
     // Accept the ownership transfer.
-    let random_info = mock_info("random", &[]);
+    let new_minter_info = mock_info("random", &[]);
     contract
         .execute(
             deps.as_mut(),
             &mock_env(),
-            &random_info,
+            &new_minter_info,
             Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
         )
         .unwrap();
@@ -758,7 +763,7 @@ fn test_update_minter() {
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter_ownership.owner, Some(random_info.sender.clone()));
+    assert_eq!(minter_ownership.owner, Some(new_minter_info.sender.clone()));
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
@@ -769,13 +774,18 @@ fn test_update_minter() {
 
     // Old owner can not mint.
     let err: Cw721ContractError = contract
-        .execute(deps.as_mut(), &mock_env(), &minter_info, mint_msg.clone())
+        .execute(
+            deps.as_mut(),
+            &mock_env(),
+            &current_minter_info,
+            mint_msg.clone(),
+        )
         .unwrap_err();
-    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(err, Cw721ContractError::NotMinter {});
 
     // New owner can mint.
     let _ = contract
-        .execute(deps.as_mut(), &mock_env(), &random_info, mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &new_minter_info, mint_msg)
         .unwrap();
 }
 

@@ -405,7 +405,6 @@ pub trait Cw721Execute<
         token_uri: Option<String>,
         extension: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        MINTER.assert_owner(deps.storage, &info.sender)?;
         // create the token
         let token_msg = NftInfoMsg {
             owner: owner.clone(),
@@ -491,7 +490,6 @@ pub trait Cw721Execute<
         token_uri: Option<String>,
         msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        CREATOR.assert_owner(deps.storage, &info.sender)?;
         let contract = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
@@ -723,6 +721,20 @@ pub fn check_can_send<TNftMetadataExtension>(
         }
         None => Err(Cw721ContractError::Ownership(OwnershipError::NotOwner)),
     }
+}
+
+pub fn assert_minter(deps: Deps, sender: &Addr) -> Result<(), Cw721ContractError> {
+    if MINTER.assert_owner(deps.storage, sender).is_err() {
+        return Err(Cw721ContractError::NotMinter {});
+    }
+    Ok(())
+}
+
+pub fn assert_creator(deps: Deps, sender: &Addr) -> Result<(), Cw721ContractError> {
+    if CREATOR.assert_owner(deps.storage, sender).is_err() {
+        return Err(Cw721ContractError::NotCollectionCreator {});
+    }
+    Ok(())
 }
 
 // ------- migrate -------

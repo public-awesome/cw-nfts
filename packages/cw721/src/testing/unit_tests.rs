@@ -1254,59 +1254,139 @@ fn test_collection_metadata_update() {
 }
 
 #[test]
-fn test_nft_mint_with_metadata_extension() {
-    let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
-        Empty,
-    >::default();
+fn test_nft_mint() {
+    // case 1: mint without onchain metadata
+    {
+        let mut deps = mock_dependencies();
+        let contract = Cw721Contract::<
+            DefaultOptionNftMetadataExtension,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtension,
+            DefaultOptionCollectionMetadataExtensionMsg,
+            Empty,
+        >::default();
 
-    let info = mock_info(CREATOR_ADDR, &[]);
-    let init_msg = Cw721InstantiateMsg {
-        name: "collection_name".into(),
-        symbol: "collection_symbol".into(),
-        collection_metadata_extension: None,
-        minter: None,
-        creator: None,
-        withdraw_address: None,
-    };
-    let env = mock_env();
-    contract
-        .instantiate(
-            deps.as_mut(),
-            &env,
-            &info,
-            init_msg,
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        let info = mock_info(CREATOR_ADDR, &[]);
+        let init_msg = Cw721InstantiateMsg {
+            name: "collection_name".into(),
+            symbol: "collection_symbol".into(),
+            collection_metadata_extension: None,
+            minter: None,
+            creator: None,
+            withdraw_address: None,
+        };
+        let env = mock_env();
+        contract
+            .instantiate(
+                deps.as_mut(),
+                &env,
+                &info,
+                init_msg,
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
-    let token_id = "Enterprise";
-    let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-    let extension = Some(NftMetadata {
-        description: Some("Spaceship with Warp Drive".into()),
-        name: Some("Starship USS Enterprise".to_string()),
-        ..NftMetadata::default()
-    });
-    let exec_msg = Cw721ExecuteMsg::Mint {
-        token_id: token_id.to_string(),
-        owner: "john".to_string(),
-        token_uri: token_uri.clone(),
-        extension: extension.clone(),
-    };
-    contract
-        .execute(deps.as_mut(), &env, &info, exec_msg)
-        .unwrap();
+        let token_id = "Enterprise";
+        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension = None;
+        let exec_msg = Cw721ExecuteMsg::Mint {
+            token_id: token_id.to_string(),
+            owner: "john".to_string(),
+            token_uri: token_uri.clone(),
+            extension: extension.clone(),
+        };
+        contract
+            .execute(deps.as_mut(), &env, &info, exec_msg)
+            .unwrap();
 
-    let res = contract
-        .query_nft_info(deps.as_ref(), &env, token_id.into())
-        .unwrap();
-    assert_eq!(res.token_uri, token_uri);
-    assert_eq!(res.extension, extension);
+        let res = contract
+            .query_nft_info(deps.as_ref(), &env, token_id.into())
+            .unwrap();
+        assert_eq!(res.token_uri, token_uri);
+        assert_eq!(res.extension, extension);
+        // mint with empty token_uri
+        let exec_msg = Cw721ExecuteMsg::Mint {
+            token_id: token_id.to_string(),
+            owner: "john".to_string(),
+            token_uri: "".to_string().into(), // empty token_uri
+            extension: extension.clone(),
+        };
+        let err = contract
+            .execute(deps.as_mut(), &env, &info, exec_msg)
+            .unwrap_err();
+        assert_eq!(
+            err,
+            Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
+        );
+        // non-minter cant mint
+        let info = mock_info("john", &[]);
+        let exec_msg = Cw721ExecuteMsg::Mint {
+            token_id: "Enterprise".to_string(),
+            owner: "john".to_string(),
+            token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
+            extension: None,
+        };
+        let err = contract
+            .execute(deps.as_mut(), &env, &info, exec_msg)
+            .unwrap_err();
+        assert_eq!(err, Cw721ContractError::NotMinter {});
+    }
+    // case 2: mint with onchain metadata
+    {
+        let mut deps = mock_dependencies();
+        let contract = Cw721Contract::<
+            DefaultOptionNftMetadataExtension,
+            DefaultOptionNftMetadataExtensionMsg,
+            DefaultOptionCollectionMetadataExtension,
+            DefaultOptionCollectionMetadataExtensionMsg,
+            Empty,
+        >::default();
+
+        let info = mock_info(CREATOR_ADDR, &[]);
+        let init_msg = Cw721InstantiateMsg {
+            name: "collection_name".into(),
+            symbol: "collection_symbol".into(),
+            collection_metadata_extension: None,
+            minter: None,
+            creator: None,
+            withdraw_address: None,
+        };
+        let env = mock_env();
+        contract
+            .instantiate(
+                deps.as_mut(),
+                &env,
+                &info,
+                init_msg,
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
+
+        let token_id = "Enterprise";
+        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension = Some(NftMetadata {
+            description: Some("Spaceship with Warp Drive".into()),
+            name: Some("Starship USS Enterprise".to_string()),
+            ..NftMetadata::default()
+        });
+        let exec_msg = Cw721ExecuteMsg::Mint {
+            token_id: token_id.to_string(),
+            owner: "john".to_string(),
+            token_uri: token_uri.clone(),
+            extension: extension.clone(),
+        };
+        contract
+            .execute(deps.as_mut(), &env, &info, exec_msg)
+            .unwrap();
+
+        let res = contract
+            .query_nft_info(deps.as_ref(), &env, token_id.into())
+            .unwrap();
+        assert_eq!(res.token_uri, token_uri);
+        assert_eq!(res.extension, extension);
+    }
 }
 
 #[test]

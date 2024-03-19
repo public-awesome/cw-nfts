@@ -461,7 +461,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // legacy minter can still mint
         mint_transfer_and_burn(
@@ -594,7 +594,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
         let minter = Addr::unchecked(MINTER_ADDR);
@@ -722,7 +722,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // legacy minter can still mint
         mint_transfer_and_burn(
@@ -855,7 +855,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
         let minter = Addr::unchecked(MINTER_ADDR);
@@ -983,7 +983,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // legacy minter can still mint
         mint_transfer_and_burn(
@@ -1116,7 +1116,7 @@ fn test_migration_legacy_to_latest() {
             .unwrap_err()
             .downcast()
             .unwrap();
-        assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+        assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
         let minter = Addr::unchecked(MINTER_ADDR);
@@ -1313,7 +1313,7 @@ fn test_update_nft_metadata() {
         .unwrap_err()
         .downcast()
         .unwrap();
-    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
+    assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
 
     // update invalid token uri
     let err: Cw721ContractError = app

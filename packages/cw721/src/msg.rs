@@ -5,6 +5,7 @@ use cw_utils::Expiration;
 use url::Url;
 
 use crate::error::Cw721ContractError;
+use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
     CollectionMetadata, NftInfo, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
     MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
@@ -616,6 +617,13 @@ where
         info: &cosmwasm_std::MessageInfo,
         current: Option<&NftInfo<TNftMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
+        if current.is_none() {
+            // current is none: only minter can create new NFT
+            assert_minter(deps, &info.sender)?;
+        } else {
+            // current is some: only creator can update NFT
+            assert_creator(deps, &info.sender)?;
+        }
         // validate token_uri is a URL
         if let Some(token_uri) = &self.token_uri {
             Url::parse(token_uri)?;
