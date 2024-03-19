@@ -19,6 +19,7 @@ use cosmwasm_std::{
     Addr, Api, Decimal, Empty, Timestamp,
 };
 use cw2::ContractVersion;
+use cw_ownable::Action;
 use cw_storage_plus::Item;
 use unit_tests::{
     contract::Cw721Contract,
@@ -1109,18 +1110,59 @@ fn test_collection_metadata_update() {
                 &env,
                 &info_other,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
-                    collection_metadata: updated_collection_metadata_msg,
+                    collection_metadata: updated_collection_metadata_msg.clone(),
                 },
             )
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+        // transfer creator to other user
+        contract.execute(
+            deps.as_mut(),
+            &env,
+            &info,
+            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::TransferOwnership {
+                new_owner: info_other.sender.to_string(),
+                expiry: None,
+            }),
+        ).unwrap();
+        // other still cannot update collection, until ownership is accepted
+        let err = contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_other,
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
+                    collection_metadata: updated_collection_metadata_msg.clone(),
+                },
+            )
+            .unwrap_err();
+        assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+        // accept ownership
+        contract.execute(
+            deps.as_mut(),
+            &env,
+            &info_other,
+            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::AcceptOwnership {}),
+        ).unwrap();
+        // other can update collection now
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_other,
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
+                    collection_metadata: updated_collection_metadata_msg,
+                },
+            )
+            .unwrap();
     }
-    // case 4: non-minter updating data
+    // case 4: minter updating data
     {
         // initialize contract
         let mut deps = mock_dependencies();
         let env = mock_env();
-        let info = mock_info(CREATOR_ADDR, &[]);
+        let info_creator = mock_info(CREATOR_ADDR, &[]);
+        let info_minter = mock_info(MINTER_ADDR, &[]);
         let instantiated_extension = Some(CollectionMetadataExtensionMsg {
             description: Some("description".into()),
             image: Some("https://moonphases.org".to_string()),
@@ -1146,13 +1188,13 @@ fn test_collection_metadata_update() {
             .instantiate(
                 deps.as_mut(),
                 &env,
-                &info,
+                &info_creator,
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_metadata_extension: instantiated_extension.clone(),
-                    creator: None,
-                    minter: None,
+                    creator: None, // in case of none, sender is creator
+                    minter: info_minter.sender.to_string().into(),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -1160,13 +1202,13 @@ fn test_collection_metadata_update() {
             )
             .unwrap();
 
-        // update collection by other user
+        // update start trading time by creator user not allowed
         let updated_extension_msg = CollectionMetadataExtensionMsg {
             description: None,
             image: None,
             explicit_content: None,
             external_link: None,
-            start_trading_time: Some(Timestamp::from_seconds(0)),
+            start_trading_time: Some(Timestamp::from_seconds(1)),
             royalty_info: None,
         };
         let updated_collection_metadata_msg = CollectionMetadataMsg {
@@ -1174,18 +1216,33 @@ fn test_collection_metadata_update() {
             symbol: None,
             extension: Some(updated_extension_msg),
         };
-        let info_other = mock_info(OTHER_ADDR, &[]);
         let err = contract
             .execute(
                 deps.as_mut(),
                 &env,
-                &info_other,
+                &info_creator,
                 Cw721ExecuteMsg::UpdateCollectionMetadata {
-                    collection_metadata: updated_collection_metadata_msg,
+                    collection_metadata: updated_collection_metadata_msg.clone(),
                 },
             )
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::NotMinter {});
+        // update start trading time by minter
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_minter,
+                Cw721ExecuteMsg::UpdateCollectionMetadata {
+                    collection_metadata: updated_collection_metadata_msg,
+                },
+            )
+            .unwrap();
+        // assert start trading has changed
+        let collection_metadata = contract
+            .query_collection_metadata(deps.as_ref(), &env)
+            .unwrap();
+        assert_eq!(collection_metadata.extension.unwrap().start_trading_time, Some(Timestamp::from_seconds(1)));
     }
 }
 
