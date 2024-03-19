@@ -1116,15 +1116,17 @@ fn test_collection_metadata_update() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
         // transfer creator to other user
-        contract.execute(
-            deps.as_mut(),
-            &env,
-            &info,
-            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::TransferOwnership {
-                new_owner: info_other.sender.to_string(),
-                expiry: None,
-            }),
-        ).unwrap();
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info,
+                Cw721ExecuteMsg::UpdateCreatorOwnership(Action::TransferOwnership {
+                    new_owner: info_other.sender.to_string(),
+                    expiry: None,
+                }),
+            )
+            .unwrap();
         // other still cannot update collection, until ownership is accepted
         let err = contract
             .execute(
@@ -1138,12 +1140,14 @@ fn test_collection_metadata_update() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
         // accept ownership
-        contract.execute(
-            deps.as_mut(),
-            &env,
-            &info_other,
-            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::AcceptOwnership {}),
-        ).unwrap();
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_other,
+                Cw721ExecuteMsg::UpdateCreatorOwnership(Action::AcceptOwnership {}),
+            )
+            .unwrap();
         // other can update collection now
         contract
             .execute(
@@ -1242,7 +1246,10 @@ fn test_collection_metadata_update() {
         let collection_metadata = contract
             .query_collection_metadata(deps.as_ref(), &env)
             .unwrap();
-        assert_eq!(collection_metadata.extension.unwrap().start_trading_time, Some(Timestamp::from_seconds(1)));
+        assert_eq!(
+            collection_metadata.extension.unwrap().start_trading_time,
+            Some(Timestamp::from_seconds(1))
+        );
     }
 }
 
