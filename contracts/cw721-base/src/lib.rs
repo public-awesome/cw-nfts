@@ -10,9 +10,9 @@ pub use cw721::*;
 // These types are re-exported so that contracts interacting with this
 // one don't need a direct dependency on cw_ownable to use the API.
 //
-// `Action` is used in `ExecuteMsg::UpdateOwnership`, `Ownership` is
-// used in `QueryMsg::Ownership`, and `OwnershipError` is used in
-// `ContractError::Ownership`.
+// `Action` is used in `Cw721ExecuteMsg::UpdateMinterOwnership` and `Cw721ExecuteMsg::UpdateCreatorOwnership`, `Ownership` is
+// used in `Cw721QueryMsg::GetMinterOwnership`, `Cw721QueryMsg::GetCreatorOwnership`, and `OwnershipError` is used in
+// `Cw721ContractError::Ownership`.
 pub use cw_ownable::{Action, Ownership, OwnershipError};
 
 use cosmwasm_std::Empty;
