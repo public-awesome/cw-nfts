@@ -297,9 +297,9 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
 {
     fn create(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<CollectionMetadataExtension<RoyaltyInfo>, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
@@ -365,11 +365,13 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
 
     fn validate(
         &self,
-        deps: Deps,
-        _env: &Env,
-        info: &MessageInfo,
+        deps: Option<Deps>,
+        _env: Option<&Env>,
+        info: Option<&MessageInfo>,
         _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
+        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+        let info = info.ok_or(Cw721ContractError::NoInfo)?;
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
         if self.start_trading_time.is_some()
@@ -426,12 +428,13 @@ impl Cw721CustomMsg for RoyaltyInfoResponse {}
 impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
     fn create(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<RoyaltyInfo, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
+        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         match current {
             // Some: update existing royalty info
             Some(current) => {
@@ -453,9 +456,9 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
 
     fn validate(
         &self,
-        _deps: Deps,
-        _env: &Env,
-        _info: &MessageInfo,
+        _deps: Option<Deps>,
+        _env: Option<&Env>,
+        _info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
         if let Some(current_royalty_info) = current {
@@ -579,9 +582,9 @@ where
 {
     fn create(
         &self,
-        deps: Deps,
-        env: &cosmwasm_std::Env,
-        info: &cosmwasm_std::MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         optional_current: Option<&NftInfo<TNftMetadataExtension>>,
     ) -> Result<NftInfo<TNftMetadataExtension>, Cw721ContractError> {
         self.validate(deps, env, info, optional_current)?;
@@ -600,6 +603,7 @@ where
             // None: create new NFT, note: msg is of same type, so we can clone it
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
+                let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
                 Ok(NftInfo {
                     owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
                     approvals: vec![],
@@ -612,15 +616,19 @@ where
 
     fn validate(
         &self,
-        deps: Deps,
-        env: &cosmwasm_std::Env,
-        info: &cosmwasm_std::MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&NftInfo<TNftMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
         if current.is_none() {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: only minter can create new NFT
             assert_minter(deps, &info.sender)?;
         } else {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT
             assert_creator(deps, &info.sender)?;
         }
@@ -644,9 +652,9 @@ where
 {
     fn create(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<Option<TState>, Cw721ContractError> {
         // no msg, so no validation needed
@@ -662,9 +670,9 @@ where
 
     fn validate(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<(), Cw721ContractError> {
         // no msg, so no validation needed

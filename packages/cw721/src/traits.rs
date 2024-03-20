@@ -24,29 +24,29 @@ impl<T> Cw721State for Option<T> where T: Cw721State {}
 impl Cw721CustomMsg for Empty {}
 impl<T> Cw721CustomMsg for Option<T> where T: Cw721CustomMsg {}
 
-pub trait StateFactory<S> {
+pub trait StateFactory<TState> {
     fn create(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
-        current: Option<&S>,
-    ) -> Result<S, Cw721ContractError>;
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&TState>,
+    ) -> Result<TState, Cw721ContractError>;
     fn validate(
         &self,
-        deps: Deps,
-        env: &Env,
-        info: &MessageInfo,
-        current: Option<&S>,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&TState>,
     ) -> Result<(), Cw721ContractError>;
 }
 
 impl StateFactory<Empty> for Empty {
     fn create(
         &self,
-        _deps: Deps,
-        _env: &Env,
-        _info: &MessageInfo,
+        _deps: Option<Deps>,
+        _env: Option<&Env>,
+        _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<Empty, Cw721ContractError> {
         Ok(Empty {})
@@ -54,9 +54,9 @@ impl StateFactory<Empty> for Empty {
 
     fn validate(
         &self,
-        _deps: Deps,
-        _env: &Env,
-        _info: &MessageInfo,
+        _deps: Option<Deps>,
+        _env: Option<&Env>,
+        _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<(), Cw721ContractError> {
         Ok(())

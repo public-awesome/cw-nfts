@@ -1,7 +1,10 @@
+use std::env;
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, Decimal, Deps, StdResult, Storage, Timestamp};
+use cosmwasm_std::{
+    Addr, BlockInfo, Decimal, Deps, Env, MessageInfo, StdResult, Storage, Timestamp,
+};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
@@ -240,9 +243,9 @@ where
 {
     fn create(
         &self,
-        deps: Deps,
-        env: &cosmwasm_std::Env,
-        info: &cosmwasm_std::MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
     ) -> Result<CollectionMetadata<TCollectionMetadataExtension>, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
@@ -266,6 +269,7 @@ where
             // None: create new metadata
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
+                let env = env.ok_or(Cw721ContractError::NoEnv)?;
                 let new = CollectionMetadata {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
@@ -279,11 +283,14 @@ where
 
     fn validate(
         &self,
-        deps: Deps,
-        _env: &cosmwasm_std::Env,
-        info: &cosmwasm_std::MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         _current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
+        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+        let info = info.ok_or(Cw721ContractError::NoInfo)?;
+        let env = env.ok_or(Cw721ContractError::NoEnv)?;
         // collection metadata can only be updated by the creator
         // - case 1: skip in case of init, since there is no creator yet
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
@@ -347,9 +354,9 @@ impl Cw721CustomMsg for NftMetadata {}
 impl StateFactory<NftMetadata> for NftMetadataMsg {
     fn create(
         &self,
-        deps: Deps,
-        env: &cosmwasm_std::Env,
-        info: &cosmwasm_std::MessageInfo,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
         current: Option<&NftMetadata>,
     ) -> Result<NftMetadata, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
@@ -393,9 +400,9 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
 
     fn validate(
         &self,
-        _deps: Deps,
-        _env: &cosmwasm_std::Env,
-        _info: &cosmwasm_std::MessageInfo,
+        _deps: Option<Deps>,
+        _env: Option<&Env>,
+        _info: Option<&MessageInfo>,
         _current: Option<&NftMetadata>,
     ) -> Result<(), Cw721ContractError> {
         // check URLs

@@ -61,7 +61,8 @@ pub trait Cw721Execute<
             symbol: Some(msg.symbol),
             extension: msg.collection_metadata_extension,
         };
-        let collection_metadata = collectin_metadata_msg.create(deps.as_ref(), env, info, None)?;
+        let collection_metadata =
+            collectin_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -384,7 +385,12 @@ pub trait Cw721Execute<
             TCustomResponseMsg,
         >::default();
         let current = config.collection_metadata.load(deps.storage)?;
-        let collection_metadata = msg.create(deps.as_ref(), env, info, Some(&current))?;
+        let collection_metadata = msg.create(
+            deps.as_ref().into(),
+            env.into(),
+            info.into(),
+            Some(&current),
+        )?;
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
@@ -412,7 +418,7 @@ pub trait Cw721Execute<
             token_uri: token_uri.clone(),
             extension,
         };
-        let token = token_msg.create(deps.as_ref(), env, info, None)?;
+        let token = token_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
@@ -504,7 +510,12 @@ pub trait Cw721Execute<
             token_uri: token_uri.clone(),
             extension: msg,
         };
-        let updated = nft_info_msg.create(deps.as_ref(), env, info, Some(&current_nft_info))?;
+        let updated = nft_info_msg.create(
+            deps.as_ref().into(),
+            env.into(),
+            info.into(),
+            Some(&current_nft_info),
+        )?;
         contract.nft_info.save(deps.storage, &token_id, &updated)?;
         Ok(Response::new()
             .add_attribute("action", "update_metadata")
