@@ -382,7 +382,7 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
                     updated.name = Some(name.clone());
                 }
                 if let Some(attributes) = &self.attributes {
-                    updated.attributes = Some(attributes.clone());
+                    updated.attributes = Some(attributes.create(deps, env, info, None)?);
                 }
                 if let Some(background_color) = &self.background_color {
                     updated.background_color = Some(background_color.clone());
@@ -396,7 +396,13 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
                 Ok(updated)
             }
             // None: create new metadata, note: msg is of same type as metadata, so we can clone it
-            None => Ok(self.clone()),
+            None => {
+                let mut new_metadata = self.clone();
+                if let Some(attributes) = &self.attributes {
+                    new_metadata.attributes = Some(attributes.create(deps, env, info, None)?);
+                }
+                Ok(new_metadata)
+            }
         }
     }
 
@@ -459,22 +465,6 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
                 return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
             }
         }
-        // check traits
-        if let Some(attributes) = &self.attributes {
-            for attribute in attributes {
-                if attribute.trait_type.is_empty() {
-                    return Err(Cw721ContractError::TraitTypeEmpty {});
-                }
-                if attribute.value.is_empty() {
-                    return Err(Cw721ContractError::TraitValueEmpty {});
-                }
-                if let Some(display_type) = &attribute.display_type {
-                    if display_type.is_empty() {
-                        return Err(Cw721ContractError::TraitDisplayTypeEmpty {});
-                    }
-                }
-            }
-        }
         Ok(())
     }
 }
@@ -484,4 +474,64 @@ pub struct Trait {
     pub display_type: Option<String>,
     pub trait_type: String,
     pub value: String,
+}
+
+impl StateFactory<Trait> for Trait {
+    fn create(
+        &self,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&Trait>,
+    ) -> Result<Trait, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        Ok(self.clone())
+    }
+
+    fn validate(
+        &self,
+        _deps: Option<Deps>,
+        _env: Option<&Env>,
+        _info: Option<&MessageInfo>,
+        _current: Option<&Trait>,
+    ) -> Result<(), Cw721ContractError> {
+        if self.trait_type.is_empty() {
+            return Err(Cw721ContractError::TraitTypeEmpty {});
+        }
+        if self.value.is_empty() {
+            return Err(Cw721ContractError::TraitValueEmpty {});
+        }
+        if let Some(display_type) = &self.display_type {
+            if display_type.is_empty() {
+                return Err(Cw721ContractError::TraitDisplayTypeEmpty {});
+            }
+        }
+        Ok(())
+    }
+}
+
+impl StateFactory<Vec<Trait>> for Vec<Trait> {
+    fn create(
+        &self,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&Vec<Trait>>,
+    ) -> Result<Vec<Trait>, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        Ok(self.clone())
+    }
+
+    fn validate(
+        &self,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        _current: Option<&Vec<Trait>>,
+    ) -> Result<(), Cw721ContractError> {
+        for attribute in self {
+            attribute.validate(deps, env, info, None)?;
+        }
+        Ok(())
+    }
 }
