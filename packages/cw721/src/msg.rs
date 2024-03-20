@@ -391,8 +391,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         if (self.description.is_some()
             || self.image.is_some()
             || self.external_link.is_some()
-            || self.explicit_content.is_some()
-            || self.royalty_info.is_some())
+            || self.explicit_content.is_some())
             && sender.is_some()
             && creator_initialized.is_some()
             && CREATOR
