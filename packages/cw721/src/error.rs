@@ -21,10 +21,13 @@ pub enum Cw721ContractError {
     Claimed {},
 
     #[error("Caller is not collection creator")]
-    NotCollectionCreator {},
+    NotCreator {},
 
     #[error("Caller is not minter")]
     NotMinter {},
+
+    #[error("Caller is neither minter nor collection creator")]
+    NotMinterOrCreator {},
 
     #[error("Cannot set approval that is already expired")]
     Expired {},

@@ -1114,7 +1114,7 @@ fn test_collection_metadata_update() {
                 },
             )
             .unwrap_err();
-        assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+        assert_eq!(err, Cw721ContractError::NotCreator {});
         // transfer creator to other user
         contract
             .execute(
@@ -1138,7 +1138,7 @@ fn test_collection_metadata_update() {
                 },
             )
             .unwrap_err();
-        assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+        assert_eq!(err, Cw721ContractError::NotCreator {});
         // accept ownership
         contract
             .execute(

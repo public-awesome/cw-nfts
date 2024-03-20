@@ -463,7 +463,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -596,7 +596,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -724,7 +724,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -857,7 +857,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -985,7 +985,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -1118,7 +1118,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -1246,7 +1246,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -1379,7 +1379,7 @@ fn test_migration_legacy_to_latest() {
                 &Cw721ExecuteMsg::<Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
-                    token_uri: None,
+                    token_uri: Some("ipfs://new.uri".to_string()),
                     extension: Empty::default(),
                 },
                 &[],
@@ -1568,8 +1568,8 @@ fn test_update_nft_metadata() {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftMetadataMsg {
-                    name: Some("".to_string()),
-                    description: None,
+                    name: Some("new name".to_string()),
+                    description: Some("new description".to_string()),
                     image: None,
                     image_data: None,
                     external_url: None,
@@ -1584,7 +1584,7 @@ fn test_update_nft_metadata() {
         .unwrap_err()
         .downcast()
         .unwrap();
-    assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+    assert_eq!(err, Cw721ContractError::NotCreator {});
 
     // update invalid token uri
     let err: Cw721ContractError = app

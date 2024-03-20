@@ -11,6 +11,7 @@ use cw_utils::Expiration;
 use url::Url;
 
 use crate::error::Cw721ContractError;
+use crate::execute::{assert_creator, assert_minter};
 use crate::msg::CollectionMetadataMsg;
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, NftMetadataMsg};
@@ -307,7 +308,7 @@ where
                 .assert_owner(deps.storage, &info.unwrap().sender)
                 .is_err()
         {
-            return Err(Cw721ContractError::NotCollectionCreator {});
+            return Err(Cw721ContractError::NotCreator {});
         }
         Ok(())
     }
@@ -401,11 +402,29 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
+        deps: Option<Deps>,
         _env: Option<&Env>,
-        _info: Option<&MessageInfo>,
-        _current: Option<&NftMetadata>,
+        info: Option<&MessageInfo>,
+        current: Option<&NftMetadata>,
     ) -> Result<(), Cw721ContractError> {
+        // assert here is different to NFT Info:
+        // - creator and minter can create NFT metadata
+        // - only creator can update NFT metadata
+        if current.is_none() {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
+            // current is none: minter and creator can create new NFT metadata
+            let minter_check = assert_minter(deps.storage, &info.sender);
+            let creator_check = assert_creator(deps.storage, &info.sender);
+            if minter_check.is_err() && creator_check.is_err() {
+                return Err(Cw721ContractError::NotMinterOrCreator {});
+            }
+        } else {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
+            // current is some: only creator can update NFT metadata
+            assert_creator(deps.storage, &info.sender)?;
+        }
         // check URLs
         if let Some(image) = &self.image {
             Url::parse(image)?;

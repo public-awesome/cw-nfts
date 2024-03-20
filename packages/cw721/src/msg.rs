@@ -398,7 +398,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
                 .assert_owner(deps.storage, &sender.unwrap())
                 .is_err()
         {
-            return Err(Cw721ContractError::NotCollectionCreator {});
+            return Err(Cw721ContractError::NotCreator {});
         }
         // check description length, must not be empty and max 512 chars
         if let Some(description) = &self.description {
@@ -604,6 +604,7 @@ where
                     updated.token_uri = Some(token_uri.clone());
                 }
                 // update extension
+                // current extension is a nested option in option, so we need to flatten it
                 let current_extension = optional_current.map(|c| &c.extension);
                 updated.extension = self.extension.create(deps, env, info, current_extension)?;
                 Ok(updated)
@@ -633,22 +634,17 @@ where
             let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: only minter can create new NFT
-            assert_minter(deps, &info.sender)?;
+            assert_minter(deps.storage, &info.sender)?;
         } else {
             let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT
-            assert_creator(deps, &info.sender)?;
+            assert_creator(deps.storage, &info.sender)?;
         }
         // validate token_uri is a URL
         if let Some(token_uri) = &self.token_uri {
             Url::parse(token_uri)?;
         }
-        // validate extension
-        // current is a nested option in option, so we need to flatten it
-        let current_extension = current.map(|c| &c.extension);
-        self.extension
-            .validate(deps, env, info, current_extension)?;
         Ok(())
     }
 }

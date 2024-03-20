@@ -734,16 +734,16 @@ pub fn check_can_send<TNftMetadataExtension>(
     }
 }
 
-pub fn assert_minter(deps: Deps, sender: &Addr) -> Result<(), Cw721ContractError> {
-    if MINTER.assert_owner(deps.storage, sender).is_err() {
+pub fn assert_minter(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
+    if MINTER.assert_owner(storage, sender).is_err() {
         return Err(Cw721ContractError::NotMinter {});
     }
     Ok(())
 }
 
-pub fn assert_creator(deps: Deps, sender: &Addr) -> Result<(), Cw721ContractError> {
-    if CREATOR.assert_owner(deps.storage, sender).is_err() {
-        return Err(Cw721ContractError::NotCollectionCreator {});
+pub fn assert_creator(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
+    if CREATOR.assert_owner(storage, sender).is_err() {
+        return Err(Cw721ContractError::NotCreator {});
     }
     Ok(())
 }

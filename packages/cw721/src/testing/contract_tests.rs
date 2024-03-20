@@ -55,12 +55,12 @@ fn setup_contract(
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
     };
-    let info = mock_info("creator", &[]);
+    let info_creator = mock_info(CREATOR_ADDR, &[]);
     let res = contract
         .instantiate(
             deps,
             &mock_env(),
-            &info,
+            &info_creator,
             msg,
             "contract_name",
             "contract_version",
@@ -329,6 +329,124 @@ fn test_mint() {
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
+}
+
+#[test]
+fn test_update_nft_info() {
+    let mut deps = mock_dependencies();
+    let contract = setup_contract(deps.as_mut());
+
+    let token_id = "1".to_string();
+    let mint_msg = Cw721ExecuteMsg::Mint {
+        token_id: token_id.clone(),
+        owner: String::from("owner"),
+        token_uri: Some("ipfs://foo.bar".to_string()),
+        extension: None,
+    };
+
+    // mint nft
+    let info_minter = mock_info(MINTER_ADDR, &[]);
+    let env = mock_env();
+    contract
+        .execute(deps.as_mut(), &env, &info_minter, mint_msg)
+        .unwrap();
+
+    // minter udpate nft info
+    let update_msg_without_extension = Cw721ExecuteMsg::<
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtensionMsg,
+    >::UpdateNftInfo {
+        token_id: token_id.clone(),
+        token_uri: Some("ipfs://to.the.moon".to_string()),
+        extension: None,
+    };
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            update_msg_without_extension.clone(),
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotCreator {});
+
+    // other udpate nft metadata extension
+    let update_msg_only_extension = Cw721ExecuteMsg::<
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtensionMsg,
+    >::UpdateNftInfo {
+        token_id: token_id.clone(),
+        token_uri: None,
+        extension: Some(NftMetadata {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: None,
+            external_url: None,
+            description: None,
+            name: None,
+            attributes: None,
+            background_color: None,
+            animation_url: None,
+            youtube_url: None,
+        }),
+    };
+    let info_other = mock_info("other", &[]);
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_other,
+            update_msg_only_extension.clone(),
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotCreator {});
+
+    // creator updates nft info
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &mock_info(CREATOR_ADDR, &[]),
+            update_msg_without_extension,
+        )
+        .unwrap();
+    assert_eq!(
+        contract
+            .query_nft_info(deps.as_ref(), &env, token_id.clone())
+            .unwrap(),
+        NftInfoResponse {
+            token_uri: Some("ipfs://to.the.moon".to_string()),
+            extension: None,
+        }
+    );
+
+    // creator updates nft metadata extension
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &mock_info(CREATOR_ADDR, &[]),
+            update_msg_only_extension,
+        )
+        .unwrap();
+    assert_eq!(
+        contract
+            .query_nft_info(deps.as_ref(), &env, token_id.clone())
+            .unwrap(),
+        NftInfoResponse {
+            token_uri: Some("ipfs://to.the.moon".to_string()),
+            extension: Some(NftMetadata {
+                image: Some("ipfs://foo.bar/image.png".to_string()),
+                image_data: None,
+                external_url: None,
+                description: None,
+                name: None,
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
+        }
+    );
 }
 
 #[test]
@@ -666,7 +784,7 @@ fn test_update_collection_metadata() {
             update_collection_metadata_msg.clone(),
         )
         .unwrap_err();
-    assert_eq!(err, Cw721ContractError::NotCollectionCreator {});
+    assert_eq!(err, Cw721ContractError::NotCreator {});
 
     // New owner can update.
     let _ = contract
