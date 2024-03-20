@@ -284,29 +284,30 @@ where
     fn validate(
         &self,
         deps: Option<Deps>,
-        env: Option<&Env>,
+        _env: Option<&Env>,
         info: Option<&MessageInfo>,
         _current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-        let info = info.ok_or(Cw721ContractError::NoInfo)?;
-        let env = env.ok_or(Cw721ContractError::NoEnv)?;
-        // collection metadata can only be updated by the creator
-        // - case 1: skip in case of init, since there is no creator yet
-        let creator_initialized = CREATOR.item.may_load(deps.storage)?;
-        // - case 2: check if sender is creator
-        if (self.name.is_some() || self.symbol.is_some())
-            && creator_initialized.is_some()
-            && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
-        {
-            return Err(Cw721ContractError::NotCollectionCreator {});
-        }
         // make sure the name and symbol are not empty
         if self.name.is_some() && self.name.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionNameEmpty {});
         }
         if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
+        }
+        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+        // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
+        // - CREATOR store is empty/not initioized (like in instantiation)
+        // - info is none (like in migration)
+        let creator_initialized = CREATOR.item.may_load(deps.storage)?;
+        if (self.name.is_some() || self.symbol.is_some())
+            && creator_initialized.is_some()
+            && info.is_some()
+            && CREATOR
+                .assert_owner(deps.storage, &info.unwrap().sender)
+                .is_err()
+        {
+            return Err(Cw721ContractError::NotCollectionCreator {});
         }
         Ok(())
     }

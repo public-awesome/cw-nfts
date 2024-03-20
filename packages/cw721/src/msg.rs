@@ -278,6 +278,7 @@ pub struct CollectionMetadataMsg<TCollectionMetadataExtensionMsg> {
 }
 
 #[cw_serde]
+/// NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.
 pub struct CollectionMetadataExtensionMsg<TRoyaltyInfoResponse> {
     pub description: Option<String>,
     pub image: Option<String>,
@@ -295,6 +296,7 @@ impl<TRoyaltyInfoResponse> Cw721CustomMsg for CollectionMetadataExtensionMsg<TRo
 impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
     for CollectionMetadataExtensionMsg<RoyaltyInfoResponse>
 {
+    /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn create(
         &self,
         deps: Option<Deps>,
@@ -363,6 +365,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         }
     }
 
+    /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn validate(
         &self,
         deps: Option<Deps>,
@@ -371,12 +374,15 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
         let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-        let info = info.ok_or(Cw721ContractError::NoInfo)?;
+        let sender = info.map_or(None, |i| Some(i.sender.clone()));
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
         if self.start_trading_time.is_some()
             && minter_initialized.is_some()
-            && MINTER.assert_owner(deps.storage, &info.sender).is_err()
+            && sender.is_some()
+            && MINTER
+                .assert_owner(deps.storage, &sender.clone().unwrap())
+                .is_err()
         {
             return Err(Cw721ContractError::NotMinter {});
         }
@@ -387,8 +393,11 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
             || self.external_link.is_some()
             || self.explicit_content.is_some()
             || self.royalty_info.is_some())
+            && sender.is_some()
             && creator_initialized.is_some()
-            && CREATOR.assert_owner(deps.storage, &info.sender).is_err()
+            && CREATOR
+                .assert_owner(deps.storage, &sender.unwrap())
+                .is_err()
         {
             return Err(Cw721ContractError::NotCollectionCreator {});
         }
@@ -680,7 +689,6 @@ where
             return Ok(());
         }
         let msg = self.clone().unwrap();
-        // current is a nested option in option, so we need to unwrap and then match it
         // current is a nested option in option, so we need to flatten it
         let current = current.and_then(|c| c.as_ref());
         msg.validate(deps, env, info, current)
