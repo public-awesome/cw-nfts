@@ -234,7 +234,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
         .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
-        assert_eq!(minter, Some(info.sender.clone()));
+        assert_eq!(minter, Some(info.sender));
         let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(Addr::unchecked(CREATOR_ADDR.to_string())));
     }
@@ -324,7 +324,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -382,7 +382,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -425,7 +425,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -468,7 +468,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -508,7 +508,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -550,7 +550,7 @@ fn test_instantiation_with_collection_metadata() {
             Cw721InstantiateMsg {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_metadata_extension: extension_msg.clone(),
+                collection_metadata_extension: extension_msg,
                 creator: Some(CREATOR_ADDR.into()),
                 minter: Some(MINTER_ADDR.into()),
                 withdraw_address: None,
@@ -619,7 +619,7 @@ fn test_collection_metadata_update() {
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
-                    collection_metadata_extension: instantiated_extension_msg.clone(),
+                    collection_metadata_extension: instantiated_extension_msg,
                     creator: Some(CREATOR_ADDR.into()),
                     minter: Some(MINTER_ADDR.into()),
                     withdraw_address: None,
@@ -815,7 +815,7 @@ fn test_collection_metadata_update() {
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
-                    collection_metadata_extension: instantiated_extension_msg.clone(),
+                    collection_metadata_extension: instantiated_extension_msg,
                     creator: None,
                     minter: None,
                     withdraw_address: None,
@@ -1073,7 +1073,7 @@ fn test_collection_metadata_update() {
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
-                    collection_metadata_extension: instantiated_extension.clone(),
+                    collection_metadata_extension: instantiated_extension,
                     creator: None,
                     minter: None,
                     withdraw_address: None,
@@ -1196,7 +1196,7 @@ fn test_collection_metadata_update() {
                 Cw721InstantiateMsg {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
-                    collection_metadata_extension: instantiated_extension.clone(),
+                    collection_metadata_extension: instantiated_extension,
                     creator: None, // in case of none, sender is creator
                     minter: info_minter.sender.to_string().into(),
                     withdraw_address: None,
@@ -1310,7 +1310,7 @@ fn test_nft_mint() {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: "".to_string().into(), // empty token_uri
-            extension: extension.clone(),
+            extension,
         };
         let err = contract
             .execute(deps.as_mut(), &env, &info, exec_msg)

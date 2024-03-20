@@ -176,7 +176,7 @@ fn test_instantiate_with_collection_metadata() {
     let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: collection_metadata_extension_msg.clone(),
+        collection_metadata_extension: collection_metadata_extension_msg,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -362,7 +362,7 @@ fn test_update_nft_info() {
     };
     // throws NotFound error
     contract
-        .execute(deps.as_mut(), &env, &info_minter, update_msg.clone())
+        .execute(deps.as_mut(), &env, &info_minter, update_msg)
         .unwrap_err();
 
     // minter udpate nft info
@@ -444,7 +444,7 @@ fn test_update_nft_info() {
         .unwrap();
     assert_eq!(
         contract
-            .query_nft_info(deps.as_ref(), &env, token_id.clone())
+            .query_nft_info(deps.as_ref(), &env, token_id)
             .unwrap(),
         NftInfoResponse {
             token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -473,9 +473,9 @@ fn test_mint_with_metadata() {
         let token_id = "1".to_string();
         let token_uri = "ipfs://foo.bar".to_string();
         let mint_msg = Cw721ExecuteMsg::Mint {
-            token_id: token_id.clone(),
+            token_id,
             owner: String::from("medusa"),
-            token_uri: Some(token_uri.clone()),
+            token_uri: Some(token_uri),
             extension: Some(NftMetadata {
                 image: Some("ipfs://foo.bar/image.png".to_string()),
                 image_data: Some("image data".to_string()),
@@ -532,10 +532,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -548,10 +548,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -564,10 +564,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -580,10 +580,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(
             err,
@@ -597,10 +597,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataImageDataEmpty {});
         // empty description
@@ -610,10 +610,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataDescriptionEmpty {});
         // empty name
@@ -623,10 +623,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataNameEmpty {});
         // empty background color
@@ -636,10 +636,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataBackgroundColorEmpty {});
 
@@ -654,10 +654,10 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitTypeEmpty {});
         // trait value empty
@@ -671,27 +671,27 @@ fn test_mint_with_metadata() {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitValueEmpty {});
         // display type empty
-        let mut metadata = valid_metadata.clone();
+        let mut metadata = valid_metadata;
         metadata.attributes = Some(vec![Trait {
             trait_type: "trait_type".to_string(),
             value: "value".to_string(),
             display_type: Some("".to_string()),
         }]);
         let mint_msg = Cw721ExecuteMsg::Mint {
-            token_id: token_id.clone(),
+            token_id,
             owner: String::from("medusa"),
-            token_uri: Some(token_uri.clone()),
-            extension: Some(metadata.clone()),
+            token_uri: Some(token_uri),
+            extension: Some(metadata),
         };
         let err = contract
-            .execute(deps.as_mut(), &env, &info_minter.clone(), mint_msg)
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitDisplayTypeEmpty {});
     }
@@ -829,12 +829,7 @@ fn test_update_minter() {
     // Minter can mint
     let current_minter_info = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(
-            deps.as_mut(),
-            &mock_env(),
-            &current_minter_info.clone(),
-            mint_msg,
-        )
+        .execute(deps.as_mut(), &mock_env(), &current_minter_info, mint_msg)
         .unwrap();
 
     // Update the owner to "random". The new owner should be able to
@@ -941,7 +936,7 @@ fn test_burn() {
     // mint some NFT
     let allowed = mock_info(MINTER_ADDR, &[]);
     let _ = contract
-        .execute(deps.as_mut(), &mock_env(), &allowed.clone(), mint_msg)
+        .execute(deps.as_mut(), &mock_env(), &allowed, mint_msg)
         .unwrap();
 
     // random not allowed to burn
@@ -1309,7 +1304,7 @@ fn test_approve_all_revoke_all() {
         token_id: token_id1,
     };
     contract
-        .execute(deps.as_mut(), &mock_env(), &random.clone(), transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &random, transfer_msg)
         .unwrap();
 
     // random can now send

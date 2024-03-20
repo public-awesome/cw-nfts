@@ -507,7 +507,7 @@ pub trait Cw721Execute<
         let nft_info_msg = NftInfoMsg {
             owner: current_nft_info.owner.to_string(),
             approvals: current_nft_info.approvals.clone(),
-            token_uri: token_uri.clone(),
+            token_uri,
             extension: msg,
         };
         let updated = nft_info_msg.create(

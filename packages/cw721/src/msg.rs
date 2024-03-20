@@ -374,7 +374,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
         let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-        let sender = info.map_or(None, |i| Some(i.sender.clone()));
+        let sender = info.map(|i| i.sender.clone());
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
         if self.start_trading_time.is_some()

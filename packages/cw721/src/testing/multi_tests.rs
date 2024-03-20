@@ -1554,12 +1554,12 @@ fn test_update_nft_metadata() {
         nft_info.token_uri,
         Some("ipfs://foo.bar/metadata.json".to_string())
     );
-    assert_eq!(nft_info.extension, Some(nft_metadata.clone()));
+    assert_eq!(nft_info.extension, Some(nft_metadata));
 
     // nft owner cant update - only creator is allowed
     let err: Cw721ContractError = app
         .execute_contract(
-            nft_owner.clone(),
+            nft_owner,
             cw721.clone(),
             &Cw721ExecuteMsg::<
                 DefaultOptionNftMetadataExtensionMsg,
@@ -1990,7 +1990,7 @@ fn test_update_nft_metadata() {
         youtube_url: Some("file://youtube_url2".to_string()),
     };
     app.execute_contract(
-        creator.clone(),
+        creator,
         cw721.clone(),
         &Cw721ExecuteMsg::<
             DefaultOptionNftMetadataExtensionMsg,
@@ -2009,7 +2009,7 @@ fn test_update_nft_metadata() {
         nft_info.token_uri,
         Some("ipfs://foo.bar/metadata2.json".to_string())
     );
-    assert_eq!(nft_info.extension, Some(new_nft_metadata.clone()));
+    assert_eq!(nft_info.extension, Some(new_nft_metadata));
     // check num tokens
     let num_tokens: NumTokensResponse = app
         .wrap()
