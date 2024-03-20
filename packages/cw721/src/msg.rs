@@ -626,18 +626,16 @@ where
     fn validate(
         &self,
         deps: Option<Deps>,
-        env: Option<&Env>,
+        _env: Option<&Env>,
         info: Option<&MessageInfo>,
         current: Option<&NftInfo<TNftMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
+        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+        let info = info.ok_or(Cw721ContractError::NoInfo)?;
         if current.is_none() {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: only minter can create new NFT
             assert_minter(deps.storage, &info.sender)?;
         } else {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT
             assert_creator(deps.storage, &info.sender)?;
         }

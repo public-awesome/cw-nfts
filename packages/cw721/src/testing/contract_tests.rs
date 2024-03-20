@@ -351,6 +351,20 @@ fn test_update_nft_info() {
         .execute(deps.as_mut(), &env, &info_minter, mint_msg)
         .unwrap();
 
+    // minter update unknown nft info
+    let update_msg = Cw721ExecuteMsg::<
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtensionMsg,
+    >::UpdateNftInfo {
+        token_id: "unknown".to_string(),
+        token_uri: Some("ipfs://to.the.moon".to_string()),
+        extension: None,
+    };
+    // throws NotFound error
+    contract
+        .execute(deps.as_mut(), &env, &info_minter, update_msg.clone())
+        .unwrap_err();
+
     // minter udpate nft info
     let update_msg_without_extension = Cw721ExecuteMsg::<
         DefaultOptionNftMetadataExtensionMsg,
