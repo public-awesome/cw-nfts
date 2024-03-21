@@ -1,4 +1,3 @@
-use std::env;
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
