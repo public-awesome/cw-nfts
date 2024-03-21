@@ -37,7 +37,7 @@ pub trait Cw721Execute<
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
-    fn instantiate(
+    fn instantiate_with_version(
         &self,
         deps: DepsMut,
         env: &Env,
@@ -47,6 +47,16 @@ pub trait Cw721Execute<
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
+        self.instantiate(deps, env, info, msg)
+    }
+
+    fn instantiate(
+        &self,
+        deps: DepsMut,
+        env: &Env,
+        info: &MessageInfo,
+        msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,

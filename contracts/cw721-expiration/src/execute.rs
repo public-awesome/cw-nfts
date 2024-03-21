@@ -55,7 +55,7 @@ where
         contract
             .expiration_days
             .save(deps.storage, &msg.expiration_days)?;
-        Ok(contract.base_contract.instantiate(
+        Ok(contract.base_contract.instantiate_with_version(
             deps,
             &env,
             &info,

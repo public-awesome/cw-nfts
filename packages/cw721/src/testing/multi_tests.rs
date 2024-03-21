@@ -40,7 +40,7 @@ pub fn instantiate(
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
-    contract.instantiate(deps, &env, &info, msg, "contract_name", "contract_version")
+    contract.instantiate_with_version(deps, &env, &info, msg, "contract_name", "contract_version")
 }
 
 pub fn execute(

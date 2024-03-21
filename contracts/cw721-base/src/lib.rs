@@ -58,7 +58,7 @@ pub mod entry {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default();
-        contract.instantiate(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
+        contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]

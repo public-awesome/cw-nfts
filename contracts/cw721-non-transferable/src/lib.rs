@@ -68,7 +68,7 @@ pub mod entry {
             withdraw_address: msg.withdraw_address,
         };
 
-        Cw721NonTransferableContract::default().instantiate(
+        Cw721NonTransferableContract::default().instantiate_with_version(
             deps.branch(),
             &env,
             &info,

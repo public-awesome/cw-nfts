@@ -57,7 +57,7 @@ fn setup_contract(
     };
     let info_creator = mock_info(CREATOR_ADDR, &[]);
     let res = contract
-        .instantiate(
+        .instantiate_with_version(
             deps,
             &mock_env(),
             &info_creator,
@@ -94,7 +94,7 @@ fn test_instantiate() {
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &env,
             &info,
@@ -186,7 +186,7 @@ fn test_instantiate_with_collection_metadata() {
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &env,
             &info,

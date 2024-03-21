@@ -40,7 +40,7 @@ fn test_instantiation() {
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default()
-    .instantiate(
+    .instantiate_with_version(
         deps.as_mut(),
         &mock_env(),
         &mock_info("mr-t", &[]),
@@ -66,7 +66,7 @@ fn test_instantiation() {
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default()
-    .instantiate(
+    .instantiate_with_version(
         deps.as_mut(),
         &mock_env(),
         &mock_info("mr-t", &[]),
@@ -91,7 +91,7 @@ fn test_instantiation() {
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default()
-    .instantiate(
+    .instantiate_with_version(
         deps.as_mut(),
         &mock_env(),
         &mock_info("larry", &[]),
@@ -148,7 +148,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_minter_and_creator,
@@ -182,7 +182,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info,
@@ -216,7 +216,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info,
@@ -250,7 +250,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info,
@@ -317,7 +317,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -375,7 +375,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -418,7 +418,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -461,7 +461,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -501,7 +501,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -543,7 +543,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .instantiate(
+        .instantiate_with_version(
             deps.as_mut(),
             &mock_env(),
             &info_creator,
@@ -612,7 +612,7 @@ fn test_collection_metadata_update() {
             Empty,
         >::default();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info_creator,
@@ -808,7 +808,7 @@ fn test_collection_metadata_update() {
             Empty,
         >::default();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info,
@@ -1066,7 +1066,7 @@ fn test_collection_metadata_update() {
             Empty,
         >::default();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info,
@@ -1189,7 +1189,7 @@ fn test_collection_metadata_update() {
             Empty,
         >::default();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info_creator,
@@ -1277,7 +1277,7 @@ fn test_nft_mint() {
         };
         let env = mock_env();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info,
@@ -1354,7 +1354,7 @@ fn test_nft_mint() {
         };
         let env = mock_env();
         contract
-            .instantiate(
+            .instantiate_with_version(
                 deps.as_mut(),
                 &env,
                 &info,
