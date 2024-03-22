@@ -1,6 +1,4 @@
-use cosmwasm_std::{
-    to_json_binary, Addr, Binary, BlockInfo, Deps, Empty, Env, Order, StdError, StdResult, Storage,
-};
+use cosmwasm_std::{Addr, BlockInfo, Deps, Empty, Env, Order, StdError, StdResult, Storage};
 use cw_ownable::Ownership;
 use cw_storage_plus::Bound;
 use cw_utils::{maybe_addr, Expiration};
@@ -8,15 +6,14 @@ use cw_utils::{maybe_addr, Expiration};
 use crate::{
     error::Cw721ContractError,
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721QueryMsg, MinterResponse,
-        NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-        TokensResponse,
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
+        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     state::{
         Approval, CollectionMetadata, CollectionMetadataAndExtension, Cw721Config, NftInfo,
         CREATOR, MINTER,
     },
-    traits::{Cw721State, FromAttributes},
+    traits::{Cw721State, FromAttributesState},
     Attribute,
 };
 
@@ -92,11 +89,11 @@ pub fn query_collection_metadata_and_extension<TCollectionMetadataExtension>(
     deps: Deps,
 ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: FromAttributes,
+    TCollectionMetadataExtension: FromAttributesState,
 {
     let collection_metadata = query_collection_metadata(deps.storage)?;
     let attributes = query_collection_metadata_extension(deps)?;
-    let extension = FromAttributes::from_attributes(&attributes)?;
+    let extension = FromAttributesState::from_attributes_state(&attributes)?;
     Ok(CollectionMetadataAndExtension {
         name: collection_metadata.name,
         symbol: collection_metadata.symbol,

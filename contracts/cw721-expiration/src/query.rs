@@ -3,7 +3,7 @@ use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721_base::traits::{Cw721CustomMsg, Cw721Query, Cw721State, FromAttributes};
+use cw721_base::traits::{Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
@@ -26,7 +26,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
@@ -170,12 +170,12 @@ where
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_and_extension(deps, &env)?,
+                    .query_collection_metadata_and_extension(deps)?,
             )?),
             QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_and_extension(deps, &env)?,
+                    .query_collection_metadata_and_extension(deps)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::Ownership {} => Ok(to_json_binary(

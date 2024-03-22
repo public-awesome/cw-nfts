@@ -91,35 +91,35 @@ impl StateFactory<Empty> for Empty {
     }
 }
 
-pub trait IntoAttributes {
-    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError>;
+pub trait ToAttributesState {
+    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError>;
 }
 
-impl<T> IntoAttributes for Option<T>
+impl<T> ToAttributesState for Option<T>
 where
-    T: IntoAttributes,
+    T: ToAttributesState,
 {
-    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         match self {
-            Some(inner) => inner.into_attributes(),
+            Some(inner) => inner.to_attributes_states(),
             None => Ok(vec![]),
         }
     }
 }
 
-pub trait FromAttributes: Sized {
-    fn from_attributes(value: &Vec<Attribute>) -> Result<Self, Cw721ContractError>;
+pub trait FromAttributesState: Sized {
+    fn from_attributes_state(value: &[Attribute]) -> Result<Self, Cw721ContractError>;
 }
 
-impl<T> FromAttributes for Option<T>
+impl<T> FromAttributesState for Option<T>
 where
-    T: FromAttributes,
+    T: FromAttributesState,
 {
-    fn from_attributes(value: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+    fn from_attributes_state(value: &[Attribute]) -> Result<Self, Cw721ContractError> {
         if value.is_empty() {
             Ok(None)
         } else {
-            T::from_attributes(value).map(Some)
+            T::from_attributes_state(value).map(Some)
         }
     }
 }
@@ -138,7 +138,7 @@ pub trait Cw721Execute<
 > where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
@@ -462,7 +462,7 @@ pub trait Cw721Query<
     TCollectionMetadataExtension,
 > where
     TNftMetadataExtension: Cw721State,
-    TCollectionMetadataExtension: Cw721State + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + FromAttributesState,
 {
     fn query(
         &self,
@@ -475,10 +475,10 @@ pub trait Cw721Query<
             Cw721QueryMsg::Minter {} => Ok(to_json_binary(&self.query_minter(deps.storage)?)?),
             #[allow(deprecated)]
             Cw721QueryMsg::ContractInfo {} => Ok(to_json_binary(
-                &self.query_collection_metadata_and_extension(deps, env)?,
+                &self.query_collection_metadata_and_extension(deps)?,
             )?),
             Cw721QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
-                &self.query_collection_metadata_and_extension(deps, env)?,
+                &self.query_collection_metadata_and_extension(deps)?,
             )?),
             Cw721QueryMsg::NftInfo { token_id } => {
                 Ok(to_json_binary(&self.query_nft_info(deps, env, token_id)?)?)
@@ -601,21 +601,20 @@ pub trait Cw721Query<
         query_creator_ownership(storage)
     }
 
-    fn query_collection_metadata(deps: Deps, env: &Env) -> StdResult<CollectionMetadata> {
+    fn query_collection_metadata(deps: Deps) -> StdResult<CollectionMetadata> {
         query_collection_metadata(deps.storage)
     }
 
-    fn query_collection_metadata_extension(deps: Deps, env: &Env) -> StdResult<Vec<Attribute>> {
+    fn query_collection_metadata_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
         query_collection_metadata_extension(deps)
     }
 
     fn query_collection_metadata_and_extension(
         &self,
         deps: Deps,
-        env: &Env,
     ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
     where
-        TCollectionMetadataExtension: FromAttributes,
+        TCollectionMetadataExtension: FromAttributesState,
     {
         query_collection_metadata_and_extension(deps)
     }

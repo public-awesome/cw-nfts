@@ -13,7 +13,7 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::msg::CollectionMetadataMsg;
-use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes};
+use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
 use crate::{traits::StateFactory, NftMetadataMsg};
 
 /// Creator owns this contract and can update collection metadata!
@@ -339,7 +339,7 @@ where
 #[cw_serde]
 pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo>
 where
-    TRoyaltyInfo: IntoAttributes,
+    TRoyaltyInfo: ToAttributesState,
 {
     pub description: String,
     pub image: String,
@@ -349,11 +349,11 @@ where
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
-impl<TRoyaltyInfo> IntoAttributes for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
+impl<TRoyaltyInfo> ToAttributesState for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
 where
-    TRoyaltyInfo: IntoAttributes + FromAttributes,
+    TRoyaltyInfo: ToAttributesState + FromAttributesState,
 {
-    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         let mut attributes = vec![
             Attribute {
                 key: ATTRIBUTE_DESCRIPTION.to_string(),
@@ -386,17 +386,17 @@ where
             });
         }
         if let Some(royalty_info) = &self.royalty_info {
-            attributes.extend(royalty_info.into_attributes()?);
+            attributes.extend(royalty_info.to_attributes_states()?);
         }
         Ok(attributes)
     }
 }
 
-impl<TRoyaltyInfo> FromAttributes for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
+impl<TRoyaltyInfo> FromAttributesState for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
 where
-    TRoyaltyInfo: IntoAttributes + FromAttributes,
+    TRoyaltyInfo: ToAttributesState + FromAttributesState,
 {
-    fn from_attributes(attributes: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+    fn from_attributes_state(attributes: &[Attribute]) -> Result<Self, Cw721ContractError> {
         let description = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_DESCRIPTION)
@@ -430,7 +430,7 @@ where
                 "start trading time".to_string(),
             ))?
             .optional_timestamp_value()?;
-        let royalty_info = FromAttributes::from_attributes(attributes)?;
+        let royalty_info = FromAttributesState::from_attributes_state(attributes)?;
         Ok(CollectionMetadataExtensionWrapper {
             description,
             image,
@@ -519,8 +519,8 @@ pub struct RoyaltyInfo {
 impl Cw721State for RoyaltyInfo {}
 impl Cw721CustomMsg for RoyaltyInfo {}
 
-impl IntoAttributes for RoyaltyInfo {
-    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+impl ToAttributesState for RoyaltyInfo {
+    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         Ok(vec![
             Attribute {
                 key: ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS.to_string(),
@@ -534,8 +534,8 @@ impl IntoAttributes for RoyaltyInfo {
     }
 }
 
-impl FromAttributes for RoyaltyInfo {
-    fn from_attributes(attributes: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+impl FromAttributesState for RoyaltyInfo {
+    fn from_attributes_state(attributes: &[Attribute]) -> Result<Self, Cw721ContractError> {
         let payment_address = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS)

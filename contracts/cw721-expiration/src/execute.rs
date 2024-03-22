@@ -6,7 +6,7 @@ use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721_base::{
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
     traits::Cw721Execute,
-    traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes, StateFactory},
+    traits::{Cw721CustomMsg, Cw721State, FromAttributesState, StateFactory, ToAttributesState},
     Expiration,
 };
 
@@ -29,7 +29,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {

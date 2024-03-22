@@ -99,7 +99,7 @@ fn proper_instantiation() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         collection_metadata,
@@ -168,7 +168,7 @@ fn proper_instantiation_with_collection_metadata() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         collection_metadata,

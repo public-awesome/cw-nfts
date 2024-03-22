@@ -342,7 +342,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -655,7 +655,7 @@ fn test_collection_metadata_update() {
             .unwrap();
         // validate data
         let collection_metadata = contract
-            .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
+            .query_collection_metadata_and_extension(deps.as_ref())
             .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -703,7 +703,7 @@ fn test_collection_metadata_update() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
         assert_eq!(collection_metadata.name, "new_collection_name");
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
@@ -758,7 +758,7 @@ fn test_collection_metadata_update() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
         assert_eq!(collection_metadata.name, "new_collection_name");
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
@@ -1244,7 +1244,7 @@ fn test_collection_metadata_update() {
             .unwrap();
         // assert start trading has changed
         let collection_metadata = contract
-            .query_collection_metadata_and_extension(deps.as_ref(), &env)
+            .query_collection_metadata_and_extension(deps.as_ref())
             .unwrap();
         assert_eq!(
             collection_metadata.extension.unwrap().start_trading_time,
@@ -1436,7 +1436,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
         Empty,
     >::default();
     contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap_err();
     // - query in new minter and creator ownership store throws NotFound Error (in v16 it was stored outside cw_ownable, in dedicated "minter" store)
     MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
@@ -1530,7 +1530,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
 
     // assert collection metadata
     let collection_metadata = contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
     let legacy_contract_info = CollectionMetadataAndExtension {
         name: "legacy_name".to_string(),

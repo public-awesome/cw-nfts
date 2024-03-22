@@ -33,7 +33,7 @@ pub mod entry {
     use cw721_base::{
         msg::Cw721ExecuteMsg, DefaultOptionCollectionMetadataExtension,
         DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
+        DefaultOptionNftMetadataExtensionMsg,
     };
 
     // This makes a conscious choice on the various generics used by the contract

@@ -12,7 +12,7 @@ use crate::{
     query::query_collection_metadata_and_extension,
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
-    traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes, StateFactory},
+    traits::{Cw721CustomMsg, Cw721State, FromAttributesState, StateFactory, ToAttributesState},
     Approval,
 };
 
@@ -30,7 +30,7 @@ pub fn instantiate_with_version<
     contract_version: &str,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
 {
     cw2::set_contract_version(deps.storage, contract_name, contract_version)?;
@@ -48,7 +48,7 @@ pub fn instantiate<
     msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
 {
     let config = Cw721Config::<
@@ -66,7 +66,9 @@ where
     };
     let collection_metadata_wrapper =
         collectin_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
-    let extension_attributes = collection_metadata_wrapper.extension.into_attributes()?;
+    let extension_attributes = collection_metadata_wrapper
+        .extension
+        .to_attributes_states()?;
     let collection_metadata = collection_metadata_wrapper.into();
     config
         .collection_metadata
@@ -335,7 +337,7 @@ pub fn update_collection_metadata<
     msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
@@ -353,7 +355,9 @@ where
         info.into(),
         Some(&current_wrapper),
     )?;
-    let extension_attributes = collection_metadata_wrapper.extension.into_attributes()?;
+    let extension_attributes = collection_metadata_wrapper
+        .extension
+        .to_attributes_states()?;
     config
         .collection_metadata
         .save(deps.storage, &collection_metadata_wrapper.into())?;

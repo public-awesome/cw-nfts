@@ -4,8 +4,8 @@ use cosmwasm_std::CustomMsg;
 
 use crate::state::Cw721Config;
 use crate::traits::{
-    Cw721CustomMsg, Cw721Execute, Cw721Query, Cw721State, FromAttributes, IntoAttributes,
-    StateFactory,
+    Cw721CustomMsg, Cw721Execute, Cw721Query, Cw721State, FromAttributesState, StateFactory,
+    ToAttributesState,
 };
 
 pub struct Cw721Contract<
@@ -92,7 +92,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
@@ -117,7 +117,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State + FromAttributes,
+    TCollectionMetadataExtension: Cw721State + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {

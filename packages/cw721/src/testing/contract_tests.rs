@@ -112,7 +112,7 @@ fn test_instantiate() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         collection_metadata,
@@ -204,7 +204,7 @@ fn test_instantiate_with_collection_metadata() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
-        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         info,
