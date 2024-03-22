@@ -625,7 +625,9 @@ fn _transfer_nft<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
+    let config =
+        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
+        );
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_send(deps.as_ref(), env, info, &token)?;
@@ -650,7 +652,9 @@ fn _update_approvals<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
+    let config =
+        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
+        );
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -693,7 +697,9 @@ where
         return Ok(());
     }
     // operator can approve
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
+    let config =
+        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
+        );
     let op = config
         .operators
         .may_load(deps.storage, (&token.owner, &info.sender))?;
@@ -731,7 +737,8 @@ pub fn check_can_send<TNftMetadataExtension>(
     }
 
     // operator can send
-    let config = Cw721Config::<Option<Empty>, Empty, Empty, Empty>::default();
+    let config =
+        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
