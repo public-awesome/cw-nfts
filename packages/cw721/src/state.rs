@@ -336,8 +336,6 @@ where
     }
 }
 
-pub type CollectionMetadataExtension = Vec<Attribute>;
-
 #[cw_serde]
 pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo>
 where
