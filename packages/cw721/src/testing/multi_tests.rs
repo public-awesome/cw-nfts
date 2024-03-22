@@ -1,12 +1,11 @@
 use crate::{
     error::Cw721ContractError,
-    execute::Cw721Execute,
     msg::{
         Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
         NumTokensResponse, OwnerOfResponse,
     },
-    query::Cw721Query,
     state::{NftMetadata, Trait},
+    traits::{Cw721Execute, Cw721Query},
     DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
     DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg, NftMetadataMsg,
 };

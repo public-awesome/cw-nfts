@@ -13,7 +13,7 @@ use cw721_base::msg::{
 };
 use cw721_base::receiver::Cw721ReceiveMsg;
 use cw721_base::state::{CREATOR, MINTER};
-use cw721_base::{query::Cw721Query, Approval, Expiration};
+use cw721_base::{traits::Cw721Query, Approval, Expiration};
 use cw721_base::{
     CollectionMetadataAndExtension, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,

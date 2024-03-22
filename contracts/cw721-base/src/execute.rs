@@ -1,7 +1,7 @@
 use cosmwasm_std::CustomMsg;
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::execute::*;
-use cw721::traits::{Cw721CustomMsg, Cw721State};
+use cw721::traits::{Cw721CustomMsg, Cw721Execute, Cw721State};
 use cw721::traits::{FromAttributes, IntoAttributes, StateFactory};
 
 use crate::Cw721Contract;

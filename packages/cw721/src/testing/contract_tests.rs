@@ -15,7 +15,8 @@ use crate::msg::{CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw
 use crate::receiver::Cw721ReceiveMsg;
 use crate::state::{NftMetadata, Trait, CREATOR, MINTER};
 use crate::{
-    execute::Cw721Execute, query::Cw721Query, Approval, DefaultOptionCollectionMetadataExtension,
+    traits::{Cw721Execute, Cw721Query},
+    Approval, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg, Expiration,
 };

@@ -2,11 +2,11 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::CustomMsg;
 
-use crate::execute::Cw721Execute;
-use crate::query::Cw721Query;
 use crate::state::Cw721Config;
-use crate::traits::{Cw721CustomMsg, Cw721State};
-use crate::traits::{FromAttributes, IntoAttributes, StateFactory};
+use crate::traits::{
+    Cw721CustomMsg, Cw721Execute, Cw721Query, Cw721State, FromAttributes, IntoAttributes,
+    StateFactory,
+};
 
 pub struct Cw721Contract<
     'a,

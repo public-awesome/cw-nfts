@@ -4,8 +4,8 @@ use crate::{
 };
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721_base::{
-    execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+    traits::Cw721Execute,
     traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes, StateFactory},
     Expiration,
 };

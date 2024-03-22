@@ -3,8 +3,7 @@ use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721_base::query::Cw721Query;
-use cw721_base::traits::{Cw721CustomMsg, Cw721State, FromAttributes};
+use cw721_base::traits::{Cw721CustomMsg, Cw721Query, Cw721State, FromAttributes};
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 

@@ -36,9 +36,8 @@ pub mod entry {
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
         error::Cw721ContractError,
-        execute::Cw721Execute,
         msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
-        query::Cw721Query,
+        traits::{Cw721Execute, Cw721Query},
         DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
         DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
     };

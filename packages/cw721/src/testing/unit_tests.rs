@@ -1,15 +1,15 @@
 use crate::{
     error::Cw721ContractError,
-    execute::Cw721Execute,
     msg::{
         CollectionMetadataExtensionMsg, CollectionMetadataMsg, Cw721ExecuteMsg,
         Cw721InstantiateMsg, RoyaltyInfoResponse,
     },
-    query::{Cw721Query, MAX_LIMIT},
+    query::MAX_LIMIT,
     state::{
         CollectionMetadataAndExtension, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
+    traits::{Cw721Execute, Cw721Query},
     CollectionMetadataExtensionWrapper, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,

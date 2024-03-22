@@ -35,8 +35,8 @@ pub mod entry {
         entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     };
     use cw721::error::Cw721ContractError;
-    use cw721::execute::Cw721Execute;
     use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+    use cw721::traits::Cw721Execute;
     use cw721::{
         DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
     };
