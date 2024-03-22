@@ -174,7 +174,9 @@ pub trait Cw721Execute<
         match msg {
             Cw721ExecuteMsg::UpdateCollectionMetadata {
                 collection_metadata,
-            } => self.update_collection_metadata(deps, info, env, collection_metadata),
+            } => {
+                self.update_collection_metadata(deps, info.into(), env.into(), collection_metadata)
+            }
             Cw721ExecuteMsg::Mint {
                 token_id,
                 owner,
@@ -353,8 +355,8 @@ pub trait Cw721Execute<
     fn update_collection_metadata(
         &self,
         deps: DepsMut,
-        info: &MessageInfo,
-        env: &Env,
+        info: Option<&MessageInfo>,
+        env: Option<&Env>,
         msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_collection_metadata::<
@@ -425,7 +427,12 @@ pub trait Cw721Execute<
         msg: TNftMetadataExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_nft_info::<TNftMetadataExtension, TNftMetadataExtensionMsg, TCustomResponseMsg>(
-            deps, env, info, token_id, token_uri, msg,
+            deps,
+            env.into(),
+            info.into(),
+            token_id,
+            token_uri,
+            msg,
         )
     }
 

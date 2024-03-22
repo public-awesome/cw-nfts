@@ -332,8 +332,8 @@ pub fn update_collection_metadata<
     TCustomResponseMsg,
 >(
     deps: DepsMut,
-    info: &MessageInfo,
-    env: &Env,
+    info: Option<&MessageInfo>,
+    env: Option<&Env>,
     msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where
@@ -367,9 +367,12 @@ where
             .save(deps.storage, attr.key.clone(), &attr)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("action", "update_collection_metadata")
-        .add_attribute("sender", info.sender.to_string()))
+    let response = Response::new().add_attribute("action", "update_collection_metadata");
+    if info.is_some() {
+        Ok(response.add_attribute("sender", info.unwrap().sender.to_string()))
+    } else {
+        Ok(response)
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -451,8 +454,8 @@ pub fn update_creator_ownership<TCustomResponseMsg>(
 /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
 pub fn update_nft_info<TNftMetadataExtension, TNftMetadataExtensionMsg, TCustomResponseMsg>(
     deps: DepsMut,
-    env: &Env,
-    info: &MessageInfo,
+    env: Option<&Env>,
+    info: Option<&MessageInfo>,
     token_id: String,
     token_uri: Option<String>,
     msg: TNftMetadataExtensionMsg,
@@ -475,12 +478,7 @@ where
         token_uri,
         extension: msg,
     };
-    let updated = nft_info_msg.create(
-        deps.as_ref().into(),
-        env.into(),
-        info.into(),
-        Some(&current_nft_info),
-    )?;
+    let updated = nft_info_msg.create(deps.as_ref().into(), env, info, Some(&current_nft_info))?;
     contract.nft_info.save(deps.storage, &token_id, &updated)?;
     Ok(Response::new()
         .add_attribute("action", "update_metadata")
