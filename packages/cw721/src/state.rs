@@ -237,16 +237,17 @@ pub struct CollectionMetadata {
     pub updated_at: Timestamp,
 }
 
+/// This is a wrapper around CollectionMetadata that includes the extension.
 #[cw_serde]
-pub struct CollectionMetadataWrapper<TCollectionMetadataExtension> {
+pub struct CollectionMetadataAndExtension<TCollectionMetadataExtension> {
     pub name: String,
     pub symbol: String,
     pub extension: TCollectionMetadataExtension,
     pub updated_at: Timestamp,
 }
 
-impl<T> From<CollectionMetadataWrapper<T>> for CollectionMetadata {
-    fn from(wrapper: CollectionMetadataWrapper<T>) -> Self {
+impl<T> From<CollectionMetadataAndExtension<T>> for CollectionMetadata {
+    fn from(wrapper: CollectionMetadataAndExtension<T>) -> Self {
         CollectionMetadata {
             name: wrapper.name,
             symbol: wrapper.symbol,
@@ -256,7 +257,7 @@ impl<T> From<CollectionMetadataWrapper<T>> for CollectionMetadata {
 }
 
 impl<TCollectionMetadataExtension, TCollectionMetadataExtensionMsg>
-    StateFactory<CollectionMetadataWrapper<TCollectionMetadataExtension>>
+    StateFactory<CollectionMetadataAndExtension<TCollectionMetadataExtension>>
     for CollectionMetadataMsg<TCollectionMetadataExtensionMsg>
 where
     TCollectionMetadataExtension: Cw721State,
@@ -267,8 +268,9 @@ where
         deps: Option<Deps>,
         env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&CollectionMetadataWrapper<TCollectionMetadataExtension>>,
-    ) -> Result<CollectionMetadataWrapper<TCollectionMetadataExtension>, Cw721ContractError> {
+        current: Option<&CollectionMetadataAndExtension<TCollectionMetadataExtension>>,
+    ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
+    {
         self.validate(deps, env, info, current)?;
         match current {
             // Some: update existing metadata
@@ -291,7 +293,7 @@ where
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
                 let env = env.ok_or(Cw721ContractError::NoEnv)?;
-                let new = CollectionMetadataWrapper {
+                let new = CollectionMetadataAndExtension {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
                     extension,
@@ -307,7 +309,7 @@ where
         deps: Option<Deps>,
         _env: Option<&Env>,
         info: Option<&MessageInfo>,
-        _current: Option<&CollectionMetadataWrapper<TCollectionMetadataExtension>>,
+        _current: Option<&CollectionMetadataAndExtension<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
         // make sure the name and symbol are not empty
         if self.name.is_some() && self.name.clone().unwrap().is_empty() {

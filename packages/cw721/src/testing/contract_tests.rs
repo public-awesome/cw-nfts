@@ -19,7 +19,7 @@ use crate::{
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg, Expiration,
 };
-use crate::{CollectionMetadataExtensionWrapper, CollectionMetadataWrapper, RoyaltyInfo};
+use crate::{CollectionMetadataAndExtension, CollectionMetadataExtensionWrapper, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
@@ -110,12 +110,12 @@ fn test_instantiate() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let res = contract.query_collection_metadata(deps.as_ref(), &env);
-    println!("{:?}", res);
-    let collection_metadata = res.unwrap();
+    let collection_metadata = contract
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
+        .unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadataWrapper {
+        CollectionMetadataAndExtension {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -203,11 +203,11 @@ fn test_instantiate_with_collection_metadata() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
-        .query_collection_metadata(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         info,
-        CollectionMetadataWrapper {
+        CollectionMetadataAndExtension {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: collection_metadata_extension_expected,

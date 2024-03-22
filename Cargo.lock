@@ -523,6 +523,7 @@ dependencies = [
  "cw721-base 0.16.0 (git+https://github.com/CosmWasm/cw-nfts?tag=v0.16.0)",
  "cw721-base 0.17.0",
  "cw721-base 0.18.0",
+ "cw721-metadata-onchain",
  "schemars",
  "serde",
  "thiserror",
@@ -659,6 +660,20 @@ dependencies = [
  "schemars",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "cw721-metadata-onchain"
+version = "0.16.0"
+source = "git+https://github.com/CosmWasm/cw-nfts?tag=v0.16.0#2cad1d3e15e0a34d466a0b51e02c58b82ebe5ecd"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw2 0.16.0",
+ "cw721 0.16.0 (git+https://github.com/CosmWasm/cw-nfts?tag=v0.16.0)",
+ "cw721-base 0.16.0 (git+https://github.com/CosmWasm/cw-nfts?tag=v0.16.0)",
+ "schemars",
+ "serde",
 ]
 
 [[package]]

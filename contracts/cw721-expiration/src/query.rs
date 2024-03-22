@@ -171,12 +171,12 @@ where
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata(deps, &env)?,
+                    .query_collection_metadata_and_extension(deps, &env)?,
             )?),
             QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata(deps, &env)?,
+                    .query_collection_metadata_and_extension(deps, &env)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::Ownership {} => Ok(to_json_binary(
@@ -204,7 +204,7 @@ where
             QueryMsg::GetCollectionMetadataExtension { msg } => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_extension(deps, &env, msg)?,
+                    .query_custom_collection_metadata_extension(deps, &env, msg)?,
             )?),
             QueryMsg::GetWithdrawAddress {} => Ok(to_json_binary(
                 &contract.base_contract.query_withdraw_address(deps)?,

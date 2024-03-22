@@ -15,7 +15,7 @@ use cw721_base::receiver::Cw721ReceiveMsg;
 use cw721_base::state::{CREATOR, MINTER};
 use cw721_base::{query::Cw721Query, Approval, Expiration};
 use cw721_base::{
-    CollectionMetadataWrapper, DefaultOptionCollectionMetadataExtension,
+    CollectionMetadataAndExtension, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
 };
 use cw_ownable::{Action, Ownership, OwnershipError};
@@ -99,11 +99,11 @@ fn proper_instantiation() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadataWrapper {
+        CollectionMetadataAndExtension {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -168,11 +168,11 @@ fn proper_instantiation_with_collection_metadata() {
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_metadata = contract
         .base_contract
-        .query_collection_metadata(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
         .unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadataWrapper {
+        CollectionMetadataAndExtension {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,

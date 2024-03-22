@@ -11,7 +11,7 @@ use crate::{
     msg::{
         CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
     },
-    query::query_collection_metadata_wrapper,
+    query::query_collection_metadata_and_extension,
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
     traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes, StateFactory},
@@ -396,8 +396,9 @@ pub trait Cw721Execute<
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let current_wrapper =
-            query_collection_metadata_wrapper::<TCollectionMetadataExtension>(deps.as_ref(), env)?;
+        let current_wrapper = query_collection_metadata_and_extension::<
+            TCollectionMetadataExtension,
+        >(deps.as_ref(), env)?;
         let collection_metadata_wrapper = msg.create(
             deps.as_ref().into(),
             env.into(),
@@ -730,7 +731,7 @@ pub fn check_can_send<TNftMetadataExtension>(
     }
 
     // operator can send
-    let config = Cw721Config::<Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<Option<Empty>, Empty, Empty, Empty>::default();
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?

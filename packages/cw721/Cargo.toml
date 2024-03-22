@@ -30,5 +30,6 @@ url             = { workspace = true }
 cw-multi-test   = { workspace = true }
 cw721-base-015  = { workspace = true, features = ["library"] }
 cw721-base-016  = { workspace = true, features = ["library"] }
+cw721-metadata-onchain-016 = { workspace = true}
 cw721-base-017  = { workspace = true, features = ["library"] }
 cw721-base-018  = { workspace = true, features = ["library"] }

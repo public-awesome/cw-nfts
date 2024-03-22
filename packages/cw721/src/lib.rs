@@ -10,7 +10,7 @@ pub mod traits;
 pub use cw_utils::Expiration;
 use msg::{CollectionMetadataExtensionMsg, RoyaltyInfoResponse};
 pub use state::{
-    Approval, Attribute, CollectionMetadataExtensionWrapper, CollectionMetadataWrapper,
+    Approval, Attribute, CollectionMetadataAndExtension, CollectionMetadataExtensionWrapper,
     NftMetadata, RoyaltyInfo,
 };
 
@@ -31,6 +31,7 @@ pub type MetaData = NftMetadata;
     since = "0.19.0",
     note = "Please use `CollectionMetadata<DefaultOptionCollectionMetadataExtension>` instead"
 )]
-pub type ContractInfoResponse = CollectionMetadataWrapper<DefaultOptionCollectionMetadataExtension>;
+pub type ContractInfoResponse =
+    CollectionMetadataAndExtension<DefaultOptionCollectionMetadataExtension>;
 #[cfg(test)]
 pub mod testing;

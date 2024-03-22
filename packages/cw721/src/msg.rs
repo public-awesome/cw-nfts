@@ -11,8 +11,9 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
-    Attribute, CollectionMetadataExtensionWrapper, CollectionMetadataWrapper, NftInfo, CREATOR,
-    MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
+    Attribute, CollectionMetadataAndExtension, CollectionMetadataExtensionWrapper, NftInfo,
+    CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
+    MINTER,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{traits::StateFactory, Approval, RoyaltyInfo};
@@ -184,13 +185,13 @@ pub enum Cw721QueryMsg<
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
-    #[returns(CollectionMetadataWrapper<TCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataAndExtension<TCollectionMetadataExtension>)]
     /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionMetadataWrapper<TCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataAndExtension<TCollectionMetadataExtension>)]
     GetCollectionMetadata {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]

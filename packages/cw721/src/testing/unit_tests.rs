@@ -7,7 +7,7 @@ use crate::{
     },
     query::{Cw721Query, MAX_LIMIT},
     state::{
-        CollectionMetadataWrapper, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+        CollectionMetadataAndExtension, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     CollectionMetadataExtensionWrapper, DefaultOptionCollectionMetadataExtension,
@@ -342,7 +342,7 @@ fn test_instantiation_with_collection_metadata() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
         .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -655,7 +655,7 @@ fn test_collection_metadata_update() {
             .unwrap();
         // validate data
         let collection_metadata = contract
-            .query_collection_metadata(deps.as_ref(), &mock_env())
+            .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
             .unwrap();
         assert_eq!(collection_metadata.name, "collection_name");
         assert_eq!(collection_metadata.symbol, "collection_symbol");
@@ -703,7 +703,7 @@ fn test_collection_metadata_update() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
         .unwrap();
         assert_eq!(collection_metadata.name, "new_collection_name");
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
@@ -758,7 +758,7 @@ fn test_collection_metadata_update() {
             DefaultOptionCollectionMetadataExtensionMsg,
             Empty,
         >::default()
-        .query_collection_metadata(deps.as_ref(), &mock_env())
+        .query_collection_metadata_and_extension(deps.as_ref(), &mock_env())
         .unwrap();
         assert_eq!(collection_metadata.name, "new_collection_name");
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
@@ -1244,7 +1244,7 @@ fn test_collection_metadata_update() {
             .unwrap();
         // assert start trading has changed
         let collection_metadata = contract
-            .query_collection_metadata(deps.as_ref(), &env)
+            .query_collection_metadata_and_extension(deps.as_ref(), &env)
             .unwrap();
         assert_eq!(
             collection_metadata.extension.unwrap().start_trading_time,
@@ -1390,12 +1390,12 @@ fn test_nft_mint() {
 }
 
 #[test]
-fn test_migrate() {
+fn test_migrate_v16_onchain_metadata_contract() {
     let mut deps = mock_dependencies();
 
-    // instantiate v16 contract
+    // instantiate v16 onchain metadata contract
     let env = mock_env();
-    use cw721_base_016 as v16;
+    use cw721_metadata_onchain_016 as v16;
     v16::entry::instantiate(
         deps.as_mut(),
         env.clone(),
@@ -1411,11 +1411,16 @@ fn test_migrate() {
     // mint 200 NFTs before migration - using v16 contract
     for i in 0..200 {
         let info = mock_info("legacy_minter", &[]);
-        let msg = v16::ExecuteMsg::Mint(v16::msg::MintMsg {
+        let msg = v16::ExecuteMsg::Mint(v16::MintMsg {
             token_id: i.to_string(),
             owner: "owner".into(),
             token_uri: None,
-            extension: None,
+            extension: Some(v16::Metadata {
+                name: Some("name".to_string()),
+                description: Some("description".to_string()),
+                image: Some("image".to_string()),
+                ..cw721_metadata_onchain_016::Metadata::default()
+            }),
         });
         v16::entry::execute(deps.as_mut(), env.clone(), info, msg).unwrap();
     }
@@ -1431,7 +1436,7 @@ fn test_migrate() {
         Empty,
     >::default();
     contract
-        .query_collection_metadata(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
         .unwrap_err();
     // - query in new minter and creator ownership store throws NotFound Error (in v16 it was stored outside cw_ownable, in dedicated "minter" store)
     MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
@@ -1466,6 +1471,20 @@ fn test_migrate() {
             .unwrap();
         assert_eq!(token.owner.as_str(), "owner");
     }
+    // check one nft
+    let token = contract
+        .query_nft_info(deps.as_ref(), &env, "0".into())
+        .unwrap();
+    assert_eq!(token.token_uri, None);
+    assert_eq!(
+        token.extension,
+        Some(NftMetadata {
+            name: Some("name".to_string()),
+            description: Some("description".to_string()),
+            image: Some("image".to_string()),
+            ..NftMetadata::default()
+        })
+    );
 
     // migrate
     Cw721Contract::<
@@ -1511,9 +1530,9 @@ fn test_migrate() {
 
     // assert collection metadata
     let collection_metadata = contract
-        .query_collection_metadata(deps.as_ref(), &env)
+        .query_collection_metadata_and_extension(deps.as_ref(), &env)
         .unwrap();
-    let legacy_contract_info = CollectionMetadataWrapper {
+    let legacy_contract_info = CollectionMetadataAndExtension {
         name: "legacy_name".to_string(),
         symbol: "legacy_symbol".to_string(),
         extension: None,
@@ -1526,6 +1545,20 @@ fn test_migrate() {
         .query_all_tokens(deps.as_ref(), &env, None, Some(MAX_LIMIT))
         .unwrap();
     assert_eq!(all_tokens.tokens.len(), 200);
+    // check one nft
+    let token = contract
+        .query_nft_info(deps.as_ref(), &env, "0".into())
+        .unwrap();
+    assert_eq!(token.token_uri, None);
+    assert_eq!(
+        token.extension,
+        Some(NftMetadata {
+            name: Some("name".to_string()),
+            description: Some("description".to_string()),
+            image: Some("image".to_string()),
+            ..NftMetadata::default()
+        })
+    );
 
     // assert legacy data is still there (allowing backward migration in case of issues)
     // - minter

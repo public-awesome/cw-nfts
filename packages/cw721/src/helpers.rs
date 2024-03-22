@@ -7,7 +7,7 @@ use crate::msg::{
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{
-    Approval, CollectionMetadataWrapper, DefaultOptionCollectionMetadataExtension,
+    Approval, CollectionMetadataAndExtension, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg,
 };
@@ -157,16 +157,16 @@ where
         Ok(res.count)
     }
 
-    /// With metadata extension
+    /// This is a helper to get the metadata and extension data in one call
     pub fn collection_metadata<U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-    ) -> StdResult<CollectionMetadataWrapper<U>> {
+    ) -> StdResult<CollectionMetadataAndExtension<U>> {
         let req = Cw721QueryMsg::GetCollectionMetadata {};
         self.query(querier, req)
     }
 
-    /// With metadata extension
+    /// With NFT onchain metadata
     pub fn nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
@@ -178,7 +178,7 @@ where
         self.query(querier, req)
     }
 
-    /// With metadata extension
+    /// With NFT onchain metadata
     pub fn all_nft_info<T: Into<String>, U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
