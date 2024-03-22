@@ -345,10 +345,8 @@ where
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >::default();
-    let current_wrapper = query_collection_metadata_and_extension::<TCollectionMetadataExtension>(
-        deps.as_ref(),
-        env,
-    )?;
+    let current_wrapper =
+        query_collection_metadata_and_extension::<TCollectionMetadataExtension>(deps.as_ref())?;
     let collection_metadata_wrapper = msg.create(
         deps.as_ref().into(),
         env.into(),

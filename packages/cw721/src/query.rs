@@ -70,13 +70,13 @@ pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Add
     CREATOR.get_ownership(storage)
 }
 
-pub fn query_collection_metadata(deps: Deps, _env: &Env) -> StdResult<CollectionMetadata> {
+pub fn query_collection_metadata(storage: &dyn Storage) -> StdResult<CollectionMetadata> {
     let config =
         Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
-    config.collection_metadata.load(deps.storage)
+    config.collection_metadata.load(storage)
 }
 
-pub fn query_collection_metadata_extension(deps: Deps, _env: &Env) -> StdResult<Vec<Attribute>> {
+pub fn query_collection_metadata_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
     let config =
         Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
     cw_paginate_storage::paginate_map_values(
@@ -90,13 +90,12 @@ pub fn query_collection_metadata_extension(deps: Deps, _env: &Env) -> StdResult<
 
 pub fn query_collection_metadata_and_extension<TCollectionMetadataExtension>(
     deps: Deps,
-    _env: &Env,
 ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
 where
     TCollectionMetadataExtension: FromAttributes,
 {
-    let collection_metadata = query_collection_metadata(deps, _env)?;
-    let attributes = query_collection_metadata_extension(deps, _env)?;
+    let collection_metadata = query_collection_metadata(deps.storage)?;
+    let attributes = query_collection_metadata_extension(deps)?;
     let extension = FromAttributes::from_attributes(&attributes)?;
     Ok(CollectionMetadataAndExtension {
         name: collection_metadata.name,

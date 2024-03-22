@@ -602,11 +602,11 @@ pub trait Cw721Query<
     }
 
     fn query_collection_metadata(deps: Deps, env: &Env) -> StdResult<CollectionMetadata> {
-        query_collection_metadata(deps, env)
+        query_collection_metadata(deps.storage)
     }
 
     fn query_collection_metadata_extension(deps: Deps, env: &Env) -> StdResult<Vec<Attribute>> {
-        query_collection_metadata_extension(deps, env)
+        query_collection_metadata_extension(deps)
     }
 
     fn query_collection_metadata_and_extension(
@@ -617,7 +617,7 @@ pub trait Cw721Query<
     where
         TCollectionMetadataExtension: FromAttributes,
     {
-        query_collection_metadata_and_extension(deps, env)
+        query_collection_metadata_and_extension(deps)
     }
 
     fn query_num_tokens(&self, deps: Deps, env: &Env) -> StdResult<NumTokensResponse> {
