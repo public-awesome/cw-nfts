@@ -1,10 +1,12 @@
+use std::marker::PhantomData;
+
 use cosmwasm_std::CustomMsg;
 
 use crate::execute::Cw721Execute;
 use crate::query::Cw721Query;
 use crate::state::Cw721Config;
-use crate::traits::StateFactory;
 use crate::traits::{Cw721CustomMsg, Cw721State};
+use crate::traits::{FromAttributes, IntoAttributes, StateFactory};
 
 pub struct Cw721Contract<
     'a,
@@ -28,10 +30,11 @@ pub struct Cw721Contract<
         'a,
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >,
+
+    pub(crate) _collection_metadata_extension: PhantomData<TCollectionMetadataExtension>,
 }
 
 impl<
@@ -58,6 +61,7 @@ where
     fn default() -> Self {
         Self {
             config: Cw721Config::default(),
+            _collection_metadata_extension: PhantomData,
         }
     }
 }
@@ -88,7 +92,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
@@ -113,7 +117,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State + FromAttributes,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {

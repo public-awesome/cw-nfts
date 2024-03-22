@@ -33,7 +33,7 @@ pub mod entry {
 
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
         error::Cw721ContractError,
         execute::Cw721Execute,
@@ -89,7 +89,7 @@ pub mod entry {
             DefaultOptionNftMetadataExtension,
             DefaultOptionCollectionMetadataExtension,
         >,
-    ) -> StdResult<Binary> {
+    ) -> Result<Binary, Cw721ContractError> {
         let contract = Cw721Contract::<
             DefaultOptionNftMetadataExtension,
             DefaultOptionNftMetadataExtensionMsg,

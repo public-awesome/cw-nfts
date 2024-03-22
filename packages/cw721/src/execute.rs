@@ -11,11 +11,11 @@ use crate::{
     msg::{
         CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg,
     },
+    query::query_collection_metadata_wrapper,
     receiver::Cw721ReceiveMsg,
     state::{CollectionMetadata, Cw721Config, NftInfo, CREATOR, MINTER},
-    traits::{Cw721CustomMsg, Cw721State, StateFactory},
-    Approval, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
+    traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes, StateFactory},
+    Approval, DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg,
 };
 
@@ -33,7 +33,7 @@ pub trait Cw721Execute<
 > where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
@@ -60,7 +60,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -71,11 +70,18 @@ pub trait Cw721Execute<
             symbol: Some(msg.symbol),
             extension: msg.collection_metadata_extension,
         };
-        let collection_metadata =
+        let collection_metadata_wrapper =
             collectin_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
+        let extension_attributes = collection_metadata_wrapper.extension.into_attributes()?;
+        let collection_metadata = collection_metadata_wrapper.into();
         config
             .collection_metadata
             .save(deps.storage, &collection_metadata)?;
+        for attr in extension_attributes {
+            config
+                .collection_metadata_extension
+                .save(deps.storage, attr.key.clone(), &attr)?;
+        }
 
         // ---- set minter and creator ----
         // use info.sender if None is passed
@@ -294,7 +300,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -321,7 +326,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -345,7 +349,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -390,20 +393,26 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
-        let current = config.collection_metadata.load(deps.storage)?;
-        let collection_metadata = msg.create(
+        let current_wrapper =
+            query_collection_metadata_wrapper::<TCollectionMetadataExtension>(deps.as_ref(), env)?;
+        let collection_metadata_wrapper = msg.create(
             deps.as_ref().into(),
             env.into(),
             info.into(),
-            Some(&current),
+            Some(&current_wrapper),
         )?;
+        let extension_attributes = collection_metadata_wrapper.extension.into_attributes()?;
         config
             .collection_metadata
-            .save(deps.storage, &collection_metadata)?;
+            .save(deps.storage, &collection_metadata_wrapper.into())?;
+        for attr in extension_attributes {
+            config
+                .collection_metadata_extension
+                .save(deps.storage, attr.key.clone(), &attr)?;
+        }
 
         Ok(Response::new()
             .add_attribute("action", "update_collection_metadata")
@@ -432,7 +441,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -509,7 +517,6 @@ pub trait Cw721Execute<
         let contract = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             Empty,
         >::default();
@@ -543,7 +550,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -562,7 +568,6 @@ pub trait Cw721Execute<
         let config = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default();
@@ -586,7 +591,6 @@ pub trait Cw721Execute<
         let withdraw_address = Cw721Config::<
             TNftMetadataExtension,
             TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
             TCollectionMetadataExtensionMsg,
             TCustomResponseMsg,
         >::default()
@@ -620,7 +624,7 @@ fn _transfer_nft<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_send(deps.as_ref(), env, info, &token)?;
@@ -645,7 +649,7 @@ fn _update_approvals<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -688,7 +692,7 @@ where
         return Ok(());
     }
     // operator can approve
-    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<TNftMetadataExtension, Empty, Empty, Empty>::default();
     let op = config
         .operators
         .may_load(deps.storage, (&token.owner, &info.sender))?;
@@ -726,7 +730,7 @@ pub fn check_can_send<TNftMetadataExtension>(
     }
 
     // operator can send
-    let config = Cw721Config::<Empty, Empty, Empty, Empty, Empty>::default();
+    let config = Cw721Config::<Empty, Empty, Empty, Empty>::default();
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
@@ -863,7 +867,6 @@ pub fn migrate_legacy_collection_metadata(
     let contract = Cw721Config::<
         DefaultOptionNftMetadataExtension,
         DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
         DefaultOptionCollectionMetadataExtensionMsg,
         Empty,
     >::default();
@@ -877,7 +880,6 @@ pub fn migrate_legacy_collection_metadata(
             let collection_metadata = CollectionMetadata {
                 name: legacy_collection_metadata.name.clone(),
                 symbol: legacy_collection_metadata.symbol.clone(),
-                extension: None,
                 updated_at: env.block.time,
             };
             contract

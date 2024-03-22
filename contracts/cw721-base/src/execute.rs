@@ -1,8 +1,8 @@
 use cosmwasm_std::CustomMsg;
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::execute::*;
-use cw721::traits::StateFactory;
 use cw721::traits::{Cw721CustomMsg, Cw721State};
+use cw721::traits::{FromAttributes, IntoAttributes, StateFactory};
 
 use crate::Cw721Contract;
 
@@ -32,7 +32,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State + IntoAttributes + FromAttributes,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {

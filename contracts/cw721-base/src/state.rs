@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::state::*;
 use cw721::traits::{Cw721CustomMsg, Cw721State};
@@ -26,10 +28,10 @@ pub struct Cw721Contract<
         'a,
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >,
+    pub(crate) _collection_metadata_extension: PhantomData<TCollectionMetadataExtension>,
 }
 
 impl<
@@ -56,6 +58,7 @@ where
     fn default() -> Self {
         Self {
             config: Cw721Config::default(),
+            _collection_metadata_extension: PhantomData,
         }
     }
 }

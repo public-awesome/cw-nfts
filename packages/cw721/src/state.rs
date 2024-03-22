@@ -2,7 +2,8 @@ use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    Addr, BlockInfo, Decimal, Deps, Env, MessageInfo, StdResult, Storage, Timestamp,
+    from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Env, MessageInfo, StdResult,
+    Storage, Timestamp,
 };
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
@@ -12,7 +13,7 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::msg::CollectionMetadataMsg;
-use crate::traits::{Cw721CustomMsg, Cw721State};
+use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributes, IntoAttributes};
 use crate::{traits::StateFactory, NftMetadataMsg};
 
 /// Creator owns this contract and can update collection metadata!
@@ -35,6 +36,14 @@ pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
 /// Max royalty share percentage.
 pub const MAX_ROYALTY_SHARE_PCT: u64 = 10;
 // ----------------------
+pub const ATTRIBUTE_DESCRIPTION: &str = "description";
+pub const ATTRIBUTE_IMAGE: &str = "image";
+pub const ATTRIBUTE_EXTERNAL_LINK: &str = "external_link";
+pub const ATTRIBUTE_EXPLICIT_CONTENT: &str = "explicit_content";
+pub const ATTRIBUTE_START_TRADING_TIME: &str = "start_trading_time";
+pub const ATTRIBUTE_ROYALTY_SHARE: &str = "royalty_share";
+pub const ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS: &str = "royalty_payment_address";
+// ----------------------
 
 pub struct Cw721Config<
     'a,
@@ -42,8 +51,6 @@ pub struct Cw721Config<
     TNftMetadataExtension,
     // Message passed for updating metadata.
     TNftMetadataExtensionMsg,
-    // Extension defined in CollectionMetadata.
-    TCollectionMetadataExtension,
     // Message passed for updating collection metadata extension.
     TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
@@ -51,11 +58,11 @@ pub struct Cw721Config<
 > where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
-    pub collection_metadata: Item<'a, CollectionMetadata<TCollectionMetadataExtension>>,
+    pub collection_metadata: Item<'a, CollectionMetadata>,
+    pub collection_metadata_extension: Map<'a, String, Attribute>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
@@ -77,7 +84,6 @@ pub struct Cw721Config<
 impl<
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     > Default
@@ -85,19 +91,18 @@ impl<
         'static,
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self::new(
             "collection_metadata", // Note: replaces deprecated/legacy key "nft_info"
+            "collection_metadata_extension",
             "num_tokens",
             "operators",
             "tokens",
@@ -111,7 +116,6 @@ impl<
         'a,
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
@@ -119,18 +123,17 @@ impl<
         'a,
         TNftMetadataExtension,
         TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
         TCollectionMetadataExtensionMsg,
         TCustomResponseMsg,
     >
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn new(
         collection_metadata_key: &'a str,
+        collection_metadata_extension_key: &'a str,
         token_count_key: &'a str,
         operator_key: &'a str,
         nft_info_key: &'a str,
@@ -146,6 +149,7 @@ where
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
+            collection_metadata_extension: Map::new(collection_metadata_extension_key),
             _custom_metadata_extension_msg: PhantomData,
             _custom_collection_metadata_extension_msg: PhantomData,
             _custom_response_msg: PhantomData,
@@ -227,15 +231,32 @@ where
 }
 
 #[cw_serde]
-pub struct CollectionMetadata<TCollectionMetadataExtension> {
+pub struct CollectionMetadata {
+    pub name: String,
+    pub symbol: String,
+    pub updated_at: Timestamp,
+}
+
+#[cw_serde]
+pub struct CollectionMetadataWrapper<TCollectionMetadataExtension> {
     pub name: String,
     pub symbol: String,
     pub extension: TCollectionMetadataExtension,
     pub updated_at: Timestamp,
 }
 
+impl<T> From<CollectionMetadataWrapper<T>> for CollectionMetadata {
+    fn from(wrapper: CollectionMetadataWrapper<T>) -> Self {
+        CollectionMetadata {
+            name: wrapper.name,
+            symbol: wrapper.symbol,
+            updated_at: wrapper.updated_at,
+        }
+    }
+}
+
 impl<TCollectionMetadataExtension, TCollectionMetadataExtensionMsg>
-    StateFactory<CollectionMetadata<TCollectionMetadataExtension>>
+    StateFactory<CollectionMetadataWrapper<TCollectionMetadataExtension>>
     for CollectionMetadataMsg<TCollectionMetadataExtensionMsg>
 where
     TCollectionMetadataExtension: Cw721State,
@@ -246,8 +267,8 @@ where
         deps: Option<Deps>,
         env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
-    ) -> Result<CollectionMetadata<TCollectionMetadataExtension>, Cw721ContractError> {
+        current: Option<&CollectionMetadataWrapper<TCollectionMetadataExtension>>,
+    ) -> Result<CollectionMetadataWrapper<TCollectionMetadataExtension>, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
         match current {
             // Some: update existing metadata
@@ -270,7 +291,7 @@ where
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
                 let env = env.ok_or(Cw721ContractError::NoEnv)?;
-                let new = CollectionMetadata {
+                let new = CollectionMetadataWrapper {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
                     extension,
@@ -286,7 +307,7 @@ where
         deps: Option<Deps>,
         _env: Option<&Env>,
         info: Option<&MessageInfo>,
-        _current: Option<&CollectionMetadata<TCollectionMetadataExtension>>,
+        _current: Option<&CollectionMetadataWrapper<TCollectionMetadataExtension>>,
     ) -> Result<(), Cw721ContractError> {
         // make sure the name and symbol are not empty
         if self.name.is_some() && self.name.clone().unwrap().is_empty() {
@@ -313,8 +334,13 @@ where
     }
 }
 
+pub type CollectionMetadataExtension = Vec<Attribute>;
+
 #[cw_serde]
-pub struct CollectionMetadataExtension<TRoyaltyInfo> {
+pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo>
+where
+    TRoyaltyInfo: IntoAttributes,
+{
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
@@ -323,7 +349,166 @@ pub struct CollectionMetadataExtension<TRoyaltyInfo> {
     pub royalty_info: Option<TRoyaltyInfo>,
 }
 
-impl Cw721State for CollectionMetadataExtension<RoyaltyInfo> {}
+impl<TRoyaltyInfo> IntoAttributes for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
+where
+    TRoyaltyInfo: IntoAttributes + FromAttributes,
+{
+    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+        let mut attributes = vec![
+            Attribute {
+                key: ATTRIBUTE_DESCRIPTION.to_string(),
+                value: to_json_binary(&self.description)?,
+            },
+            Attribute {
+                key: ATTRIBUTE_IMAGE.to_string(),
+                value: to_json_binary(&self.image)?,
+            },
+        ];
+        if let Some(external_link) = &self.external_link {
+            let value = Some(external_link.clone());
+            attributes.push(Attribute {
+                key: ATTRIBUTE_EXTERNAL_LINK.to_string(),
+                value: to_json_binary(&value)?,
+            });
+        }
+        if let Some(explicit_content) = self.explicit_content {
+            let value = Some(explicit_content);
+            attributes.push(Attribute {
+                key: ATTRIBUTE_EXPLICIT_CONTENT.to_string(),
+                value: to_json_binary(&value)?,
+            });
+        }
+        if let Some(start_trading_time) = self.start_trading_time {
+            let value = Some(start_trading_time);
+            attributes.push(Attribute {
+                key: ATTRIBUTE_START_TRADING_TIME.to_string(),
+                value: to_json_binary(&value)?,
+            });
+        }
+        if let Some(royalty_info) = &self.royalty_info {
+            attributes.extend(royalty_info.into_attributes()?);
+        }
+        Ok(attributes)
+    }
+}
+
+impl<TRoyaltyInfo> FromAttributes for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
+where
+    TRoyaltyInfo: IntoAttributes + FromAttributes,
+{
+    fn from_attributes(attributes: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+        let description = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_DESCRIPTION)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "description".to_string(),
+            ))?
+            .string_value()?;
+        let image = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_IMAGE)
+            .ok_or(Cw721ContractError::AttributeMissing("image".to_string()))?
+            .string_value()?;
+        let external_link = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_EXTERNAL_LINK)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "external link".to_string(),
+            ))?
+            .optional_string_value()?;
+        let explicit_content = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_EXPLICIT_CONTENT)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "explicit content".to_string(),
+            ))?
+            .optional_bool_value()?;
+        let start_trading_time = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_START_TRADING_TIME)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "start trading time".to_string(),
+            ))?
+            .optional_timestamp_value()?;
+        let royalty_info = FromAttributes::from_attributes(attributes)?;
+        Ok(CollectionMetadataExtensionWrapper {
+            description,
+            image,
+            external_link,
+            explicit_content,
+            start_trading_time,
+            royalty_info,
+        })
+    }
+}
+
+#[cw_serde]
+pub struct Attribute {
+    pub key: String,
+    pub value: Binary,
+}
+
+impl Attribute {
+    pub fn string_value(&self) -> Result<String, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_string_value(&self) -> Result<Option<String>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn u64_value(&self) -> Result<u64, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_u64_value(&self) -> Result<Option<u64>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn bool_value(&self) -> Result<bool, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_bool_value(&self) -> Result<Option<bool>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn decimal_value(&self) -> Result<Decimal, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_decimal_value(&self) -> Result<Option<Decimal>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn timestamp_value(&self) -> Result<Timestamp, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_timestamp_value(&self) -> Result<Option<Timestamp>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn addr_value(&self) -> Result<Addr, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+
+    pub fn optional_addr_value(&self) -> Result<Option<Addr>, Cw721ContractError> {
+        Ok(from_json(&self.value)?)
+    }
+}
+
+// pub struct StringAttribute {
+//     pub key: String,
+//     pub value: String,
+// }
+
+// pub struct UintAttribute {
+//     pub key: String,
+//     pub value: u64,
+// }
+
+impl Cw721State for CollectionMetadataExtensionWrapper<RoyaltyInfo> {}
 
 #[cw_serde]
 pub struct RoyaltyInfo {
@@ -333,6 +518,44 @@ pub struct RoyaltyInfo {
 
 impl Cw721State for RoyaltyInfo {}
 impl Cw721CustomMsg for RoyaltyInfo {}
+
+impl IntoAttributes for RoyaltyInfo {
+    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+        Ok(vec![
+            Attribute {
+                key: ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS.to_string(),
+                value: to_json_binary(&Some(self.payment_address.clone())).unwrap(),
+            },
+            Attribute {
+                key: ATTRIBUTE_ROYALTY_SHARE.to_string(),
+                value: to_json_binary(&Some(self.share)).unwrap(),
+            },
+        ])
+    }
+}
+
+impl FromAttributes for RoyaltyInfo {
+    fn from_attributes(attributes: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+        let payment_address = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "royalty payment address".to_string(),
+            ))?
+            .addr_value()?;
+        let share = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_SHARE)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "royalty share".to_string(),
+            ))?
+            .decimal_value()?;
+        Ok(RoyaltyInfo {
+            payment_address,
+            share,
+        })
+    }
+}
 
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]

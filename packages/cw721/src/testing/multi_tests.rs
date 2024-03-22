@@ -12,7 +12,7 @@ use crate::{
 };
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
-    StdResult, WasmMsg,
+    WasmMsg,
 };
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
@@ -66,7 +66,7 @@ pub fn query(
     deps: Deps,
     env: Env,
     msg: Cw721QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>,
-) -> StdResult<Binary> {
+) -> Result<Binary, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
         DefaultOptionNftMetadataExtensionMsg,

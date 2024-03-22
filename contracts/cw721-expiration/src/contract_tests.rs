@@ -12,11 +12,11 @@ use cw721_base::msg::{
     OwnerOfResponse, TokensResponse,
 };
 use cw721_base::receiver::Cw721ReceiveMsg;
-use cw721_base::state::{CollectionMetadata, CREATOR, MINTER};
+use cw721_base::state::{CREATOR, MINTER};
 use cw721_base::{query::Cw721Query, Approval, Expiration};
 use cw721_base::{
-    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-    DefaultOptionNftMetadataExtensionMsg,
+    CollectionMetadataWrapper, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
 };
 use cw_ownable::{Action, Ownership, OwnershipError};
 
@@ -103,7 +103,7 @@ fn proper_instantiation() {
         .unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadata {
+        CollectionMetadataWrapper {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -172,7 +172,7 @@ fn proper_instantiation_with_collection_metadata() {
         .unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadata {
+        CollectionMetadataWrapper {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,

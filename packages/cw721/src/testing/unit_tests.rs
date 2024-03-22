@@ -7,10 +7,10 @@ use crate::{
     },
     query::{Cw721Query, MAX_LIMIT},
     state::{
-        CollectionMetadata, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+        CollectionMetadataWrapper, NftMetadata, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
-    CollectionMetadataExtension, DefaultOptionCollectionMetadataExtension,
+    CollectionMetadataExtensionWrapper, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg, RoyaltyInfo,
 };
@@ -281,7 +281,7 @@ fn test_instantiation_with_collection_metadata() {
         let mut deps = mock_dependencies();
 
         let info_creator = mock_info(CREATOR_ADDR, &[]);
-        let extension = Some(CollectionMetadataExtension {
+        let extension = Some(CollectionMetadataExtensionWrapper {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
@@ -576,7 +576,7 @@ fn test_collection_metadata_update() {
         let mut deps = mock_dependencies();
         let env = mock_env();
         let info_creator = mock_info(CREATOR_ADDR, &[]);
-        let expected_instantiated_extension = Some(CollectionMetadataExtension {
+        let expected_instantiated_extension = Some(CollectionMetadataExtensionWrapper {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
@@ -709,7 +709,7 @@ fn test_collection_metadata_update() {
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
         assert_eq!(
             collection_metadata.extension,
-            Some(CollectionMetadataExtension {
+            Some(CollectionMetadataExtensionWrapper {
                 description: "new_description".into(),
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),
@@ -764,7 +764,7 @@ fn test_collection_metadata_update() {
         assert_eq!(collection_metadata.symbol, "new_collection_symbol");
         assert_eq!(
             collection_metadata.extension,
-            Some(CollectionMetadataExtension {
+            Some(CollectionMetadataExtensionWrapper {
                 description: "new_description".into(),
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),
@@ -1513,7 +1513,7 @@ fn test_migrate() {
     let collection_metadata = contract
         .query_collection_metadata(deps.as_ref(), &env)
         .unwrap();
-    let legacy_contract_info = CollectionMetadata {
+    let legacy_contract_info = CollectionMetadataWrapper {
         name: "legacy_name".to_string(),
         symbol: "legacy_symbol".to_string(),
         extension: None,

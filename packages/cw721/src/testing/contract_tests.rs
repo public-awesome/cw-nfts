@@ -13,13 +13,13 @@ use crate::msg::{
 };
 use crate::msg::{CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
-use crate::state::{CollectionMetadata, NftMetadata, Trait, CREATOR, MINTER};
+use crate::state::{NftMetadata, Trait, CREATOR, MINTER};
 use crate::{
     execute::Cw721Execute, query::Cw721Query, Approval, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg, Expiration,
 };
-use crate::{CollectionMetadataExtension, RoyaltyInfo};
+use crate::{CollectionMetadataExtensionWrapper, CollectionMetadataWrapper, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
@@ -110,12 +110,12 @@ fn test_instantiate() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_metadata = contract
-        .query_collection_metadata(deps.as_ref(), &env)
-        .unwrap();
+    let res = contract.query_collection_metadata(deps.as_ref(), &env);
+    println!("{:?}", res);
+    let collection_metadata = res.unwrap();
     assert_eq!(
         collection_metadata,
-        CollectionMetadata {
+        CollectionMetadataWrapper {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -151,7 +151,7 @@ fn test_instantiate_with_collection_metadata() {
         Empty,
     >::default();
 
-    let collection_metadata_extension_expected = Some(CollectionMetadataExtension {
+    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
         description: "description".to_string(),
         image: "https://moonphases.org".to_string(),
         explicit_content: Some(true),
@@ -207,7 +207,7 @@ fn test_instantiate_with_collection_metadata() {
         .unwrap();
     assert_eq!(
         info,
-        CollectionMetadata {
+        CollectionMetadataWrapper {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: collection_metadata_extension_expected,

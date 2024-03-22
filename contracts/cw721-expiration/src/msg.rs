@@ -1,7 +1,7 @@
 use crate::{DefaultOptionNftMetadataExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
-use cw721_base::state::CollectionMetadata;
+use cw721_base::state::CollectionMetadataWrapper;
 use cw_ownable::Ownership;
 
 // expose to all others using contract, so others dont need to import cw721
@@ -127,13 +127,13 @@ pub enum QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension> {
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
-    #[returns(cw721_base::state::CollectionMetadata<cw721_base::DefaultOptionCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataWrapper<cw721_base::DefaultOptionCollectionMetadataExtension>)]
     /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionMetadata<TCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataWrapper<TCollectionMetadataExtension>)]
     GetCollectionMetadata {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]

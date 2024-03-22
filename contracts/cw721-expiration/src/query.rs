@@ -4,7 +4,7 @@ use cw721_base::msg::{
     TokensResponse,
 };
 use cw721_base::query::Cw721Query;
-use cw721_base::traits::{Cw721CustomMsg, Cw721State};
+use cw721_base::traits::{Cw721CustomMsg, Cw721State, FromAttributes};
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
@@ -27,7 +27,7 @@ impl<
 where
     TNftMetadataExtension: Cw721State,
     TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
+    TCollectionMetadataExtension: Cw721State + FromAttributes,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {

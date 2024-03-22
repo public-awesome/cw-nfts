@@ -4,7 +4,7 @@ use cosmwasm_std::{Deps, Empty, Env, MessageInfo};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::error::Cw721ContractError;
+use crate::{error::Cw721ContractError, Attribute};
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
 ///
@@ -60,5 +60,38 @@ impl StateFactory<Empty> for Empty {
         _current: Option<&Empty>,
     ) -> Result<(), Cw721ContractError> {
         Ok(())
+    }
+}
+
+pub trait IntoAttributes {
+    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError>;
+}
+
+impl<T> IntoAttributes for Option<T>
+where
+    T: IntoAttributes,
+{
+    fn into_attributes(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+        match self {
+            Some(inner) => inner.into_attributes(),
+            None => Ok(vec![]),
+        }
+    }
+}
+
+pub trait FromAttributes: Sized {
+    fn from_attributes(value: &Vec<Attribute>) -> Result<Self, Cw721ContractError>;
+}
+
+impl<T> FromAttributes for Option<T>
+where
+    T: FromAttributes,
+{
+    fn from_attributes(value: &Vec<Attribute>) -> Result<Self, Cw721ContractError> {
+        if value.is_empty() {
+            Ok(None)
+        } else {
+            T::from_attributes(value).map(Some)
+        }
     }
 }

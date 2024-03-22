@@ -1,3 +1,5 @@
+use std::{num::ParseIntError, str::ParseBoolError};
+
 use cosmwasm_std::StdError;
 use cw_ownable::OwnershipError;
 use thiserror::Error;
@@ -7,6 +9,18 @@ use url::ParseError;
 pub enum Cw721ContractError {
     #[error(transparent)]
     ParseError(#[from] ParseError),
+
+    #[error(transparent)]
+    ParseIntError(#[from] ParseIntError),
+
+    #[error(transparent)]
+    ParseBoolError(#[from] ParseBoolError),
+
+    #[error("Unsupoorted custom attribute type: {key}={value}")]
+    UnsupportedCustomAttributeType { key: String, value: String },
+
+    #[error("Missing {0} attribute")]
+    AttributeMissing(String),
 
     #[error(transparent)]
     Std(#[from] StdError),

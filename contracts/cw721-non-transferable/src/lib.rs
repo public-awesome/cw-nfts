@@ -33,7 +33,6 @@ pub mod entry {
     use crate::state::{Config, CONFIG};
     use cosmwasm_std::{
         entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-        StdResult,
     };
     use cw721::error::Cw721ContractError;
     use cw721::execute::Cw721Execute;
@@ -121,9 +120,9 @@ pub mod entry {
     }
 
     #[entry_point]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
         match msg {
-            QueryMsg::Admin {} => to_json_binary(&admin(deps)?),
+            QueryMsg::Admin {} => Ok(to_json_binary(&admin(deps)?)?),
             _ => _query(deps, env, msg.into()),
         }
     }

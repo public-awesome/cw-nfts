@@ -5,10 +5,9 @@ use crate::msg::{
     OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
-use crate::state::CollectionMetadata;
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{
-    Approval, DefaultOptionCollectionMetadataExtension,
+    Approval, CollectionMetadataWrapper, DefaultOptionCollectionMetadataExtension,
     DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
     DefaultOptionNftMetadataExtensionMsg,
 };
@@ -162,7 +161,7 @@ where
     pub fn collection_metadata<U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-    ) -> StdResult<CollectionMetadata<U>> {
+    ) -> StdResult<CollectionMetadataWrapper<U>> {
         let req = Cw721QueryMsg::GetCollectionMetadata {};
         self.query(querier, req)
     }

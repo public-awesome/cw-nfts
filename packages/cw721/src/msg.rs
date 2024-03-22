@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Binary, Coin, Decimal, Deps, Env, MessageInfo, Timestamp};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Coin, Decimal, Deps, Env, MessageInfo, Timestamp,
+};
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
 use url::Url;
@@ -7,11 +11,11 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
-    CollectionMetadata, NftInfo, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
-    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
+    Attribute, CollectionMetadataExtensionWrapper, CollectionMetadataWrapper, NftInfo, CREATOR,
+    MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State};
-use crate::{traits::StateFactory, Approval, CollectionMetadataExtension, RoyaltyInfo};
+use crate::{traits::StateFactory, Approval, RoyaltyInfo};
 
 #[cw_serde]
 pub enum Cw721ExecuteMsg<
@@ -180,13 +184,13 @@ pub enum Cw721QueryMsg<
     NumTokens {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
-    #[returns(CollectionMetadata<TCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataWrapper<TCollectionMetadataExtension>)]
     /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionMetadata<TCollectionMetadataExtension>)]
+    #[returns(CollectionMetadataWrapper<TCollectionMetadataExtension>)]
     GetCollectionMetadata {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
@@ -278,6 +282,76 @@ pub struct CollectionMetadataMsg<TCollectionMetadataExtensionMsg> {
 }
 
 #[cw_serde]
+pub struct AttributeMsg {
+    pub attr_type: AttributeType,
+    pub key: String,
+    pub value: String,
+    pub data: Option<HashMap<String, String>>,
+}
+
+impl AttributeMsg {
+    pub fn string_value(&self) -> Result<String, Cw721ContractError> {
+        Ok(self.value.clone())
+    }
+
+    pub fn u64_value(&self) -> Result<u64, Cw721ContractError> {
+        Ok(self.value.parse::<u64>()?)
+    }
+
+    pub fn bool_value(&self) -> Result<bool, Cw721ContractError> {
+        Ok(self.value.parse::<bool>()?)
+    }
+
+    pub fn decimal_value(&self) -> Result<Decimal, Cw721ContractError> {
+        Ok(self.value.parse::<Decimal>()?)
+    }
+
+    pub fn timestamp_value(&self) -> Result<Timestamp, Cw721ContractError> {
+        let nanos = self.u64_value()?;
+        Ok(Timestamp::from_nanos(nanos))
+    }
+
+    pub fn addr_value(&self) -> Result<Addr, Cw721ContractError> {
+        Ok(Addr::unchecked(self.string_value()?))
+    }
+}
+
+impl AttributeMsg {
+    pub fn from(&self) -> Result<Attribute, Cw721ContractError> {
+        let value = match self.attr_type {
+            AttributeType::String => to_json_binary(&self.string_value()?)?,
+            AttributeType::U64 => to_json_binary(&self.u64_value()?)?,
+            AttributeType::Boolean => to_json_binary(&self.bool_value()?)?,
+            AttributeType::Decimal => to_json_binary(&self.decimal_value()?)?,
+            AttributeType::Timestamp => to_json_binary(&self.timestamp_value()?)?,
+            AttributeType::Addr => to_json_binary(&self.addr_value()?)?,
+            AttributeType::Custom => {
+                return Err(Cw721ContractError::UnsupportedCustomAttributeType {
+                    key: self.key.clone(),
+                    value: self.value.clone(),
+                });
+            }
+        };
+        let attribute = Attribute {
+            key: self.key.clone(),
+            value,
+        };
+        Ok(attribute)
+    }
+}
+
+#[cw_serde]
+pub enum AttributeType {
+    String,
+    U64,
+    Boolean,
+    Timestamp,
+    Addr,
+    Decimal,
+    Custom,
+}
+
+#[cw_serde]
 /// NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.
 pub struct CollectionMetadataExtensionMsg<TRoyaltyInfoResponse> {
     pub description: Option<String>,
@@ -293,7 +367,7 @@ impl<TRoyaltyInfoResponse> Cw721CustomMsg for CollectionMetadataExtensionMsg<TRo
 {
 }
 
-impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
+impl StateFactory<CollectionMetadataExtensionWrapper<RoyaltyInfo>>
     for CollectionMetadataExtensionMsg<RoyaltyInfoResponse>
 {
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
@@ -302,8 +376,8 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         deps: Option<Deps>,
         env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
-    ) -> Result<CollectionMetadataExtension<RoyaltyInfo>, Cw721ContractError> {
+        current: Option<&CollectionMetadataExtensionWrapper<RoyaltyInfo>>,
+    ) -> Result<CollectionMetadataExtensionWrapper<RoyaltyInfo>, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
         match current {
             // Some: update existing metadata
@@ -352,7 +426,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
                     // current royalty is none and new royalty is none
                     None => None,
                 };
-                let new = CollectionMetadataExtension {
+                let new = CollectionMetadataExtensionWrapper {
                     description: self.description.clone().unwrap_or_default(),
                     image: self.image.clone().unwrap_or_default(),
                     external_link: self.external_link.clone(),
@@ -371,7 +445,7 @@ impl StateFactory<CollectionMetadataExtension<RoyaltyInfo>>
         deps: Option<Deps>,
         _env: Option<&Env>,
         info: Option<&MessageInfo>,
-        _current: Option<&CollectionMetadataExtension<RoyaltyInfo>>,
+        _current: Option<&CollectionMetadataExtensionWrapper<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
         let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let sender = info.map(|i| i.sender.clone());

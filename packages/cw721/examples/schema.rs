@@ -11,8 +11,8 @@ use cw721::{
     },
     receiver::Cw721ReceiveMsg,
     state::CollectionMetadata,
-    DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
+    CollectionMetadataWrapper, DefaultOptionCollectionMetadataExtension,
+    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
 };
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -62,7 +62,7 @@ fn main() {
     export_schema(&schema_for!(OperatorResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     export_schema_with_title(
-        &schema_for!(CollectionMetadata<DefaultOptionCollectionMetadataExtension>),
+        &schema_for!(CollectionMetadataWrapper<DefaultOptionCollectionMetadataExtension>),
         &out_dir,
         "CollectionMetadata",
     );
