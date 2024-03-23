@@ -6,7 +6,7 @@ use cw_utils::{maybe_addr, Expiration};
 use crate::{
     error::Cw721ContractError,
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
+        AllInfoResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
         CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
         OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
@@ -103,8 +103,23 @@ where
     })
 }
 
-pub fn query_num_tokens(deps: Deps, _env: &Env) -> StdResult<NumTokensResponse> {
-    let count = Cw721Config::<Option<Empty>>::default().token_count(deps.storage)?;
+pub fn query_all_info(deps: Deps, env: &Env) -> StdResult<AllInfoResponse> {
+    let collection_info = query_collection_info(deps.storage)?;
+    let attributes = query_collection_extension_attributes(deps)?;
+    let num_tokens = Cw721Config::<Option<Empty>>::default().token_count(deps.storage)?;
+    let contract_info = deps
+        .querier
+        .query_wasm_contract_info(env.contract.address.clone())?;
+    Ok(AllInfoResponse {
+        collection_info,
+        collection_extension: attributes,
+        num_tokens,
+        contract_info,
+    })
+}
+
+pub fn query_num_tokens(storage: &dyn Storage) -> StdResult<NumTokensResponse> {
+    let count = Cw721Config::<Option<Empty>>::default().token_count(storage)?;
     Ok(NumTokensResponse { count })
 }
 

@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Coin, Decimal, Deps, Env, MessageInfo, Timestamp,
+    to_json_binary, Addr, Binary, Coin, ContractInfo, ContractInfoResponse, Decimal, Deps, Env,
+    MessageInfo, Timestamp,
 };
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
@@ -193,10 +194,17 @@ pub enum Cw721QueryMsg<
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
-    /// With MetaData Extension.
-    /// Returns top-level metadata about the contract
+    /// Returns `CollectionInfoAndExtensionResponse`
     #[returns(CollectionInfoAndExtensionResponse<TCollectionExtension>)]
     GetCollectionInfoAndExtension {},
+
+    /// returns `AllInfoResponse` which contains contract, collection and nft details
+    #[returns(AllInfoResponse)]
+    GetAllInfo {},
+
+    /// Returns `CollectionExtensionAttributes`
+    #[returns(CollectionExtensionAttributes)]
+    GetCollectionExtensionAttributes {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
@@ -254,7 +262,7 @@ pub enum Cw721QueryMsg<
     Extension { msg: TNftExtension },
 
     #[returns(())]
-    GetCollectionExtension { msg: TCollectionExtension },
+    CollectionExtension { msg: TCollectionExtension },
 }
 
 #[cw_serde]
@@ -576,11 +584,14 @@ pub struct CollectionInfoAndExtensionResponse<TCollectionExtension> {
 
 /// This is a wrapper around CollectionInfo that includes the extension.
 #[cw_serde]
-pub struct AllCollectionInfo {
-    pub name: String,
-    pub symbol: String,
-    pub extension: CollectionExtensionAttributes,
-    pub updated_at: Timestamp,
+pub struct AllInfoResponse {
+    // contract details
+    pub contract_info: ContractInfoResponse,
+    // collection details
+    pub collection_info: CollectionInfo,
+    pub collection_extension: CollectionExtensionAttributes,
+    // NFT details
+    pub num_tokens: u64,
 }
 
 impl<T> From<CollectionInfoAndExtensionResponse<T>> for CollectionInfo {

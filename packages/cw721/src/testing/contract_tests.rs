@@ -130,7 +130,7 @@ fn test_instantiate() {
         .unwrap();
     assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
 
-    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
     assert_eq!(0, count.count);
 
     // list the token_ids
@@ -222,7 +222,7 @@ fn test_instantiate_with_collection_info_and_extension() {
         .unwrap();
     assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
 
-    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
     assert_eq!(0, count.count);
 
     // list the token_ids
@@ -347,7 +347,7 @@ fn test_mint() {
         .unwrap();
 
     // ensure num tokens increases
-    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
     assert_eq!(1, count.count);
 
     // unknown nft returns error
@@ -1023,7 +1023,7 @@ fn test_burn() {
         .unwrap();
 
     // ensure num tokens decreases
-    let count = contract.query_num_tokens(deps.as_ref(), &env).unwrap();
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
     assert_eq!(0, count.count);
 
     // trying to get nft returns error

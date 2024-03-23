@@ -164,7 +164,7 @@ where
                 limit,
             )?)?),
             QueryMsg::NumTokens {} => Ok(to_json_binary(
-                &contract.base_contract.query_num_tokens(deps, &env)?,
+                &contract.base_contract.query_num_tokens(deps.storage)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
@@ -203,7 +203,7 @@ where
             QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_custom_collection_info_extension(deps, &env, msg)?,
+                    .query_custom_collection_extension(deps, &env, msg)?,
             )?),
             QueryMsg::GetWithdrawAddress {} => Ok(to_json_binary(
                 &contract.base_contract.query_withdraw_address(deps)?,

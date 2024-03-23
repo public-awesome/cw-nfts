@@ -34,6 +34,7 @@ use crate::{
     state::CollectionInfo,
     Attribute,
 };
+use crate::{msg::AllInfoResponse, query::query_all_info, state::CollectionExtensionAttributes};
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
 ///
@@ -478,6 +479,10 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCollectionInfoAndExtension {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
             )?),
+            Cw721QueryMsg::GetAllInfo {} => Ok(to_json_binary(&self.query_all_info(deps, env)?)?),
+            Cw721QueryMsg::GetCollectionExtensionAttributes {} => Ok(to_json_binary(
+                &self.query_collection_extension_attributes(deps)?,
+            )?),
             Cw721QueryMsg::NftInfo { token_id } => {
                 Ok(to_json_binary(&self.query_nft_info(deps, env, token_id)?)?)
             }
@@ -523,7 +528,9 @@ pub trait Cw721Query<
                 start_after,
                 limit,
             )?)?),
-            Cw721QueryMsg::NumTokens {} => Ok(to_json_binary(&self.query_num_tokens(deps, env)?)?),
+            Cw721QueryMsg::NumTokens {} => {
+                Ok(to_json_binary(&self.query_num_tokens(deps.storage)?)?)
+            }
             Cw721QueryMsg::Tokens {
                 owner,
                 start_after,
@@ -569,9 +576,9 @@ pub trait Cw721Query<
                 &self.query_creator_ownership(deps.storage)?,
             )?),
             Cw721QueryMsg::Extension { msg } => self.query_custom(deps, env, msg),
-            Cw721QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
-                &self.query_custom_collection_info_extension(deps, env, msg)?,
-            )?),
+            Cw721QueryMsg::CollectionExtension { msg } => {
+                self.query_custom_collection_extension(deps, env, msg)
+            }
             Cw721QueryMsg::GetWithdrawAddress {} => {
                 Ok(to_json_binary(&self.query_withdraw_address(deps)?)?)
             }
@@ -593,11 +600,11 @@ pub trait Cw721Query<
         query_creator_ownership(storage)
     }
 
-    fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
+    fn query_collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {
         query_collection_info(deps.storage)
     }
 
-    fn query_collection_extension_attributes(deps: Deps) -> StdResult<Vec<Attribute>> {
+    fn query_collection_extension_attributes(&self, deps: Deps) -> StdResult<Vec<Attribute>> {
         query_collection_extension_attributes(deps)
     }
 
@@ -611,8 +618,12 @@ pub trait Cw721Query<
         query_collection_info_and_extension(deps)
     }
 
-    fn query_num_tokens(&self, deps: Deps, env: &Env) -> StdResult<NumTokensResponse> {
-        query_num_tokens(deps, env)
+    fn query_all_info(&self, deps: Deps, env: &Env) -> StdResult<AllInfoResponse> {
+        Ok(query_all_info(deps, env)?)
+    }
+
+    fn query_num_tokens(&self, storage: &dyn Storage) -> StdResult<NumTokensResponse> {
+        query_num_tokens(storage)
     }
 
     fn query_nft_info(
@@ -733,12 +744,12 @@ pub trait Cw721Query<
     /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
     ///
     /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
-    fn query_custom_collection_info_extension(
+    fn query_custom_collection_extension(
         &self,
         _deps: Deps,
         _env: &Env,
         _msg: TCollectionExtension,
-    ) -> StdResult<Binary> {
+    ) -> Result<Binary, Cw721ContractError> {
         Ok(Binary::default())
     }
 

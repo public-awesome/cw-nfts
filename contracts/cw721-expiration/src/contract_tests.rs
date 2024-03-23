@@ -121,7 +121,7 @@ fn proper_instantiation() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), &env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -190,7 +190,7 @@ fn proper_instantiation_with_collection_info() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), &env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -233,7 +233,7 @@ fn test_mint() {
     // ensure num tokens increases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), &env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(1, count.count);
 
@@ -437,7 +437,7 @@ fn test_burn() {
     // ensure num tokens decreases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), &env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
