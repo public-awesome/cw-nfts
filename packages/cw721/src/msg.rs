@@ -20,9 +20,9 @@ use crate::{traits::StateFactory, Approval, RoyaltyInfo};
 
 #[cw_serde]
 pub enum Cw721ExecuteMsg<
-    // Message for updating metadata.
+    // NftInfo extension msg for onchain metadata.
     TNftMetadataExtensionMsg,
-    // Message for updating collection metadata extension.
+    // CollectionMetadata extension msg for onchain collection attributes.
     TCollectionMetadataExtensionMsg,
 > {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]

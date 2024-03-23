@@ -48,7 +48,7 @@ pub const ATTRIBUTE_ROYALTY_INFO: &str = "royalty_info";
 
 pub struct Cw721Config<
     'a,
-    // Metadata defined in NftInfo (used for mint).
+    // NftInfo extension (onchain metadata).
     TNftMetadataExtension,
 > where
     TNftMetadataExtension: Cw721State,

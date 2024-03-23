@@ -5,14 +5,14 @@ use cw_storage_plus::{Item, Map};
 
 pub struct Cw721ExpirationContract<
     'a,
-    // Metadata defined in NftInfo (used for mint).
+    // NftInfo extension (onchain metadata).
     TNftMetadataExtension,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    // Message for updating metadata.
+    // NftInfo extension msg for onchain metadata.
     TNftMetadataExtensionMsg,
-    // Extension defined in CollectionMetadata.
+    // CollectionMetadata extension (onchain attributes).
     TCollectionMetadataExtension,
-    // Message for updating collection metadata extension.
+    // CollectionMetadata extension msg for onchain collection attributes.
     TCollectionMetadataExtensionMsg,
     TCustomResponseMsg,
 > where

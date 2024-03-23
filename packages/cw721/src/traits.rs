@@ -125,13 +125,13 @@ where
 }
 
 pub trait Cw721Execute<
-    // Metadata defined in NftInfo (used for mint).
+    // NftInfo extension (onchain metadata).
     TNftMetadataExtension,
-    // Message for updating metadata.
+    // NftInfo extension msg for onchain metadata.
     TNftMetadataExtensionMsg,
-    // Extension defined in CollectionMetadata.
+    // CollectionMetadata extension (onchain attributes).
     TCollectionMetadataExtension,
-    // Message for updating collection metadata extension.
+    // CollectionMetadata extension msg for onchain collection attributes.
     TCollectionMetadataExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
@@ -463,9 +463,9 @@ pub trait Cw721Execute<
 }
 
 pub trait Cw721Query<
-    // Metadata defined in NftInfo.
+    // NftInfo extension (onchain metadata).
     TNftMetadataExtension,
-    // Extension defined in CollectionMetadata.
+    // CollectionMetadata extension (onchain attributes).
     TCollectionMetadataExtension,
 > where
     TNftMetadataExtension: Cw721State,
