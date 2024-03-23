@@ -89,7 +89,7 @@ pub fn query_collection_metadata_and_extension<TCollectionMetadataExtension>(
     deps: Deps,
 ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: FromAttributesState,
+    TCollectionMetadataExtension: Cw721State + FromAttributesState,
 {
     let collection_metadata = query_collection_metadata(deps.storage)?;
     let attributes = query_collection_metadata_extension(deps)?;

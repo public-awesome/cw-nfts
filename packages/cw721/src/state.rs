@@ -363,30 +363,30 @@ where
                 key: ATTRIBUTE_IMAGE.to_string(),
                 value: to_json_binary(&self.image)?,
             },
-        ];
-        if let Some(external_link) = &self.external_link {
-            let value = Some(external_link.clone());
-            attributes.push(Attribute {
+            Attribute {
                 key: ATTRIBUTE_EXTERNAL_LINK.to_string(),
-                value: to_json_binary(&value)?,
-            });
-        }
-        if let Some(explicit_content) = self.explicit_content {
-            let value = Some(explicit_content);
-            attributes.push(Attribute {
+                value: to_json_binary(&self.external_link.clone())?,
+            },
+            Attribute {
                 key: ATTRIBUTE_EXPLICIT_CONTENT.to_string(),
-                value: to_json_binary(&value)?,
-            });
-        }
-        if let Some(start_trading_time) = self.start_trading_time {
-            let value = Some(start_trading_time);
-            attributes.push(Attribute {
+                value: to_json_binary(&self.explicit_content)?,
+            },
+            Attribute {
                 key: ATTRIBUTE_START_TRADING_TIME.to_string(),
-                value: to_json_binary(&value)?,
-            });
-        }
+                value: to_json_binary(&self.start_trading_time)?,
+            },
+        ];
         if let Some(royalty_info) = &self.royalty_info {
             attributes.extend(royalty_info.to_attributes_states()?);
+        } else {
+            attributes.push(Attribute {
+                key: ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS.to_string(),
+                value: to_json_binary(&None::<Option<Addr>>)?,
+            });
+            attributes.push(Attribute {
+                key: ATTRIBUTE_ROYALTY_SHARE.to_string(),
+                value: to_json_binary(&None::<Option<Decimal>>)?,
+            });
         }
         Ok(attributes)
     }
@@ -430,7 +430,27 @@ where
                 "start trading time".to_string(),
             ))?
             .optional_timestamp_value()?;
-        let royalty_info = FromAttributesState::from_attributes_state(attributes)?;
+
+        let payment_address = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "royalty payment address".to_string(),
+            ))?
+            .optional_addr_value()?;
+        let share = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_SHARE)
+            .ok_or(Cw721ContractError::AttributeMissing(
+                "royalty share".to_string(),
+            ))?
+            .optional_decimal_value()?;
+
+        let royalty_info = if payment_address.is_some() && share.is_some() {
+            Some(FromAttributesState::from_attributes_state(attributes)?)
+        } else {
+            None
+        };
         Ok(CollectionMetadataExtensionWrapper {
             description,
             image,

@@ -142,7 +142,7 @@ fn test_instantiate() {
 }
 
 #[test]
-fn test_instantiate_with_collection_metadata() {
+fn test_instantiate_with_collection_metadata_and_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
         DefaultOptionNftMetadataExtension,
@@ -152,17 +152,6 @@ fn test_instantiate_with_collection_metadata() {
         Empty,
     >::default();
 
-    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
-        description: "description".to_string(),
-        image: "https://moonphases.org".to_string(),
-        explicit_content: Some(true),
-        external_link: Some("https://moonphases.org/".to_string()),
-        start_trading_time: Some(Timestamp::from_seconds(0)),
-        royalty_info: Some(RoyaltyInfo {
-            payment_address: Addr::unchecked("payment_address"),
-            share: "0.1".parse().unwrap(),
-        }),
-    });
     let collection_metadata_extension_msg = Some(CollectionMetadataExtensionMsg {
         description: Some("description".to_string()),
         image: Some("https://moonphases.org".to_string()),
@@ -206,6 +195,17 @@ fn test_instantiate_with_collection_metadata() {
     let info = contract
         .query_collection_metadata_and_extension(deps.as_ref())
         .unwrap();
+    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
+        description: "description".to_string(),
+        image: "https://moonphases.org".to_string(),
+        explicit_content: Some(true),
+        external_link: Some("https://moonphases.org/".to_string()),
+        start_trading_time: Some(Timestamp::from_seconds(0)),
+        royalty_info: Some(RoyaltyInfo {
+            payment_address: Addr::unchecked("payment_address"),
+            share: "0.1".parse().unwrap(),
+        }),
+    });
     assert_eq!(
         info,
         CollectionMetadataAndExtension {
@@ -231,6 +231,76 @@ fn test_instantiate_with_collection_metadata() {
         .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(0, tokens.tokens.len());
+}
+
+#[test]
+fn test_instantiate_with_minimal_collection_metadata_and_extension() {
+    let mut deps = mock_dependencies();
+    let contract = Cw721Contract::<
+        DefaultOptionNftMetadataExtension,
+        DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionCollectionMetadataExtension,
+        DefaultOptionCollectionMetadataExtensionMsg,
+        Empty,
+    >::default();
+
+    let collection_metadata_extension_msg = Some(CollectionMetadataExtensionMsg {
+        description: Some("description".to_string()),
+        image: Some("https://moonphases.org".to_string()),
+        explicit_content: None,
+        external_link: None,
+        start_trading_time: None,
+        royalty_info: None,
+    });
+    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        collection_metadata_extension: collection_metadata_extension_msg,
+        minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
+        withdraw_address: Some(String::from(CREATOR_ADDR)),
+    };
+    let info = mock_info("creator", &[]);
+    let env = mock_env();
+
+    // we can just call .unwrap() to assert this was a success
+    let res = contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info,
+            msg,
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+    assert_eq!(0, res.messages.len());
+
+    // it worked, let's query the state
+    let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
+    let info = contract
+        .query_collection_metadata_and_extension(deps.as_ref())
+        .unwrap();
+    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
+        description: "description".to_string(),
+        image: "https://moonphases.org".to_string(),
+        explicit_content: None,
+        external_link: None,
+        start_trading_time: None,
+        royalty_info: None,
+    });
+    assert_eq!(
+        info,
+        CollectionMetadataAndExtension {
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
+            extension: collection_metadata_extension_expected,
+            updated_at: env.block.time
+        }
+    );
 }
 
 #[test]
