@@ -24,14 +24,12 @@ pub struct Cw721Contract<
     TCollectionMetadataExtension: Cw721State,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
-    pub config: Cw721Config<
-        'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >,
+    pub config: Cw721Config<'a, TNftMetadataExtension>,
     pub(crate) _collection_metadata_extension: PhantomData<TCollectionMetadataExtension>,
+    pub(crate) _custom_metadata_extension_msg: PhantomData<TNftMetadataExtensionMsg>,
+    pub(crate) _custom_collection_metadata_extension_msg:
+        PhantomData<TCollectionMetadataExtensionMsg>,
+    pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
 impl<
@@ -59,6 +57,9 @@ where
         Self {
             config: Cw721Config::default(),
             _collection_metadata_extension: PhantomData,
+            _custom_metadata_extension_msg: PhantomData,
+            _custom_collection_metadata_extension_msg: PhantomData,
+            _custom_response_msg: PhantomData,
         }
     }
 }

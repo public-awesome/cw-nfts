@@ -51,12 +51,7 @@ where
     TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
 {
-    let config = Cw721Config::<
-        Option<Empty>,
-        Option<Empty>,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >::default();
+    let config = Cw721Config::<Option<Empty>>::default();
 
     // ---- update collection metadata before(!) creator and minter is set ----
     let collectin_metadata_msg = CollectionMetadataMsg {
@@ -131,9 +126,7 @@ pub fn transfer_nft<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config =
-        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
-        );
+    let config = Cw721Config::<TNftMetadataExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_send(deps.as_ref(), env, info, &token)?;
@@ -209,9 +202,7 @@ pub fn update_approvals<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let config =
-        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
-        );
+    let config = Cw721Config::<TNftMetadataExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
     check_can_approve(deps.as_ref(), env, info, &token)?;
@@ -273,8 +264,7 @@ pub fn approve_all<TCustomResponseMsg>(
 
     // set the operator for us
     let operator_addr = deps.api.addr_validate(&operator)?;
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     config
         .operators
         // stores info.sender as key (=granter, NFT owner) and operator as value (operator only(!) has control over NFTs of granter)
@@ -294,8 +284,7 @@ pub fn revoke_all<TCustomResponseMsg>(
     operator: String,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
     let operator_addr = deps.api.addr_validate(&operator)?;
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     config
         .operators
         .remove(deps.storage, (&info.sender, &operator_addr));
@@ -312,8 +301,7 @@ pub fn burn_nft<TCustomResponseMsg>(
     info: &MessageInfo,
     token_id: String,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     let token = config.nft_info.load(deps.storage, &token_id)?;
     check_can_send(deps.as_ref(), env, info, &token)?;
 
@@ -341,12 +329,7 @@ where
     TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
-    let config = Cw721Config::<
-        Option<Empty>,
-        Option<Empty>,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     let current_wrapper =
         query_collection_metadata_and_extension::<TCollectionMetadataExtension>(deps.as_ref())?;
     let collection_metadata_wrapper = msg.create(
@@ -398,12 +381,7 @@ where
         extension,
     };
     let token = token_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
-    let config = Cw721Config::<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        Option<Empty>,
-        TCustomResponseMsg,
-    >::default();
+    let config = Cw721Config::<TNftMetadataExtension>::default();
     config
         .nft_info
         .update(deps.storage, &token_id, |old| match old {
@@ -465,12 +443,7 @@ where
     TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
     TCustomResponseMsg: CustomMsg,
 {
-    let contract = Cw721Config::<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        Option<Empty>,
-        Empty,
-    >::default();
+    let contract = Cw721Config::<TNftMetadataExtension>::default();
     let current_nft_info = contract.nft_info.load(deps.storage, &token_id)?;
     let nft_info_msg = NftInfoMsg {
         owner: current_nft_info.owner.to_string(),
@@ -492,8 +465,7 @@ pub fn set_withdraw_address<TCustomResponseMsg>(
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
     CREATOR.assert_owner(deps.storage, sender)?;
     deps.api.addr_validate(&address)?;
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     config.withdraw_address.save(deps.storage, &address)?;
     Ok(Response::new()
         .add_attribute("action", "set_withdraw_address")
@@ -505,8 +477,7 @@ pub fn remove_withdraw_address<TCustomResponseMsg>(
     sender: &Addr,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
     CREATOR.assert_owner(storage, sender)?;
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     let address = config.withdraw_address.may_load(storage)?;
     match address {
         Some(address) => {
@@ -523,10 +494,9 @@ pub fn withdraw_funds<TCustomResponseMsg>(
     storage: &mut dyn Storage,
     amount: &Coin,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let withdraw_address =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, TCustomResponseMsg>::default()
-            .withdraw_address
-            .may_load(storage)?;
+    let withdraw_address = Cw721Config::<Option<Empty>>::default()
+        .withdraw_address
+        .may_load(storage)?;
     match withdraw_address {
         Some(address) => {
             let msg = BankMsg::Send {
@@ -558,9 +528,7 @@ where
         return Ok(());
     }
     // operator can approve
-    let config =
-        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
-        );
+    let config = Cw721Config::<TNftMetadataExtension>::default();
     let op = config
         .operators
         .may_load(deps.storage, (&token.owner, &info.sender))?;
@@ -598,8 +566,7 @@ pub fn check_can_send<TNftMetadataExtension>(
     }
 
     // operator can send
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
@@ -752,7 +719,7 @@ pub fn migrate_legacy_collection_metadata(
     _msg: &Cw721MigrateMsg,
     response: Response,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Empty>::default();
+    let contract = Cw721Config::<Option<Empty>>::default();
     match contract.collection_metadata.may_load(storage)? {
         Some(_) => Ok(response),
         None => {

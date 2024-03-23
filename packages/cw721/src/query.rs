@@ -68,14 +68,12 @@ pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Add
 }
 
 pub fn query_collection_metadata(storage: &dyn Storage) -> StdResult<CollectionMetadata> {
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     config.collection_metadata.load(storage)
 }
 
 pub fn query_collection_metadata_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
-    let config =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default();
+    let config = Cw721Config::<Option<Empty>>::default();
     cw_paginate_storage::paginate_map_values(
         deps,
         &config.collection_metadata_extension,
@@ -103,9 +101,7 @@ where
 }
 
 pub fn query_num_tokens(deps: Deps, _env: &Env) -> StdResult<NumTokensResponse> {
-    let count =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .token_count(deps.storage)?;
+    let count = Cw721Config::<Option<Empty>>::default().token_count(deps.storage)?;
     Ok(NumTokensResponse { count })
 }
 
@@ -117,9 +113,7 @@ pub fn query_nft_info<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let info =
-        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
-        )
+    let info = Cw721Config::<TNftMetadataExtension>::default()
         .nft_info
         .load(deps.storage, &token_id)?;
     Ok(NftInfoResponse {
@@ -134,10 +128,9 @@ pub fn query_owner_of(
     token_id: String,
     include_expired_approval: bool,
 ) -> StdResult<OwnerOfResponse> {
-    let nft_info =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+    let nft_info = Cw721Config::<Option<Empty>>::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
     Ok(OwnerOfResponse {
         owner: nft_info.owner.to_string(),
         approvals: humanize_approvals(&env.block, &nft_info, include_expired_approval),
@@ -155,7 +148,7 @@ pub fn query_operator(
     let owner_addr = deps.api.addr_validate(&owner)?;
     let operator_addr = deps.api.addr_validate(&operator)?;
 
-    let info = Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
+    let info = Cw721Config::<Option<Empty>>::default()
         .operators
         .may_load(deps.storage, (&owner_addr, &operator_addr))?;
 
@@ -189,19 +182,16 @@ pub fn query_operators(
     let start = start_addr.as_ref().map(Bound::exclusive);
 
     let owner_addr = deps.api.addr_validate(&owner)?;
-    let res: StdResult<Vec<_>> =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .operators
-            .prefix(&owner_addr)
-            .range(deps.storage, start, None, Order::Ascending)
-            .filter(|r| {
-                include_expired_approval
-                    || r.is_err()
-                    || !r.as_ref().unwrap().1.is_expired(&env.block)
-            })
-            .take(limit)
-            .map(parse_approval)
-            .collect();
+    let res: StdResult<Vec<_>> = Cw721Config::<Option<Empty>>::default()
+        .operators
+        .prefix(&owner_addr)
+        .range(deps.storage, start, None, Order::Ascending)
+        .filter(|r| {
+            include_expired_approval || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
+        })
+        .take(limit)
+        .map(parse_approval)
+        .collect();
     Ok(OperatorsResponse { operators: res? })
 }
 
@@ -212,10 +202,9 @@ pub fn query_approval(
     spender: String,
     include_expired_approval: bool,
 ) -> StdResult<ApprovalResponse> {
-    let token =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+    let token = Cw721Config::<Option<Empty>>::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
 
     // token owner has absolute approval
     if token.owner == spender {
@@ -253,10 +242,9 @@ pub fn query_approvals(
     token_id: String,
     include_expired_approval: bool,
 ) -> StdResult<ApprovalsResponse> {
-    let token =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .nft_info
-            .load(deps.storage, &token_id)?;
+    let token = Cw721Config::<Option<Empty>>::default()
+        .nft_info
+        .load(deps.storage, &token_id)?;
     let approvals: Vec<_> = token
         .approvals
         .into_iter()
@@ -281,15 +269,14 @@ pub fn query_tokens(
     let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
     let owner_addr = deps.api.addr_validate(&owner)?;
-    let tokens: Vec<String> =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .nft_info
-            .idx
-            .owner
-            .prefix(owner_addr)
-            .keys(deps.storage, start, None, Order::Ascending)
-            .take(limit)
-            .collect::<StdResult<Vec<_>>>()?;
+    let tokens: Vec<String> = Cw721Config::<Option<Empty>>::default()
+        .nft_info
+        .idx
+        .owner
+        .prefix(owner_addr)
+        .keys(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .collect::<StdResult<Vec<_>>>()?;
 
     Ok(TokensResponse { tokens })
 }
@@ -303,13 +290,12 @@ pub fn query_all_tokens(
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
-    let tokens: StdResult<Vec<String>> =
-        Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
-            .nft_info
-            .range(deps.storage, start, None, Order::Ascending)
-            .take(limit)
-            .map(|item| item.map(|(k, _)| k))
-            .collect();
+    let tokens: StdResult<Vec<String>> = Cw721Config::<Option<Empty>>::default()
+        .nft_info
+        .range(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| item.map(|(k, _)| k))
+        .collect();
 
     Ok(TokensResponse { tokens: tokens? })
 }
@@ -323,9 +309,7 @@ pub fn query_all_nft_info<TNftMetadataExtension>(
 where
     TNftMetadataExtension: Cw721State,
 {
-    let nft_info =
-        Cw721Config::<TNftMetadataExtension, Option<Empty>, Option<Empty>, Option<Empty>>::default(
-        )
+    let nft_info = Cw721Config::<TNftMetadataExtension>::default()
         .nft_info
         .load(deps.storage, &token_id)?;
     Ok(AllNftInfoResponse {
@@ -341,7 +325,7 @@ where
 }
 
 pub fn query_withdraw_address(deps: Deps) -> StdResult<Option<String>> {
-    Cw721Config::<Option<Empty>, Option<Empty>, Option<Empty>, Option<Empty>>::default()
+    Cw721Config::<Option<Empty>>::default()
         .withdraw_address
         .may_load(deps.storage)
 }

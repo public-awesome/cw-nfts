@@ -50,16 +50,8 @@ pub struct Cw721Config<
     'a,
     // Metadata defined in NftInfo (used for mint).
     TNftMetadataExtension,
-    // Message passed for updating metadata.
-    TNftMetadataExtensionMsg,
-    // Message passed for updating collection metadata extension.
-    TCollectionMetadataExtensionMsg,
-    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMsg,
 > where
     TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
     pub collection_metadata: Item<'a, CollectionMetadata>,
@@ -75,30 +67,11 @@ pub struct Cw721Config<
         TokenIndexes<'a, TNftMetadataExtension>,
     >,
     pub withdraw_address: Item<'a, String>,
-
-    pub(crate) _custom_metadata_extension_msg: PhantomData<TNftMetadataExtensionMsg>,
-    pub(crate) _custom_collection_metadata_extension_msg:
-        PhantomData<TCollectionMetadataExtensionMsg>,
-    pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
-impl<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    > Default
-    for Cw721Config<
-        'static,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >
+impl<TNftMetadataExtension> Default for Cw721Config<'static, TNftMetadataExtension>
 where
     TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self::new(
@@ -113,24 +86,9 @@ where
     }
 }
 
-impl<
-        'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >
-    Cw721Config<
-        'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtensionMsg,
-        TCustomResponseMsg,
-    >
+impl<'a, TNftMetadataExtension> Cw721Config<'a, TNftMetadataExtension>
 where
     TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
 {
     fn new(
         collection_metadata_key: &'a str,
@@ -151,9 +109,6 @@ where
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
             collection_metadata_extension: Map::new(collection_metadata_extension_key),
-            _custom_metadata_extension_msg: PhantomData,
-            _custom_collection_metadata_extension_msg: PhantomData,
-            _custom_response_msg: PhantomData,
         }
     }
 
