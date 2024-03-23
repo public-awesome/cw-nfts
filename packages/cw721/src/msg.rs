@@ -12,10 +12,10 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
-    Attribute, CollectionInfo, NftInfo, ATTRIBUTE_DESCRIPTION, ATTRIBUTE_EXPLICIT_CONTENT,
-    ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE, ATTRIBUTE_ROYALTY_INFO, ATTRIBUTE_START_TRADING_TIME,
-    CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT,
-    MINTER,
+    Attribute, CollectionExtensionAttributes, CollectionInfo, NftInfo, ATTRIBUTE_DESCRIPTION,
+    ATTRIBUTE_EXPLICIT_CONTENT, ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE, ATTRIBUTE_ROYALTY_INFO,
+    ATTRIBUTE_START_TRADING_TIME, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
 use crate::{traits::StateFactory, Approval, RoyaltyInfo};
@@ -583,6 +583,15 @@ pub struct CollectionInfoAndExtensionResponse<TCollectionExtension> {
     pub name: String,
     pub symbol: String,
     pub extension: TCollectionExtension,
+    pub updated_at: Timestamp,
+}
+
+/// This is a wrapper around CollectionInfo that includes the extension.
+#[cw_serde]
+pub struct AllCollectionInfo {
+    pub name: String,
+    pub symbol: String,
+    pub extension: CollectionExtensionAttributes,
     pub updated_at: Timestamp,
 }
 

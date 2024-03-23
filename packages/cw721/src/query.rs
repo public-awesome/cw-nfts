@@ -10,7 +10,10 @@ use crate::{
         CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
         OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
-    state::{Approval, CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
+    state::{
+        Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
+        MINTER,
+    },
     traits::{Cw721State, FromAttributesState},
     Attribute,
 };
@@ -70,7 +73,9 @@ pub fn query_collection_info(storage: &dyn Storage) -> StdResult<CollectionInfo>
     config.collection_info.load(storage)
 }
 
-pub fn query_collection_info_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
+pub fn query_collection_extension_attributes(
+    deps: Deps,
+) -> StdResult<CollectionExtensionAttributes> {
     let config = Cw721Config::<Option<Empty>>::default();
     cw_paginate_storage::paginate_map_values(
         deps,
@@ -88,7 +93,7 @@ where
     TCollectionExtension: Cw721State + FromAttributesState,
 {
     let collection_info = query_collection_info(deps.storage)?;
-    let attributes = query_collection_info_extension(deps)?;
+    let attributes = query_collection_extension_attributes(deps)?;
     let extension = FromAttributesState::from_attributes_state(&attributes)?;
     Ok(CollectionInfoAndExtensionResponse {
         name: collection_info.name,

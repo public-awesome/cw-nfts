@@ -26,8 +26,8 @@ use crate::{
     },
     query::{
         query_all_nft_info, query_all_tokens, query_approval, query_approvals,
-        query_collection_info, query_collection_info_and_extension,
-        query_collection_info_extension, query_creator_ownership, query_minter,
+        query_collection_extension_attributes, query_collection_info,
+        query_collection_info_and_extension, query_creator_ownership, query_minter,
         query_minter_ownership, query_nft_info, query_num_tokens, query_operator, query_operators,
         query_owner_of, query_tokens, query_withdraw_address,
     },
@@ -605,8 +605,8 @@ pub trait Cw721Query<
         query_collection_info(deps.storage)
     }
 
-    fn query_collection_info_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
-        query_collection_info_extension(deps)
+    fn query_collection_extension_attributes(deps: Deps) -> StdResult<Vec<Attribute>> {
+        query_collection_extension_attributes(deps)
     }
 
     fn query_collection_info_and_extension(

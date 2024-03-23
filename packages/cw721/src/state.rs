@@ -183,6 +183,9 @@ pub struct CollectionInfo {
     pub updated_at: Timestamp,
 }
 
+/// Explicit type equivalent to `Vec<Attribute>`, for better distinction.
+pub type CollectionExtensionAttributes = Vec<Attribute>;
+
 #[cw_serde]
 pub struct Attribute {
     pub key: String,
