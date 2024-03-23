@@ -12,25 +12,25 @@ use cw721_base::{
 
 impl<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
     Cw721ExpirationContract<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
+    TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     // -- instantiate --
@@ -39,16 +39,16 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<TCollectionMetadataExtensionMsg>,
+        msg: InstantiateMsg<TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         if msg.expiration_days == 0 {
             return Err(ContractError::MinExpiration {});
         }
         let contract = Cw721ExpirationContract::<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
-            TCollectionMetadataExtensionMsg,
+            TNftExtension,
+            TNftExtensionMsg,
+            TCollectionExtension,
+            TCollectionExtensionMsg,
             TCustomResponseMsg,
         >::default();
         contract
@@ -61,7 +61,7 @@ where
             Cw721InstantiateMsg {
                 name: msg.name,
                 symbol: msg.symbol,
-                collection_metadata_extension: msg.collection_metadata_extension,
+                collection_info_extension: msg.collection_info_extension,
                 minter: msg.minter,
                 creator: msg.creator,
                 withdraw_address: msg.withdraw_address,
@@ -77,13 +77,13 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let contract = Cw721ExpirationContract::<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
-            TCollectionMetadataExtensionMsg,
+            TNftExtension,
+            TNftExtensionMsg,
+            TCollectionExtension,
+            TCollectionExtensionMsg,
             TCustomResponseMsg,
         >::default();
         match msg {
@@ -131,7 +131,7 @@ where
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TNftMetadataExtensionMsg,
+        extension: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let mint_timstamp = env.block.time;
         self.mint_timestamps

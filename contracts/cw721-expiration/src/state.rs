@@ -6,53 +6,53 @@ use cw_storage_plus::{Item, Map};
 pub struct Cw721ExpirationContract<
     'a,
     // NftInfo extension (onchain metadata).
-    TNftMetadataExtension,
+    TNftExtension,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     // NftInfo extension msg for onchain metadata.
-    TNftMetadataExtensionMsg,
-    // CollectionMetadata extension (onchain attributes).
-    TCollectionMetadataExtension,
-    // CollectionMetadata extension msg for onchain collection attributes.
-    TCollectionMetadataExtensionMsg,
+    TNftExtensionMsg,
+    // CollectionInfo extension (onchain attributes).
+    TCollectionExtension,
+    // CollectionInfo extension msg for onchain collection attributes.
+    TCollectionExtensionMsg,
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
 {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
     pub base_contract: Cw721Contract<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >,
 }
 
 impl<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     > Default
     for Cw721ExpirationContract<
         'static,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self {

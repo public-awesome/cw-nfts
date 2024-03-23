@@ -7,9 +7,9 @@ use crate::msg::{
 use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
 use crate::traits::{Cw721CustomMsg, Cw721State};
 use crate::{
-    Approval, CollectionMetadataAndExtension, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
+    Approval, CollectionInfoAndExtensionResponse, DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg,
 };
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
@@ -19,44 +19,34 @@ use serde::de::DeserializeOwned;
 
 #[deprecated(since = "0.19.0", note = "Please use `Cw721Helper` instead")]
 pub type Cw721Contract = Cw721Helper<
-    DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
-    DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg,
+    DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg,
 >;
 
 #[cw_serde]
 pub struct Cw721Helper<
-    TNftMetadataExtension,
-    TNftMetadataExtensionMsg,
-    TCollectionMetadataExtension,
-    TCollectionMetadataExtensionMsg,
+    TNftExtension,
+    TNftExtensionMsg,
+    TCollectionExtension,
+    TCollectionExtensionMsg,
 >(
     pub Addr,
-    pub PhantomData<TNftMetadataExtension>,
-    pub PhantomData<TNftMetadataExtensionMsg>,
-    pub PhantomData<TCollectionMetadataExtension>,
-    pub PhantomData<TCollectionMetadataExtensionMsg>,
+    pub PhantomData<TNftExtension>,
+    pub PhantomData<TNftExtensionMsg>,
+    pub PhantomData<TCollectionExtension>,
+    pub PhantomData<TCollectionExtensionMsg>,
 );
 
 #[allow(dead_code)]
-impl<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
-    >
-    Cw721Helper<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
-    >
+impl<TNftExtension, TNftExtensionMsg, TCollectionExtension, TCollectionExtensionMsg>
+    Cw721Helper<TNftExtension, TNftExtensionMsg, TCollectionExtension, TCollectionExtensionMsg>
 where
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TNftMetadataExtension: Cw721State,
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -64,7 +54,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
@@ -78,7 +68,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension>,
+        req: Cw721QueryMsg<TNftExtension, TCollectionExtension>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -158,11 +148,11 @@ where
     }
 
     /// This is a helper to get the metadata and extension data in one call
-    pub fn collection_metadata<U: DeserializeOwned>(
+    pub fn collection_info<U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-    ) -> StdResult<CollectionMetadataAndExtension<U>> {
-        let req = Cw721QueryMsg::GetCollectionMetadata {};
+    ) -> StdResult<CollectionInfoAndExtensionResponse<U>> {
+        let req = Cw721QueryMsg::GetCollectionInfo {};
         self.query(querier, req)
     }
 
@@ -221,7 +211,7 @@ where
 
     /// returns true if the contract supports the metadata extension
     pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
-        self.collection_metadata::<Empty>(querier).is_ok()
+        self.collection_info::<Empty>(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension

@@ -9,29 +9,30 @@ use cw_utils::Expiration;
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Serialize};
 
+#[allow(deprecated)]
 use crate::{
     error::Cw721ContractError,
     execute::{
         approve, approve_all, burn_nft, initialize_creator, initialize_minter, instantiate,
         instantiate_with_version, migrate, mint, remove_withdraw_address, revoke, revoke_all,
-        send_nft, set_withdraw_address, transfer_nft, update_collection_metadata,
+        send_nft, set_withdraw_address, transfer_nft, update_collection_info,
         update_creator_ownership, update_minter_ownership, update_nft_info, withdraw_funds,
     },
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionMetadataMsg,
-        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
-        NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-        TokensResponse,
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
+        CollectionInfoAndExtensionResponse, CollectionInfoMsg, Cw721ExecuteMsg,
+        Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse, NftInfoResponse,
+        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     query::{
         query_all_nft_info, query_all_tokens, query_approval, query_approvals,
-        query_collection_metadata, query_collection_metadata_and_extension,
-        query_collection_metadata_extension, query_creator_ownership, query_minter,
+        query_collection_info, query_collection_info_and_extension,
+        query_collection_info_extension, query_creator_ownership, query_minter,
         query_minter_ownership, query_nft_info, query_num_tokens, query_operator, query_operators,
         query_owner_of, query_tokens, query_withdraw_address,
     },
-    state::CollectionMetadata,
-    Attribute, CollectionMetadataAndExtension,
+    state::CollectionInfo,
+    Attribute,
 };
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
@@ -126,20 +127,20 @@ where
 
 pub trait Cw721Execute<
     // NftInfo extension (onchain metadata).
-    TNftMetadataExtension,
+    TNftExtension,
     // NftInfo extension msg for onchain metadata.
-    TNftMetadataExtensionMsg,
-    // CollectionMetadata extension (onchain attributes).
-    TCollectionMetadataExtension,
-    // CollectionMetadata extension msg for onchain collection attributes.
-    TCollectionMetadataExtensionMsg,
+    TNftExtensionMsg,
+    // CollectionInfo extension (onchain attributes).
+    TCollectionExtension,
+    // CollectionInfo extension msg for onchain collection attributes.
+    TCollectionExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
+    TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
     TCustomResponseMsg: CustomMsg,
 {
     fn instantiate_with_version(
@@ -147,7 +148,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: &Env,
         info: &MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
+        msg: Cw721InstantiateMsg<TCollectionExtensionMsg>,
         contract_name: &str,
         contract_version: &str,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
@@ -159,7 +160,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: &Env,
         info: &MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionMetadataExtensionMsg>,
+        msg: Cw721InstantiateMsg<TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         instantiate(deps, env, info, msg)
     }
@@ -169,13 +170,11 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: &Env,
         info: &MessageInfo,
-        msg: Cw721ExecuteMsg<TNftMetadataExtensionMsg, TCollectionMetadataExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
-            Cw721ExecuteMsg::UpdateCollectionMetadata {
-                collection_metadata,
-            } => {
-                self.update_collection_metadata(deps, info.into(), env.into(), collection_metadata)
+            Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
+                self.update_collection_info(deps, info.into(), env.into(), collection_info)
             }
             Cw721ExecuteMsg::Mint {
                 token_id,
@@ -254,7 +253,7 @@ pub trait Cw721Execute<
         recipient: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        transfer_nft::<TNftMetadataExtension>(deps, env, info, &recipient, &token_id)?;
+        transfer_nft::<TNftExtension>(deps, env, info, &recipient, &token_id)?;
 
         Ok(Response::new()
             .add_attribute("action", "transfer_nft")
@@ -272,9 +271,7 @@ pub trait Cw721Execute<
         token_id: String,
         msg: Binary,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        send_nft::<TNftMetadataExtension, TCustomResponseMsg>(
-            deps, env, info, contract, token_id, msg,
-        )
+        send_nft::<TNftExtension, TCustomResponseMsg>(deps, env, info, contract, token_id, msg)
     }
 
     fn approve(
@@ -286,9 +283,7 @@ pub trait Cw721Execute<
         token_id: String,
         expires: Option<Expiration>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        approve::<TNftMetadataExtension, TCustomResponseMsg>(
-            deps, env, info, spender, token_id, expires,
-        )
+        approve::<TNftExtension, TCustomResponseMsg>(deps, env, info, spender, token_id, expires)
     }
 
     fn revoke(
@@ -299,7 +294,7 @@ pub trait Cw721Execute<
         spender: String,
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        revoke::<TNftMetadataExtension, TCustomResponseMsg>(deps, env, info, spender, token_id)
+        revoke::<TNftExtension, TCustomResponseMsg>(deps, env, info, spender, token_id)
     }
 
     fn approve_all(
@@ -352,18 +347,16 @@ pub trait Cw721Execute<
         initialize_minter(storage, api, minter)
     }
 
-    fn update_collection_metadata(
+    fn update_collection_info(
         &self,
         deps: DepsMut,
         info: Option<&MessageInfo>,
         env: Option<&Env>,
-        msg: CollectionMetadataMsg<TCollectionMetadataExtensionMsg>,
+        msg: CollectionInfoMsg<TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        update_collection_metadata::<
-            TCollectionMetadataExtension,
-            TCollectionMetadataExtensionMsg,
-            TCustomResponseMsg,
-        >(deps, info, env, msg)
+        update_collection_info::<TCollectionExtension, TCollectionExtensionMsg, TCustomResponseMsg>(
+            deps, info, env, msg,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -375,9 +368,9 @@ pub trait Cw721Execute<
         token_id: String,
         owner: String,
         token_uri: Option<String>,
-        extension: TNftMetadataExtensionMsg,
+        extension: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        mint::<TNftMetadataExtension, TNftMetadataExtensionMsg, TCustomResponseMsg>(
+        mint::<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
             deps, env, info, token_id, owner, token_uri, extension,
         )
     }
@@ -410,7 +403,7 @@ pub trait Cw721Execute<
         _deps: DepsMut,
         _env: &Env,
         _info: &MessageInfo,
-        _msg: TNftMetadataExtensionMsg,
+        _msg: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         panic!("deprecated. pls use update_metadata instead.")
     }
@@ -424,9 +417,9 @@ pub trait Cw721Execute<
         info: &MessageInfo,
         token_id: String,
         token_uri: Option<String>,
-        msg: TNftMetadataExtensionMsg,
+        msg: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        update_nft_info::<TNftMetadataExtension, TNftMetadataExtensionMsg, TCustomResponseMsg>(
+        update_nft_info::<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
             deps,
             env.into(),
             info.into(),
@@ -464,28 +457,28 @@ pub trait Cw721Execute<
 
 pub trait Cw721Query<
     // NftInfo extension (onchain metadata).
-    TNftMetadataExtension,
-    // CollectionMetadata extension (onchain attributes).
-    TCollectionMetadataExtension,
+    TNftExtension,
+    // CollectionInfo extension (onchain attributes).
+    TCollectionExtension,
 > where
-    TNftMetadataExtension: Cw721State,
-    TCollectionMetadataExtension: Cw721State + FromAttributesState,
+    TNftExtension: Cw721State,
+    TCollectionExtension: Cw721State + FromAttributesState,
 {
     fn query(
         &self,
         deps: Deps,
         env: &Env,
-        msg: Cw721QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension>,
+        msg: Cw721QueryMsg<TNftExtension, TCollectionExtension>,
     ) -> Result<Binary, Cw721ContractError> {
         match msg {
             #[allow(deprecated)]
             Cw721QueryMsg::Minter {} => Ok(to_json_binary(&self.query_minter(deps.storage)?)?),
             #[allow(deprecated)]
             Cw721QueryMsg::ContractInfo {} => Ok(to_json_binary(
-                &self.query_collection_metadata_and_extension(deps)?,
+                &self.query_collection_info_and_extension(deps)?,
             )?),
-            Cw721QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
-                &self.query_collection_metadata_and_extension(deps)?,
+            Cw721QueryMsg::GetCollectionInfo {} => Ok(to_json_binary(
+                &self.query_collection_info_and_extension(deps)?,
             )?),
             Cw721QueryMsg::NftInfo { token_id } => {
                 Ok(to_json_binary(&self.query_nft_info(deps, env, token_id)?)?)
@@ -581,11 +574,11 @@ pub trait Cw721Query<
             Cw721QueryMsg::Extension { msg } => {
                 Ok(to_json_binary(&self.query_nft_metadata(deps, env, msg)?)?)
             }
-            Cw721QueryMsg::GetNftMetadata { msg } => {
+            Cw721QueryMsg::GetNftExtension { msg } => {
                 Ok(to_json_binary(&self.query_nft_metadata(deps, env, msg)?)?)
             }
-            Cw721QueryMsg::GetCollectionMetadataExtension { msg } => Ok(to_json_binary(
-                &self.query_custom_collection_metadata_extension(deps, env, msg)?,
+            Cw721QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
+                &self.query_custom_collection_info_extension(deps, env, msg)?,
             )?),
             Cw721QueryMsg::GetWithdrawAddress {} => {
                 Ok(to_json_binary(&self.query_withdraw_address(deps)?)?)
@@ -608,22 +601,22 @@ pub trait Cw721Query<
         query_creator_ownership(storage)
     }
 
-    fn query_collection_metadata(deps: Deps) -> StdResult<CollectionMetadata> {
-        query_collection_metadata(deps.storage)
+    fn query_collection_info(deps: Deps) -> StdResult<CollectionInfo> {
+        query_collection_info(deps.storage)
     }
 
-    fn query_collection_metadata_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
-        query_collection_metadata_extension(deps)
+    fn query_collection_info_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
+        query_collection_info_extension(deps)
     }
 
-    fn query_collection_metadata_and_extension(
+    fn query_collection_info_and_extension(
         &self,
         deps: Deps,
-    ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
+    ) -> Result<CollectionInfoAndExtensionResponse<TCollectionExtension>, Cw721ContractError>
     where
-        TCollectionMetadataExtension: FromAttributesState,
+        TCollectionExtension: FromAttributesState,
     {
-        query_collection_metadata_and_extension(deps)
+        query_collection_info_and_extension(deps)
     }
 
     fn query_num_tokens(&self, deps: Deps, env: &Env) -> StdResult<NumTokensResponse> {
@@ -635,8 +628,8 @@ pub trait Cw721Query<
         deps: Deps,
         env: &Env,
         token_id: String,
-    ) -> StdResult<NftInfoResponse<TNftMetadataExtension>> {
-        query_nft_info::<TNftMetadataExtension>(deps, env, token_id)
+    ) -> StdResult<NftInfoResponse<TNftExtension>> {
+        query_nft_info::<TNftExtension>(deps, env, token_id)
     }
 
     fn query_owner_of(
@@ -730,8 +723,8 @@ pub trait Cw721Query<
         env: &Env,
         token_id: String,
         include_expired_approval: bool,
-    ) -> StdResult<AllNftInfoResponse<TNftMetadataExtension>> {
-        query_all_nft_info::<TNftMetadataExtension>(deps, env, token_id, include_expired_approval)
+    ) -> StdResult<AllNftInfoResponse<TNftExtension>> {
+        query_all_nft_info::<TNftExtension>(deps, env, token_id, include_expired_approval)
     }
 
     /// Use NftInfo instead.
@@ -742,20 +735,20 @@ pub trait Cw721Query<
         &self,
         _deps: Deps,
         _env: &Env,
-        _msg: TNftMetadataExtension,
+        _msg: TNftExtension,
     ) -> StdResult<Binary> {
         Ok(Binary::default())
     }
 
-    /// Use GetCollectionMetadata instead.
+    /// Use GetCollectionInfo instead.
     /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
     ///
     /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
-    fn query_custom_collection_metadata_extension(
+    fn query_custom_collection_info_extension(
         &self,
         _deps: Deps,
         _env: &Env,
-        _msg: TCollectionMetadataExtension,
+        _msg: TCollectionExtension,
     ) -> StdResult<Binary> {
         Ok(Binary::default())
     }

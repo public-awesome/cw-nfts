@@ -13,16 +13,16 @@ use cw721_base::msg::{
 };
 use cw721_base::receiver::Cw721ReceiveMsg;
 use cw721_base::state::{CREATOR, MINTER};
-use cw721_base::{traits::Cw721Query, Approval, Expiration};
 use cw721_base::{
-    CollectionMetadataAndExtension, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
+    msg::CollectionInfoAndExtensionResponse, DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg,
 };
+use cw721_base::{traits::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionNftMetadataExtension,
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionalNftExtension,
 };
 
 const MINTER_ADDR: &str = "minter";
@@ -35,24 +35,24 @@ fn setup_contract(
     expiration_days: u16,
 ) -> Cw721ExpirationContract<
     'static,
-    DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
-    DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg,
+    DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg,
     Empty,
 > {
     let contract = Cw721ExpirationContract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: None,
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
@@ -67,10 +67,10 @@ fn setup_contract(
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
 
@@ -78,7 +78,7 @@ fn proper_instantiation() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: None,
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -97,13 +97,13 @@ fn proper_instantiation() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_metadata = contract
+    let collection_info = contract
         .base_contract
-        .query_collection_metadata_and_extension(deps.as_ref())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
-        collection_metadata,
-        CollectionMetadataAndExtension {
+        collection_info,
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -133,13 +133,13 @@ fn proper_instantiation() {
 }
 
 #[test]
-fn proper_instantiation_with_collection_metadata() {
+fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
     let contract = Cw721ExpirationContract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
 
@@ -147,7 +147,7 @@ fn proper_instantiation_with_collection_metadata() {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: None,
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -166,13 +166,13 @@ fn proper_instantiation_with_collection_metadata() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_metadata = contract
+    let collection_info = contract
         .base_contract
-        .query_collection_metadata_and_extension(deps.as_ref())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
-        collection_metadata,
-        CollectionMetadataAndExtension {
+        collection_info,
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -248,7 +248,7 @@ fn test_mint() {
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<DefaultOptionNftMetadataExtension> {
+        NftInfoResponse::<DefaultOptionalNftExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }

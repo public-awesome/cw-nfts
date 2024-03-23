@@ -6,13 +6,11 @@ use cw_utils::{maybe_addr, Expiration};
 use crate::{
     error::Cw721ContractError,
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
-        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
+        CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
+        OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
-    state::{
-        Approval, CollectionMetadata, CollectionMetadataAndExtension, Cw721Config, NftInfo,
-        CREATOR, MINTER,
-    },
+    state::{Approval, CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
     traits::{Cw721State, FromAttributesState},
     Attribute,
 };
@@ -24,13 +22,13 @@ pub fn parse_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<Approval
     item.map(|(spender, expires)| Approval { spender, expires })
 }
 
-pub fn humanize_approvals<TNftMetadataExtension>(
+pub fn humanize_approvals<TNftExtension>(
     block: &BlockInfo,
-    nft_info: &NftInfo<TNftMetadataExtension>,
+    nft_info: &NftInfo<TNftExtension>,
     include_expired_approval: bool,
 ) -> Vec<Approval>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
     nft_info
         .approvals
@@ -67,35 +65,35 @@ pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Add
     CREATOR.get_ownership(storage)
 }
 
-pub fn query_collection_metadata(storage: &dyn Storage) -> StdResult<CollectionMetadata> {
+pub fn query_collection_info(storage: &dyn Storage) -> StdResult<CollectionInfo> {
     let config = Cw721Config::<Option<Empty>>::default();
-    config.collection_metadata.load(storage)
+    config.collection_info.load(storage)
 }
 
-pub fn query_collection_metadata_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
+pub fn query_collection_info_extension(deps: Deps) -> StdResult<Vec<Attribute>> {
     let config = Cw721Config::<Option<Empty>>::default();
     cw_paginate_storage::paginate_map_values(
         deps,
-        &config.collection_metadata_extension,
+        &config.collection_extension,
         None,
         None,
         Order::Ascending,
     )
 }
 
-pub fn query_collection_metadata_and_extension<TCollectionMetadataExtension>(
+pub fn query_collection_info_and_extension<TCollectionExtension>(
     deps: Deps,
-) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
+) -> Result<CollectionInfoAndExtensionResponse<TCollectionExtension>, Cw721ContractError>
 where
-    TCollectionMetadataExtension: Cw721State + FromAttributesState,
+    TCollectionExtension: Cw721State + FromAttributesState,
 {
-    let collection_metadata = query_collection_metadata(deps.storage)?;
-    let attributes = query_collection_metadata_extension(deps)?;
+    let collection_info = query_collection_info(deps.storage)?;
+    let attributes = query_collection_info_extension(deps)?;
     let extension = FromAttributesState::from_attributes_state(&attributes)?;
-    Ok(CollectionMetadataAndExtension {
-        name: collection_metadata.name,
-        symbol: collection_metadata.symbol,
-        updated_at: collection_metadata.updated_at,
+    Ok(CollectionInfoAndExtensionResponse {
+        name: collection_info.name,
+        symbol: collection_info.symbol,
+        updated_at: collection_info.updated_at,
         extension,
     })
 }
@@ -105,15 +103,15 @@ pub fn query_num_tokens(deps: Deps, _env: &Env) -> StdResult<NumTokensResponse> 
     Ok(NumTokensResponse { count })
 }
 
-pub fn query_nft_info<TNftMetadataExtension>(
+pub fn query_nft_info<TNftExtension>(
     deps: Deps,
     _env: &Env,
     token_id: String,
-) -> StdResult<NftInfoResponse<TNftMetadataExtension>>
+) -> StdResult<NftInfoResponse<TNftExtension>>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
-    let info = Cw721Config::<TNftMetadataExtension>::default()
+    let info = Cw721Config::<TNftExtension>::default()
         .nft_info
         .load(deps.storage, &token_id)?;
     Ok(NftInfoResponse {
@@ -300,16 +298,16 @@ pub fn query_all_tokens(
     Ok(TokensResponse { tokens: tokens? })
 }
 
-pub fn query_all_nft_info<TNftMetadataExtension>(
+pub fn query_all_nft_info<TNftExtension>(
     deps: Deps,
     env: &Env,
     token_id: String,
     include_expired_approval: bool,
-) -> StdResult<AllNftInfoResponse<TNftMetadataExtension>>
+) -> StdResult<AllNftInfoResponse<TNftExtension>>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
-    let nft_info = Cw721Config::<TNftMetadataExtension>::default()
+    let nft_info = Cw721Config::<TNftExtension>::default()
         .nft_info
         .load(deps.storage, &token_id)?;
     Ok(AllNftInfoResponse {

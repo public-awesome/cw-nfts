@@ -8,19 +8,18 @@ use cosmwasm_std::{
 
 use crate::error::Cw721ContractError;
 use crate::msg::{
-    ApprovalResponse, CollectionMetadataExtensionMsg, NftInfoResponse, OperatorResponse,
-    OperatorsResponse, OwnerOfResponse, RoyaltyInfoResponse,
+    ApprovalResponse, CollectionExtensionMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, RoyaltyInfoResponse,
 };
-use crate::msg::{CollectionMetadataMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
+use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
-use crate::state::{NftMetadata, Trait, CREATOR, MINTER};
+use crate::state::{NftExtension, Trait, CREATOR, MINTER};
 use crate::{
     traits::{Cw721Execute, Cw721Query},
-    Approval, DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg, Expiration,
+    Approval, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, Expiration,
 };
-use crate::{CollectionMetadataAndExtension, CollectionMetadataExtensionWrapper, RoyaltyInfo};
+use crate::{CollectionExtensionResponse, CollectionInfoAndExtensionResponse, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
@@ -34,24 +33,24 @@ fn setup_contract(
     deps: DepsMut<'_>,
 ) -> Cw721Contract<
     'static,
-    DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
-    DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg,
+    DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg,
     Empty,
 > {
     let contract: Cw721Contract<
         'static,
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     > = Cw721Contract::default();
-    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
+    let msg = Cw721InstantiateMsg::<DefaultOptionalCollectionExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: None,
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
@@ -75,17 +74,17 @@ fn setup_contract(
 fn test_instantiate() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
 
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: None,
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -111,12 +110,12 @@ fn test_instantiate() {
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
-    let collection_metadata = contract
-        .query_collection_metadata_and_extension(deps.as_ref())
+    let collection_info = contract
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
-        collection_metadata,
-        CollectionMetadataAndExtension {
+        collection_info,
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
             extension: None,
@@ -142,17 +141,17 @@ fn test_instantiate() {
 }
 
 #[test]
-fn test_instantiate_with_collection_metadata_and_extension() {
+fn test_instantiate_with_collection_info_and_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
 
-    let collection_metadata_extension_msg = Some(CollectionMetadataExtensionMsg {
+    let collection_info_extension_msg = Some(CollectionExtensionMsg {
         description: Some("description".to_string()),
         image: Some("https://moonphases.org".to_string()),
         explicit_content: Some(true),
@@ -163,10 +162,10 @@ fn test_instantiate_with_collection_metadata_and_extension() {
             share: "0.1".parse().unwrap(),
         }),
     });
-    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
+    let msg = Cw721InstantiateMsg::<DefaultOptionalCollectionExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: collection_metadata_extension_msg,
+        collection_info_extension: collection_info_extension_msg,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -193,9 +192,9 @@ fn test_instantiate_with_collection_metadata_and_extension() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
-        .query_collection_metadata_and_extension(deps.as_ref())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
-    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
+    let collection_info_extension_expected = Some(CollectionExtensionResponse {
         description: "description".to_string(),
         image: "https://moonphases.org".to_string(),
         explicit_content: Some(true),
@@ -208,10 +207,10 @@ fn test_instantiate_with_collection_metadata_and_extension() {
     });
     assert_eq!(
         info,
-        CollectionMetadataAndExtension {
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: collection_metadata_extension_expected,
+            extension: collection_info_extension_expected,
             updated_at: env.block.time
         }
     );
@@ -234,17 +233,17 @@ fn test_instantiate_with_collection_metadata_and_extension() {
 }
 
 #[test]
-fn test_instantiate_with_minimal_collection_metadata_and_extension() {
+fn test_instantiate_with_minimal_collection_info_and_extension() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<
-        DefaultOptionNftMetadataExtension,
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtension,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
         Empty,
     >::default();
 
-    let collection_metadata_extension_msg = Some(CollectionMetadataExtensionMsg {
+    let collection_info_extension_msg = Some(CollectionExtensionMsg {
         description: Some("description".to_string()),
         image: Some("https://moonphases.org".to_string()),
         explicit_content: None,
@@ -252,10 +251,10 @@ fn test_instantiate_with_minimal_collection_metadata_and_extension() {
         start_trading_time: None,
         royalty_info: None,
     });
-    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionMetadataExtensionMsg> {
+    let msg = Cw721InstantiateMsg::<DefaultOptionalCollectionExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_metadata_extension: collection_metadata_extension_msg,
+        collection_info_extension: collection_info_extension_msg,
         minter: Some(String::from(MINTER_ADDR)),
         creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
@@ -282,9 +281,9 @@ fn test_instantiate_with_minimal_collection_metadata_and_extension() {
     let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
-        .query_collection_metadata_and_extension(deps.as_ref())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
-    let collection_metadata_extension_expected = Some(CollectionMetadataExtensionWrapper {
+    let collection_info_extension_expected = Some(CollectionExtensionResponse {
         description: "description".to_string(),
         image: "https://moonphases.org".to_string(),
         explicit_content: None,
@@ -294,10 +293,10 @@ fn test_instantiate_with_minimal_collection_metadata_and_extension() {
     });
     assert_eq!(
         info,
-        CollectionMetadataAndExtension {
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: collection_metadata_extension_expected,
+            extension: collection_info_extension_expected,
             updated_at: env.block.time
         }
     );
@@ -362,7 +361,7 @@ fn test_mint() {
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<DefaultOptionNftMetadataExtension> {
+        NftInfoResponse::<DefaultOptionalNftExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }
@@ -424,8 +423,8 @@ fn test_update_nft_info() {
 
     // minter update unknown nft info
     let update_msg = Cw721ExecuteMsg::<
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtensionMsg,
     >::UpdateNftInfo {
         token_id: "unknown".to_string(),
         token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -438,8 +437,8 @@ fn test_update_nft_info() {
 
     // minter udpate nft info
     let update_msg_without_extension = Cw721ExecuteMsg::<
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtensionMsg,
     >::UpdateNftInfo {
         token_id: token_id.clone(),
         token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -457,12 +456,12 @@ fn test_update_nft_info() {
 
     // other udpate nft metadata extension
     let update_msg_only_extension = Cw721ExecuteMsg::<
-        DefaultOptionNftMetadataExtensionMsg,
-        DefaultOptionCollectionMetadataExtensionMsg,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtensionMsg,
     >::UpdateNftInfo {
         token_id: token_id.clone(),
         token_uri: None,
-        extension: Some(NftMetadata {
+        extension: Some(NftExtension {
             image: Some("ipfs://foo.bar/image.png".to_string()),
             image_data: None,
             external_url: None,
@@ -519,7 +518,7 @@ fn test_update_nft_info() {
             .unwrap(),
         NftInfoResponse {
             token_uri: Some("ipfs://to.the.moon".to_string()),
-            extension: Some(NftMetadata {
+            extension: Some(NftExtension {
                 image: Some("ipfs://foo.bar/image.png".to_string()),
                 image_data: None,
                 external_url: None,
@@ -547,7 +546,7 @@ fn test_mint_with_metadata() {
             token_id,
             owner: String::from("medusa"),
             token_uri: Some(token_uri),
-            extension: Some(NftMetadata {
+            extension: Some(NftExtension {
                 image: Some("ipfs://foo.bar/image.png".to_string()),
                 image_data: Some("image data".to_string()),
                 external_url: Some("https://github.com".to_string()),
@@ -580,7 +579,7 @@ fn test_mint_with_metadata() {
         let info_minter = mock_info(MINTER_ADDR, &[]);
         let env = mock_env();
 
-        let valid_metadata = NftMetadata {
+        let valid_metadata = NftExtension {
             image: Some("ipfs://foo.bar/image.png".to_string()),
             image_data: Some("image data".to_string()),
             external_url: Some("https://github.com".to_string()),
@@ -769,12 +768,12 @@ fn test_mint_with_metadata() {
 }
 
 #[test]
-fn test_update_collection_metadata() {
+fn test_update_collection_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    let update_collection_metadata_msg = Cw721ExecuteMsg::UpdateCollectionMetadata {
-        collection_metadata: CollectionMetadataMsg {
+    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
+        collection_info: CollectionInfoMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),
             extension: None,
@@ -788,7 +787,7 @@ fn test_update_collection_metadata() {
             deps.as_mut(),
             &mock_env(),
             &creator_info,
-            update_collection_metadata_msg,
+            update_collection_info_msg,
         )
         .unwrap();
 
@@ -852,8 +851,8 @@ fn test_update_collection_metadata() {
     .unwrap();
     assert_eq!(creator_ownership.owner, Some(random_info.sender.clone()));
 
-    let update_collection_metadata_msg = Cw721ExecuteMsg::UpdateCollectionMetadata {
-        collection_metadata: CollectionMetadataMsg {
+    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
+        collection_info: CollectionInfoMsg {
             name: Some("new name".to_string()),
             symbol: Some("NEW".to_string()),
             extension: None,
@@ -866,7 +865,7 @@ fn test_update_collection_metadata() {
             deps.as_mut(),
             &mock_env(),
             &creator_info,
-            update_collection_metadata_msg.clone(),
+            update_collection_info_msg.clone(),
         )
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::NotCreator {});
@@ -877,7 +876,7 @@ fn test_update_collection_metadata() {
             deps.as_mut(),
             &mock_env(),
             &random_info,
-            update_collection_metadata_msg,
+            update_collection_info_msg,
         )
         .unwrap();
 }

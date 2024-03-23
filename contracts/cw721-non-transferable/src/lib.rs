@@ -1,8 +1,8 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
 use cw721::{
-    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
 };
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
@@ -19,10 +19,10 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     'a,
-    DefaultOptionNftMetadataExtension,
-    DefaultOptionNftMetadataExtensionMsg,
-    DefaultOptionCollectionMetadataExtension,
-    DefaultOptionCollectionMetadataExtensionMsg,
+    DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg,
+    DefaultOptionalCollectionExtension,
+    DefaultOptionalCollectionExtensionMsg,
     Empty,
 >;
 
@@ -37,16 +37,14 @@ pub mod entry {
     use cw721::error::Cw721ContractError;
     use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
     use cw721::traits::Cw721Execute;
-    use cw721::{
-        DefaultOptionCollectionMetadataExtensionMsg, DefaultOptionNftMetadataExtensionMsg,
-    };
+    use cw721::{DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg};
 
     #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
+        msg: InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
@@ -61,7 +59,7 @@ pub mod entry {
         let cw721_base_instantiate_msg = Cw721InstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
-            collection_metadata_extension: msg.collection_metadata_extension,
+            collection_info_extension: msg.collection_info_extension,
             minter: msg.minter,
             creator: msg.creator,
             withdraw_address: msg.withdraw_address,
@@ -88,10 +86,7 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtensionMsg,
-        >,
+        msg: Cw721ExecuteMsg<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;
         match config.admin {

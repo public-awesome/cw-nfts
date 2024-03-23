@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
     from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Env, MessageInfo, StdResult,
@@ -9,14 +7,13 @@ use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
-use crate::msg::CollectionMetadataMsg;
+use crate::msg::CollectionInfoMsg;
 use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
-use crate::{traits::StateFactory, NftMetadataMsg};
+use crate::{traits::StateFactory, NftExtensionMsg};
 
 /// Creator owns this contract and can update collection metadata!
 /// !!! Important note here: !!!
@@ -27,9 +24,10 @@ pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
 // ----------------------
-// NOTE: below are max restrictions for default CollectionMetadataExtension
+// NOTE: below are max restrictions for default collection extension (CollectionExtensionResponse)
 // This may be quite restrictive and may be increased in the future.
-// Custom contracts may also provide a custom CollectionMetadataExtension.
+// Custom contracts may also provide different collection extension.
+// Please also note, each element in the collection extension is stored as a separate `Attribute`.
 
 /// Maximum length of the description field in the collection metadata.
 pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
@@ -49,34 +47,30 @@ pub const ATTRIBUTE_ROYALTY_INFO: &str = "royalty_info";
 pub struct Cw721Config<
     'a,
     // NftInfo extension (onchain metadata).
-    TNftMetadataExtension,
+    TNftExtension,
 > where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
-    pub collection_metadata: Item<'a, CollectionMetadata>,
-    pub collection_metadata_extension: Map<'a, String, Attribute>,
+    pub collection_info: Item<'a, CollectionInfo>,
+    pub collection_extension: Map<'a, String, Attribute>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info: IndexedMap<
-        'a,
-        &'a str,
-        NftInfo<TNftMetadataExtension>,
-        TokenIndexes<'a, TNftMetadataExtension>,
-    >,
+    pub nft_info: IndexedMap<'a, &'a str, NftInfo<TNftExtension>, TokenIndexes<'a, TNftExtension>>,
     pub withdraw_address: Item<'a, String>,
 }
 
-impl<TNftMetadataExtension> Default for Cw721Config<'static, TNftMetadataExtension>
+impl<TNftExtension> Default for Cw721Config<'static, TNftExtension>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
     fn default() -> Self {
         Self::new(
-            "collection_metadata", // Note: replaces deprecated/legacy key "nft_info"
-            "collection_metadata_extension",
+            // `cw721_` prefix is added for avoiding conflicts with other contracts.
+            "cw721_collection_info", // replaces deprecated/legacy key "nft_info"
+            "cw721_collection_info_extension",
             "num_tokens",
             "operators",
             "tokens",
@@ -86,13 +80,13 @@ where
     }
 }
 
-impl<'a, TNftMetadataExtension> Cw721Config<'a, TNftMetadataExtension>
+impl<'a, TNftExtension> Cw721Config<'a, TNftExtension>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
     fn new(
-        collection_metadata_key: &'a str,
-        collection_metadata_extension_key: &'a str,
+        collection_info_key: &'a str,
+        collection_info_extension_key: &'a str,
         token_count_key: &'a str,
         operator_key: &'a str,
         nft_info_key: &'a str,
@@ -103,12 +97,12 @@ where
             owner: MultiIndex::new(token_owner_idx, nft_info_key, nft_info_owner_key),
         };
         Self {
-            collection_metadata: Item::new(collection_metadata_key),
+            collection_info: Item::new(collection_info_key),
             token_count: Item::new(token_count_key),
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
-            collection_metadata_extension: Map::new(collection_metadata_extension_key),
+            collection_extension: Map::new(collection_info_extension_key),
         }
     }
 
@@ -129,15 +123,12 @@ where
     }
 }
 
-pub fn token_owner_idx<TNftMetadataExtension>(
-    _pk: &[u8],
-    d: &NftInfo<TNftMetadataExtension>,
-) -> Addr {
+pub fn token_owner_idx<TNftExtension>(_pk: &[u8], d: &NftInfo<TNftExtension>) -> Addr {
     d.owner.clone()
 }
 
 #[cw_serde]
-pub struct NftInfo<TNftMetadataExtension> {
+pub struct NftInfo<TNftExtension> {
     /// The owner of the newly minted NFT
     pub owner: Addr,
     /// Approvals are stored here, as we clear them all upon transfer and cannot accumulate much
@@ -149,7 +140,7 @@ pub struct NftInfo<TNftMetadataExtension> {
     pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
-    pub extension: TNftMetadataExtension,
+    pub extension: TNftExtension,
 }
 
 #[cw_serde]
@@ -166,246 +157,30 @@ impl Approval {
     }
 }
 
-pub struct TokenIndexes<'a, TNftMetadataExtension>
+pub struct TokenIndexes<'a, TNftExtension>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
-    pub owner: MultiIndex<'a, Addr, NftInfo<TNftMetadataExtension>, String>,
+    pub owner: MultiIndex<'a, Addr, NftInfo<TNftExtension>, String>,
 }
 
-impl<'a, TNftMetadataExtension> IndexList<NftInfo<TNftMetadataExtension>>
-    for TokenIndexes<'a, TNftMetadataExtension>
+impl<'a, TNftExtension> IndexList<NftInfo<TNftExtension>> for TokenIndexes<'a, TNftExtension>
 where
-    TNftMetadataExtension: Cw721State,
+    TNftExtension: Cw721State,
 {
     fn get_indexes(
         &'_ self,
-    ) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TNftMetadataExtension>>> + '_> {
-        let v: Vec<&dyn Index<NftInfo<TNftMetadataExtension>>> = vec![&self.owner];
+    ) -> Box<dyn Iterator<Item = &'_ dyn Index<NftInfo<TNftExtension>>> + '_> {
+        let v: Vec<&dyn Index<NftInfo<TNftExtension>>> = vec![&self.owner];
         Box::new(v.into_iter())
     }
 }
 
 #[cw_serde]
-pub struct CollectionMetadata {
+pub struct CollectionInfo {
     pub name: String,
     pub symbol: String,
     pub updated_at: Timestamp,
-}
-
-/// This is a wrapper around CollectionMetadata that includes the extension.
-#[cw_serde]
-pub struct CollectionMetadataAndExtension<TCollectionMetadataExtension> {
-    pub name: String,
-    pub symbol: String,
-    pub extension: TCollectionMetadataExtension,
-    pub updated_at: Timestamp,
-}
-
-impl<T> From<CollectionMetadataAndExtension<T>> for CollectionMetadata {
-    fn from(wrapper: CollectionMetadataAndExtension<T>) -> Self {
-        CollectionMetadata {
-            name: wrapper.name,
-            symbol: wrapper.symbol,
-            updated_at: wrapper.updated_at,
-        }
-    }
-}
-
-impl<TCollectionMetadataExtension, TCollectionMetadataExtensionMsg>
-    StateFactory<CollectionMetadataAndExtension<TCollectionMetadataExtension>>
-    for CollectionMetadataMsg<TCollectionMetadataExtensionMsg>
-where
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
-{
-    fn create(
-        &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
-        info: Option<&MessageInfo>,
-        current: Option<&CollectionMetadataAndExtension<TCollectionMetadataExtension>>,
-    ) -> Result<CollectionMetadataAndExtension<TCollectionMetadataExtension>, Cw721ContractError>
-    {
-        self.validate(deps, env, info, current)?;
-        match current {
-            // Some: update existing metadata
-            Some(current) => {
-                let mut updated = current.clone();
-                if let Some(name) = &self.name {
-                    updated.name = name.clone();
-                }
-                if let Some(symbol) = &self.symbol {
-                    updated.symbol = symbol.clone();
-                }
-                let current_extension = current.extension.clone();
-                let updated_extension =
-                    self.extension
-                        .create(deps, env, info, Some(&current_extension))?;
-                updated.extension = updated_extension;
-                Ok(updated)
-            }
-            // None: create new metadata
-            None => {
-                let extension = self.extension.create(deps, env, info, None)?;
-                let env = env.ok_or(Cw721ContractError::NoEnv)?;
-                let new = CollectionMetadataAndExtension {
-                    name: self.name.clone().unwrap(),
-                    symbol: self.symbol.clone().unwrap(),
-                    extension,
-                    updated_at: env.block.time,
-                };
-                Ok(new)
-            }
-        }
-    }
-
-    fn validate(
-        &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
-        info: Option<&MessageInfo>,
-        _current: Option<&CollectionMetadataAndExtension<TCollectionMetadataExtension>>,
-    ) -> Result<(), Cw721ContractError> {
-        // make sure the name and symbol are not empty
-        if self.name.is_some() && self.name.clone().unwrap().is_empty() {
-            return Err(Cw721ContractError::CollectionNameEmpty {});
-        }
-        if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
-            return Err(Cw721ContractError::CollectionSymbolEmpty {});
-        }
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-        // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
-        // - CREATOR store is empty/not initioized (like in instantiation)
-        // - info is none (like in migration)
-        let creator_initialized = CREATOR.item.may_load(deps.storage)?;
-        if (self.name.is_some() || self.symbol.is_some())
-            && creator_initialized.is_some()
-            && info.is_some()
-            && CREATOR
-                .assert_owner(deps.storage, &info.unwrap().sender)
-                .is_err()
-        {
-            return Err(Cw721ContractError::NotCreator {});
-        }
-        Ok(())
-    }
-}
-
-#[cw_serde]
-pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo> {
-    pub description: String,
-    pub image: String,
-    pub external_link: Option<String>,
-    pub explicit_content: Option<bool>,
-    pub start_trading_time: Option<Timestamp>,
-    pub royalty_info: Option<TRoyaltyInfo>,
-}
-
-impl<TRoyaltyInfo> ToAttributesState for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
-where
-    TRoyaltyInfo: Serialize,
-{
-    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
-        let attributes = vec![
-            Attribute {
-                key: ATTRIBUTE_DESCRIPTION.to_string(),
-                value: to_json_binary(&self.description)?,
-            },
-            Attribute {
-                key: ATTRIBUTE_IMAGE.to_string(),
-                value: to_json_binary(&self.image)?,
-            },
-            Attribute {
-                key: ATTRIBUTE_EXTERNAL_LINK.to_string(),
-                value: to_json_binary(&self.external_link.clone())?,
-            },
-            Attribute {
-                key: ATTRIBUTE_EXPLICIT_CONTENT.to_string(),
-                value: to_json_binary(&self.explicit_content)?,
-            },
-            Attribute {
-                key: ATTRIBUTE_START_TRADING_TIME.to_string(),
-                value: to_json_binary(&self.start_trading_time)?,
-            },
-            Attribute {
-                key: ATTRIBUTE_ROYALTY_INFO.to_string(),
-                value: to_json_binary(&self.royalty_info)?,
-            },
-        ];
-        // if let Some(royalty_info) = &self.royalty_info {
-        //     attributes.extend(royalty_info.to_attributes_states()?);
-        // } else {
-        //     attributes.push(Attribute {
-        //         key: ATTRIBUTE_ROYALTY_INFO.to_string(),
-        //         value: to_json_binary(&None::<Option<RoyaltyInfo>>)?,
-        //     });
-        // }
-        Ok(attributes)
-    }
-}
-
-impl<TRoyaltyInfo> FromAttributesState for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
-where
-    TRoyaltyInfo: ToAttributesState + FromAttributesState,
-{
-    fn from_attributes_state(attributes: &[Attribute]) -> Result<Self, Cw721ContractError> {
-        let description = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_DESCRIPTION)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "description".to_string(),
-            ))?
-            .value::<String>()?;
-        let image = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_IMAGE)
-            .ok_or(Cw721ContractError::AttributeMissing("image".to_string()))?
-            .value::<String>()?;
-        let external_link = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_EXTERNAL_LINK)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "external link".to_string(),
-            ))?
-            .value::<Option<String>>()?;
-        let explicit_content = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_EXPLICIT_CONTENT)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "explicit content".to_string(),
-            ))?
-            .value::<Option<bool>>()?;
-        let start_trading_time = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_START_TRADING_TIME)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "start trading time".to_string(),
-            ))?
-            .value::<Option<Timestamp>>()?;
-
-        let royalty_info = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_INFO)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "royalty info".to_string(),
-            ))?
-            .value::<Option<RoyaltyInfo>>()?;
-
-        let royalty_info = if royalty_info.is_some() {
-            Some(FromAttributesState::from_attributes_state(attributes)?)
-        } else {
-            None
-        };
-        Ok(CollectionMetadataExtensionWrapper {
-            description,
-            image,
-            external_link,
-            explicit_content,
-            start_trading_time,
-            royalty_info,
-        })
-    }
 }
 
 #[cw_serde]
@@ -422,8 +197,6 @@ impl Attribute {
         Ok(from_json(&self.value)?)
     }
 }
-
-impl Cw721State for CollectionMetadataExtensionWrapper<RoyaltyInfo> {}
 
 #[cw_serde]
 pub struct RoyaltyInfo {
@@ -459,7 +232,7 @@ impl FromAttributesState for RoyaltyInfo {
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
 #[derive(Default)]
-pub struct NftMetadata {
+pub struct NftExtension {
     pub image: Option<String>,
     pub image_data: Option<String>,
     pub external_url: Option<String>,
@@ -471,17 +244,17 @@ pub struct NftMetadata {
     pub youtube_url: Option<String>,
 }
 
-impl Cw721State for NftMetadata {}
-impl Cw721CustomMsg for NftMetadata {}
+impl Cw721State for NftExtension {}
+impl Cw721CustomMsg for NftExtension {}
 
-impl StateFactory<NftMetadata> for NftMetadataMsg {
+impl StateFactory<NftExtension> for NftExtensionMsg {
     fn create(
         &self,
         deps: Option<Deps>,
         env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&NftMetadata>,
-    ) -> Result<NftMetadata, Cw721ContractError> {
+        current: Option<&NftExtension>,
+    ) -> Result<NftExtension, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
         match current {
             // Some: update existing metadata
@@ -532,7 +305,7 @@ impl StateFactory<NftMetadata> for NftMetadataMsg {
         deps: Option<Deps>,
         _env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&NftMetadata>,
+        current: Option<&NftExtension>,
     ) -> Result<(), Cw721ContractError> {
         // assert here is different to NFT Info:
         // - creator and minter can create NFT metadata

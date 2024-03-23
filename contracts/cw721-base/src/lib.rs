@@ -23,9 +23,9 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[deprecated(
     since = "0.19.0",
-    note = "Please use `DefaultOptionNftMetadataExtension` instead"
+    note = "Please use `DefaultOptionNftExtension` instead"
 )]
-pub type Extension = DefaultOptionNftMetadataExtension;
+pub type Extension = DefaultOptionalNftExtension;
 
 pub mod entry {
 
@@ -38,8 +38,8 @@ pub mod entry {
         error::Cw721ContractError,
         msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
         traits::{Cw721Execute, Cw721Query},
-        DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-        DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
+        DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+        DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -48,13 +48,13 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<DefaultOptionCollectionMetadataExtensionMsg>,
+        msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
-            DefaultOptionNftMetadataExtension,
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtension,
-            DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionalNftExtension,
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtension,
+            DefaultOptionalCollectionExtensionMsg,
             Empty,
         >::default();
         contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
@@ -65,16 +65,13 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtensionMsg,
-        >,
+        msg: Cw721ExecuteMsg<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
-            DefaultOptionNftMetadataExtension,
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtension,
-            DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionalNftExtension,
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtension,
+            DefaultOptionalCollectionExtensionMsg,
             Empty,
         >::default();
         contract.execute(deps, &env, &info, msg)
@@ -84,16 +81,13 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: Cw721QueryMsg<
-            DefaultOptionNftMetadataExtension,
-            DefaultOptionCollectionMetadataExtension,
-        >,
+        msg: Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension>,
     ) -> Result<Binary, Cw721ContractError> {
         let contract = Cw721Contract::<
-            DefaultOptionNftMetadataExtension,
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtension,
-            DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionalNftExtension,
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtension,
+            DefaultOptionalCollectionExtensionMsg,
             Empty,
         >::default();
         contract.query(deps, &env, msg)
@@ -106,10 +100,10 @@ pub mod entry {
         msg: Cw721MigrateMsg,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721Contract::<
-            DefaultOptionNftMetadataExtension,
-            DefaultOptionNftMetadataExtensionMsg,
-            DefaultOptionCollectionMetadataExtension,
-            DefaultOptionCollectionMetadataExtensionMsg,
+            DefaultOptionalNftExtension,
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtension,
+            DefaultOptionalCollectionExtensionMsg,
             Empty,
         >::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)

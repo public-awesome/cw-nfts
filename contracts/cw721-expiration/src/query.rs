@@ -9,38 +9,38 @@ use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract}
 
 impl<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
     Cw721ExpirationContract<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State + FromAttributesState,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
     pub fn query(
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<TNftMetadataExtension, TCollectionMetadataExtension>,
+        msg: QueryMsg<TNftExtension, TCollectionExtension>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
-            TNftMetadataExtension,
-            TNftMetadataExtensionMsg,
-            TCollectionMetadataExtension,
-            TCollectionMetadataExtensionMsg,
+            TNftExtension,
+            TNftExtensionMsg,
+            TCollectionExtension,
+            TCollectionExtensionMsg,
             TCustomResponseMsg,
         >::default();
         match msg {
@@ -170,12 +170,12 @@ where
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_and_extension(deps)?,
+                    .query_collection_info_and_extension(deps)?,
             )?),
-            QueryMsg::GetCollectionMetadata {} => Ok(to_json_binary(
+            QueryMsg::GetCollectionInfo {} => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_collection_metadata_and_extension(deps)?,
+                    .query_collection_info_and_extension(deps)?,
             )?),
             #[allow(deprecated)]
             QueryMsg::Ownership {} => Ok(to_json_binary(
@@ -200,10 +200,10 @@ where
             QueryMsg::Extension { msg } => Ok(to_json_binary(
                 &contract.base_contract.query_nft_metadata(deps, &env, msg)?,
             )?),
-            QueryMsg::GetCollectionMetadataExtension { msg } => Ok(to_json_binary(
+            QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
                 &contract
                     .base_contract
-                    .query_custom_collection_metadata_extension(deps, &env, msg)?,
+                    .query_custom_collection_info_extension(deps, &env, msg)?,
             )?),
             QueryMsg::GetWithdrawAddress {} => Ok(to_json_binary(
                 &contract.base_contract.query_withdraw_address(deps)?,
@@ -217,7 +217,7 @@ where
         env: Env,
         token_id: String,
         include_expired_nft: bool,
-    ) -> Result<NftInfoResponse<TNftMetadataExtension>, ContractError> {
+    ) -> Result<NftInfoResponse<TNftExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
@@ -336,7 +336,7 @@ where
         token_id: String,
         include_expired_approval: bool,
         include_expired_nft: bool,
-    ) -> Result<AllNftInfoResponse<TNftMetadataExtension>, ContractError> {
+    ) -> Result<AllNftInfoResponse<TNftExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }

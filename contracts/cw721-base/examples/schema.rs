@@ -1,7 +1,7 @@
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
 use cw721::{
-    DefaultOptionCollectionMetadataExtension, DefaultOptionCollectionMetadataExtensionMsg,
-    DefaultOptionNftMetadataExtension, DefaultOptionNftMetadataExtensionMsg,
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
 };
 use cw721_base::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use std::env::current_dir;
@@ -15,22 +15,19 @@ fn main() {
 
     // entry points - generate always with title for avoiding name suffixes like "..._empty_for_..." due to generics
     export_schema_with_title(
-        &schema_for!(InstantiateMsg<DefaultOptionCollectionMetadataExtension>),
+        &schema_for!(InstantiateMsg<DefaultOptionalCollectionExtension>),
         &out_dir,
         "InstantiateMsg",
     );
     export_schema_with_title(
         &schema_for!(
-            ExecuteMsg::<
-                DefaultOptionNftMetadataExtensionMsg,
-                DefaultOptionCollectionMetadataExtensionMsg,
-            >
+            ExecuteMsg::<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg>
         ),
         &out_dir,
         "ExecuteMsg",
     );
     export_schema_with_title(
-        &schema_for!(QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>),
+        &schema_for!(QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension>),
         &out_dir,
         "QueryMsg",
     );

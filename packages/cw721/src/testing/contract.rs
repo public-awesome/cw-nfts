@@ -11,57 +11,56 @@ use crate::traits::{
 pub struct Cw721Contract<
     'a,
     // NftInfo extension (onchain metadata).
-    TNftMetadataExtension,
+    TNftExtension,
     // NftInfo extension msg for onchain metadata.
-    TNftMetadataExtensionMsg,
-    // CollectionMetadata extension (onchain attributes).
-    TCollectionMetadataExtension,
-    // CollectionMetadata extension msg for onchain collection attributes.
-    TCollectionMetadataExtensionMsg,
+    TNftExtensionMsg,
+    // CollectionInfo extension (onchain attributes).
+    TCollectionExtension,
+    // CollectionInfo extension msg for onchain collection attributes.
+    TCollectionExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
 {
-    pub config: Cw721Config<'a, TNftMetadataExtension>,
+    pub config: Cw721Config<'a, TNftExtension>,
 
-    pub(crate) _collection_metadata_extension: PhantomData<TCollectionMetadataExtension>,
-    pub(crate) _custom_metadata_extension_msg: PhantomData<TNftMetadataExtensionMsg>,
-    pub(crate) _custom_collection_metadata_extension_msg:
-        PhantomData<TCollectionMetadataExtensionMsg>,
+    pub(crate) _collection_extension: PhantomData<TCollectionExtension>,
+    pub(crate) _nft_extension_msg: PhantomData<TNftExtensionMsg>,
+    pub(crate) _collection_extension_msg: PhantomData<TCollectionExtensionMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
 impl<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     > Default
     for Cw721Contract<
         'static,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
 {
     fn default() -> Self {
         Self {
             config: Cw721Config::default(),
-            _collection_metadata_extension: PhantomData,
-            _custom_metadata_extension_msg: PhantomData,
-            _custom_collection_metadata_extension_msg: PhantomData,
+            _collection_extension: PhantomData,
+            _nft_extension_msg: PhantomData,
+            _collection_extension_msg: PhantomData,
             _custom_response_msg: PhantomData,
         }
     }
@@ -69,57 +68,57 @@ where
 
 impl<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
     Cw721Execute<
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
     for Cw721Contract<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TNftMetadataExtension>,
-    TCollectionMetadataExtension: Cw721State + ToAttributesState + FromAttributesState,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionMetadataExtension>,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
+    TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
     TCustomResponseMsg: CustomMsg,
 {
 }
 
 impl<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
-    > Cw721Query<TNftMetadataExtension, TCollectionMetadataExtension>
+    > Cw721Query<TNftExtension, TCollectionExtension>
     for Cw721Contract<
         'a,
-        TNftMetadataExtension,
-        TNftMetadataExtensionMsg,
-        TCollectionMetadataExtension,
-        TCollectionMetadataExtensionMsg,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
         TCustomResponseMsg,
     >
 where
-    TNftMetadataExtension: Cw721State,
-    TNftMetadataExtensionMsg: Cw721CustomMsg,
-    TCollectionMetadataExtension: Cw721State + FromAttributesState,
-    TCollectionMetadataExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
 }

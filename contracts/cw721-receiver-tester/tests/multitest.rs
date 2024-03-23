@@ -1,5 +1,5 @@
 use cosmwasm_std::{to_json_binary, Addr, Attribute, Binary};
-use cw721::DefaultOptionCollectionMetadataExtension;
+use cw721::DefaultOptionalCollectionExtension;
 use cw_multi_test::{App, ContractWrapper, Executor};
 
 #[test]
@@ -123,10 +123,10 @@ fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
         .instantiate_contract(
             nft_code_id,
             admin.clone(),
-            &base_msg::InstantiateMsg::<DefaultOptionCollectionMetadataExtension> {
+            &base_msg::InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "nft".to_string(),
                 symbol: "NFT".to_string(),
-                collection_metadata_extension: None,
+                collection_info_extension: None,
                 minter: Some(admin.to_string()),
                 creator: Some(admin.to_string()),
                 withdraw_address: None,

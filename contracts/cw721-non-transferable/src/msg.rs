@@ -3,18 +3,18 @@ use cosmwasm_schema::cw_serde;
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::{
     msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, Cw721QueryMsg},
-    DefaultOptionCollectionMetadataExtension, DefaultOptionNftMetadataExtension, *,
+    *,
 };
 
 #[cw_serde]
-pub struct InstantiateMsg<TCollectionMetadataExtension> {
+pub struct InstantiateMsg<TCollectionExtension> {
     pub admin: Option<String>,
     /// Name of the collection metadata
     pub name: String,
     /// Symbol of the collection metadata
     pub symbol: String,
     /// Optional extension of the collection metadata
-    pub collection_metadata_extension: TCollectionMetadataExtension,
+    pub collection_info_extension: TCollectionExtension,
     pub minter: Option<String>,
     pub creator: Option<String>,
     pub withdraw_address: Option<String>,
@@ -45,11 +45,11 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     NumTokens {},
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionMetadata instead")]
-    /// Deprecated: use GetCollectionMetadata instead! Will be removed in next release!
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
+    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
     ContractInfo {},
 
-    GetCollectionMetadata {},
+    GetCollectionInfo {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
@@ -80,12 +80,11 @@ pub enum QueryMsg {
 }
 
 impl From<QueryMsg>
-    for Cw721QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>
+    for Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension>
 {
     fn from(
         msg: QueryMsg,
-    ) -> Cw721QueryMsg<DefaultOptionNftMetadataExtension, DefaultOptionCollectionMetadataExtension>
-    {
+    ) -> Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,
@@ -96,8 +95,8 @@ impl From<QueryMsg>
             },
             QueryMsg::NumTokens {} => Cw721QueryMsg::NumTokens {},
             #[allow(deprecated)]
-            QueryMsg::ContractInfo {} => Cw721QueryMsg::GetCollectionMetadata {},
-            QueryMsg::GetCollectionMetadata {} => Cw721QueryMsg::GetCollectionMetadata {},
+            QueryMsg::ContractInfo {} => Cw721QueryMsg::GetCollectionInfo {},
+            QueryMsg::GetCollectionInfo {} => Cw721QueryMsg::GetCollectionInfo {},
             QueryMsg::NftInfo { token_id } => Cw721QueryMsg::NftInfo { token_id },
             QueryMsg::AllNftInfo {
                 token_id,
