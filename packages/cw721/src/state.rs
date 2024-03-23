@@ -8,6 +8,8 @@ use cosmwasm_std::{
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use url::Url;
 
 use crate::error::Cw721ContractError;
@@ -41,8 +43,7 @@ pub const ATTRIBUTE_IMAGE: &str = "image";
 pub const ATTRIBUTE_EXTERNAL_LINK: &str = "external_link";
 pub const ATTRIBUTE_EXPLICIT_CONTENT: &str = "explicit_content";
 pub const ATTRIBUTE_START_TRADING_TIME: &str = "start_trading_time";
-pub const ATTRIBUTE_ROYALTY_SHARE: &str = "royalty_share";
-pub const ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS: &str = "royalty_payment_address";
+pub const ATTRIBUTE_ROYALTY_INFO: &str = "royalty_info";
 // ----------------------
 
 pub struct Cw721Config<
@@ -337,10 +338,7 @@ where
 }
 
 #[cw_serde]
-pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo>
-where
-    TRoyaltyInfo: ToAttributesState,
-{
+pub struct CollectionMetadataExtensionWrapper<TRoyaltyInfo> {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
@@ -351,10 +349,10 @@ where
 
 impl<TRoyaltyInfo> ToAttributesState for CollectionMetadataExtensionWrapper<TRoyaltyInfo>
 where
-    TRoyaltyInfo: ToAttributesState + FromAttributesState,
+    TRoyaltyInfo: Serialize,
 {
     fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
-        let mut attributes = vec![
+        let attributes = vec![
             Attribute {
                 key: ATTRIBUTE_DESCRIPTION.to_string(),
                 value: to_json_binary(&self.description)?,
@@ -375,19 +373,19 @@ where
                 key: ATTRIBUTE_START_TRADING_TIME.to_string(),
                 value: to_json_binary(&self.start_trading_time)?,
             },
+            Attribute {
+                key: ATTRIBUTE_ROYALTY_INFO.to_string(),
+                value: to_json_binary(&self.royalty_info)?,
+            },
         ];
-        if let Some(royalty_info) = &self.royalty_info {
-            attributes.extend(royalty_info.to_attributes_states()?);
-        } else {
-            attributes.push(Attribute {
-                key: ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS.to_string(),
-                value: to_json_binary(&None::<Option<Addr>>)?,
-            });
-            attributes.push(Attribute {
-                key: ATTRIBUTE_ROYALTY_SHARE.to_string(),
-                value: to_json_binary(&None::<Option<Decimal>>)?,
-            });
-        }
+        // if let Some(royalty_info) = &self.royalty_info {
+        //     attributes.extend(royalty_info.to_attributes_states()?);
+        // } else {
+        //     attributes.push(Attribute {
+        //         key: ATTRIBUTE_ROYALTY_INFO.to_string(),
+        //         value: to_json_binary(&None::<Option<RoyaltyInfo>>)?,
+        //     });
+        // }
         Ok(attributes)
     }
 }
@@ -403,50 +401,43 @@ where
             .ok_or(Cw721ContractError::AttributeMissing(
                 "description".to_string(),
             ))?
-            .string_value()?;
+            .value::<String>()?;
         let image = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_IMAGE)
             .ok_or(Cw721ContractError::AttributeMissing("image".to_string()))?
-            .string_value()?;
+            .value::<String>()?;
         let external_link = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_EXTERNAL_LINK)
             .ok_or(Cw721ContractError::AttributeMissing(
                 "external link".to_string(),
             ))?
-            .optional_string_value()?;
+            .value::<Option<String>>()?;
         let explicit_content = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_EXPLICIT_CONTENT)
             .ok_or(Cw721ContractError::AttributeMissing(
                 "explicit content".to_string(),
             ))?
-            .optional_bool_value()?;
+            .value::<Option<bool>>()?;
         let start_trading_time = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_START_TRADING_TIME)
             .ok_or(Cw721ContractError::AttributeMissing(
                 "start trading time".to_string(),
             ))?
-            .optional_timestamp_value()?;
+            .value::<Option<Timestamp>>()?;
 
-        let payment_address = attributes
+        let royalty_info = attributes
             .iter()
-            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS)
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_INFO)
             .ok_or(Cw721ContractError::AttributeMissing(
-                "royalty payment address".to_string(),
+                "royalty info".to_string(),
             ))?
-            .optional_addr_value()?;
-        let share = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_SHARE)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "royalty share".to_string(),
-            ))?
-            .optional_decimal_value()?;
+            .value::<Option<RoyaltyInfo>>()?;
 
-        let royalty_info = if payment_address.is_some() && share.is_some() {
+        let royalty_info = if royalty_info.is_some() {
             Some(FromAttributesState::from_attributes_state(attributes)?)
         } else {
             None
@@ -469,64 +460,13 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    pub fn string_value(&self) -> Result<String, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_string_value(&self) -> Result<Option<String>, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn u64_value(&self) -> Result<u64, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_u64_value(&self) -> Result<Option<u64>, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn bool_value(&self) -> Result<bool, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_bool_value(&self) -> Result<Option<bool>, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn decimal_value(&self) -> Result<Decimal, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_decimal_value(&self) -> Result<Option<Decimal>, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn timestamp_value(&self) -> Result<Timestamp, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_timestamp_value(&self) -> Result<Option<Timestamp>, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn addr_value(&self) -> Result<Addr, Cw721ContractError> {
-        Ok(from_json(&self.value)?)
-    }
-
-    pub fn optional_addr_value(&self) -> Result<Option<Addr>, Cw721ContractError> {
+    pub fn value<T>(&self) -> Result<T, Cw721ContractError>
+    where
+        T: DeserializeOwned,
+    {
         Ok(from_json(&self.value)?)
     }
 }
-
-// pub struct StringAttribute {
-//     pub key: String,
-//     pub value: String,
-// }
-
-// pub struct UintAttribute {
-//     pub key: String,
-//     pub value: u64,
-// }
 
 impl Cw721State for CollectionMetadataExtensionWrapper<RoyaltyInfo> {}
 
@@ -541,39 +481,23 @@ impl Cw721CustomMsg for RoyaltyInfo {}
 
 impl ToAttributesState for RoyaltyInfo {
     fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
-        Ok(vec![
-            Attribute {
-                key: ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS.to_string(),
-                value: to_json_binary(&Some(self.payment_address.clone())).unwrap(),
-            },
-            Attribute {
-                key: ATTRIBUTE_ROYALTY_SHARE.to_string(),
-                value: to_json_binary(&Some(self.share)).unwrap(),
-            },
-        ])
+        Ok(vec![Attribute {
+            key: ATTRIBUTE_ROYALTY_INFO.to_string(),
+            value: to_json_binary(&self.clone()).unwrap(),
+        }])
     }
 }
 
 impl FromAttributesState for RoyaltyInfo {
     fn from_attributes_state(attributes: &[Attribute]) -> Result<Self, Cw721ContractError> {
-        let payment_address = attributes
+        let royalty_info = attributes
             .iter()
-            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_PAYMENT_ADDRESS)
+            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_INFO)
             .ok_or(Cw721ContractError::AttributeMissing(
                 "royalty payment address".to_string(),
             ))?
-            .addr_value()?;
-        let share = attributes
-            .iter()
-            .find(|attr| attr.key == ATTRIBUTE_ROYALTY_SHARE)
-            .ok_or(Cw721ContractError::AttributeMissing(
-                "royalty share".to_string(),
-            ))?
-            .decimal_value()?;
-        Ok(RoyaltyInfo {
-            payment_address,
-            share,
-        })
+            .value::<RoyaltyInfo>()?;
+        Ok(royalty_info)
     }
 }
 
