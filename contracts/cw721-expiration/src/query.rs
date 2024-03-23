@@ -198,7 +198,7 @@ where
                 &contract.base_contract.query_minter(deps.storage)?,
             )?),
             QueryMsg::Extension { msg } => Ok(to_json_binary(
-                &contract.base_contract.query_nft_metadata(deps, &env, msg)?,
+                &contract.base_contract.query_custom(deps, &env, msg)?,
             )?),
             QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
                 &contract

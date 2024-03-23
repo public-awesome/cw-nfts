@@ -152,7 +152,7 @@ where
         &self,
         querier: &QuerierWrapper,
     ) -> StdResult<CollectionInfoAndExtensionResponse<U>> {
-        let req = Cw721QueryMsg::GetCollectionInfo {};
+        let req = Cw721QueryMsg::GetCollectionInfoAndExtension {};
         self.query(querier, req)
     }
 

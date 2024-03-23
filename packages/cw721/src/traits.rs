@@ -215,9 +215,7 @@ pub trait Cw721Execute<
                 self.update_creator_ownership(deps.api, deps.storage, env, info, action)
             }
             #[allow(deprecated)]
-            Cw721ExecuteMsg::Extension { msg } => {
-                self.update_legacy_extension(deps, env, info, msg)
-            }
+            Cw721ExecuteMsg::Extension { msg } => self.execute_custom(deps, env, info, msg),
             Cw721ExecuteMsg::UpdateNftInfo {
                 token_id,
                 token_uri,
@@ -397,15 +395,15 @@ pub trait Cw721Execute<
         update_creator_ownership::<TCustomResponseMsg>(api, storage, env, info, action)
     }
 
-    /// Allows creator to update onchain metadata. For now this is a no-op.
-    fn update_legacy_extension(
+    /// Custom msg execution. This is a no-op in default implementation.
+    fn execute_custom(
         &self,
         _deps: DepsMut,
         _env: &Env,
         _info: &MessageInfo,
         _msg: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        panic!("deprecated. pls use update_metadata instead.")
+        Ok(Response::default())
     }
 
     /// The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`).
@@ -477,7 +475,7 @@ pub trait Cw721Query<
             Cw721QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
             )?),
-            Cw721QueryMsg::GetCollectionInfo {} => Ok(to_json_binary(
+            Cw721QueryMsg::GetCollectionInfoAndExtension {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
             )?),
             Cw721QueryMsg::NftInfo { token_id } => {
@@ -570,13 +568,7 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCreatorOwnership {} => Ok(to_json_binary(
                 &self.query_creator_ownership(deps.storage)?,
             )?),
-            #[allow(deprecated)]
-            Cw721QueryMsg::Extension { msg } => {
-                Ok(to_json_binary(&self.query_nft_metadata(deps, env, msg)?)?)
-            }
-            Cw721QueryMsg::GetNftExtension { msg } => {
-                Ok(to_json_binary(&self.query_nft_metadata(deps, env, msg)?)?)
-            }
+            Cw721QueryMsg::Extension { msg } => self.query_custom(deps, env, msg),
             Cw721QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
                 &self.query_custom_collection_info_extension(deps, env, msg)?,
             )?),
@@ -727,20 +719,17 @@ pub trait Cw721Query<
         query_all_nft_info::<TNftExtension>(deps, env, token_id, include_expired_approval)
     }
 
-    /// Use NftInfo instead.
-    /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile.
-    ///
-    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
-    fn query_nft_metadata(
+    /// Custom msg query. Default implementation returns an empty binary.
+    fn query_custom(
         &self,
         _deps: Deps,
         _env: &Env,
         _msg: TNftExtension,
-    ) -> StdResult<Binary> {
+    ) -> Result<Binary, Cw721ContractError> {
         Ok(Binary::default())
     }
 
-    /// Use GetCollectionInfo instead.
+    /// use GetCollectionInfoAndExtension instead.
     /// No-op / empty extension query returning empty binary, needed for inferring type parameter during compile
     ///
     /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.

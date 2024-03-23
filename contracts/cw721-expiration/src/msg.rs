@@ -126,9 +126,12 @@ pub enum QueryMsg<TNftExtension, TCollectionExtension> {
     #[returns(cw721_base::msg::NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
+    #[deprecated(
+        since = "0.19.0",
+        note = "Please use GetCollectionInfoAndExtension instead"
+    )]
     #[returns(CollectionInfoAndExtensionResponse<cw721_base::DefaultOptionalCollectionExtension>)]
-    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
+    /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.

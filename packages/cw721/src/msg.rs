@@ -91,12 +91,11 @@ pub enum Cw721ExecuteMsg<
         token_id: String,
     },
 
-    /// Metadata msg
-    #[deprecated(since = "0.19.0", note = "Please use UpdateNftExtension instead")]
-    /// Deprecated: use UpdateNftExtension instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!
+    /// Custom msg execution. This is a no-op in default implementation.
     Extension {
         msg: TNftExtensionMsg,
     },
+
     /// The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`).
     /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
     UpdateNftInfo {
@@ -186,15 +185,18 @@ pub enum Cw721QueryMsg<
     #[returns(NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
+    #[deprecated(
+        since = "0.19.0",
+        note = "Please use GetCollectionInfoAndExtension instead"
+    )]
     #[returns(CollectionInfoAndExtensionResponse<TCollectionExtension>)]
-    /// Deprecated: use GetCollectionInfo instead! Will be removed in next release!
+    /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
     #[returns(CollectionInfoAndExtensionResponse<TCollectionExtension>)]
-    GetCollectionInfo {},
+    GetCollectionInfoAndExtension {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
@@ -247,24 +249,10 @@ pub enum Cw721QueryMsg<
     #[returns(Option<String>)]
     GetWithdrawAddress {},
 
-    // -- below queries, Extension and GetCollectionExtension, are just dummies, since type annotations are required for
-    // -- TNftExtension and TCollectionExtension, Error:
-    // -- "type annotations needed: cannot infer type for type parameter `TNftExtension` declared on the enum `Cw721QueryMsg`"
-    /// Use NftInfo instead.
-    /// No-op / NFT metadata query returning empty binary, needed for inferring type parameter during compile.
-    ///
-    /// Note: it may be extended in case there are use cases e.g. for specific NFT metadata query.
+    /// Custom msg query. Default implementation returns an empty binary.
     #[returns(())]
-    #[deprecated(since = "0.19.0", note = "Please use GetNftExtension instead")]
     Extension { msg: TNftExtension },
 
-    #[returns(())]
-    GetNftExtension { msg: TNftExtension },
-
-    /// Use GetCollectionInfo instead.
-    /// No-op / collection metadata extension query returning empty binary, needed for inferring type parameter during compile
-    ///
-    /// Note: it may be extended in case there are use cases e.g. for specific collection metadata query.
     #[returns(())]
     GetCollectionExtension { msg: TCollectionExtension },
 }
