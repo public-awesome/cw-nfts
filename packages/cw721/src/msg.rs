@@ -458,7 +458,7 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
         info: Option<&MessageInfo>,
         _current: Option<&CollectionExtensionResponse<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or_else(||Cw721ContractError::NoDeps)?;
+        let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
         let sender = info.map(|i| i.sender.clone());
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
@@ -527,7 +527,7 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
         current: Option<&RoyaltyInfo>,
     ) -> Result<RoyaltyInfo, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
-        let deps = deps.ok_or_else(||Cw721ContractError::NoDeps)?;
+        let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
         match current {
             // Some: update existing royalty info
             Some(current) => {
@@ -651,7 +651,7 @@ where
             // None: create new metadata
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let env = env.ok_or_else(||Cw721ContractError::NoEnv)?;
+                let env = env.ok_or_else(|| Cw721ContractError::NoEnv)?;
                 let new = CollectionInfoAndExtensionResponse {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
@@ -677,7 +677,7 @@ where
         if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
         }
-        let deps = deps.ok_or_else(||Cw721ContractError::NoDeps)?;
+        let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
         // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
         // - CREATOR store is empty/not initioized (like in instantiation)
         // - info is none (like in migration)
@@ -750,43 +750,33 @@ where
         let description = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_DESCRIPTION)
-            .ok_or_else(||Cw721ContractError::AttributeMissing(
-                "description".to_string(),
-            ))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("description".to_string()))?
             .value::<String>()?;
         let image = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_IMAGE)
-            .ok_or_else(||Cw721ContractError::AttributeMissing("image".to_string()))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("image".to_string()))?
             .value::<String>()?;
         let external_link = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_EXTERNAL_LINK)
-            .ok_or_else(||Cw721ContractError::AttributeMissing(
-                "external link".to_string(),
-            ))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("external link".to_string()))?
             .value::<Option<String>>()?;
         let explicit_content = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_EXPLICIT_CONTENT)
-            .ok_or_else(||Cw721ContractError::AttributeMissing(
-                "explicit content".to_string(),
-            ))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("explicit content".to_string()))?
             .value::<Option<bool>>()?;
         let start_trading_time = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_START_TRADING_TIME)
-            .ok_or_else(||Cw721ContractError::AttributeMissing(
-                "start trading time".to_string(),
-            ))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("start trading time".to_string()))?
             .value::<Option<Timestamp>>()?;
 
         let royalty_info = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_ROYALTY_INFO)
-            .ok_or_else(||Cw721ContractError::AttributeMissing(
-                "royalty info".to_string(),
-            ))?
+            .ok_or_else(|| Cw721ContractError::AttributeMissing("royalty info".to_string()))?
             .value::<Option<RoyaltyInfo>>()?;
 
         let royalty_info = if royalty_info.is_some() {
@@ -917,7 +907,7 @@ where
             // None: create new NFT, note: msg is of same type, so we can clone it
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let deps = deps.ok_or_else(||Cw721ContractError::NoDeps)?;
+                let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
                 Ok(NftInfo {
                     owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
                     approvals: vec![],
@@ -935,8 +925,8 @@ where
         info: Option<&MessageInfo>,
         current: Option<&NftInfo<TNftExtension>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or_else(||Cw721ContractError::NoDeps)?;
-        let info = info.ok_or_else(||Cw721ContractError::NoInfo)?;
+        let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
+        let info = info.ok_or_else(|| Cw721ContractError::NoInfo)?;
         if current.is_none() {
             // current is none: only minter can create new NFT
             assert_minter(deps.storage, &info.sender)?;
