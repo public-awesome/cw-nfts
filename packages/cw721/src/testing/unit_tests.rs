@@ -1470,6 +1470,8 @@ fn test_nft_mint() {
                     description: Some("other_description".into()), // only description is different compared to nft 1
                     ..NftExtension::default()
                 }),
+                None,
+                None,
             )
             .unwrap();
         assert!(res.is_some());
@@ -1492,6 +1494,8 @@ fn test_nft_mint() {
                     }]),
                     ..NftExtension::default()
                 }),
+                None,
+                None,
             )
             .unwrap();
         assert!(res.is_some());

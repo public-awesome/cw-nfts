@@ -234,7 +234,11 @@ pub enum Cw721QueryMsg<
     NftInfo { token_id: String },
 
     #[returns(Option<NftInfoResponse<TNftExtension>>)]
-    GetNftByExtension { extension: TNftExtension },
+    GetNftByExtension {
+        extension: TNftExtension,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
 
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization

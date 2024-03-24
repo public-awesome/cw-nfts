@@ -141,13 +141,19 @@ where
 pub fn query_nft_by_extension<TNftExtension>(
     storage: &dyn Storage,
     extension: TNftExtension,
+    start_after: Option<String>,
+    limit: Option<u32>,
 ) -> StdResult<Option<Vec<NftInfoResponse<TNftExtension>>>>
 where
     TNftExtension: Cw721State + Contains,
 {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
+
     let nfts: Vec<Option<NftInfo<TNftExtension>>> = Cw721Config::<TNftExtension>::default()
         .nft_info
-        .range(storage, None, None, Order::Ascending)
+        .range(storage, start, None, Order::Ascending)
+        .take(limit)
         .map(|kv| {
             let nft = kv?.1;
             let result = if nft.extension.contains(&extension) {

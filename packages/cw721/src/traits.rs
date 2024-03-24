@@ -499,9 +499,16 @@ pub trait Cw721Query<
             Cw721QueryMsg::NftInfo { token_id } => Ok(to_json_binary(
                 &self.query_nft_info(deps.storage, token_id)?,
             )?),
-            Cw721QueryMsg::GetNftByExtension { extension } => Ok(to_json_binary(
-                &self.query_nft_by_extension(deps.storage, extension)?,
-            )?),
+            Cw721QueryMsg::GetNftByExtension {
+                extension,
+                start_after,
+                limit,
+            } => Ok(to_json_binary(&self.query_nft_by_extension(
+                deps.storage,
+                extension,
+                start_after,
+                limit,
+            )?)?),
             Cw721QueryMsg::OwnerOf {
                 token_id,
                 include_expired,
@@ -654,8 +661,10 @@ pub trait Cw721Query<
         &self,
         storage: &dyn Storage,
         extension: TNftExtension,
+        start_after: Option<String>,
+        limit: Option<u32>,
     ) -> StdResult<Option<Vec<NftInfoResponse<TNftExtension>>>> {
-        query_nft_by_extension::<TNftExtension>(storage, extension)
+        query_nft_by_extension::<TNftExtension>(storage, extension, start_after, limit)
     }
 
     fn query_owner_of(
