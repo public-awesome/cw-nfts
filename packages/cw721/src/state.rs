@@ -371,8 +371,8 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
         // - creator and minter can create NFT metadata
         // - only creator can update NFT metadata
         if current.is_none() {
-            let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
-            let info = info.ok_or_else(|| Cw721ContractError::NoInfo)?;
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: minter and creator can create new NFT metadata
             let minter_check = assert_minter(deps.storage, &info.sender);
             let creator_check = assert_creator(deps.storage, &info.sender);
@@ -380,8 +380,8 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
                 return Err(Cw721ContractError::NotMinterOrCreator {});
             }
         } else {
-            let deps = deps.ok_or_else(|| Cw721ContractError::NoDeps)?;
-            let info = info.ok_or_else(|| Cw721ContractError::NoInfo)?;
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT metadata
             assert_creator(deps.storage, &info.sender)?;
         }
