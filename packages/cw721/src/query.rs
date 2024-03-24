@@ -15,7 +15,6 @@ use crate::{
         MINTER,
     },
     traits::{Contains, Cw721State, FromAttributesState},
-    Attribute,
 };
 
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -161,8 +160,7 @@ where
         .collect::<StdResult<_>>()?;
     let filtered = nfts
         .iter()
-        .filter(|n| n.is_some())
-        .map(|n| n.clone().unwrap())
+        .filter_map(|n| n.clone())
         .map(|n| NftInfoResponse {
             token_uri: n.token_uri,
             extension: n.extension,

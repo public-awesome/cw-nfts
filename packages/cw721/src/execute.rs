@@ -318,12 +318,8 @@ where
     let config = Cw721Config::<Option<Empty>>::default();
     let current_wrapper =
         query_collection_info_and_extension::<TCollectionExtension>(deps.as_ref())?;
-    let collection_info_wrapper = msg.create(
-        deps.as_ref().into(),
-        env.into(),
-        info.into(),
-        Some(&current_wrapper),
-    )?;
+    let collection_info_wrapper =
+        msg.create(deps.as_ref().into(), env, info, Some(&current_wrapper))?;
     let extension_attributes = collection_info_wrapper.extension.to_attributes_states()?;
     config
         .collection_info
@@ -335,8 +331,8 @@ where
     }
 
     let response = Response::new().add_attribute("action", "update_collection_info");
-    if info.is_some() {
-        Ok(response.add_attribute("sender", info.unwrap().sender.to_string()))
+    if let Some(info) = info {
+        Ok(response.add_attribute("sender", info.sender.to_string()))
     } else {
         Ok(response)
     }

@@ -1,4 +1,4 @@
-use cosmwasm_std::{CustomMsg, Empty};
+use cosmwasm_std::CustomMsg;
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::query::*;
 use cw721::traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};

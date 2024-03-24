@@ -285,7 +285,7 @@ impl Contains for NftExtension {
         }
         if let (Some(a), Some(b)) = (&self.attributes, &other.attributes) {
             for (i, b) in b.iter().enumerate() {
-                if !a[i].eq(&b) {
+                if !a[i].eq(b) {
                     return false;
                 }
             }

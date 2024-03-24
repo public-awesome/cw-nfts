@@ -2,7 +2,7 @@ use crate::{
     error::Cw721ContractError,
     msg::{
         CollectionExtensionMsg, CollectionInfoAndExtensionResponse, CollectionInfoMsg,
-        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg, RoyaltyInfoResponse,
+        Cw721ExecuteMsg, Cw721InstantiateMsg, RoyaltyInfoResponse,
     },
     query::MAX_LIMIT,
     state::{
@@ -1454,7 +1454,7 @@ fn test_nft_mint() {
         let result = res.unwrap();
         assert_eq!(result.len(), 1);
         // get first element
-        let nft = result.get(0).unwrap();
+        let nft = result.first().unwrap();
         assert_eq!(nft.token_uri, "ipfs://foo.bar".to_string().into());
 
         // query for both tokens

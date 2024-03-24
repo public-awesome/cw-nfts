@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Coin, ContractInfo, ContractInfoResponse, Decimal, Deps, Env,
-    MessageInfo, Timestamp,
+    to_json_binary, Addr, Binary, Coin, ContractInfoResponse, Decimal, Deps, Env, MessageInfo,
+    Timestamp,
 };
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
@@ -146,9 +146,7 @@ pub enum Cw721QueryMsg<
     // Return type of collection metadata extension defined in `GetCollectionInfo`.
     TCollectionExtension,
     TExtensionQueryMsg,
-> where
-    TExtensionQueryMsg: Cw721CustomMsg,
-{
+> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {

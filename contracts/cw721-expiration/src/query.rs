@@ -216,7 +216,7 @@ where
             )?),
             QueryMsg::Extension {
                 msg,
-                include_expired_nft,
+                include_expired_nft: _,
             } => Ok(to_json_binary(
                 &contract.base_contract.query_extension(deps, &env, msg)?,
             )?),
@@ -249,7 +249,7 @@ where
         deps: Deps,
         env: Env,
         token_id: String,
-        extension: TNftExtension,
+        _extension: TNftExtension,
         include_expired_nft: bool,
     ) -> Result<NftInfoResponse<TNftExtension>, ContractError> {
         if !include_expired_nft {

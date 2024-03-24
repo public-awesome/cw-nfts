@@ -37,7 +37,6 @@ use crate::{
 use crate::{
     msg::AllInfoResponse,
     query::{query_all_info, query_nft_by_extension},
-    state::CollectionExtensionAttributes,
 };
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
@@ -633,7 +632,7 @@ pub trait Cw721Query<
     }
 
     fn query_all_info(&self, deps: Deps, env: &Env) -> StdResult<AllInfoResponse> {
-        Ok(query_all_info(deps, env)?)
+        query_all_info(deps, env)
     }
 
     fn query_num_tokens(&self, storage: &dyn Storage) -> StdResult<NumTokensResponse> {
