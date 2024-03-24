@@ -6,7 +6,7 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Reply, ReplyOn, Response,
+    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
     StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -181,7 +181,15 @@ pub fn execute_receive(
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtension,
                 DefaultOptionalCollectionExtensionMsg,
-            >(cw721, PhantomData, PhantomData, PhantomData, PhantomData)
+                Empty,
+            >(
+                cw721,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+                PhantomData,
+            )
             .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;

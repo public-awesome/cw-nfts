@@ -34,7 +34,11 @@ use crate::{
     state::CollectionInfo,
     Attribute,
 };
-use crate::{msg::AllInfoResponse, query::query_all_info, state::CollectionExtensionAttributes};
+use crate::{
+    msg::AllInfoResponse,
+    query::{query_all_info, query_nft_by_extension},
+    state::CollectionExtensionAttributes,
+};
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
 ///
@@ -53,6 +57,11 @@ impl Cw721State for Empty {}
 impl<T> Cw721State for Option<T> where T: Cw721State {}
 impl Cw721CustomMsg for Empty {}
 impl<T> Cw721CustomMsg for Option<T> where T: Cw721CustomMsg {}
+
+/// e.g. for checking whether an NFT has specific traits (metadata).
+pub trait Contains {
+    fn contains(&self, other: &Self) -> bool;
+}
 
 pub trait StateFactory<TState> {
     fn create(
@@ -459,15 +468,17 @@ pub trait Cw721Query<
     TNftExtension,
     // CollectionInfo extension (onchain attributes).
     TCollectionExtension,
+    TExtensionQueryMsg,
 > where
-    TNftExtension: Cw721State,
+    TNftExtension: Cw721State + Contains,
     TCollectionExtension: Cw721State + FromAttributesState,
+    TExtensionQueryMsg: Cw721CustomMsg,
 {
     fn query(
         &self,
         deps: Deps,
         env: &Env,
-        msg: Cw721QueryMsg<TNftExtension, TCollectionExtension>,
+        msg: Cw721QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
     ) -> Result<Binary, Cw721ContractError> {
         match msg {
             #[allow(deprecated)]
@@ -483,9 +494,12 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCollectionExtensionAttributes {} => Ok(to_json_binary(
                 &self.query_collection_extension_attributes(deps)?,
             )?),
-            Cw721QueryMsg::NftInfo { token_id } => {
-                Ok(to_json_binary(&self.query_nft_info(deps, env, token_id)?)?)
-            }
+            Cw721QueryMsg::NftInfo { token_id } => Ok(to_json_binary(
+                &self.query_nft_info(deps.storage, token_id)?,
+            )?),
+            Cw721QueryMsg::GetNftByExtension { extension } => Ok(to_json_binary(
+                &self.query_nft_by_extension(deps.storage, extension)?,
+            )?),
             Cw721QueryMsg::OwnerOf {
                 token_id,
                 include_expired,
@@ -575,8 +589,8 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCreatorOwnership {} => Ok(to_json_binary(
                 &self.query_creator_ownership(deps.storage)?,
             )?),
-            Cw721QueryMsg::Extension { msg } => self.query_custom(deps, env, msg),
-            Cw721QueryMsg::CollectionExtension { msg } => {
+            Cw721QueryMsg::Extension { msg } => self.query_extension(deps, env, msg),
+            Cw721QueryMsg::GetCollectionExtension { msg } => {
                 self.query_custom_collection_extension(deps, env, msg)
             }
             Cw721QueryMsg::GetWithdrawAddress {} => {
@@ -628,11 +642,18 @@ pub trait Cw721Query<
 
     fn query_nft_info(
         &self,
-        deps: Deps,
-        env: &Env,
+        storage: &dyn Storage,
         token_id: String,
     ) -> StdResult<NftInfoResponse<TNftExtension>> {
-        query_nft_info::<TNftExtension>(deps, env, token_id)
+        query_nft_info::<TNftExtension>(storage, token_id)
+    }
+
+    fn query_nft_by_extension(
+        &self,
+        storage: &dyn Storage,
+        extension: TNftExtension,
+    ) -> StdResult<Option<Vec<NftInfoResponse<TNftExtension>>>> {
+        query_nft_by_extension::<TNftExtension>(storage, extension)
     }
 
     fn query_owner_of(
@@ -731,11 +752,11 @@ pub trait Cw721Query<
     }
 
     /// Custom msg query. Default implementation returns an empty binary.
-    fn query_custom(
+    fn query_extension(
         &self,
         _deps: Deps,
         _env: &Env,
-        _msg: TNftExtension,
+        _msg: TExtensionQueryMsg,
     ) -> Result<Binary, Cw721ContractError> {
         Ok(Binary::default())
     }

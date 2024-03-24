@@ -50,6 +50,7 @@ pub mod entry {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
         contract.instantiate(deps, env, info, msg)
     }
@@ -67,6 +68,7 @@ pub mod entry {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
         contract.execute(deps, env, info, msg)
     }
@@ -75,13 +77,14 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension>,
+        msg: QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
             DefaultOptionalNftExtension,
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default();
         contract.query(deps, env, msg)
@@ -161,6 +164,7 @@ mod tests {
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtension,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
                 Empty,
             >::default()
             .expiration_days

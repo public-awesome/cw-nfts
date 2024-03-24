@@ -5,8 +5,10 @@ use crate::{
 use cosmwasm_std::{Binary, CustomMsg, DepsMut, Env, MessageInfo, Response};
 use cw721_base::{
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    traits::Cw721Execute,
-    traits::{Cw721CustomMsg, Cw721State, FromAttributesState, StateFactory, ToAttributesState},
+    traits::{
+        Contains, Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
+        ToAttributesState,
+    },
     Expiration,
 };
 
@@ -16,6 +18,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
     Cw721ExpirationContract<
@@ -24,13 +27,15 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
-    TNftExtension: Cw721State,
+    TNftExtension: Cw721State + Contains,
     TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
     TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
     TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
+    TExtensionQueryMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
     // -- instantiate --
@@ -49,6 +54,7 @@ where
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();
         contract
@@ -84,6 +90,7 @@ where
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();
         match msg {

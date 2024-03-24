@@ -4,8 +4,8 @@ use cosmwasm_std::CustomMsg;
 
 use crate::state::Cw721Config;
 use crate::traits::{
-    Cw721CustomMsg, Cw721Execute, Cw721Query, Cw721State, FromAttributesState, StateFactory,
-    ToAttributesState,
+    Contains, Cw721CustomMsg, Cw721Execute, Cw721Query, Cw721State, FromAttributesState,
+    StateFactory, ToAttributesState,
 };
 
 pub struct Cw721Contract<
@@ -18,6 +18,7 @@ pub struct Cw721Contract<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    TExtensionQueryMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
@@ -31,6 +32,7 @@ pub struct Cw721Contract<
     pub(crate) _collection_extension: PhantomData<TCollectionExtension>,
     pub(crate) _nft_extension_msg: PhantomData<TNftExtensionMsg>,
     pub(crate) _collection_extension_msg: PhantomData<TCollectionExtensionMsg>,
+    pub(crate) _extension_query_msg: PhantomData<TExtensionQueryMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
@@ -39,6 +41,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     > Default
     for Cw721Contract<
@@ -47,6 +50,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
@@ -61,6 +65,7 @@ where
             _collection_extension: PhantomData,
             _nft_extension_msg: PhantomData,
             _collection_extension_msg: PhantomData,
+            _extension_query_msg: PhantomData,
             _custom_response_msg: PhantomData,
         }
     }
@@ -72,6 +77,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
     Cw721Execute<
@@ -87,6 +93,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
@@ -104,21 +111,24 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
-    > Cw721Query<TNftExtension, TCollectionExtension>
+    > Cw721Query<TNftExtension, TCollectionExtension, TExtensionQueryMsg>
     for Cw721Contract<
         'a,
         TNftExtension,
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
-    TNftExtension: Cw721State,
+    TNftExtension: Cw721State + Contains,
     TNftExtensionMsg: Cw721CustomMsg,
     TCollectionExtension: Cw721State + FromAttributesState,
     TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
 }

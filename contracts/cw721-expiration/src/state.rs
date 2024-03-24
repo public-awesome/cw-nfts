@@ -14,6 +14,7 @@ pub struct Cw721ExpirationContract<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    TExtensionQueryMsg,
     TCustomResponseMsg,
 > where
     TNftExtension: Cw721State,
@@ -29,6 +30,7 @@ pub struct Cw721ExpirationContract<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >,
 }
@@ -38,6 +40,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     > Default
     for Cw721ExpirationContract<
@@ -46,6 +49,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where

@@ -2,12 +2,12 @@ use crate::{
     error::Cw721ContractError,
     msg::{
         CollectionExtensionMsg, CollectionInfoAndExtensionResponse, CollectionInfoMsg,
-        Cw721ExecuteMsg, Cw721InstantiateMsg, RoyaltyInfoResponse,
+        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg, RoyaltyInfoResponse,
     },
     query::MAX_LIMIT,
     state::{
-        NftExtension, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
-        MAX_ROYALTY_SHARE_PCT, MINTER,
+        NftExtension, Trait, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+        MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
     CollectionExtensionResponse, DefaultOptionalCollectionExtension,
@@ -39,6 +39,7 @@ fn test_instantiation() {
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
+        Empty,
     >::default()
     .instantiate_with_version(
         deps.as_mut(),
@@ -65,6 +66,7 @@ fn test_instantiation() {
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
+        Empty,
     >::default()
     .instantiate_with_version(
         deps.as_mut(),
@@ -89,6 +91,7 @@ fn test_instantiation() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default()
     .instantiate_with_version(
@@ -147,6 +150,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -180,6 +184,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .instantiate_with_version(
@@ -215,6 +220,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -248,6 +254,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .instantiate_with_version(
@@ -316,6 +323,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -340,6 +348,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .query_collection_info_and_extension(deps.as_ref())
@@ -373,6 +382,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .instantiate_with_version(
@@ -417,6 +427,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -460,6 +471,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -499,6 +511,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .instantiate_with_version(
@@ -541,6 +554,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default()
         .instantiate_with_version(
@@ -609,6 +623,7 @@ fn test_collection_info_update() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default();
         contract
@@ -699,6 +714,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
@@ -754,6 +770,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default()
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
@@ -802,6 +819,7 @@ fn test_collection_info_update() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
         >::default();
         contract
@@ -1061,6 +1079,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
         contract
             .instantiate_with_version(
@@ -1184,6 +1203,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
         contract
             .instantiate_with_version(
@@ -1261,6 +1281,7 @@ fn test_nft_mint() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
 
         let info = mock_info(CREATOR_ADDR, &[]);
@@ -1298,7 +1319,7 @@ fn test_nft_mint() {
             .unwrap();
 
         let res = contract
-            .query_nft_info(deps.as_ref(), &env, token_id.into())
+            .query_nft_info(deps.as_ref().storage, token_id.into())
             .unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
@@ -1338,6 +1359,7 @@ fn test_nft_mint() {
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
             Empty,
+            Empty,
         >::default();
 
         let info = mock_info(CREATOR_ADDR, &[]);
@@ -1361,28 +1383,98 @@ fn test_nft_mint() {
             )
             .unwrap();
 
-        let token_id = "Enterprise";
-        let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension = Some(NftExtension {
-            description: Some("Spaceship with Warp Drive".into()),
-            name: Some("Starship USS Enterprise".to_string()),
+        let nft_1 = "1";
+        let uri_1 = Some("https://starships.example.com/Starship/Enterprise.json".into());
+        let extension_1 = Some(NftExtension {
+            description: Some("description1".into()),
+            name: Some("name1".to_string()),
+            attributes: Some(vec![Trait {
+                display_type: None,
+                trait_type: "type1".to_string(),
+                value: "value1".to_string(),
+            }]),
             ..NftExtension::default()
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
-            token_id: token_id.to_string(),
+            token_id: nft_1.to_string(),
             owner: "john".to_string(),
-            token_uri: token_uri.clone(),
-            extension: extension.clone(),
+            token_uri: uri_1.clone(),
+            extension: extension_1.clone(),
         };
         contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
             .unwrap();
 
-        let res = contract
-            .query_nft_info(deps.as_ref(), &env, token_id.into())
+        let nft_info_1 = contract
+            .query_nft_info(deps.as_ref().storage, nft_1.into())
             .unwrap();
-        assert_eq!(res.token_uri, token_uri);
-        assert_eq!(res.extension, extension);
+        assert_eq!(nft_info_1.token_uri, uri_1);
+        assert_eq!(nft_info_1.extension, extension_1);
+
+        // mint another
+        let nft_2 = "2";
+        let uri_2 = Some("ipfs://foo.bar".into());
+        let extension_1 = Some(NftExtension {
+            description: Some("other_description".into()), // only description is different compared to nft 1
+            name: Some("name1".to_string()),
+            attributes: Some(vec![Trait {
+                display_type: None,
+                trait_type: "type1".to_string(),
+                value: "value1".to_string(),
+            }]),
+            ..NftExtension::default()
+        });
+        let exec_msg = Cw721ExecuteMsg::Mint {
+            token_id: nft_2.to_string(),
+            owner: "allen".to_string(),
+            token_uri: uri_2.clone(),
+            extension: extension_1.clone(),
+        };
+        contract
+            .execute(deps.as_mut(), &env, &info, exec_msg)
+            .unwrap();
+
+        let nft_info_2 = contract
+            .query_nft_info(deps.as_ref().storage, nft_2.into())
+            .unwrap();
+        assert_eq!(nft_info_2.token_uri, uri_2);
+        assert_eq!(nft_info_2.extension, extension_1);
+
+        // query for token 2 with different description
+        let res = contract
+            .query_nft_by_extension(
+                deps.as_ref().storage,
+                Some(NftExtension {
+                    description: Some("other_description".into()), // only description is different compared to nft 1
+                    ..NftExtension::default()
+                }),
+            )
+            .unwrap();
+        assert!(res.is_some());
+        let result = res.unwrap();
+        assert_eq!(result.len(), 1);
+        // get first element
+        let nft = result.get(0).unwrap();
+        assert_eq!(nft.token_uri, "ipfs://foo.bar".to_string().into());
+
+        // query for both tokens
+        let res = contract
+            .query_nft_by_extension(
+                deps.as_ref().storage,
+                Some(NftExtension {
+                    name: Some("name1".into()), // only description is different compared to nft 1
+                    attributes: Some(vec![Trait {
+                        display_type: None,
+                        trait_type: "type1".to_string(),
+                        value: "value1".to_string(),
+                    }]),
+                    ..NftExtension::default()
+                }),
+            )
+            .unwrap();
+        assert!(res.is_some());
+        let result = res.unwrap();
+        assert_eq!(result.len(), 2);
     }
 }
 
@@ -1431,6 +1523,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
+        Empty,
     >::default();
     contract
         .query_collection_info_and_extension(deps.as_ref())
@@ -1469,7 +1562,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
     }
     // check one nft
     let token = contract
-        .query_nft_info(deps.as_ref(), &env, "0".into())
+        .query_nft_info(deps.as_ref().storage, "0".into())
         .unwrap();
     assert_eq!(token.token_uri, None);
     assert_eq!(
@@ -1488,6 +1581,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default()
     .migrate(
@@ -1543,7 +1637,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
     assert_eq!(all_tokens.tokens.len(), 200);
     // check one nft
     let token = contract
-        .query_nft_info(deps.as_ref(), &env, "0".into())
+        .query_nft_info(deps.as_ref().storage, "0".into())
         .unwrap();
     assert_eq!(token.token_uri, None);
     assert_eq!(

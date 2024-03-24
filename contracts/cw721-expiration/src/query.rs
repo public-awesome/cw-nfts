@@ -3,7 +3,7 @@ use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721_base::traits::{Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
+use cw721_base::traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
@@ -13,6 +13,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
     Cw721ExpirationContract<
@@ -21,26 +22,29 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
-    TNftExtension: Cw721State,
+    TNftExtension: Cw721State + Contains,
     TNftExtensionMsg: Cw721CustomMsg,
     TCollectionExtension: Cw721State + FromAttributesState,
     TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {
     pub fn query(
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<TNftExtension, TCollectionExtension>,
+        msg: QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
             TNftExtension,
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();
         match msg {
@@ -62,7 +66,7 @@ where
                 token_id,
                 spender,
                 include_expired,
-                include_expired_nft: include_invalid,
+                include_expired_nft,
             } => Ok(to_json_binary(
                 &contract.query_approval_include_expired_nft(
                     deps,
@@ -70,31 +74,44 @@ where
                     token_id,
                     spender,
                     include_expired.unwrap_or(false),
-                    include_invalid.unwrap_or(false),
+                    include_expired_nft.unwrap_or(false),
                 )?,
             )?),
             QueryMsg::Approvals {
                 token_id,
                 include_expired,
-                include_expired_nft: include_invalid,
+                include_expired_nft,
             } => Ok(to_json_binary(
                 &contract.query_approvals_include_expired_nft(
                     deps,
                     env,
                     token_id,
                     include_expired.unwrap_or(false),
-                    include_invalid.unwrap_or(false),
+                    include_expired_nft.unwrap_or(false),
                 )?,
             )?),
             QueryMsg::NftInfo {
                 token_id,
-                include_expired_nft: include_expired,
+                include_expired_nft,
             } => Ok(to_json_binary(
                 &contract.query_nft_info_include_expired_nft(
                     deps,
                     env,
                     token_id,
-                    include_expired.unwrap_or(false),
+                    include_expired_nft.unwrap_or(false),
+                )?,
+            )?),
+            QueryMsg::GetNftByExtension {
+                token_id,
+                extension,
+                include_expired_nft,
+            } => Ok(to_json_binary(
+                &contract.query_nft_by_extension_include_expired_nft(
+                    deps,
+                    env,
+                    token_id,
+                    extension,
+                    include_expired_nft.unwrap_or(false),
                 )?,
             )?),
             QueryMsg::AllNftInfo {
@@ -114,7 +131,7 @@ where
                 owner,
                 start_after,
                 limit,
-                include_expired_nft: include_invalid,
+                include_expired_nft,
             } => Ok(to_json_binary(
                 &contract.query_tokens_include_expired_nft(
                     deps,
@@ -122,20 +139,20 @@ where
                     owner,
                     start_after,
                     limit,
-                    include_invalid.unwrap_or(false),
+                    include_expired_nft.unwrap_or(false),
                 )?,
             )?),
             QueryMsg::AllTokens {
                 start_after,
                 limit,
-                include_expired_nft: include_invalid,
+                include_expired_nft,
             } => Ok(to_json_binary(
                 &contract.query_all_tokens_include_expired_nft(
                     deps,
                     env,
                     start_after,
                     limit,
-                    include_invalid.unwrap_or(false),
+                    include_expired_nft.unwrap_or(false),
                 )?,
             )?),
             // -------- below is from cw721/src/msg.rs --------
@@ -152,14 +169,14 @@ where
             )?)?),
             QueryMsg::AllOperators {
                 owner,
-                include_expired,
+                include_expired: include_expired_approval,
                 start_after,
                 limit,
             } => Ok(to_json_binary(&contract.base_contract.query_operators(
                 deps,
                 &env,
                 owner,
-                include_expired.unwrap_or(false),
+                include_expired_approval.unwrap_or(false),
                 start_after,
                 limit,
             )?)?),
@@ -197,8 +214,11 @@ where
             QueryMsg::Minter {} => Ok(to_json_binary(
                 &contract.base_contract.query_minter(deps.storage)?,
             )?),
-            QueryMsg::Extension { msg } => Ok(to_json_binary(
-                &contract.base_contract.query_custom(deps, &env, msg)?,
+            QueryMsg::Extension {
+                msg,
+                include_expired_nft,
+            } => Ok(to_json_binary(
+                &contract.base_contract.query_extension(deps, &env, msg)?,
             )?),
             QueryMsg::GetCollectionExtension { msg } => Ok(to_json_binary(
                 &contract
@@ -221,7 +241,21 @@ where
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
-        Ok(self.base_contract.query_nft_info(deps, &env, token_id)?)
+        Ok(self.base_contract.query_nft_info(deps.storage, token_id)?)
+    }
+
+    pub fn query_nft_by_extension_include_expired_nft(
+        &self,
+        deps: Deps,
+        env: Env,
+        token_id: String,
+        extension: TNftExtension,
+        include_expired_nft: bool,
+    ) -> Result<NftInfoResponse<TNftExtension>, ContractError> {
+        if !include_expired_nft {
+            self.assert_nft_expired(deps, &env, token_id.as_str())?;
+        }
+        Ok(self.base_contract.query_nft_info(deps.storage, token_id)?)
     }
 
     pub fn query_owner_of_include_expired_nft(

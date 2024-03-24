@@ -14,7 +14,7 @@ use crate::{
         Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
         MINTER,
     },
-    traits::{Cw721State, FromAttributesState},
+    traits::{Contains, Cw721State, FromAttributesState},
     Attribute,
 };
 
@@ -124,8 +124,7 @@ pub fn query_num_tokens(storage: &dyn Storage) -> StdResult<NumTokensResponse> {
 }
 
 pub fn query_nft_info<TNftExtension>(
-    deps: Deps,
-    _env: &Env,
+    storage: &dyn Storage,
     token_id: String,
 ) -> StdResult<NftInfoResponse<TNftExtension>>
 where
@@ -133,11 +132,47 @@ where
 {
     let info = Cw721Config::<TNftExtension>::default()
         .nft_info
-        .load(deps.storage, &token_id)?;
+        .load(storage, &token_id)?;
     Ok(NftInfoResponse {
         token_uri: info.token_uri,
         extension: info.extension,
     })
+}
+
+pub fn query_nft_by_extension<TNftExtension>(
+    storage: &dyn Storage,
+    extension: TNftExtension,
+) -> StdResult<Option<Vec<NftInfoResponse<TNftExtension>>>>
+where
+    TNftExtension: Cw721State + Contains,
+{
+    let nfts: Vec<Option<NftInfo<TNftExtension>>> = Cw721Config::<TNftExtension>::default()
+        .nft_info
+        .range(storage, None, None, Order::Ascending)
+        .map(|kv| {
+            let nft = kv?.1;
+            let result = if nft.extension.contains(&extension) {
+                Some(nft)
+            } else {
+                None
+            };
+            Ok(result)
+        })
+        .collect::<StdResult<_>>()?;
+    let filtered = nfts
+        .iter()
+        .filter(|n| n.is_some())
+        .map(|n| n.clone().unwrap())
+        .map(|n| NftInfoResponse {
+            token_uri: n.token_uri,
+            extension: n.extension,
+        })
+        .collect::<Vec<NftInfoResponse<TNftExtension>>>();
+    if filtered.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(filtered))
+    }
 }
 
 pub fn query_owner_of(

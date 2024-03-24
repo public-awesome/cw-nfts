@@ -38,6 +38,7 @@ pub fn instantiate(
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
+        Empty,
     >::default();
     contract.instantiate_with_version(deps, &env, &info, msg, "contract_name", "contract_version")
 }
@@ -54,6 +55,7 @@ pub fn execute(
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
+        Empty,
     >::default();
     contract.execute(deps, &env, &info, msg)
 }
@@ -61,13 +63,14 @@ pub fn execute(
 pub fn query(
     deps: Deps,
     env: Env,
-    msg: Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension>,
+    msg: Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
 ) -> Result<Binary, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionalNftExtension,
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default();
     contract.query(deps, &env, msg)
@@ -83,6 +86,7 @@ pub fn migrate(
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
@@ -134,19 +138,19 @@ fn cw721_base_018_contract() -> Box<dyn Contract<Empty>> {
 }
 
 fn query_owner(querier: QuerierWrapper, cw721: &Addr, token_id: String) -> Addr {
-    let resp: OwnerOfResponse =
-        querier
-            .query_wasm_smart(
-                cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::OwnerOf {
-                    token_id,
-                    include_expired: None,
-                },
-            )
-            .unwrap();
+    let resp: OwnerOfResponse = querier
+        .query_wasm_smart(
+            cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::OwnerOf {
+                token_id,
+                include_expired: None,
+            },
+        )
+        .unwrap();
     Addr::unchecked(resp.owner)
 }
 
@@ -161,6 +165,7 @@ fn query_nft_info(
             &Cw721QueryMsg::<
                 DefaultOptionalNftExtension,
                 DefaultOptionalCollectionExtension,
+                Empty,
             >::NftInfo {
                 token_id,
             },
@@ -273,19 +278,20 @@ fn test_operator() {
     )
     .unwrap();
     // check other is new owner
-    let owner_response: OwnerOfResponse =
-        app.wrap()
-            .query_wasm_smart(
-                &cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::OwnerOf {
-                    token_id: "1".to_string(),
-                    include_expired: None,
-                },
-            )
-            .unwrap();
+    let owner_response: OwnerOfResponse = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            },
+        )
+        .unwrap();
     assert_eq!(owner_response.owner, other.to_string());
     // check previous owner cant transfer
     let err: Cw721ContractError = app
@@ -315,19 +321,20 @@ fn test_operator() {
     )
     .unwrap();
     // check owner
-    let owner_response: OwnerOfResponse =
-        app.wrap()
-            .query_wasm_smart(
-                &cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::OwnerOf {
-                    token_id: "1".to_string(),
-                    include_expired: None,
-                },
-            )
-            .unwrap();
+    let owner_response: OwnerOfResponse = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            },
+        )
+        .unwrap();
     assert_eq!(owner_response.owner, nft_owner.to_string());
 
     // other user is still operator and can transfer!
@@ -342,19 +349,20 @@ fn test_operator() {
     )
     .unwrap();
     // check other is new owner
-    let owner_response: OwnerOfResponse =
-        app.wrap()
-            .query_wasm_smart(
-                &cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::OwnerOf {
-                    token_id: "1".to_string(),
-                    include_expired: None,
-                },
-            )
-            .unwrap();
+    let owner_response: OwnerOfResponse = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::OwnerOf {
+                token_id: "1".to_string(),
+                include_expired: None,
+            },
+        )
+        .unwrap();
     assert_eq!(owner_response.owner, other.to_string());
 
     // -- test revoke
@@ -480,60 +488,64 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v15::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v15::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, legacy_creator_and_minter.to_string());
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(
             minter_ownership.owner,
             Some(legacy_creator_and_minter.clone())
         );
 
         // check creator ownership query works
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // v0.15 migration by providing new creator and minter addr
@@ -609,58 +621,62 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v15::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v15::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, minter.to_string());
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
     // v0.16 migration by using existing minter addr
@@ -741,60 +757,64 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v16::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v16::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, legacy_creator_and_minter.to_string());
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(
             minter_ownership.owner,
             Some(legacy_creator_and_minter.clone())
         );
 
         // check creator ownership query works
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // v0.16 migration by providing new creator and minter addr
@@ -870,58 +890,62 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v16::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v16::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, minter.to_string());
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
     // v0.17 migration by using existing minter addr
@@ -1002,60 +1026,64 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v17::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v17::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(
             minter_ownership.owner,
             Some(legacy_creator_and_minter.clone())
         );
 
         // check creator ownership query works
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // v0.17 migration by providing new creator and minter addr
@@ -1131,58 +1159,62 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v17::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v17::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
     // v0.18 migration by using existing minter addr
@@ -1263,60 +1295,64 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v18::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v18::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(
             minter_ownership.owner,
             Some(legacy_creator_and_minter.clone())
         );
 
         // check creator ownership query works
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // v0.18 migration by providing new creator and minter addr
@@ -1392,58 +1428,62 @@ fn test_migration_legacy_to_latest() {
 
         // check new mint query response works.
         #[allow(deprecated)]
-        let m: MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
         #[allow(deprecated)]
-        let m: v18::MinterResponse =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::Minter {},
-                )
-                .unwrap();
+        let m: v18::MinterResponse = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::Minter {},
+            )
+            .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check minter ownership query works
-        let minter_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetMinterOwnership {},
-                )
-                .unwrap();
+        let minter_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetMinterOwnership {},
+            )
+            .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
         let creator = Addr::unchecked(CREATOR_ADDR);
-        let creator_ownership: Ownership<Addr> =
-            app.wrap()
-                .query_wasm_smart(
-                    &cw721,
-                    &Cw721QueryMsg::<
-                        DefaultOptionalNftExtension,
-                        DefaultOptionalCollectionExtension,
-                    >::GetCreatorOwnership {},
-                )
-                .unwrap();
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetCreatorOwnership {},
+            )
+            .unwrap();
         assert_eq!(creator_ownership.owner, Some(creator));
     }
 }
@@ -1474,16 +1514,17 @@ fn test_instantiate_016_msg() {
         .unwrap();
 
     // assert withdraw address is None
-    let withdraw_addr: Option<String> =
-        app.wrap()
-            .query_wasm_smart(
-                cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::GetWithdrawAddress {},
-            )
-            .unwrap();
+    let withdraw_addr: Option<String> = app
+        .wrap()
+        .query_wasm_smart(
+            cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::GetWithdrawAddress {},
+        )
+        .unwrap();
     assert!(withdraw_addr.is_none());
 }
 
@@ -2010,15 +2051,16 @@ fn test_update_nft_metadata() {
     );
     assert_eq!(nft_info.extension, Some(new_nft_metadata));
     // check num tokens
-    let num_tokens: NumTokensResponse =
-        app.wrap()
-            .query_wasm_smart(
-                &cw721,
-                &Cw721QueryMsg::<
-                    DefaultOptionalNftExtension,
-                    DefaultOptionalCollectionExtension,
-                >::NumTokens {},
-            )
-            .unwrap();
+    let num_tokens: NumTokensResponse = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::NumTokens {},
+        )
+        .unwrap();
     assert_eq!(num_tokens.count, 1);
 }

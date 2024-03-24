@@ -23,6 +23,7 @@ pub type Cw721Contract = Cw721Helper<
     DefaultOptionalNftExtensionMsg,
     DefaultOptionalCollectionExtension,
     DefaultOptionalCollectionExtensionMsg,
+    Empty,
 >;
 
 #[cw_serde]
@@ -31,22 +32,37 @@ pub struct Cw721Helper<
     TNftExtensionMsg,
     TCollectionExtension,
     TCollectionExtensionMsg,
+    TExtensionQueryMsg,
 >(
     pub Addr,
     pub PhantomData<TNftExtension>,
     pub PhantomData<TNftExtensionMsg>,
     pub PhantomData<TCollectionExtension>,
     pub PhantomData<TCollectionExtensionMsg>,
+    pub PhantomData<TExtensionQueryMsg>,
 );
 
 #[allow(dead_code)]
-impl<TNftExtension, TNftExtensionMsg, TCollectionExtension, TCollectionExtensionMsg>
-    Cw721Helper<TNftExtension, TNftExtensionMsg, TCollectionExtension, TCollectionExtensionMsg>
+impl<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionQueryMsg,
+    >
+    Cw721Helper<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionQueryMsg,
+    >
 where
     TNftExtensionMsg: Cw721CustomMsg,
     TNftExtension: Cw721State,
     TCollectionExtension: Cw721State,
     TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -68,7 +84,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TNftExtension, TCollectionExtension>,
+        req: Cw721QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),

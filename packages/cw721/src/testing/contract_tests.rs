@@ -38,6 +38,7 @@ fn setup_contract(
     DefaultOptionalCollectionExtension,
     DefaultOptionalCollectionExtensionMsg,
     Empty,
+    Empty,
 > {
     let contract: Cw721Contract<
         'static,
@@ -45,6 +46,7 @@ fn setup_contract(
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     > = Cw721Contract::default();
     let msg = Cw721InstantiateMsg::<DefaultOptionalCollectionExtensionMsg> {
@@ -78,6 +80,7 @@ fn test_instantiate() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default();
 
@@ -148,6 +151,7 @@ fn test_instantiate_with_collection_info_and_extension() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default();
 
@@ -240,6 +244,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
     >::default();
 
@@ -352,12 +357,12 @@ fn test_mint() {
 
     // unknown nft returns error
     let _ = contract
-        .query_nft_info(deps.as_ref(), &env, "unknown".to_string())
+        .query_nft_info(deps.as_ref().storage, "unknown".to_string())
         .unwrap_err();
 
     // this nft info is correct
     let info = contract
-        .query_nft_info(deps.as_ref(), &env, token_id.clone())
+        .query_nft_info(deps.as_ref().storage, token_id.clone())
         .unwrap();
     assert_eq!(
         info,
@@ -495,7 +500,7 @@ fn test_update_nft_info() {
         .unwrap();
     assert_eq!(
         contract
-            .query_nft_info(deps.as_ref(), &env, token_id.clone())
+            .query_nft_info(deps.as_ref().storage, token_id.clone())
             .unwrap(),
         NftInfoResponse {
             token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -514,7 +519,7 @@ fn test_update_nft_info() {
         .unwrap();
     assert_eq!(
         contract
-            .query_nft_info(deps.as_ref(), &env, token_id)
+            .query_nft_info(deps.as_ref().storage, token_id)
             .unwrap(),
         NftInfoResponse {
             token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -1028,7 +1033,7 @@ fn test_burn() {
 
     // trying to get nft returns error
     let _ = contract
-        .query_nft_info(deps.as_ref(), &env, "petrify".to_string())
+        .query_nft_info(deps.as_ref().storage, "petrify".to_string())
         .unwrap_err();
 
     // list the token_ids

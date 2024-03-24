@@ -11,8 +11,7 @@ use url::Url;
 
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
-use crate::msg::CollectionInfoMsg;
-use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
+use crate::traits::{Contains, Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
 use crate::{traits::StateFactory, NftExtensionMsg};
 
 /// Creator owns this contract and can update collection metadata!
@@ -249,6 +248,64 @@ pub struct NftExtension {
 
 impl Cw721State for NftExtension {}
 impl Cw721CustomMsg for NftExtension {}
+
+impl Contains for NftExtension {
+    fn contains(&self, other: &NftExtension) -> bool {
+        fn is_equal(a: &Option<String>, b: &Option<String>) -> bool {
+            match (a, b) {
+                (Some(a), Some(b)) => a.contains(b),
+                (Some(_), None) => true,
+                (None, None) => true,
+                _ => false,
+            }
+        }
+        if !is_equal(&self.image, &other.image) {
+            return false;
+        }
+        if !is_equal(&self.image_data, &other.image_data) {
+            return false;
+        }
+        if !is_equal(&self.external_url, &other.external_url) {
+            return false;
+        }
+        if !is_equal(&self.description, &other.description) {
+            return false;
+        }
+        if !is_equal(&self.name, &other.name) {
+            return false;
+        }
+        if !is_equal(&self.background_color, &other.background_color) {
+            return false;
+        }
+        if !is_equal(&self.animation_url, &other.animation_url) {
+            return false;
+        }
+        if !is_equal(&self.youtube_url, &other.youtube_url) {
+            return false;
+        }
+        if let (Some(a), Some(b)) = (&self.attributes, &other.attributes) {
+            for (i, b) in b.iter().enumerate() {
+                if !a[i].eq(&b) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl<T> Contains for Option<T>
+where
+    T: Contains,
+{
+    fn contains(&self, other: &Option<T>) -> bool {
+        match (self, other) {
+            (Some(a), Some(b)) => a.contains(b),
+            (None, None) => true,
+            _ => false,
+        }
+    }
+}
 
 impl StateFactory<NftExtension> for NftExtensionMsg {
     fn create(

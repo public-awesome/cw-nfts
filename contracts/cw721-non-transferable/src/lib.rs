@@ -24,6 +24,7 @@ pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     DefaultOptionalCollectionExtension,
     DefaultOptionalCollectionExtensionMsg,
     Empty,
+    Empty,
 >;
 
 #[cfg(not(feature = "library"))]

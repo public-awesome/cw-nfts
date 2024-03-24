@@ -145,7 +145,10 @@ pub enum Cw721QueryMsg<
     TNftExtension,
     // Return type of collection metadata extension defined in `GetCollectionInfo`.
     TCollectionExtension,
-> {
+    TExtensionQueryMsg,
+> where
+    TExtensionQueryMsg: Cw721CustomMsg,
+{
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {
@@ -228,6 +231,10 @@ pub enum Cw721QueryMsg<
     /// but directly from the contract
     #[returns(NftInfoResponse<TNftExtension>)]
     NftInfo { token_id: String },
+
+    #[returns(Option<NftInfoResponse<TNftExtension>>)]
+    GetNftByExtension { extension: TNftExtension },
+
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
@@ -254,15 +261,15 @@ pub enum Cw721QueryMsg<
         limit: Option<u32>,
     },
 
-    #[returns(Option<String>)]
-    GetWithdrawAddress {},
-
     /// Custom msg query. Default implementation returns an empty binary.
     #[returns(())]
-    Extension { msg: TNftExtension },
+    Extension { msg: TExtensionQueryMsg },
 
     #[returns(())]
-    CollectionExtension { msg: TCollectionExtension },
+    GetCollectionExtension { msg: TCollectionExtension },
+
+    #[returns(Option<String>)]
+    GetWithdrawAddress {},
 }
 
 #[cw_serde]

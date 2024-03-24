@@ -17,6 +17,7 @@ pub struct Cw721Contract<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    TExtensionQueryMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
@@ -29,6 +30,7 @@ pub struct Cw721Contract<
     pub(crate) _collection_extension: PhantomData<TCollectionExtension>,
     pub(crate) _nft_extension_msg: PhantomData<TNftExtensionMsg>,
     pub(crate) _collection_extension_msg: PhantomData<TCollectionExtensionMsg>,
+    pub(crate) _extension_query_msg: PhantomData<TExtensionQueryMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
 
@@ -37,6 +39,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     > Default
     for Cw721Contract<
@@ -45,6 +48,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionQueryMsg,
         TCustomResponseMsg,
     >
 where
@@ -59,6 +63,7 @@ where
             _collection_extension: PhantomData,
             _nft_extension_msg: PhantomData,
             _collection_extension_msg: PhantomData,
+            _extension_query_msg: PhantomData,
             _custom_response_msg: PhantomData,
         }
     }
