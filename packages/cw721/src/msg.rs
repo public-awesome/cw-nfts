@@ -145,7 +145,7 @@ pub struct Cw721InstantiateMsg<TCollectionExtensionMsg> {
 pub enum Cw721QueryMsg<
     // Return type of NFT metadata defined in `NftInfo` and `AllNftInfo`.
     TNftExtension,
-    // Return type of collection metadata extension defined in `GetCollectionInfo`.
+    // Return type of collection extension defined in `GetCollectionInfo`.
     TCollectionExtension,
     // Custom query msg for custom contract logic. Default implementation returns an empty binary.
     TExtensionQueryMsg,
@@ -471,7 +471,7 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
         {
             return Err(Cw721ContractError::NotMinter {});
         }
-        // all other props collection metadata extension can only be updated by the creator
+        // all other props collection extension can only be updated by the creator
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
         if (self.description.is_some()
             || self.image.is_some()
