@@ -18,6 +18,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -27,6 +28,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -54,6 +56,7 @@ where
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionMsg,
             TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();
@@ -83,13 +86,14 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg, TExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TNftExtension,
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionMsg,
             TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();

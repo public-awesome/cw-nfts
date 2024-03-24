@@ -41,12 +41,14 @@ fn setup_contract(
     DefaultOptionalCollectionExtensionMsg,
     Empty,
     Empty,
+    Empty,
 > {
     let contract = Cw721ExpirationContract::<
         DefaultOptionalNftExtension,
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -73,6 +75,7 @@ fn proper_instantiation() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -143,6 +146,7 @@ fn proper_instantiation_with_collection_info() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();

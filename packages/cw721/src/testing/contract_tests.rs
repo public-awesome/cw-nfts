@@ -39,6 +39,7 @@ fn setup_contract(
     DefaultOptionalCollectionExtensionMsg,
     Empty,
     Empty,
+    Empty,
 > {
     let contract: Cw721Contract<
         'static,
@@ -46,6 +47,7 @@ fn setup_contract(
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     > = Cw721Contract::default();
@@ -80,6 +82,7 @@ fn test_instantiate() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -151,6 +154,7 @@ fn test_instantiate_with_collection_info_and_extension() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -244,6 +248,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -430,6 +435,7 @@ fn test_update_nft_info() {
     let update_msg = Cw721ExecuteMsg::<
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
     >::UpdateNftInfo {
         token_id: "unknown".to_string(),
         token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -444,6 +450,7 @@ fn test_update_nft_info() {
     let update_msg_without_extension = Cw721ExecuteMsg::<
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
     >::UpdateNftInfo {
         token_id: token_id.clone(),
         token_uri: Some("ipfs://to.the.moon".to_string()),
@@ -463,6 +470,7 @@ fn test_update_nft_info() {
     let update_msg_only_extension = Cw721ExecuteMsg::<
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
     >::UpdateNftInfo {
         token_id: token_id.clone(),
         token_uri: None,

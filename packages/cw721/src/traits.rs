@@ -143,6 +143,8 @@ pub trait Cw721Execute<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    // Custom extension msg for custom contract logic. Default implementation is a no-op.
+    TExtensionMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
 > where
@@ -179,7 +181,7 @@ pub trait Cw721Execute<
         deps: DepsMut,
         env: &Env,
         info: &MessageInfo,
-        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg, TExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
@@ -224,7 +226,7 @@ pub trait Cw721Execute<
                 self.update_creator_ownership(deps.api, deps.storage, env, info, action)
             }
             #[allow(deprecated)]
-            Cw721ExecuteMsg::Extension { msg } => self.execute_custom(deps, env, info, msg),
+            Cw721ExecuteMsg::Extension { msg } => self.execute_extension(deps, env, info, msg),
             Cw721ExecuteMsg::UpdateNftInfo {
                 token_id,
                 token_uri,
@@ -405,12 +407,12 @@ pub trait Cw721Execute<
     }
 
     /// Custom msg execution. This is a no-op in default implementation.
-    fn execute_custom(
+    fn execute_extension(
         &self,
         _deps: DepsMut,
         _env: &Env,
         _info: &MessageInfo,
-        _msg: TNftExtensionMsg,
+        _msg: TExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         Ok(Response::default())
     }
@@ -467,6 +469,7 @@ pub trait Cw721Query<
     TNftExtension,
     // CollectionInfo extension (onchain attributes).
     TCollectionExtension,
+    // Custom query msg for custom contract logic. Default implementation returns an empty binary.
     TExtensionQueryMsg,
 > where
     TNftExtension: Cw721State + Contains,

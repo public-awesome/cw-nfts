@@ -167,6 +167,7 @@ pub fn execute_receive(
     let mint_msg = Cw721ExecuteMsg::<
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
     >::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
@@ -182,8 +183,10 @@ pub fn execute_receive(
                 DefaultOptionalCollectionExtension,
                 DefaultOptionalCollectionExtensionMsg,
                 Empty,
+                Empty,
             >(
                 cw721,
+                PhantomData,
                 PhantomData,
                 PhantomData,
                 PhantomData,
@@ -407,6 +410,7 @@ mod tests {
         let mint_msg = Cw721ExecuteMsg::<
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
         >::Mint {
             token_id: String::from("0"),
             owner: String::from("minter"),

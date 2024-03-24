@@ -11,6 +11,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     > Cw721Query<TNftExtension, TCollectionExtension, TExtensionQueryMsg>
@@ -20,6 +21,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >

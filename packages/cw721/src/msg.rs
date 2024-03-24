@@ -27,6 +27,8 @@ pub enum Cw721ExecuteMsg<
     TNftExtensionMsg,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    // Custom extension msg for custom contract logic. Default implementation is a no-op.
+    TExtensionMsg,
 > {
     #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
     /// Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!
@@ -94,7 +96,7 @@ pub enum Cw721ExecuteMsg<
 
     /// Custom msg execution. This is a no-op in default implementation.
     Extension {
-        msg: TNftExtensionMsg,
+        msg: TExtensionMsg,
     },
 
     /// The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`).
@@ -145,6 +147,7 @@ pub enum Cw721QueryMsg<
     TNftExtension,
     // Return type of collection metadata extension defined in `GetCollectionInfo`.
     TCollectionExtension,
+    // Custom query msg for custom contract logic. Default implementation returns an empty binary.
     TExtensionQueryMsg,
 > {
     /// Return the owner of the given token, error if token does not exist

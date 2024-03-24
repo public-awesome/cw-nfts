@@ -13,6 +13,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -22,6 +23,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -44,6 +46,7 @@ where
             TNftExtensionMsg,
             TCollectionExtension,
             TCollectionExtensionMsg,
+            TExtensionMsg,
             TExtensionQueryMsg,
             TCustomResponseMsg,
         >::default();

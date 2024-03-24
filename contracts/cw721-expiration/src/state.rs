@@ -14,6 +14,9 @@ pub struct Cw721ExpirationContract<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    // Custom extension msg for custom contract logic. Default implementation is a no-op.
+    TExtensionMsg,
+    // Custom query msg for custom contract logic. Default implementation returns an empty binary.
     TExtensionQueryMsg,
     TCustomResponseMsg,
 > where
@@ -30,6 +33,7 @@ pub struct Cw721ExpirationContract<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >,
@@ -40,6 +44,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     > Default
@@ -49,6 +54,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >

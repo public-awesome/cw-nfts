@@ -40,6 +40,7 @@ fn test_instantiation() {
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
+        Empty,
     >::default()
     .instantiate_with_version(
         deps.as_mut(),
@@ -67,6 +68,7 @@ fn test_instantiation() {
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
+        Empty,
     >::default()
     .instantiate_with_version(
         deps.as_mut(),
@@ -91,6 +93,7 @@ fn test_instantiation() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default()
@@ -151,6 +154,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -184,6 +188,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -221,6 +226,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -254,6 +260,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -324,6 +331,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -348,6 +356,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -382,6 +391,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -428,6 +438,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -472,6 +483,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .instantiate_with_version(
             deps.as_mut(),
@@ -511,6 +523,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -554,6 +567,7 @@ fn test_instantiation_with_collection_info() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default()
@@ -623,6 +637,7 @@ fn test_collection_info_update() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default();
@@ -715,6 +730,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
@@ -771,6 +787,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default()
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
@@ -819,6 +836,7 @@ fn test_collection_info_update() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default();
@@ -1080,6 +1098,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default();
         contract
             .instantiate_with_version(
@@ -1204,6 +1223,7 @@ fn test_collection_info_update() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default();
         contract
             .instantiate_with_version(
@@ -1282,6 +1302,7 @@ fn test_nft_mint() {
             DefaultOptionalCollectionExtensionMsg,
             Empty,
             Empty,
+            Empty,
         >::default();
 
         let info = mock_info(CREATOR_ADDR, &[]);
@@ -1358,6 +1379,7 @@ fn test_nft_mint() {
             DefaultOptionalNftExtensionMsg,
             DefaultOptionalCollectionExtension,
             DefaultOptionalCollectionExtensionMsg,
+            Empty,
             Empty,
             Empty,
         >::default();
@@ -1524,6 +1546,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
+        Empty,
     >::default();
     contract
         .query_collection_info_and_extension(deps.as_ref())
@@ -1581,6 +1604,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default()

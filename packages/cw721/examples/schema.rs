@@ -29,7 +29,11 @@ fn main() {
     );
     export_schema_with_title(
         &schema_for!(
-            Cw721ExecuteMsg::<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtension>
+            Cw721ExecuteMsg::<
+                DefaultOptionalNftExtensionMsg,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >
         ),
         &out_dir,
         "Cw721ExecuteMsg",

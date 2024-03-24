@@ -24,6 +24,7 @@ pub type Cw721Contract = Cw721Helper<
     DefaultOptionalCollectionExtension,
     DefaultOptionalCollectionExtensionMsg,
     Empty,
+    Empty,
 >;
 
 #[cw_serde]
@@ -32,6 +33,7 @@ pub struct Cw721Helper<
     TNftExtensionMsg,
     TCollectionExtension,
     TCollectionExtensionMsg,
+    TExtensionMsg,
     TExtensionQueryMsg,
 >(
     pub Addr,
@@ -39,6 +41,7 @@ pub struct Cw721Helper<
     pub PhantomData<TNftExtensionMsg>,
     pub PhantomData<TCollectionExtension>,
     pub PhantomData<TCollectionExtensionMsg>,
+    pub PhantomData<TExtensionMsg>,
     pub PhantomData<TExtensionQueryMsg>,
 );
 
@@ -48,6 +51,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
     >
     Cw721Helper<
@@ -55,6 +59,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
     >
 where
@@ -62,6 +67,7 @@ where
     TNftExtension: Cw721State,
     TCollectionExtension: Cw721State,
     TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionMsg: Cw721CustomMsg,
     TExtensionQueryMsg: Cw721CustomMsg,
 {
     pub fn addr(&self) -> Addr {
@@ -70,7 +76,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg>,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg, TExtensionMsg>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {

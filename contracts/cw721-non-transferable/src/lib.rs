@@ -25,6 +25,7 @@ pub type Cw721NonTransferableContract<'a> = Cw721Contract<
     DefaultOptionalCollectionExtensionMsg,
     Empty,
     Empty,
+    Empty,
 >;
 
 #[cfg(not(feature = "library"))]
@@ -87,7 +88,11 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg>,
+        msg: Cw721ExecuteMsg<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;
         match config.admin {

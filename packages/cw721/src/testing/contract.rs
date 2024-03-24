@@ -18,6 +18,9 @@ pub struct Cw721Contract<
     TCollectionExtension,
     // CollectionInfo extension msg for onchain collection attributes.
     TCollectionExtensionMsg,
+    // Custom extension msg for custom contract logic. Default implementation is a no-op.
+    TExtensionMsg,
+    // Custom query msg for custom contract logic. Default implementation returns an empty binary.
     TExtensionQueryMsg,
     // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
     TCustomResponseMsg,
@@ -32,6 +35,7 @@ pub struct Cw721Contract<
     pub(crate) _collection_extension: PhantomData<TCollectionExtension>,
     pub(crate) _nft_extension_msg: PhantomData<TNftExtensionMsg>,
     pub(crate) _collection_extension_msg: PhantomData<TCollectionExtensionMsg>,
+    pub(crate) _extension_msg: PhantomData<TExtensionMsg>,
     pub(crate) _extension_query_msg: PhantomData<TExtensionQueryMsg>,
     pub(crate) _custom_response_msg: PhantomData<TCustomResponseMsg>,
 }
@@ -41,6 +45,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     > Default
@@ -50,6 +55,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -65,6 +71,7 @@ where
             _collection_extension: PhantomData,
             _nft_extension_msg: PhantomData,
             _collection_extension_msg: PhantomData,
+            _extension_msg: PhantomData,
             _extension_query_msg: PhantomData,
             _custom_response_msg: PhantomData,
         }
@@ -77,6 +84,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -85,6 +93,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TCustomResponseMsg,
     >
     for Cw721Contract<
@@ -93,6 +102,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -111,6 +121,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     > Cw721Query<TNftExtension, TCollectionExtension, TExtensionQueryMsg>
@@ -120,6 +131,7 @@ impl<
         TNftExtensionMsg,
         TCollectionExtension,
         TCollectionExtensionMsg,
+        TExtensionMsg,
         TExtensionQueryMsg,
         TCustomResponseMsg,
     >
@@ -128,6 +140,7 @@ where
     TNftExtensionMsg: Cw721CustomMsg,
     TCollectionExtension: Cw721State + FromAttributesState,
     TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionMsg: Cw721CustomMsg,
     TExtensionQueryMsg: Cw721CustomMsg,
     TCustomResponseMsg: CustomMsg,
 {

@@ -39,6 +39,7 @@ pub fn instantiate(
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
+        Empty,
     >::default();
     contract.instantiate_with_version(deps, &env, &info, msg, "contract_name", "contract_version")
 }
@@ -47,13 +48,14 @@ pub fn execute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721ExecuteMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtensionMsg>,
+    msg: Cw721ExecuteMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtensionMsg, Empty>,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionalNftExtension,
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -72,6 +74,7 @@ pub fn query(
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
+        Empty,
     >::default();
     contract.query(deps, &env, msg)
 }
@@ -86,6 +89,7 @@ pub fn migrate(
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
+        Empty,
         Empty,
         Empty,
     >::default();
@@ -177,7 +181,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: token_id.clone(),
             owner: sender.to_string(),
             token_uri: None,
@@ -193,7 +197,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: "burner".to_string(),
             token_id: token_id.clone(),
         },
@@ -207,7 +211,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         Addr::unchecked("burner"),
         cw721,
-        &Cw721ExecuteMsg::<Empty, Empty>::Burn { token_id },
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Burn { token_id },
         &[],
     )
     .unwrap();
@@ -243,7 +247,7 @@ fn test_operator() {
     app.execute_contract(
         minter,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: None,
@@ -258,7 +262,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::ApproveAll {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::ApproveAll {
             operator: other.to_string(),
             expires: Some(Expiration::Never {}),
         },
@@ -270,7 +274,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -298,7 +302,7 @@ fn test_operator() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -313,7 +317,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -341,7 +345,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -370,7 +374,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -382,7 +386,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::RevokeAll {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::RevokeAll {
             operator: other.to_string(),
         },
         &[],
@@ -394,7 +398,7 @@ fn test_operator() {
         .execute_contract(
             other.clone(),
             cw721,
-            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -465,7 +469,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -602,7 +606,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -734,7 +738,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -871,7 +875,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -1003,7 +1007,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -1140,7 +1144,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -1272,7 +1276,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -1409,7 +1413,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: Some("ipfs://new.uri".to_string()),
@@ -1570,22 +1574,22 @@ fn test_update_nft_metadata() {
         animation_url: Some("ssl://animation_url".to_string()),
         youtube_url: Some("file://youtube_url".to_string()),
     };
-    app
-        .execute_contract(
-            minter,
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-            >::Mint {
-                token_id: "1".to_string(),
-                owner: nft_owner.to_string(),
-                token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
-                extension: Some(nft_metadata.clone()),
-            },
-            &[],
-        )
-        .unwrap();
+    app.execute_contract(
+        minter,
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::Mint {
+            token_id: "1".to_string(),
+            owner: nft_owner.to_string(),
+            token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
+            extension: Some(nft_metadata.clone()),
+        },
+        &[],
+    )
+    .unwrap();
 
     // check nft info
     let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
@@ -1603,6 +1607,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1633,6 +1638,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: Some("invalid".to_string()),
@@ -1666,6 +1672,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1699,6 +1706,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1732,6 +1740,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1765,6 +1774,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1798,6 +1808,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1828,6 +1839,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1858,6 +1870,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1888,6 +1901,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1918,6 +1932,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1952,6 +1967,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -1986,6 +2002,7 @@ fn test_update_nft_metadata() {
             &Cw721ExecuteMsg::<
                 DefaultOptionalNftExtensionMsg,
                 DefaultOptionalCollectionExtensionMsg,
+                Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
                 token_uri: None,
@@ -2028,21 +2045,21 @@ fn test_update_nft_metadata() {
         animation_url: Some("ssl://animation_url2".to_string()),
         youtube_url: Some("file://youtube_url2".to_string()),
     };
-    app
-        .execute_contract(
-            creator,
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-            >::UpdateNftInfo {
-                token_id: "1".to_string(),
-                token_uri: Some("ipfs://foo.bar/metadata2.json".to_string()),
-                extension: Some(new_nft_metadata.clone()),
-            },
-            &[],
-        )
-        .unwrap();
+    app.execute_contract(
+        creator,
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::UpdateNftInfo {
+            token_id: "1".to_string(),
+            token_uri: Some("ipfs://foo.bar/metadata2.json".to_string()),
+            extension: Some(new_nft_metadata.clone()),
+        },
+        &[],
+    )
+    .unwrap();
     // check token uri and extension
     let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
     assert_eq!(

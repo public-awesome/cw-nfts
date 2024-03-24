@@ -22,7 +22,11 @@ fn main() {
     );
     export_schema_with_title(
         &schema_for!(
-            ExecuteMsg::<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg>
+            ExecuteMsg::<
+                DefaultOptionalNftExtensionMsg,
+                DefaultOptionalCollectionExtensionMsg,
+                Empty,
+            >
         ),
         &out_dir,
         "ExecuteMsg",
