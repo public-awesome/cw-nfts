@@ -41,20 +41,20 @@
       "additionalProperties": false
     },
     {
-      "description": "The creator is the only one eligible to update `CollectionMetadata`.",
+      "description": "The creator is the only one eligible to update `CollectionInfo`.",
       "type": "object",
       "required": [
-        "update_collection_metadata"
+        "update_collection_info"
       ],
       "properties": {
-        "update_collection_metadata": {
+        "update_collection_info": {
           "type": "object",
           "required": [
-            "collection_metadata"
+            "collection_info"
           ],
           "properties": {
-            "collection_metadata": {
-              "$ref": "#/definitions/CollectionMetadataMsg_for_Nullable_CollectionMetadataExtensionMsg_for_RoyaltyInfoResponse"
+            "collection_info": {
+              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionExtensionMsg_for_RoyaltyInfoResponse"
             }
           },
           "additionalProperties": false
@@ -252,7 +252,7 @@
               "description": "Any custom extension used by this contract",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -303,8 +303,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Metadata msg Deprecated: use UpdateNftMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!",
-      "deprecated": true,
+      "description": "Custom msg execution. This is a no-op in default implementation.",
       "type": "object",
       "required": [
         "extension"
@@ -316,7 +315,7 @@
             "msg": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -345,7 +344,7 @@
             "extension": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -497,7 +496,8 @@
         }
       }
     },
-    "CollectionMetadataExtensionMsg_for_RoyaltyInfoResponse": {
+    "CollectionExtensionMsg_for_RoyaltyInfoResponse": {
+      "description": "NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.",
       "type": "object",
       "properties": {
         "description": {
@@ -547,13 +547,13 @@
       },
       "additionalProperties": false
     },
-    "CollectionMetadataMsg_for_Nullable_CollectionMetadataExtensionMsg_for_RoyaltyInfoResponse": {
+    "CollectionInfoMsg_for_Nullable_CollectionExtensionMsg_for_RoyaltyInfoResponse": {
       "type": "object",
       "properties": {
         "extension": {
           "anyOf": [
             {
-              "$ref": "#/definitions/CollectionMetadataExtensionMsg_for_RoyaltyInfoResponse"
+              "$ref": "#/definitions/CollectionExtensionMsg_for_RoyaltyInfoResponse"
             },
             {
               "type": "null"
@@ -626,7 +626,7 @@
         }
       ]
     },
-    "NftMetadata": {
+    "NftExtension": {
       "type": "object",
       "properties": {
         "animation_url": {

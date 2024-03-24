@@ -41,20 +41,20 @@
       "additionalProperties": false
     },
     {
-      "description": "The creator is the only one eligible to update `CollectionMetadata`.",
+      "description": "The creator is the only one eligible to update `CollectionInfo`.",
       "type": "object",
       "required": [
-        "update_collection_metadata"
+        "update_collection_info"
       ],
       "properties": {
-        "update_collection_metadata": {
+        "update_collection_info": {
           "type": "object",
           "required": [
-            "collection_metadata"
+            "collection_info"
           ],
           "properties": {
-            "collection_metadata": {
-              "$ref": "#/definitions/CollectionMetadataMsg_for_Nullable_CollectionMetadataExtension_for_RoyaltyInfo"
+            "collection_info": {
+              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionExtensionResponse_for_RoyaltyInfo"
             }
           },
           "additionalProperties": false
@@ -252,7 +252,7 @@
               "description": "Any custom extension used by this contract",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -303,8 +303,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Metadata msg Deprecated: use UpdateNftMetadata instead! In previous release it was a no-op for customization in other contracts. Will be removed in next release!",
-      "deprecated": true,
+      "description": "Custom msg execution. This is a no-op in default implementation.",
       "type": "object",
       "required": [
         "extension"
@@ -316,7 +315,7 @@
             "msg": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -345,7 +344,7 @@
             "extension": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftMetadata"
+                  "$ref": "#/definitions/NftExtension"
                 },
                 {
                   "type": "null"
@@ -501,7 +500,7 @@
         }
       }
     },
-    "CollectionMetadataExtension_for_RoyaltyInfo": {
+    "CollectionExtensionResponse_for_RoyaltyInfo": {
       "type": "object",
       "required": [
         "description",
@@ -549,13 +548,13 @@
       },
       "additionalProperties": false
     },
-    "CollectionMetadataMsg_for_Nullable_CollectionMetadataExtension_for_RoyaltyInfo": {
+    "CollectionInfoMsg_for_Nullable_CollectionExtensionResponse_for_RoyaltyInfo": {
       "type": "object",
       "properties": {
         "extension": {
           "anyOf": [
             {
-              "$ref": "#/definitions/CollectionMetadataExtension_for_RoyaltyInfo"
+              "$ref": "#/definitions/CollectionExtensionResponse_for_RoyaltyInfo"
             },
             {
               "type": "null"
@@ -628,7 +627,7 @@
         }
       ]
     },
-    "NftMetadata": {
+    "NftExtension": {
       "type": "object",
       "properties": {
         "animation_url": {

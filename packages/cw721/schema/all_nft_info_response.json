@@ -19,7 +19,7 @@
       "description": "Data on the token itself,",
       "allOf": [
         {
-          "$ref": "#/definitions/NftInfoResponse_for_Nullable_NftMetadata"
+          "$ref": "#/definitions/NftInfoResponse_for_Nullable_NftExtension"
         }
       ]
     }
@@ -103,31 +103,7 @@
         }
       ]
     },
-    "NftInfoResponse_for_Nullable_NftMetadata": {
-      "type": "object",
-      "properties": {
-        "extension": {
-          "description": "You can add any custom metadata here when you extend cw721-base",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/NftMetadata"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "token_uri": {
-          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "NftMetadata": {
+    "NftExtension": {
       "type": "object",
       "properties": {
         "animation_url": {
@@ -182,6 +158,30 @@
           ]
         },
         "youtube_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "NftInfoResponse_for_Nullable_NftExtension": {
+      "type": "object",
+      "properties": {
+        "extension": {
+          "description": "You can add any custom metadata here when you extend cw721-base",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NftExtension"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "token_uri": {
+          "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
           "type": [
             "string",
             "null"
