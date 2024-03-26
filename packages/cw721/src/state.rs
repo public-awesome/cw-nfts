@@ -210,7 +210,7 @@ impl Cw721State for RoyaltyInfo {}
 impl Cw721CustomMsg for RoyaltyInfo {}
 
 impl ToAttributesState for RoyaltyInfo {
-    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+    fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         Ok(vec![Attribute {
             key: ATTRIBUTE_ROYALTY_INFO.to_string(),
             value: to_json_binary(&self.clone()).unwrap(),

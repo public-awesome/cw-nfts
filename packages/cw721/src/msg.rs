@@ -711,7 +711,7 @@ impl<TRoyaltyInfo> ToAttributesState for CollectionExtensionResponse<TRoyaltyInf
 where
     TRoyaltyInfo: Serialize,
 {
-    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+    fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         let attributes = vec![
             Attribute {
                 key: ATTRIBUTE_DESCRIPTION.to_string(),

@@ -102,16 +102,16 @@ impl StateFactory<Empty> for Empty {
 }
 
 pub trait ToAttributesState {
-    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError>;
+    fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError>;
 }
 
 impl<T> ToAttributesState for Option<T>
 where
     T: ToAttributesState,
 {
-    fn to_attributes_states(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+    fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         match self {
-            Some(inner) => inner.to_attributes_states(),
+            Some(inner) => inner.to_attributes_state(),
             None => Ok(vec![]),
         }
     }

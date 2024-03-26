@@ -46,14 +46,14 @@ where
     let config = Cw721Config::<Option<Empty>>::default();
 
     // ---- update collection metadata before(!) creator and minter is set ----
-    let collectin_metadata_msg = CollectionInfoMsg {
+    let collection_metadata_msg = CollectionInfoMsg {
         name: Some(msg.name),
         symbol: Some(msg.symbol),
         extension: msg.collection_info_extension,
     };
     let collection_info =
-        collectin_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
-    let extension_attributes = collection_info.extension.to_attributes_states()?;
+        collection_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
+    let extension_attributes = collection_info.extension.to_attributes_state()?;
     let collection_info = collection_info.into();
     config
         .collection_info
@@ -318,7 +318,7 @@ where
     let config = Cw721Config::<Option<Empty>>::default();
     let current = query_collection_info_and_extension::<TCollectionExtension>(deps.as_ref())?;
     let collection_info = msg.create(deps.as_ref().into(), env, info, Some(&current))?;
-    let extension_attributes = collection_info.extension.to_attributes_states()?;
+    let extension_attributes = collection_info.extension.to_attributes_state()?;
     config
         .collection_info
         .save(deps.storage, &collection_info.into())?;
