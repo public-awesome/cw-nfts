@@ -594,7 +594,7 @@ pub struct CollectionInfoAndExtensionResponse<TCollectionExtension> {
     pub updated_at: Timestamp,
 }
 
-/// This is a wrapper around CollectionInfo that includes the extension.
+/// This is a wrapper around CollectionInfo that includes the extension, contract info, and number of tokens (supply).
 #[cw_serde]
 pub struct AllInfoResponse {
     // contract details

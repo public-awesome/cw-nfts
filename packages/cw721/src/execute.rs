@@ -51,10 +51,10 @@ where
         symbol: Some(msg.symbol),
         extension: msg.collection_info_extension,
     };
-    let collection_info_wrapper =
+    let collection_info =
         collectin_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
-    let extension_attributes = collection_info_wrapper.extension.to_attributes_states()?;
-    let collection_info = collection_info_wrapper.into();
+    let extension_attributes = collection_info.extension.to_attributes_states()?;
+    let collection_info = collection_info.into();
     config
         .collection_info
         .save(deps.storage, &collection_info)?;
@@ -316,14 +316,12 @@ where
     TCustomResponseMsg: CustomMsg,
 {
     let config = Cw721Config::<Option<Empty>>::default();
-    let current_wrapper =
-        query_collection_info_and_extension::<TCollectionExtension>(deps.as_ref())?;
-    let collection_info_wrapper =
-        msg.create(deps.as_ref().into(), env, info, Some(&current_wrapper))?;
-    let extension_attributes = collection_info_wrapper.extension.to_attributes_states()?;
+    let current = query_collection_info_and_extension::<TCollectionExtension>(deps.as_ref())?;
+    let collection_info = msg.create(deps.as_ref().into(), env, info, Some(&current))?;
+    let extension_attributes = collection_info.extension.to_attributes_states()?;
     config
         .collection_info
-        .save(deps.storage, &collection_info_wrapper.into())?;
+        .save(deps.storage, &collection_info.into())?;
     for attr in extension_attributes {
         config
             .collection_extension
