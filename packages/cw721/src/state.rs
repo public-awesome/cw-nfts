@@ -7,10 +7,8 @@ use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
-use url::Url;
 
 use crate::error::Cw721ContractError;
-use crate::execute::{assert_creator, assert_minter};
 use crate::traits::{Contains, Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
 use crate::{traits::StateFactory, NftExtensionMsg};
 
