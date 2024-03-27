@@ -12,7 +12,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
 use cw721::helpers::Cw721Helper;
-use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg};
 use cw721::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
@@ -164,6 +164,7 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
+    let extension: Option<NftExtensionMsg> = config.extension.clone().map(|e| e.into());
     let mint_msg = Cw721ExecuteMsg::<
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtensionMsg,
@@ -172,7 +173,7 @@ pub fn execute_receive(
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
-        extension: config.extension.clone(),
+        extension,
     };
 
     match config.cw721_address.clone() {

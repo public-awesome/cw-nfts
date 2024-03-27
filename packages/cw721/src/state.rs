@@ -247,7 +247,22 @@ pub struct NftExtension {
 }
 
 impl Cw721State for NftExtension {}
-impl Cw721CustomMsg for NftExtension {}
+
+impl From<NftExtensionMsg> for NftExtension {
+    fn from(msg: NftExtensionMsg) -> Self {
+        NftExtension {
+            image: msg.image.flatten(),
+            image_data: msg.image_data.flatten(),
+            external_url: msg.external_url.flatten(),
+            description: msg.description.flatten(),
+            name: msg.name.flatten(),
+            attributes: msg.attributes.flatten(),
+            background_color: msg.background_color.flatten(),
+            animation_url: msg.animation_url.flatten(),
+            youtube_url: msg.youtube_url.flatten(),
+        }
+    }
+}
 
 impl Contains for NftExtension {
     fn contains(&self, other: &NftExtension) -> bool {
@@ -304,122 +319,6 @@ where
             (None, None) => true,
             _ => false,
         }
-    }
-}
-
-impl StateFactory<NftExtension> for NftExtensionMsg {
-    fn create(
-        &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
-        info: Option<&MessageInfo>,
-        current: Option<&NftExtension>,
-    ) -> Result<NftExtension, Cw721ContractError> {
-        self.validate(deps, env, info, current)?;
-        match current {
-            // Some: update existing metadata
-            Some(current) => {
-                let mut updated = current.clone();
-                if let Some(image) = &self.image {
-                    updated.image = Some(image.clone());
-                }
-                if let Some(image_data) = &self.image_data {
-                    updated.image_data = Some(image_data.clone());
-                }
-                if let Some(external_url) = &self.external_url {
-                    updated.external_url = Some(external_url.clone());
-                }
-                if let Some(description) = &self.description {
-                    updated.description = Some(description.clone());
-                }
-                if let Some(name) = &self.name {
-                    updated.name = Some(name.clone());
-                }
-                if let Some(attributes) = &self.attributes {
-                    updated.attributes = Some(attributes.create(deps, env, info, None)?);
-                }
-                if let Some(background_color) = &self.background_color {
-                    updated.background_color = Some(background_color.clone());
-                }
-                if let Some(animation_url) = &self.animation_url {
-                    updated.animation_url = Some(animation_url.clone());
-                }
-                if let Some(youtube_url) = &self.youtube_url {
-                    updated.youtube_url = Some(youtube_url.clone());
-                }
-                Ok(updated)
-            }
-            // None: create new metadata, note: msg is of same type as metadata, so we can clone it
-            None => {
-                let mut new_metadata = self.clone();
-                if let Some(attributes) = &self.attributes {
-                    new_metadata.attributes = Some(attributes.create(deps, env, info, None)?);
-                }
-                Ok(new_metadata)
-            }
-        }
-    }
-
-    fn validate(
-        &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
-        info: Option<&MessageInfo>,
-        current: Option<&NftExtension>,
-    ) -> Result<(), Cw721ContractError> {
-        // assert here is different to NFT Info:
-        // - creator and minter can create NFT metadata
-        // - only creator can update NFT metadata
-        if current.is_none() {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-            let info = info.ok_or(Cw721ContractError::NoInfo)?;
-            // current is none: minter and creator can create new NFT metadata
-            let minter_check = assert_minter(deps.storage, &info.sender);
-            let creator_check = assert_creator(deps.storage, &info.sender);
-            if minter_check.is_err() && creator_check.is_err() {
-                return Err(Cw721ContractError::NotMinterOrCreator {});
-            }
-        } else {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
-            let info = info.ok_or(Cw721ContractError::NoInfo)?;
-            // current is some: only creator can update NFT metadata
-            assert_creator(deps.storage, &info.sender)?;
-        }
-        // check URLs
-        if let Some(image) = &self.image {
-            Url::parse(image)?;
-        }
-        if let Some(url) = &self.external_url {
-            Url::parse(url)?;
-        }
-        if let Some(animation_url) = &self.animation_url {
-            Url::parse(animation_url)?;
-        }
-        if let Some(youtube_url) = &self.youtube_url {
-            Url::parse(youtube_url)?;
-        }
-        // Strings must not be empty
-        if let Some(image_data) = &self.image_data {
-            if image_data.is_empty() {
-                return Err(Cw721ContractError::MetadataImageDataEmpty {});
-            }
-        }
-        if let Some(desc) = &self.description {
-            if desc.is_empty() {
-                return Err(Cw721ContractError::MetadataDescriptionEmpty {});
-            }
-        }
-        if let Some(name) = &self.name {
-            if name.is_empty() {
-                return Err(Cw721ContractError::MetadataNameEmpty {});
-            }
-        }
-        if let Some(background_color) = &self.background_color {
-            if background_color.is_empty() {
-                return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
-            }
-        }
-        Ok(())
     }
 }
 

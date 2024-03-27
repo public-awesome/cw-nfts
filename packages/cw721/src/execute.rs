@@ -355,7 +355,7 @@ where
     let token_msg = NftInfoMsg {
         owner: owner.clone(),
         approvals: vec![],
-        token_uri: token_uri.clone(),
+        token_uri: Some(token_uri.clone()),
         extension,
     };
     let token = token_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
@@ -413,7 +413,7 @@ pub fn update_nft_info<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
     env: Option<&Env>,
     info: Option<&MessageInfo>,
     token_id: String,
-    token_uri: Option<String>,
+    token_uri: Option<Option<String>>,
     msg: TNftExtensionMsg,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where

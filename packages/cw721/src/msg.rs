@@ -13,12 +13,13 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
-    Attribute, CollectionExtensionAttributes, CollectionInfo, NftInfo, ATTRIBUTE_DESCRIPTION,
-    ATTRIBUTE_EXPLICIT_CONTENT, ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE, ATTRIBUTE_ROYALTY_INFO,
-    ATTRIBUTE_START_TRADING_TIME, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
-    MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
+    Attribute, CollectionExtensionAttributes, CollectionInfo, NftInfo, Trait,
+    ATTRIBUTE_DESCRIPTION, ATTRIBUTE_EXPLICIT_CONTENT, ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE,
+    ATTRIBUTE_ROYALTY_INFO, ATTRIBUTE_START_TRADING_TIME, CREATOR,
+    MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
 };
 use crate::traits::{Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
+use crate::NftExtension;
 use crate::{traits::StateFactory, Approval, RoyaltyInfo};
 
 #[cw_serde]
@@ -103,7 +104,7 @@ pub enum Cw721ExecuteMsg<
     /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
     UpdateNftInfo {
         token_id: String,
-        token_uri: Option<String>,
+        token_uri: Option<Option<String>>,
         extension: TNftExtensionMsg,
     },
 
@@ -871,7 +872,7 @@ pub struct NftInfoMsg<TNftExtensionMsg> {
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
     /// Metadata JSON Schema
-    pub token_uri: Option<String>,
+    pub token_uri: Option<Option<String>>,
 
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtensionMsg,
@@ -896,7 +897,7 @@ where
             Some(current) => {
                 let mut updated = current.clone();
                 if let Some(token_uri) = &self.token_uri {
-                    updated.token_uri = Some(token_uri.clone());
+                    updated.token_uri = token_uri.clone();
                 }
                 // update extension
                 // current extension is a nested option in option, so we need to flatten it
@@ -911,7 +912,7 @@ where
                 Ok(NftInfo {
                     owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
                     approvals: vec![],
-                    token_uri: self.token_uri.clone(),
+                    token_uri: self.token_uri.clone().flatten(),
                     extension,
                 })
             }
@@ -935,8 +936,162 @@ where
             assert_creator(deps.storage, &info.sender)?;
         }
         // validate token_uri is a URL
-        if let Some(token_uri) = &self.token_uri {
+        if let Some(token_uri) = &self.token_uri.clone().flatten() {
             Url::parse(token_uri)?;
+        }
+        Ok(())
+    }
+}
+
+#[cw_serde]
+#[derive(Default)]
+pub struct NftExtensionMsg {
+    pub image: Option<Option<String>>,
+    pub image_data: Option<Option<String>>,
+    pub external_url: Option<Option<String>>,
+    pub description: Option<Option<String>>,
+    pub name: Option<Option<String>>,
+    pub attributes: Option<Option<Vec<Trait>>>,
+    pub background_color: Option<Option<String>>,
+    pub animation_url: Option<Option<String>>,
+    pub youtube_url: Option<Option<String>>,
+}
+
+impl Cw721CustomMsg for NftExtensionMsg {}
+
+impl From<NftExtension> for NftExtensionMsg {
+    fn from(extension: NftExtension) -> Self {
+        NftExtensionMsg {
+            image: Some(extension.image),
+            image_data: Some(extension.image_data),
+            external_url: Some(extension.external_url),
+            description: Some(extension.description),
+            name: Some(extension.name),
+            attributes: Some(extension.attributes),
+            background_color: Some(extension.background_color),
+            animation_url: Some(extension.animation_url),
+            youtube_url: Some(extension.youtube_url),
+        }
+    }
+}
+
+impl StateFactory<NftExtension> for NftExtensionMsg {
+    fn create(
+        &self,
+        deps: Option<Deps>,
+        env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&NftExtension>,
+    ) -> Result<NftExtension, Cw721ContractError> {
+        self.validate(deps, env, info, current)?;
+        match current {
+            // Some: update existing metadata
+            Some(current) => {
+                let mut updated = current.clone();
+                if self.image.is_some() {
+                    updated.image = self.image.clone().flatten();
+                }
+                if self.image_data.is_some() {
+                    updated.image_data = self.image_data.clone().flatten();
+                }
+                if self.external_url.is_some() {
+                    updated.external_url = self.external_url.clone().flatten();
+                }
+                if self.description.is_some() {
+                    updated.description = self.description.clone().flatten();
+                }
+                if self.name.is_some() {
+                    updated.name = self.name.clone().flatten();
+                }
+                if self.attributes.is_some() {
+                    updated.attributes = match self.attributes.clone().flatten() {
+                        Some(attributes) => Some(attributes.create(deps, env, info, None)?),
+                        None => None,
+                    };
+                }
+                if self.background_color.is_some() {
+                    updated.background_color = self.background_color.clone().flatten();
+                }
+                if self.animation_url.is_some() {
+                    updated.animation_url = self.animation_url.clone().flatten();
+                }
+                if self.youtube_url.is_some() {
+                    updated.youtube_url = self.youtube_url.clone().flatten();
+                }
+                Ok(updated)
+            }
+            // None: create new metadata, note: msg is of same type as metadata, so we can clone it
+            None => {
+                let mut new_metadata: NftExtension = self.clone().into();
+                if self.attributes.is_some() {
+                    new_metadata.attributes = match self.attributes.clone().flatten() {
+                        Some(attributes) => Some(attributes.create(deps, env, info, None)?),
+                        None => None,
+                    };
+                }
+                Ok(new_metadata)
+            }
+        }
+    }
+
+    fn validate(
+        &self,
+        deps: Option<Deps>,
+        _env: Option<&Env>,
+        info: Option<&MessageInfo>,
+        current: Option<&NftExtension>,
+    ) -> Result<(), Cw721ContractError> {
+        // assert here is different to NFT Info:
+        // - creator and minter can create NFT metadata
+        // - only creator can update NFT metadata
+        if current.is_none() {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
+            // current is none: minter and creator can create new NFT metadata
+            let minter_check = assert_minter(deps.storage, &info.sender);
+            let creator_check = assert_creator(deps.storage, &info.sender);
+            if minter_check.is_err() && creator_check.is_err() {
+                return Err(Cw721ContractError::NotMinterOrCreator {});
+            }
+        } else {
+            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+            let info = info.ok_or(Cw721ContractError::NoInfo)?;
+            // current is some: only creator can update NFT metadata
+            assert_creator(deps.storage, &info.sender)?;
+        }
+        // check URLs
+        if let Some(image) = &self.image.clone().flatten() {
+            Url::parse(image)?;
+        }
+        if let Some(url) = &self.external_url.clone().flatten() {
+            Url::parse(url)?;
+        }
+        if let Some(animation_url) = &self.animation_url.clone().flatten() {
+            Url::parse(animation_url)?;
+        }
+        if let Some(youtube_url) = &self.youtube_url.clone().flatten() {
+            Url::parse(youtube_url)?;
+        }
+        // Strings must not be empty
+        if let Some(image_data) = &self.image_data.clone().flatten() {
+            if image_data.is_empty() {
+                return Err(Cw721ContractError::MetadataImageDataEmpty {});
+            }
+        }
+        if let Some(desc) = &self.description.clone().flatten() {
+            if desc.is_empty() {
+                return Err(Cw721ContractError::MetadataDescriptionEmpty {});
+            }
+        }
+        if let Some(name) = &self.name.clone().flatten() {
+            if name.is_empty() {
+                return Err(Cw721ContractError::MetadataNameEmpty {});
+            }
+        }
+        if let Some(background_color) = &self.background_color.clone().flatten() {
+            if background_color.is_empty() {
+                return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
+            }
         }
         Ok(())
     }

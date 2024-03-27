@@ -425,7 +425,7 @@ pub trait Cw721Execute<
         env: &Env,
         info: &MessageInfo,
         token_id: String,
-        token_uri: Option<String>,
+        token_uri: Option<Option<String>>,
         msg: TNftExtensionMsg,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_nft_info::<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(

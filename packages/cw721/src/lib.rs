@@ -10,7 +10,7 @@ pub mod traits;
 pub use cw_utils::Expiration;
 use msg::{
     CollectionExtensionMsg, CollectionExtensionResponse, CollectionInfoAndExtensionResponse,
-    RoyaltyInfoResponse,
+    NftExtensionMsg, RoyaltyInfoResponse,
 };
 pub use state::{Approval, Attribute, NftExtension, RoyaltyInfo};
 
@@ -23,7 +23,6 @@ pub type DefaultOptionalNftExtension = Option<NftExtension>;
 pub type DefaultOptionalNftExtensionMsg = Option<NftExtensionMsg>;
 
 // explicit type for better distinction.
-pub type NftExtensionMsg = NftExtension;
 #[deprecated(since = "0.19.0", note = "Please use `NftExtension` instead")]
 pub type MetaData = NftExtension;
 #[deprecated(

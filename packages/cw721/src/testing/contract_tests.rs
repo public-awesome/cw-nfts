@@ -8,8 +8,8 @@ use cosmwasm_std::{
 
 use crate::error::Cw721ContractError;
 use crate::msg::{
-    ApprovalResponse, CollectionExtensionMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
-    OwnerOfResponse, RoyaltyInfoResponse,
+    ApprovalResponse, CollectionExtensionMsg, NftExtensionMsg, NftInfoResponse, OperatorResponse,
+    OperatorsResponse, OwnerOfResponse, RoyaltyInfoResponse,
 };
 use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
@@ -438,7 +438,7 @@ fn test_update_nft_info() {
         Empty,
     >::UpdateNftInfo {
         token_id: "unknown".to_string(),
-        token_uri: Some("ipfs://to.the.moon".to_string()),
+        token_uri: Some(Some("ipfs://to.the.moon".to_string())),
         extension: None,
     };
     // throws NotFound error
@@ -453,7 +453,7 @@ fn test_update_nft_info() {
         Empty,
     >::UpdateNftInfo {
         token_id: token_id.clone(),
-        token_uri: Some("ipfs://to.the.moon".to_string()),
+        token_uri: Some(None), // sets token uri to none
         extension: None,
     };
     let err = contract
@@ -474,8 +474,8 @@ fn test_update_nft_info() {
     >::UpdateNftInfo {
         token_id: token_id.clone(),
         token_uri: None,
-        extension: Some(NftExtension {
-            image: Some("ipfs://foo.bar/image.png".to_string()),
+        extension: Some(NftExtensionMsg {
+            image: Some(Some("ipfs://foo.bar/image.png".to_string())),
             image_data: None,
             external_url: None,
             description: None,
@@ -511,7 +511,7 @@ fn test_update_nft_info() {
             .query_nft_info(deps.as_ref().storage, token_id.clone())
             .unwrap(),
         NftInfoResponse {
-            token_uri: Some("ipfs://to.the.moon".to_string()),
+            token_uri: None,
             extension: None,
         }
     );
@@ -530,7 +530,7 @@ fn test_update_nft_info() {
             .query_nft_info(deps.as_ref().storage, token_id)
             .unwrap(),
         NftInfoResponse {
-            token_uri: Some("ipfs://to.the.moon".to_string()),
+            token_uri: None,
             extension: Some(NftExtension {
                 image: Some("ipfs://foo.bar/image.png".to_string()),
                 image_data: None,
@@ -555,25 +555,26 @@ fn test_mint_with_metadata() {
 
         let token_id = "1".to_string();
         let token_uri = "ipfs://foo.bar".to_string();
+        let extension_msg = NftExtensionMsg {
+            image: Some(Some("ipfs://foo.bar/image.png".to_string())),
+            image_data: Some(Some("image data".to_string())),
+            external_url: Some(Some("https://github.com".to_string())),
+            description: Some(Some("description".to_string())),
+            name: Some(Some("name".to_string())),
+            attributes: Some(Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }])),
+            background_color: Some(Some("background_color".to_string())),
+            animation_url: Some(Some("ssl://animation_url".to_string())),
+            youtube_url: Some(Some("file://youtube_url".to_string())),
+        };
         let mint_msg = Cw721ExecuteMsg::Mint {
-            token_id,
+            token_id: token_id.clone(),
             owner: String::from("medusa"),
             token_uri: Some(token_uri),
-            extension: Some(NftExtension {
-                image: Some("ipfs://foo.bar/image.png".to_string()),
-                image_data: Some("image data".to_string()),
-                external_url: Some("https://github.com".to_string()),
-                description: Some("description".to_string()),
-                name: Some("name".to_string()),
-                attributes: Some(vec![Trait {
-                    trait_type: "trait_type".to_string(),
-                    value: "value".to_string(),
-                    display_type: Some("display_type".to_string()),
-                }]),
-                background_color: Some("background_color".to_string()),
-                animation_url: Some("ssl://animation_url".to_string()),
-                youtube_url: Some("file://youtube_url".to_string()),
-            }),
+            extension: Some(extension_msg.clone()),
         };
 
         let info_minter = mock_info(MINTER_ADDR, &[]);
@@ -581,6 +582,59 @@ fn test_mint_with_metadata() {
         contract
             .execute(deps.as_mut(), &env, &info_minter, mint_msg)
             .unwrap();
+        assert_eq!(
+            contract
+                .query_nft_info(deps.as_ref().storage, token_id)
+                .unwrap(),
+            NftInfoResponse {
+                token_uri: Some("ipfs://foo.bar".to_string()),
+                extension: Some(extension_msg.into()),
+            }
+        );
+
+        // mint with empty token uri and empty extension
+        let mint_msg = Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::Mint {
+            token_id: "2".to_string(),
+            owner: String::from("medusa"),
+            token_uri: None,
+            extension: Some(NftExtensionMsg {
+                image: None,
+                image_data: None,
+                external_url: None,
+                description: None,
+                name: None,
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
+        };
+        contract
+            .execute(deps.as_mut(), &env, &info_minter, mint_msg)
+            .unwrap();
+        assert_eq!(
+            contract
+                .query_nft_info(deps.as_ref().storage, "2".to_string())
+                .unwrap(),
+            NftInfoResponse {
+                token_uri: None,
+                extension: Some(NftExtension {
+                    image: None,
+                    image_data: None,
+                    external_url: None,
+                    description: None,
+                    name: None,
+                    attributes: None,
+                    background_color: None,
+                    animation_url: None,
+                    youtube_url: None,
+                }),
+            }
+        );
     }
     // case 2: mint with invalid metadata
     {
@@ -592,25 +646,25 @@ fn test_mint_with_metadata() {
         let info_minter = mock_info(MINTER_ADDR, &[]);
         let env = mock_env();
 
-        let valid_metadata = NftExtension {
-            image: Some("ipfs://foo.bar/image.png".to_string()),
-            image_data: Some("image data".to_string()),
-            external_url: Some("https://github.com".to_string()),
-            description: Some("description".to_string()),
-            name: Some("name".to_string()),
-            attributes: Some(vec![Trait {
+        let valid_metadata_msg = NftExtensionMsg {
+            image: Some(Some("ipfs://foo.bar/image.png".to_string())),
+            image_data: Some(Some("image data".to_string())),
+            external_url: Some(Some("https://github.com".to_string())),
+            description: Some(Some("description".to_string())),
+            name: Some(Some("name".to_string())),
+            attributes: Some(Some(vec![Trait {
                 trait_type: "trait_type".to_string(),
                 value: "value".to_string(),
                 display_type: Some("display_type".to_string()),
-            }]),
-            background_color: Some("background_color".to_string()),
-            animation_url: Some("ssl://animation_url".to_string()),
-            youtube_url: Some("file://youtube_url".to_string()),
+            }])),
+            background_color: Some(Some("background_color".to_string())),
+            animation_url: Some(Some("ssl://animation_url".to_string())),
+            youtube_url: Some(Some("file://youtube_url".to_string())),
         };
 
         // invalid image
-        let mut metadata = valid_metadata.clone();
-        metadata.image = Some("invalid".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.image = Some(Some("invalid".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -625,8 +679,8 @@ fn test_mint_with_metadata() {
             Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
         );
         // invalid external url
-        let mut metadata = valid_metadata.clone();
-        metadata.external_url = Some("invalid".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.external_url = Some(Some("invalid".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -641,8 +695,8 @@ fn test_mint_with_metadata() {
             Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
         );
         // invalid animation url
-        let mut metadata = valid_metadata.clone();
-        metadata.animation_url = Some("invalid".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.animation_url = Some(Some("invalid".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -657,8 +711,8 @@ fn test_mint_with_metadata() {
             Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
         );
         // invalid youtube url
-        let mut metadata = valid_metadata.clone();
-        metadata.youtube_url = Some("invalid".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.youtube_url = Some(Some("invalid".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -674,8 +728,8 @@ fn test_mint_with_metadata() {
         );
 
         // empty image data
-        let mut metadata = valid_metadata.clone();
-        metadata.image_data = Some("".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.image_data = Some(Some("".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -687,8 +741,8 @@ fn test_mint_with_metadata() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataImageDataEmpty {});
         // empty description
-        let mut metadata = valid_metadata.clone();
-        metadata.description = Some("".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.description = Some(Some("".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -700,8 +754,8 @@ fn test_mint_with_metadata() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataDescriptionEmpty {});
         // empty name
-        let mut metadata = valid_metadata.clone();
-        metadata.name = Some("".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.name = Some(Some("".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -713,8 +767,8 @@ fn test_mint_with_metadata() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::MetadataNameEmpty {});
         // empty background color
-        let mut metadata = valid_metadata.clone();
-        metadata.background_color = Some("".to_string());
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.background_color = Some(Some("".to_string()));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -727,12 +781,12 @@ fn test_mint_with_metadata() {
         assert_eq!(err, Cw721ContractError::MetadataBackgroundColorEmpty {});
 
         // trait type empty
-        let mut metadata = valid_metadata.clone();
-        metadata.attributes = Some(vec![Trait {
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.attributes = Some(Some(vec![Trait {
             trait_type: "".to_string(),
             value: "value".to_string(),
             display_type: Some("display_type".to_string()),
-        }]);
+        }]));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -744,12 +798,12 @@ fn test_mint_with_metadata() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitTypeEmpty {});
         // trait value empty
-        let mut metadata = valid_metadata.clone();
-        metadata.attributes = Some(vec![Trait {
+        let mut metadata = valid_metadata_msg.clone();
+        metadata.attributes = Some(Some(vec![Trait {
             trait_type: "trait_type".to_string(),
             value: "".to_string(),
             display_type: Some("display_type".to_string()),
-        }]);
+        }]));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
             owner: String::from("medusa"),
@@ -761,12 +815,12 @@ fn test_mint_with_metadata() {
             .unwrap_err();
         assert_eq!(err, Cw721ContractError::TraitValueEmpty {});
         // display type empty
-        let mut metadata = valid_metadata;
-        metadata.attributes = Some(vec![Trait {
+        let mut metadata = valid_metadata_msg;
+        metadata.attributes = Some(Some(vec![Trait {
             trait_type: "trait_type".to_string(),
             value: "value".to_string(),
             display_type: Some("".to_string()),
-        }]);
+        }]));
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id,
             owner: String::from("medusa"),

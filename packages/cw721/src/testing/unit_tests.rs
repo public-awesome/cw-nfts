@@ -2,7 +2,7 @@ use crate::{
     error::Cw721ContractError,
     msg::{
         CollectionExtensionMsg, CollectionInfoAndExtensionResponse, CollectionInfoMsg,
-        Cw721ExecuteMsg, Cw721InstantiateMsg, RoyaltyInfoResponse,
+        Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg, RoyaltyInfoResponse,
     },
     query::MAX_LIMIT,
     state::{
@@ -1328,12 +1328,11 @@ fn test_nft_mint() {
 
         let token_id = "Enterprise";
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension = None;
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: token_uri.clone(),
-            extension: extension.clone(),
+            extension: None,
         };
         contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
@@ -1343,13 +1342,13 @@ fn test_nft_mint() {
             .query_nft_info(deps.as_ref().storage, token_id.into())
             .unwrap();
         assert_eq!(res.token_uri, token_uri);
-        assert_eq!(res.extension, extension);
+        assert_eq!(res.extension, None);
         // mint with empty token_uri
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: "".to_string().into(), // empty token_uri
-            extension,
+            extension: None,
         };
         let err = contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
@@ -1407,21 +1406,21 @@ fn test_nft_mint() {
 
         let nft_1 = "1";
         let uri_1 = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension_1 = Some(NftExtension {
-            description: Some("description1".into()),
-            name: Some("name1".to_string()),
-            attributes: Some(vec![Trait {
+        let extension_1_msg = Some(NftExtensionMsg {
+            description: Some(Some("description1".into())),
+            name: Some(Some("name1".to_string())),
+            attributes: Some(Some(vec![Trait {
                 display_type: None,
                 trait_type: "type1".to_string(),
                 value: "value1".to_string(),
-            }]),
-            ..NftExtension::default()
+            }])),
+            ..NftExtensionMsg::default()
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: nft_1.to_string(),
             owner: "john".to_string(),
             token_uri: uri_1.clone(),
-            extension: extension_1.clone(),
+            extension: extension_1_msg.clone(),
         };
         contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
@@ -1431,26 +1430,38 @@ fn test_nft_mint() {
             .query_nft_info(deps.as_ref().storage, nft_1.into())
             .unwrap();
         assert_eq!(nft_info_1.token_uri, uri_1);
-        assert_eq!(nft_info_1.extension, extension_1);
+        assert_eq!(
+            nft_info_1.extension,
+            Some(NftExtension {
+                description: Some("description1".into()),
+                name: Some("name1".to_string()),
+                attributes: Some(vec![Trait {
+                    display_type: None,
+                    trait_type: "type1".to_string(),
+                    value: "value1".to_string(),
+                }]),
+                ..NftExtension::default()
+            })
+        );
 
         // mint another
         let nft_2 = "2";
         let uri_2 = Some("ipfs://foo.bar".into());
-        let extension_1 = Some(NftExtension {
-            description: Some("other_description".into()), // only description is different compared to nft 1
-            name: Some("name1".to_string()),
-            attributes: Some(vec![Trait {
+        let extension_2_msg = Some(NftExtensionMsg {
+            description: Some(Some("other_description".into())),
+            name: Some(Some("name1".to_string())),
+            attributes: Some(Some(vec![Trait {
                 display_type: None,
                 trait_type: "type1".to_string(),
                 value: "value1".to_string(),
-            }]),
-            ..NftExtension::default()
+            }])),
+            ..NftExtensionMsg::default()
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: nft_2.to_string(),
             owner: "allen".to_string(),
             token_uri: uri_2.clone(),
-            extension: extension_1.clone(),
+            extension: extension_2_msg.clone(),
         };
         contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
@@ -1460,7 +1471,19 @@ fn test_nft_mint() {
             .query_nft_info(deps.as_ref().storage, nft_2.into())
             .unwrap();
         assert_eq!(nft_info_2.token_uri, uri_2);
-        assert_eq!(nft_info_2.extension, extension_1);
+        assert_eq!(
+            nft_info_2.extension,
+            Some(NftExtension {
+                description: Some("other_description".into()),
+                name: Some("name1".to_string()),
+                attributes: Some(vec![Trait {
+                    display_type: None,
+                    trait_type: "type1".to_string(),
+                    value: "value1".to_string(),
+                }]),
+                ..NftExtension::default()
+            })
+        );
 
         // query for token 2 with different description
         let res = contract

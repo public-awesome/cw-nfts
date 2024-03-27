@@ -48,7 +48,11 @@ pub fn execute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721ExecuteMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtensionMsg, Empty>,
+    msg: Cw721ExecuteMsg<
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtensionMsg,
+        Empty,
+    >,
 ) -> Result<Response, Cw721ContractError> {
     let contract = Cw721Contract::<
         DefaultOptionalNftExtension,
@@ -1559,20 +1563,20 @@ fn test_update_nft_metadata() {
     // mint
     let minter = Addr::unchecked(MINTER_ADDR);
     let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
-    let nft_metadata = NftExtension {
-        image: Some("ipfs://foo.bar/image.png".to_string()),
-        image_data: Some("image data".to_string()),
-        external_url: Some("https://github.com".to_string()),
-        description: Some("description".to_string()),
-        name: Some("name".to_string()),
-        attributes: Some(vec![Trait {
+    let nft_metadata_msg = NftExtensionMsg {
+        image: Some(Some("ipfs://foo.bar/image.png".to_string())),
+        image_data: Some(Some("image data".to_string())),
+        external_url: Some(Some("https://github.com".to_string())),
+        description: Some(Some("description".to_string())),
+        name: Some(Some("name".to_string())),
+        attributes: Some(Some(vec![Trait {
             trait_type: "trait_type".to_string(),
             value: "value".to_string(),
             display_type: Some("display_type".to_string()),
-        }]),
-        background_color: Some("background_color".to_string()),
-        animation_url: Some("ssl://animation_url".to_string()),
-        youtube_url: Some("file://youtube_url".to_string()),
+        }])),
+        background_color: Some(Some("background_color".to_string())),
+        animation_url: Some(Some("ssl://animation_url".to_string())),
+        youtube_url: Some(Some("file://youtube_url".to_string())),
     };
     app.execute_contract(
         minter,
@@ -1585,7 +1589,7 @@ fn test_update_nft_metadata() {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
-            extension: Some(nft_metadata.clone()),
+            extension: Some(nft_metadata_msg.clone()),
         },
         &[],
     )
@@ -1597,7 +1601,24 @@ fn test_update_nft_metadata() {
         nft_info.token_uri,
         Some("ipfs://foo.bar/metadata.json".to_string())
     );
-    assert_eq!(nft_info.extension, Some(nft_metadata));
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: Some("image data".to_string()),
+            external_url: Some("https://github.com".to_string()),
+            description: Some("description".to_string()),
+            name: Some("name".to_string()),
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: Some("background_color".to_string()),
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
 
     // nft owner cant update - only creator is allowed
     let err: Cw721ContractError = app
@@ -1612,8 +1633,8 @@ fn test_update_nft_metadata() {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftExtensionMsg {
-                    name: Some("new name".to_string()),
-                    description: Some("new description".to_string()),
+                    name: Some(Some("new name".to_string())),
+                    description: Some(Some("new description".to_string())),
                     image: None,
                     image_data: None,
                     external_url: None,
@@ -1641,7 +1662,7 @@ fn test_update_nft_metadata() {
                 Empty,
             >::UpdateNftInfo {
                 token_id: "1".to_string(),
-                token_uri: Some("invalid".to_string()),
+                token_uri: Some(Some("invalid".to_string())),
                 extension: Some(NftExtensionMsg {
                     name: None,
                     description: None,
@@ -1679,7 +1700,7 @@ fn test_update_nft_metadata() {
                 extension: Some(NftExtensionMsg {
                     name: None,
                     description: None,
-                    image: Some("invalid".to_string()),
+                    image: Some(Some("invalid".to_string())),
                     image_data: None,
                     external_url: None,
                     attributes: None,
@@ -1715,7 +1736,7 @@ fn test_update_nft_metadata() {
                     description: None,
                     image: None,
                     image_data: None,
-                    external_url: Some("invalid".to_string()),
+                    external_url: Some(Some("invalid".to_string())),
                     attributes: None,
                     background_color: None,
                     animation_url: None,
@@ -1752,7 +1773,7 @@ fn test_update_nft_metadata() {
                     external_url: None,
                     attributes: None,
                     background_color: None,
-                    animation_url: Some("invalid".to_string()),
+                    animation_url: Some(Some("invalid".to_string())),
                     youtube_url: None,
                 }),
             },
@@ -1787,7 +1808,7 @@ fn test_update_nft_metadata() {
                     attributes: None,
                     background_color: None,
                     animation_url: None,
-                    youtube_url: Some("invalid".to_string()),
+                    youtube_url: Some(Some("invalid".to_string())),
                 }),
             },
             &[],
@@ -1816,7 +1837,7 @@ fn test_update_nft_metadata() {
                     name: None,
                     description: None,
                     image: None,
-                    image_data: Some("".to_string()),
+                    image_data: Some(Some("".to_string())),
                     external_url: None,
                     attributes: None,
                     background_color: None,
@@ -1845,7 +1866,7 @@ fn test_update_nft_metadata() {
                 token_uri: None,
                 extension: Some(NftExtensionMsg {
                     name: None,
-                    description: Some("".to_string()),
+                    description: Some(Some("".to_string())),
                     image: None,
                     image_data: None,
                     external_url: None,
@@ -1875,7 +1896,7 @@ fn test_update_nft_metadata() {
                 token_id: "1".to_string(),
                 token_uri: None,
                 extension: Some(NftExtensionMsg {
-                    name: Some("".to_string()),
+                    name: Some(Some("".to_string())),
                     description: None,
                     image: None,
                     image_data: None,
@@ -1912,7 +1933,7 @@ fn test_update_nft_metadata() {
                     image_data: None,
                     external_url: None,
                     attributes: None,
-                    background_color: Some("".to_string()),
+                    background_color: Some(Some("".to_string())),
                     animation_url: None,
                     youtube_url: None,
                 }),
@@ -1942,11 +1963,11 @@ fn test_update_nft_metadata() {
                     image: None,
                     image_data: None,
                     external_url: None,
-                    attributes: Some(vec![Trait {
+                    attributes: Some(Some(vec![Trait {
                         trait_type: "".to_string(),
                         value: "value".to_string(),
                         display_type: Some("display_type".to_string()),
-                    }]),
+                    }])),
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
@@ -1977,11 +1998,11 @@ fn test_update_nft_metadata() {
                     image: None,
                     image_data: None,
                     external_url: None,
-                    attributes: Some(vec![Trait {
+                    attributes: Some(Some(vec![Trait {
                         trait_type: "trait_type".to_string(),
                         value: "".to_string(),
                         display_type: Some("display_type".to_string()),
-                    }]),
+                    }])),
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
@@ -2012,11 +2033,11 @@ fn test_update_nft_metadata() {
                     image: None,
                     image_data: None,
                     external_url: None,
-                    attributes: Some(vec![Trait {
+                    attributes: Some(Some(vec![Trait {
                         trait_type: "trait_type".to_string(),
                         value: "value".to_string(),
                         display_type: Some("".to_string()),
-                    }]),
+                    }])),
                     background_color: None,
                     animation_url: None,
                     youtube_url: None,
@@ -2030,20 +2051,20 @@ fn test_update_nft_metadata() {
     assert_eq!(err, Cw721ContractError::TraitDisplayTypeEmpty {});
 
     // proper update
-    let new_nft_metadata = NftExtension {
-        image: Some("ipfs://foo.bar/image2.png".to_string()),
-        image_data: Some("image data2".to_string()),
-        external_url: Some("https://github.com2".to_string()),
-        description: Some("description2".to_string()),
-        name: Some("name2".to_string()),
-        attributes: Some(vec![Trait {
+    let new_nft_metadata_msg = NftExtensionMsg {
+        image: Some(None), // set image to none
+        image_data: Some(Some("image data2".to_string())),
+        external_url: Some(Some("https://github.com2".to_string())),
+        description: Some(Some("description2".to_string())),
+        name: Some(Some("name2".to_string())),
+        attributes: Some(Some(vec![Trait {
             trait_type: "trait_type2".to_string(),
             value: "value2".to_string(),
             display_type: Some("display_type2".to_string()),
-        }]),
-        background_color: Some("background_color2".to_string()),
-        animation_url: Some("ssl://animation_url2".to_string()),
-        youtube_url: Some("file://youtube_url2".to_string()),
+        }])),
+        background_color: Some(Some("background_color2".to_string())),
+        animation_url: Some(Some("ssl://animation_url2".to_string())),
+        youtube_url: Some(Some("file://youtube_url2".to_string())),
     };
     app.execute_contract(
         creator,
@@ -2054,8 +2075,8 @@ fn test_update_nft_metadata() {
             Empty,
         >::UpdateNftInfo {
             token_id: "1".to_string(),
-            token_uri: Some("ipfs://foo.bar/metadata2.json".to_string()),
-            extension: Some(new_nft_metadata.clone()),
+            token_uri: Some(Some("ipfs://foo.bar/metadata2.json".to_string())),
+            extension: Some(new_nft_metadata_msg.clone()),
         },
         &[],
     )
@@ -2066,7 +2087,24 @@ fn test_update_nft_metadata() {
         nft_info.token_uri,
         Some("ipfs://foo.bar/metadata2.json".to_string())
     );
-    assert_eq!(nft_info.extension, Some(new_nft_metadata));
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()), // this is unchanged
+            image_data: Some("image data2".to_string()),
+            external_url: Some("https://github.com2".to_string()),
+            description: Some("description2".to_string()),
+            name: Some("name2".to_string()),
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type2".to_string(),
+                value: "value2".to_string(),
+                display_type: Some("display_type2".to_string()),
+            }]),
+            background_color: Some("background_color2".to_string()),
+            animation_url: Some("ssl://animation_url2".to_string()),
+            youtube_url: Some("file://youtube_url2".to_string()),
+        })
+    );
     // check num tokens
     let num_tokens: NumTokensResponse = app
         .wrap()
