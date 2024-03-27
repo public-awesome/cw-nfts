@@ -252,7 +252,7 @@
               "description": "Any custom extension used by this contract",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftExtension"
+                  "$ref": "#/definitions/NftExtensionMsg"
                 },
                 {
                   "type": "null"
@@ -340,7 +340,7 @@
             "extension": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftExtension"
+                  "$ref": "#/definitions/NftExtensionMsg"
                 },
                 {
                   "type": "null"
@@ -627,7 +627,7 @@
         }
       ]
     },
-    "NftExtension": {
+    "NftExtensionMsg": {
       "type": "object",
       "properties": {
         "animation_url": {
