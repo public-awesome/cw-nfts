@@ -84,11 +84,11 @@ mod tests {
     #[test]
     fn proper_cw2_initialization() {
         let mut deps = mock_dependencies();
-
+        let larry = deps.api.addr_make("larry");
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("larry", &[]),
+            mock_info(&larry.to_string(), &[]),
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),
@@ -108,7 +108,7 @@ mod tests {
         let mut deps = mock_dependencies();
         let contract = Cw721MetadataContract::default();
 
-        let info = mock_info(CREATOR, &[]);
+        let info = mock_info(deps.api.addr_make(CREATOR).as_ref(), &[]);
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
@@ -128,7 +128,7 @@ mod tests {
         });
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "john".to_string(),
+            owner: deps.api.addr_make( "john").to_string(),
             token_uri: token_uri.clone(),
             extension: extension.clone(),
         };

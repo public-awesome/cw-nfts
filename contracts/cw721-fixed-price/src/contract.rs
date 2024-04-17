@@ -6,7 +6,7 @@ use crate::state::{Config, CONFIG};
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, ReplyOn, Response,
+    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, Reply, Response,
     StdResult, SubMsg, Uint128, WasmMsg,
 };
 use cw2::set_contract_version;
@@ -15,7 +15,7 @@ use cw721_base::{
     helpers::Cw721Contract, msg::ExecuteMsg as Cw721ExecuteMsg,
     msg::InstantiateMsg as Cw721InstantiateMsg,
 };
-use cw_utils::parse_reply_instantiate_data;
+use cw_utils::{parse_instantiate_response_data, ParseReplyError};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw721-fixed-price";
@@ -55,24 +55,18 @@ pub fn instantiate(
 
     CONFIG.save(deps.storage, &config)?;
 
-    let sub_msg: Vec<SubMsg> = vec![SubMsg {
-        msg: WasmMsg::Instantiate {
-            code_id: msg.token_code_id,
-            msg: to_json_binary(&Cw721InstantiateMsg {
-                name: msg.name.clone(),
-                symbol: msg.symbol,
-                minter: None,
-                withdraw_address: msg.withdraw_address,
-            })?,
-            funds: vec![],
-            admin: None,
-            label: String::from("Instantiate fixed price NFT contract"),
-        }
-        .into(),
-        id: INSTANTIATE_TOKEN_REPLY_ID,
-        gas_limit: None,
-        reply_on: ReplyOn::Success,
-    }];
+    let sub_msg: Vec<SubMsg> = vec![SubMsg::reply_on_success(WasmMsg::Instantiate {
+        code_id: msg.token_code_id,
+        msg: to_json_binary(&Cw721InstantiateMsg {
+            name: msg.name.clone(),
+            symbol: msg.symbol,
+            minter: None,
+            withdraw_address: msg.withdraw_address,
+        })?,
+        funds: vec![],
+        admin: None,
+        label: String::from("Instantiate fixed price NFT contract"),
+    }, INSTANTIATE_TOKEN_REPLY_ID)];
 
     Ok(Response::new().add_submessages(sub_msg))
 }
@@ -90,7 +84,12 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidTokenReplyId {});
     }
 
-    let reply = parse_reply_instantiate_data(msg).unwrap();
+    let msg_result = msg.result.into_result()
+        .map_err(ParseReplyError::SubMsgFailure)?
+        .data.ok_or_else(|| ParseReplyError::ParseFailure("missing reply data".to_owned()))?;
+
+    let reply = parse_instantiate_response_data(msg_result.as_slice())?;
+    // let reply = parse_reply_instantiate_data(msg).unwrap();
     config.cw721_address = Addr::unchecked(reply.contract_address).into();
     CONFIG.save(deps.storage, &config)?;
 
@@ -184,7 +183,7 @@ pub fn execute_receive(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
+    use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult, ReplyOn};
     use cw721_base::Extension;
     use prost::Message;
 
@@ -222,8 +221,7 @@ mod tests {
 
         assert_eq!(
             res.messages,
-            vec![SubMsg {
-                msg: WasmMsg::Instantiate {
+            vec![SubMsg::reply_on_success( WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
                     msg: to_json_binary(&Cw721InstantiateMsg {
                         name: msg.name.clone(),
@@ -235,12 +233,8 @@ mod tests {
                     funds: vec![],
                     admin: None,
                     label: String::from("Instantiate fixed price NFT contract"),
-                }
-                .into(),
-                id: INSTANTIATE_TOKEN_REPLY_ID,
-                gas_limit: None,
-                reply_on: ReplyOn::Success,
-            }]
+                }, INSTANTIATE_TOKEN_REPLY_ID)
+               ]
         );
 
         let instantiate_reply = MsgInstantiateContractResponse {
@@ -255,9 +249,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
@@ -362,9 +359,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
@@ -396,6 +396,7 @@ mod tests {
                 id: 0,
                 gas_limit: None,
                 reply_on: ReplyOn::Never,
+                payload: Default::default(),
             }
         );
     }
@@ -430,9 +431,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: 10,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         let err = reply(deps.as_mut(), mock_env(), reply_msg).unwrap_err();
@@ -472,9 +476,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: 1,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg.clone()).unwrap();
@@ -516,9 +523,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
@@ -609,9 +619,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();
@@ -664,9 +677,12 @@ mod tests {
 
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
+            payload: Default::default(),
+            gas_used: 0,
             result: SubMsgResult::Ok(SubMsgResponse {
                 events: vec![],
                 data: Some(encoded_instantiate_reply.into()),
+                msg_responses: vec![],
             }),
         };
         reply(deps.as_mut(), mock_env(), reply_msg).unwrap();

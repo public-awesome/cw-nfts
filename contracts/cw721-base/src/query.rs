@@ -128,7 +128,7 @@ where
         let token = self.tokens.load(deps.storage, &token_id)?;
 
         // token owner has absolute approval
-        if token.owner == spender {
+        if token.owner.to_string() == spender {
             let approval = cw721::Approval {
                 spender: token.owner.to_string(),
                 expires: Expiration::Never {},
@@ -139,7 +139,7 @@ where
         let filtered: Vec<_> = token
             .approvals
             .into_iter()
-            .filter(|t| t.spender == spender)
+            .filter(|t| t.spender.to_string() == spender)
             .filter(|t| include_expired || !t.is_expired(&env.block))
             .map(|a| cw721::Approval {
                 spender: a.spender.into_string(),

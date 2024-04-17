@@ -86,7 +86,8 @@ pub mod entry {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         // perform the upgrade
-        upgrades::v0_17::migrate::<Extension, Empty, Empty, Empty>(deps)
+       // upgrades::v0_17::migrate::<Extension, Empty, Empty, Empty>(deps)
+        Ok(Response::new())
     }
 }
 
@@ -101,15 +102,16 @@ mod tests {
     #[test]
     fn proper_cw2_initialization() {
         let mut deps = mock_dependencies();
-
+        let larry = deps.api.addr_make("larry");
+        let other = deps.api.addr_make("other");
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("larry", &[]),
+            mock_info(larry.as_ref(), &[]),
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),
-                minter: Some("other".into()),
+                minter: Some(other.to_string()),
                 withdraw_address: None,
             },
         )
@@ -119,7 +121,7 @@ mod tests {
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(minter, Some("other".to_string()));
+        assert_eq!(minter, Some(other.to_string()));
 
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(
@@ -134,11 +136,11 @@ mod tests {
     #[test]
     fn proper_owner_initialization() {
         let mut deps = mock_dependencies();
-
+        let owner = deps.api.addr_make("owner").to_string();
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("owner", &[]),
+            mock_info(owner.as_ref(), &[]),
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),
@@ -152,6 +154,6 @@ mod tests {
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(minter, Some("owner".to_string()));
+        assert_eq!(minter, Some(owner.to_string()));
     }
 }

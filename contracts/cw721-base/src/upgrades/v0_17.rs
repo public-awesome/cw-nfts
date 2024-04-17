@@ -1,5 +1,5 @@
 use cosmwasm_std::{CustomMsg, DepsMut, Response};
-use cw721_base_016 as v16;
+
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::ContractError;

@@ -131,8 +131,9 @@ mod tests {
     fn use_metadata_extension() {
         let mut deps = mock_dependencies();
         let contract = Cw2981Contract::default();
+        let creator = deps.api.addr_make(CREATOR).to_string();
 
-        let info = mock_info(CREATOR, &[]);
+        let info = mock_info(creator.as_ref(), &[]);
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
@@ -150,7 +151,7 @@ mod tests {
         });
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "john".to_string(),
+            owner: deps.api.addr_make("john").to_string(),
             token_uri: token_uri.clone(),
             extension: extension.clone(),
         };
@@ -165,8 +166,9 @@ mod tests {
     fn validate_royalty_information() {
         let mut deps = mock_dependencies();
         let _contract = Cw2981Contract::default();
+        let creator = deps.api.addr_make(CREATOR).to_string();
 
-        let info = mock_info(CREATOR, &[]);
+        let info = mock_info(creator.as_ref(), &[]);
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
@@ -178,7 +180,7 @@ mod tests {
         let token_id = "Enterprise";
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "john".to_string(),
+            owner: deps.api.addr_make("john").to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
@@ -197,7 +199,9 @@ mod tests {
         let mut deps = mock_dependencies();
         let _contract = Cw2981Contract::default();
 
-        let info = mock_info(CREATOR, &[]);
+        let creator = deps.api.addr_make(CREATOR).to_string();
+
+        let info = mock_info(creator.as_ref(), &[]);
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
@@ -209,7 +213,7 @@ mod tests {
         let token_id = "Enterprise";
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "john".to_string(),
+            owner: deps.api.addr_make("john").to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
@@ -237,8 +241,9 @@ mod tests {
     #[test]
     fn check_token_royalties() {
         let mut deps = mock_dependencies();
+        let creator = deps.api.addr_make(CREATOR).to_string();
 
-        let info = mock_info(CREATOR, &[]);
+        let info = mock_info(creator.as_ref(), &[]);
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
@@ -248,15 +253,15 @@ mod tests {
         entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
 
         let token_id = "Enterprise";
-        let owner = "jeanluc";
+        let owner = deps.api.addr_make("jeanluc").to_string();
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: owner.into(),
+            owner: owner.clone(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Enterprise".to_string()),
-                royalty_payment_address: Some("jeanluc".to_string()),
+                royalty_payment_address: Some(deps.api.addr_make("jeanluc").to_string()),
                 royalty_percentage: Some(10),
                 ..Metadata::default()
             }),
@@ -285,15 +290,15 @@ mod tests {
         // check for rounding down
         // which is the default behaviour
         let voyager_token_id = "Voyager";
-        let owner = "janeway";
+        let owner = deps.api.addr_make("janeway").to_string();
         let voyager_exec_msg = ExecuteMsg::Mint {
             token_id: voyager_token_id.to_string(),
-            owner: owner.into(),
+            owner: owner.clone(),
             token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
                 name: Some("Starship USS Voyager".to_string()),
-                royalty_payment_address: Some("janeway".to_string()),
+                royalty_payment_address: Some(deps.api.addr_make("janeway").to_string()),
                 royalty_percentage: Some(4),
                 ..Metadata::default()
             }),

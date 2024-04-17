@@ -2,7 +2,7 @@
 members = ["packages/*", "contracts/*"]
 
 [workspace.package]
-version       = "0.18.0"
+version       = "2.0.0"
 edition       = "2021"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
@@ -11,17 +11,18 @@ documentation = "https://docs.cosmwasm.com"
 rust-version  = "1.65"
 
 [workspace.dependencies]
-cosmwasm-schema = "^1.2"
-cosmwasm-std    = "^1.2"
-cw2             = "^1.1"
-cw20            = "^1.1"
+cosmwasm-schema = "^2.0"
+cosmwasm-std    = "^2.0"
+cw2             = "^2.0"
+cw20            = "^2.0"
 cw721           = { version = "*", path = "./packages/cw721" }
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
-cw-multi-test   = "^0.20"
-cw-ownable      = "^0.5"
-cw-storage-plus = "^1.1"
-cw-utils        = "^1.0"
+cw-multi-test   = "^2.0"
+cw-ownable = { version = "2.0", git = "https://github.com/PFC-Validator/cw-plus-plus", branch = "v2.0.0-wip" }
+
+cw-storage-plus = "^2.0"
+cw-utils        = "^2.0"
 schemars        = "^0.8"
 serde           = { version = "1.0.152", default-features = false, features = ["derive"] }
 thiserror       = "^1.0"

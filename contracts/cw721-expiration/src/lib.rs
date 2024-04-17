@@ -76,12 +76,12 @@ mod tests {
     #[test]
     fn proper_cw2_initialization() {
         let mut deps = mock_dependencies();
-
+        let mrt = deps.api.addr_make("mrt").to_string();
         // assert min expiration
         let error = entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("mrt", &[]),
+            mock_info(mrt.as_ref(), &[]),
             InstantiateMsg {
                 expiration_days: 0,
                 name: "".into(),
@@ -97,12 +97,12 @@ mod tests {
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info("mrt", &[]),
+            mock_info(mrt.as_ref(), &[]),
             InstantiateMsg {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                minter: Some("mrt".into()),
+                minter: Some(mrt),
                 withdraw_address: None,
             },
         )

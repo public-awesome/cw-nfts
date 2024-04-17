@@ -19,7 +19,7 @@ pub fn query_royalties_info(
         },
         None => Decimal::percent(0),
     };
-    let royalty_from_sale_price = sale_price * royalty_percentage;
+    let royalty_from_sale_price = Decimal::from_ratio(sale_price,Uint128::one()) * royalty_percentage;
 
     let royalty_address = match token_info.extension {
         Some(ext) => match ext.royalty_payment_address {
@@ -31,7 +31,7 @@ pub fn query_royalties_info(
 
     Ok(RoyaltiesInfoResponse {
         address: royalty_address,
-        royalty_amount: royalty_from_sale_price,
+        royalty_amount: royalty_from_sale_price.to_uint_floor(),
     })
 }
 
