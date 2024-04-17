@@ -55,18 +55,21 @@ pub fn instantiate(
 
     CONFIG.save(deps.storage, &config)?;
 
-    let sub_msg: Vec<SubMsg> = vec![SubMsg::reply_on_success(WasmMsg::Instantiate {
-        code_id: msg.token_code_id,
-        msg: to_json_binary(&Cw721InstantiateMsg {
-            name: msg.name.clone(),
-            symbol: msg.symbol,
-            minter: None,
-            withdraw_address: msg.withdraw_address,
-        })?,
-        funds: vec![],
-        admin: None,
-        label: String::from("Instantiate fixed price NFT contract"),
-    }, INSTANTIATE_TOKEN_REPLY_ID)];
+    let sub_msg: Vec<SubMsg> = vec![SubMsg::reply_on_success(
+        WasmMsg::Instantiate {
+            code_id: msg.token_code_id,
+            msg: to_json_binary(&Cw721InstantiateMsg {
+                name: msg.name.clone(),
+                symbol: msg.symbol,
+                minter: None,
+                withdraw_address: msg.withdraw_address,
+            })?,
+            funds: vec![],
+            admin: None,
+            label: String::from("Instantiate fixed price NFT contract"),
+        },
+        INSTANTIATE_TOKEN_REPLY_ID,
+    )];
 
     Ok(Response::new().add_submessages(sub_msg))
 }
@@ -84,9 +87,12 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidTokenReplyId {});
     }
 
-    let msg_result = msg.result.into_result()
+    let msg_result = msg
+        .result
+        .into_result()
         .map_err(ParseReplyError::SubMsgFailure)?
-        .data.ok_or_else(|| ParseReplyError::ParseFailure("missing reply data".to_owned()))?;
+        .data
+        .ok_or_else(|| ParseReplyError::ParseFailure("missing reply data".to_owned()))?;
 
     let reply = parse_instantiate_response_data(msg_result.as_slice())?;
     // let reply = parse_reply_instantiate_data(msg).unwrap();
@@ -183,7 +189,9 @@ pub fn execute_receive(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult, ReplyOn};
+    use cosmwasm_std::{
+        from_json, to_json_binary, CosmosMsg, ReplyOn, SubMsgResponse, SubMsgResult,
+    };
     use cw721_base::Extension;
     use prost::Message;
 
@@ -221,7 +229,8 @@ mod tests {
 
         assert_eq!(
             res.messages,
-            vec![SubMsg::reply_on_success( WasmMsg::Instantiate {
+            vec![SubMsg::reply_on_success(
+                WasmMsg::Instantiate {
                     code_id: msg.token_code_id,
                     msg: to_json_binary(&Cw721InstantiateMsg {
                         name: msg.name.clone(),
@@ -233,8 +242,9 @@ mod tests {
                     funds: vec![],
                     admin: None,
                     label: String::from("Instantiate fixed price NFT contract"),
-                }, INSTANTIATE_TOKEN_REPLY_ID)
-               ]
+                },
+                INSTANTIATE_TOKEN_REPLY_ID
+            )]
         );
 
         let instantiate_reply = MsgInstantiateContractResponse {

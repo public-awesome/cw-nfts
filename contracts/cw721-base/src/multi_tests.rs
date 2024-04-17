@@ -12,7 +12,6 @@ fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-
 fn query_owner(querier: QuerierWrapper, cw721: &Addr, token_id: String) -> Addr {
     let resp: OwnerOfResponse = querier
         .query_wasm_smart(

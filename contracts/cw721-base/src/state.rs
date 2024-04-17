@@ -17,7 +17,7 @@ where
     pub contract_info: Item<ContractInfoResponse>,
     pub token_count: Item<u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account
-    pub operators: Map< (&'a Addr, &'a Addr), Expiration>,
+    pub operators: Map<(&'a Addr, &'a Addr), Expiration>,
     pub tokens: IndexedMap<&'a str, TokenInfo<T>, TokenIndexes<'a, T>>,
     pub withdraw_address: Item<String>,
 

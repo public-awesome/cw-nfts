@@ -20,7 +20,11 @@ const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>,creator:Addr,minter:Addr) -> Cw721Contract<'static, Extension, Empty, Empty, Empty> {
+fn setup_contract(
+    deps: DepsMut<'_>,
+    creator: Addr,
+    minter: Addr,
+) -> Cw721Contract<'static, Extension, Empty, Empty, Empty> {
     let contract = Cw721Contract::default();
 
     let msg = InstantiateMsg {
@@ -85,7 +89,7 @@ fn minting() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -167,7 +171,7 @@ fn test_update_minter() {
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
     let random = deps.api.addr_make("random");
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -269,7 +273,7 @@ fn burning() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -320,7 +324,7 @@ fn transferring_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -376,7 +380,7 @@ fn sending_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -444,7 +448,7 @@ fn approving_revoking() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
     let token_id = "grow".to_string();
@@ -484,7 +488,7 @@ fn approving_revoking() {
 
     // Give random transferring power
     let approve_msg = ExecuteMsg::Approve {
-        spender:deps.api.addr_make("random").to_string(),
+        spender: deps.api.addr_make("random").to_string(),
         token_id: token_id.clone(),
         expires: None,
     };
@@ -524,7 +528,7 @@ fn approving_revoking() {
     // random can now transfer
     let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
     let transfer_msg = ExecuteMsg::TransferNft {
-        recipient:deps.api.addr_make("person").to_string(),
+        recipient: deps.api.addr_make("person").to_string(),
         token_id: token_id.clone(),
     };
     contract
@@ -545,7 +549,7 @@ fn approving_revoking() {
     assert_eq!(
         res,
         OwnerOfResponse {
-            owner:deps.api.addr_make("person").to_string(),
+            owner: deps.api.addr_make("person").to_string(),
             approvals: vec![],
         }
     );
@@ -590,7 +594,7 @@ fn approving_all_revoking_all() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter);
+    let contract = setup_contract(deps.as_mut(), creator, minter);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
@@ -712,11 +716,11 @@ fn approving_all_revoking_all() {
         deps.as_ref(),
         mock_env(),
         deps.api.addr_make("person").to_string(),
-       deps.api.addr_make("other").to_string(),
+        deps.api.addr_make("other").to_string(),
         true,
     );
     match res {
-        Err(StdError::NotFound{kind ,..}) => assert_eq!(kind, "Approval not found"),
+        Err(StdError::NotFound { kind, .. }) => assert_eq!(kind, "Approval not found"),
         _ => panic!("Unexpected error"),
     }
 
@@ -809,7 +813,7 @@ fn approving_all_revoking_all() {
         true,
     );
     match res {
-        Err(StdError::NotFound {kind, ..} ) => assert_eq!(kind, "Approval not found"),
+        Err(StdError::NotFound { kind, .. }) => assert_eq!(kind, "Approval not found"),
         _ => panic!("Unexpected error"),
     }
 
@@ -859,7 +863,7 @@ fn approving_all_revoking_all() {
     );
 
     match res {
-        Err(StdError::NotFound{ kind, ..}) => assert_eq!(kind, "Approval not found"),
+        Err(StdError::NotFound { kind, .. }) => assert_eq!(kind, "Approval not found"),
         _ => panic!("Unexpected error"),
     }
 }
@@ -869,7 +873,7 @@ fn test_set_withdraw_address() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
     let other = deps.api.addr_make("other");
     // other cant set
     let foo = deps.api.addr_make("foo");
@@ -895,7 +899,7 @@ fn test_remove_withdraw_address() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter);
+    let contract = setup_contract(deps.as_mut(), creator, minter);
     let other = deps.api.addr_make("other");
     let foo = deps.api.addr_make("foo");
     // other cant remove
@@ -913,7 +917,7 @@ fn test_remove_withdraw_address() {
 
     // set and remove
     contract
-        .set_withdraw_address(deps.as_mut(), &minter,foo.to_string())
+        .set_withdraw_address(deps.as_mut(), &minter, foo.to_string())
         .unwrap();
     contract
         .remove_withdraw_address(deps.as_mut().storage, &minter)
@@ -937,7 +941,7 @@ fn test_withdraw_funds() {
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
     let foo = deps.api.addr_make("foo");
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // no withdraw address set
     let err = contract
@@ -947,7 +951,7 @@ fn test_withdraw_funds() {
 
     // set and withdraw by non-owner
     contract
-        .set_withdraw_address(deps.as_mut(), &minter,foo.to_string())
+        .set_withdraw_address(deps.as_mut(), &minter, foo.to_string())
         .unwrap();
     contract
         .withdraw_funds(deps.as_mut().storage, &Coin::new(100u32, "uark"))
@@ -959,7 +963,7 @@ fn query_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(),creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let minter = mock_info(minter.as_ref(), &[]);
 

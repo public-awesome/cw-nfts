@@ -23,7 +23,12 @@ const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>, expiration_days: u16,creator:Addr,minter:Addr) -> Cw721ExpirationContract<'static> {
+fn setup_contract(
+    deps: DepsMut<'_>,
+    expiration_days: u16,
+    creator: Addr,
+    minter: Addr,
+) -> Cw721ExpirationContract<'static> {
     let contract = Cw721ExpirationContract::default();
     let msg = InstantiateMsg {
         expiration_days,
@@ -85,7 +90,7 @@ fn test_mint() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make("minter");
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     let token_id = "atomize".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/atomize".to_string();
@@ -180,7 +185,7 @@ fn test_update_minter() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -257,7 +262,10 @@ fn test_update_minter() {
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some(deps.api.addr_make("random").to_string()));
+    assert_eq!(
+        minter.minter,
+        Some(deps.api.addr_make("random").to_string())
+    );
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
@@ -286,7 +294,7 @@ fn test_burn() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
@@ -366,7 +374,7 @@ fn test_transfer_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -403,8 +411,8 @@ fn test_transfer_nft() {
 
     // owner can
     let owner_info = mock_info(owner.as_ref(), &[]);
-    let binding = deps.api.addr_make( "random");
-    let new_owner =binding.as_ref();
+    let binding = deps.api.addr_make("random");
+    let new_owner = binding.as_ref();
     let transfer_msg = ExecuteMsg::TransferNft {
         recipient: String::from(new_owner),
         token_id: token_id.clone(),
@@ -450,7 +458,7 @@ fn test_send_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     // Mint a token
     let token_id = "melt".to_string();
@@ -470,7 +478,7 @@ fn test_send_nft() {
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
-    let target =deps.api.addr_make("another_contract").to_string();
+    let target = deps.api.addr_make("another_contract").to_string();
     let send_msg = ExecuteMsg::SendNft {
         contract: target.clone(),
         token_id: token_id.clone(),
@@ -538,7 +546,7 @@ fn test_approve_revoke() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     // Mint a token
     let token_id = "grow".to_string();
@@ -727,7 +735,7 @@ fn test_approve_all_revoke_all() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
@@ -937,7 +945,6 @@ fn test_approve_all_revoke_all() {
         }
     );
 
-
     let revoke_all_msg = ExecuteMsg::RevokeAll {
         operator: deps.api.addr_make("operator").to_string(),
     };
@@ -955,7 +962,7 @@ fn test_approve_all_revoke_all() {
     );
     match res {
         Err(StdError::NotFound { kind, .. }) => assert_eq!(kind, "Approval not found"),
-        _ => panic!("Unexpected error {:?}",res),
+        _ => panic!("Unexpected error {:?}", res),
     }
 
     // Approvals are removed / cleared without affecting others
@@ -1014,13 +1021,13 @@ fn test_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     let minter = mock_info(minter.as_ref(), &[]);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter =deps.api.addr_make("demeter").to_string();
+    let demeter = deps.api.addr_make("demeter").to_string();
     let token_id2 = "grow2".to_string();
     let ceres = deps.api.addr_make("ceres").to_string();
     let token_id3 = "sing".to_string();
@@ -1127,7 +1134,7 @@ fn test_nft_info() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1171,7 +1178,7 @@ fn test_all_nft_info() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1215,7 +1222,7 @@ fn test_owner_of() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1259,7 +1266,7 @@ fn test_approval() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1310,7 +1317,7 @@ fn test_approvals() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1354,7 +1361,7 @@ fn test_tokens() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
@@ -1401,7 +1408,7 @@ fn test_all_tokens() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
     let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), 1,creator,minter.clone());
+    let contract = setup_contract(deps.as_mut(), 1, creator, minter.clone());
 
     let minter = mock_info(minter.as_ref(), &[]);
 

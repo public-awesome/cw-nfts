@@ -86,7 +86,7 @@ pub mod entry {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
         // perform the upgrade
-       // upgrades::v0_17::migrate::<Extension, Empty, Empty, Empty>(deps)
+        // upgrades::v0_17::migrate::<Extension, Empty, Empty, Empty>(deps)
         Ok(Response::new())
     }
 }

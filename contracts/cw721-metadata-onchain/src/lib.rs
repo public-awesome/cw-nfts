@@ -128,7 +128,7 @@ mod tests {
         });
         let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: deps.api.addr_make( "john").to_string(),
+            owner: deps.api.addr_make("john").to_string(),
             token_uri: token_uri.clone(),
             extension: extension.clone(),
         };
