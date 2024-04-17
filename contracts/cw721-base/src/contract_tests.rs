@@ -33,7 +33,7 @@ fn setup_contract(
         minter: Some(minter.to_string()),
         withdraw_address: None,
     };
-    let info = mock_info(&creator.to_string(), &[]);
+    let info = mock_info(creator.as_ref(), &[]);
     let res = contract.instantiate(deps, mock_env(), info, msg).unwrap();
     assert_eq!(0, res.messages.len());
     contract

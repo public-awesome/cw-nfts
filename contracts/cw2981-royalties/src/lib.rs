@@ -269,7 +269,7 @@ mod tests {
         entry::execute(deps.as_mut(), mock_env(), info.clone(), exec_msg).unwrap();
 
         let expected = RoyaltiesInfoResponse {
-            address: owner.into(),
+            address: owner,
             royalty_amount: Uint128::new(10),
         };
         let res =
@@ -308,7 +308,7 @@ mod tests {
         // 43 x 0.04 (i.e., 4%) should be 1.72
         // we expect this to be rounded down to 1
         let voyager_expected = RoyaltiesInfoResponse {
-            address: owner.into(),
+            address: owner,
             royalty_amount: Uint128::new(1),
         };
 

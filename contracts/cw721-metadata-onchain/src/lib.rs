@@ -88,7 +88,7 @@ mod tests {
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-            mock_info(&larry.to_string(), &[]),
+            mock_info(larry.as_ref(), &[]),
             InstantiateMsg {
                 name: "".into(),
                 symbol: "".into(),

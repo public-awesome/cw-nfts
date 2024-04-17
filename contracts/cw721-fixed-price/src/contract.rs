@@ -87,6 +87,7 @@ pub fn reply(deps: DepsMut, _env: Env, msg: Reply) -> Result<Response, ContractE
         return Err(ContractError::InvalidTokenReplyId {});
     }
 
+    #[allow(deprecated)]
     let msg_result = msg
         .result
         .into_result()
@@ -257,6 +258,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
             payload: Default::default(),
@@ -367,6 +369,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
             payload: Default::default(),
@@ -439,6 +442,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: 10,
             payload: Default::default(),
@@ -484,6 +488,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: 1,
             payload: Default::default(),
@@ -531,6 +536,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
             payload: Default::default(),
@@ -627,6 +633,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
             payload: Default::default(),
@@ -685,6 +692,7 @@ mod tests {
             .encode(&mut encoded_instantiate_reply)
             .unwrap();
 
+        #[allow(deprecated)]
         let reply_msg = Reply {
             id: INSTANTIATE_TOKEN_REPLY_ID,
             payload: Default::default(),
