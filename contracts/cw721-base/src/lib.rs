@@ -154,6 +154,6 @@ mod tests {
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(minter, Some(owner.to_string()));
+        assert_eq!(minter, Some(owner));
     }
 }
