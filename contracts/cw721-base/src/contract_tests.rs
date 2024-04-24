@@ -1024,7 +1024,9 @@ fn query_tokens_by_owner() {
         .tokens(deps.as_ref(), demeter.to_string(), None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
-    let tokens = contract.tokens(deps.as_ref(), ceres.to_string(), None, None).unwrap();
+    let tokens = contract
+        .tokens(deps.as_ref(), ceres.to_string(), None, None)
+        .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
@@ -1033,7 +1035,12 @@ fn query_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.to_string(), Some(by_demeter[0].clone()), Some(3))
+        .tokens(
+            deps.as_ref(),
+            demeter.to_string(),
+            Some(by_demeter[0].clone()),
+            Some(3),
+        )
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
 }

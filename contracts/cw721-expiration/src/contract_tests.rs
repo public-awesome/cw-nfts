@@ -1100,7 +1100,14 @@ fn test_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
-        .tokens(deps.as_ref(), mock_env(), ceres.to_string(), None, None, false)
+        .tokens(
+            deps.as_ref(),
+            mock_env(),
+            ceres.to_string(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
@@ -1300,7 +1307,14 @@ fn test_approval() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .approval(deps.as_ref(), env, token_id.clone(), owner.to_string(), false, false)
+        .approval(
+            deps.as_ref(),
+            env,
+            token_id.clone(),
+            owner.to_string(),
+            false,
+            false,
+        )
         .unwrap_err();
     assert_eq!(
         error,
@@ -1380,14 +1394,28 @@ fn test_tokens() {
 
     // assert valid nft is returned
     contract
-        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
+        .tokens(
+            deps.as_ref(),
+            env.clone(),
+            owner.to_string(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
 
     // assert invalid nft is not returned
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
+        .tokens(
+            deps.as_ref(),
+            env.clone(),
+            owner.to_string(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
@@ -1435,7 +1463,14 @@ fn test_all_tokens() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
+        .tokens(
+            deps.as_ref(),
+            env.clone(),
+            owner.to_string(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
