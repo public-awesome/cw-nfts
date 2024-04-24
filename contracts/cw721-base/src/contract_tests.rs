@@ -43,12 +43,12 @@ fn setup_contract(
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
-    let minter = deps.api.addr_make(MINTER).to_string();
+    let minter = deps.api.addr_make(MINTER);
     let msg = InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        minter: Some(minter.clone()),
-        withdraw_address: Some(minter.clone()),
+        minter: Some(minter.to_string()),
+        withdraw_address: Some(minter.to_string()),
     };
     let info = mock_info(deps.api.addr_make("creator").as_ref(), &[]);
 
@@ -60,7 +60,7 @@ fn proper_instantiation() {
 
     // it worked, let's query the state
     let res = contract.minter(deps.as_ref()).unwrap();
-    assert_eq!(Some(minter.clone()), res.minter);
+    assert_eq!(Some(minter.to_string()), res.minter);
     let info = contract.contract_info(deps.as_ref()).unwrap();
     assert_eq!(
         info,
@@ -74,7 +74,7 @@ fn proper_instantiation() {
         .withdraw_address
         .may_load(deps.as_ref().storage)
         .unwrap();
-    assert_eq!(Some(minter), withdraw_address);
+    assert_eq!(Some(minter.to_string()), withdraw_address);
 
     let count = contract.num_tokens(deps.as_ref()).unwrap();
     assert_eq!(0, count.count);
@@ -399,9 +399,9 @@ fn sending_nft() {
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
-    let target = deps.api.addr_make("another_contract").to_string();
+    let target = deps.api.addr_make("another_contract");
     let send_msg = ExecuteMsg::SendNft {
-        contract: target.clone(),
+        contract: target.to_string(),
         token_id: token_id.clone(),
         msg: msg.clone(),
     };
@@ -427,7 +427,7 @@ fn sending_nft() {
     // ensure expected serializes as we think it should
     match &expected {
         CosmosMsg::Wasm(WasmMsg::Execute { contract_addr, .. }) => {
-            assert_eq!(contract_addr, &target)
+            assert_eq!(contract_addr, target.as_ref())
         }
         _m => panic!("Unexpected message type: {_m:?}"),
     }
@@ -969,14 +969,14 @@ fn query_tokens_by_owner() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter = deps.api.addr_make("demeter").to_string();
+    let demeter = deps.api.addr_make("demeter");
     let token_id2 = "grow2".to_string();
-    let ceres = deps.api.addr_make("ceres").to_string();
+    let ceres = deps.api.addr_make("ceres");
     let token_id3 = "sing".to_string();
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: demeter.clone(),
+        owner: demeter.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -986,7 +986,7 @@ fn query_tokens_by_owner() {
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id2.clone(),
-        owner: ceres.clone(),
+        owner: ceres.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -996,7 +996,7 @@ fn query_tokens_by_owner() {
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id3.clone(),
-        owner: demeter.clone(),
+        owner: demeter.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1021,19 +1021,19 @@ fn query_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, None)
+        .tokens(deps.as_ref(), demeter.to_string(), None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
-    let tokens = contract.tokens(deps.as_ref(), ceres, None, None).unwrap();
+    let tokens = contract.tokens(deps.as_ref(), ceres.to_string(), None, None).unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .tokens(deps.as_ref(), demeter.clone(), None, Some(1))
+        .tokens(deps.as_ref(), demeter.to_string(), None, Some(1))
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(deps.as_ref(), demeter, Some(by_demeter[0].clone()), Some(3))
+        .tokens(deps.as_ref(), demeter.to_string(), Some(by_demeter[0].clone()), Some(3))
         .unwrap();
     assert_eq!(&by_demeter[1..], &tokens.tokens[..]);
 }

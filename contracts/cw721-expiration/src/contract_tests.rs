@@ -380,10 +380,10 @@ fn test_transfer_nft() {
     let token_id = "melt".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
-    let owner = deps.api.addr_make("owner").into_string();
+    let owner = deps.api.addr_make("owner");
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner: owner.to_string(),
         token_uri: Some(token_uri),
         extension: None,
     };
@@ -478,9 +478,9 @@ fn test_send_nft() {
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
-    let target = deps.api.addr_make("another_contract").to_string();
+    let target = deps.api.addr_make("another_contract");
     let send_msg = ExecuteMsg::SendNft {
-        contract: target.clone(),
+        contract: target.to_string(),
         token_id: token_id.clone(),
         msg: msg.clone(),
     };
@@ -509,7 +509,7 @@ fn test_send_nft() {
     // ensure expected serializes as we think it should
     match &expected {
         CosmosMsg::Wasm(WasmMsg::Execute { contract_addr, .. }) => {
-            assert_eq!(contract_addr, &target)
+            assert_eq!(contract_addr, target.as_ref())
         }
         _m => panic!("Unexpected message type: {_m:?}"),
     }
@@ -1027,14 +1027,14 @@ fn test_tokens_by_owner() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter = deps.api.addr_make("demeter").to_string();
+    let demeter = deps.api.addr_make("demeter");
     let token_id2 = "grow2".to_string();
-    let ceres = deps.api.addr_make("ceres").to_string();
+    let ceres = deps.api.addr_make("ceres");
     let token_id3 = "sing".to_string();
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: demeter.clone(),
+        owner: demeter.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1044,7 +1044,7 @@ fn test_tokens_by_owner() {
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id2.clone(),
-        owner: ceres.clone(),
+        owner: ceres.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1054,7 +1054,7 @@ fn test_tokens_by_owner() {
 
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id3.clone(),
-        owner: demeter.clone(),
+        owner: demeter.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1092,7 +1092,7 @@ fn test_tokens_by_owner() {
         .tokens(
             deps.as_ref(),
             mock_env(),
-            demeter.clone(),
+            demeter.to_string(),
             None,
             None,
             false,
@@ -1100,7 +1100,7 @@ fn test_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
-        .tokens(deps.as_ref(), mock_env(), ceres, None, None, false)
+        .tokens(deps.as_ref(), mock_env(), ceres.to_string(), None, None, false)
         .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
@@ -1109,7 +1109,7 @@ fn test_tokens_by_owner() {
         .tokens(
             deps.as_ref(),
             mock_env(),
-            demeter.clone(),
+            demeter.to_string(),
             None,
             Some(1),
             false,
@@ -1120,7 +1120,7 @@ fn test_tokens_by_owner() {
         .tokens(
             deps.as_ref(),
             mock_env(),
-            demeter,
+            demeter.to_string(),
             Some(by_demeter[0].clone()),
             Some(3),
             false,
@@ -1270,12 +1270,12 @@ fn test_approval() {
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
-    let owner = deps.api.addr_make("ark").to_string();
+    let owner = deps.api.addr_make("ark");
 
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner: owner.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1289,7 +1289,7 @@ fn test_approval() {
             deps.as_ref(),
             env.clone(),
             token_id.clone(),
-            owner.clone(),
+            owner.to_string(),
             false,
             false,
         )
@@ -1300,7 +1300,7 @@ fn test_approval() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .approval(deps.as_ref(), env, token_id.clone(), owner, false, false)
+        .approval(deps.as_ref(), env, token_id.clone(), owner.to_string(), false, false)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1321,12 +1321,12 @@ fn test_approvals() {
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
-    let owner = deps.api.addr_make("ark").to_string();
+    let owner = deps.api.addr_make("ark");
 
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner,
+        owner: owner.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1365,12 +1365,12 @@ fn test_tokens() {
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
-    let owner = deps.api.addr_make("ark").to_string();
+    let owner = deps.api.addr_make("ark");
 
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner: owner.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1380,20 +1380,20 @@ fn test_tokens() {
 
     // assert valid nft is returned
     contract
-        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
         .unwrap();
 
     // assert invalid nft is not returned
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
     // assert invalid nft is returned
     let tokens = contract
-        .tokens(deps.as_ref(), env, owner, None, None, true)
+        .tokens(deps.as_ref(), env, owner.to_string(), None, None, true)
         .unwrap();
     assert_eq!(
         tokens,
@@ -1413,12 +1413,12 @@ fn test_all_tokens() {
     let minter = mock_info(minter.as_ref(), &[]);
 
     let token_id = "grow1".to_string();
-    let owner = deps.api.addr_make("ark").to_string();
+    let owner = deps.api.addr_make("ark");
 
     let mut env = mock_env();
     let mint_msg = ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: owner.clone(),
+        owner: owner.to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1435,7 +1435,7 @@ fn test_all_tokens() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner, None, None, false)
+        .tokens(deps.as_ref(), env.clone(), owner.to_string(), None, None, false)
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 

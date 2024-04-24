@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn proper_owner_initialization() {
         let mut deps = mock_dependencies();
-        let owner = deps.api.addr_make("owner").to_string();
+        let owner = deps.api.addr_make("owner");
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
@@ -154,6 +154,6 @@ mod tests {
             .unwrap()
             .owner
             .map(|a| a.into_string());
-        assert_eq!(minter, Some(owner));
+        assert_eq!(minter, Some(owner.to_string()));
     }
 }

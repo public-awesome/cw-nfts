@@ -126,9 +126,9 @@ where
         include_expired: bool,
     ) -> StdResult<ApprovalResponse> {
         let token = self.tokens.load(deps.storage, &token_id)?;
-
+        let spender_addr = deps.api.addr_validate(&spender)?;
         // token owner has absolute approval
-        if token.owner.to_string() == spender {
+        if token.owner == spender_addr {
             let approval = cw721::Approval {
                 spender: token.owner.to_string(),
                 expires: Expiration::Never {},
