@@ -8,9 +8,9 @@ pub struct InstantiateMsg<TCollectionExtensionMsg> {
     pub owner: Addr,
     pub max_tokens: u32,
     pub unit_price: Uint128,
-    /// Name of the collection metadata
+    /// Name of the NFT contract
     pub name: String,
-    /// Symbol of the collection metadata
+    /// Symbol of the NFT contract
     pub symbol: String,
     /// Optional extension of the collection metadata
     pub collection_info_extension: TCollectionExtensionMsg,

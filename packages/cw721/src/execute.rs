@@ -45,7 +45,7 @@ where
 {
     let config = Cw721Config::<Option<Empty>>::default();
 
-    // ---- update collection metadata before(!) creator and minter is set ----
+    // ---- update collection info before(!) creator and minter is set ----
     let collection_metadata_msg = CollectionInfoMsg {
         name: Some(msg.name),
         symbol: Some(msg.symbol),
@@ -649,7 +649,7 @@ pub fn migrate_minter(
 
 /// Migrates only in case ownership is not present
 /// !!! Important note here: !!!
-/// - creator owns the contract and can update collection metadata
+/// - creator owns the contract and can update collection info
 /// - minter can mint new tokens
 ///
 /// Before v0.19.0 there were confusing naming conventions:
@@ -701,7 +701,7 @@ pub fn migrate_legacy_collection_info(
     match contract.collection_info.may_load(storage)? {
         Some(_) => Ok(response),
         None => {
-            // contract info is legacy collection metadata
+            // contract info = legacy collection info
             let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
                 Item::new("nft_info");
             let legacy_collection_info = legacy_collection_info_store.load(storage)?;

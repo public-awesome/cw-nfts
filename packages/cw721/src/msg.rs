@@ -123,9 +123,9 @@ pub enum Cw721ExecuteMsg<
 
 #[cw_serde]
 pub struct Cw721InstantiateMsg<TCollectionExtensionMsg> {
-    /// Name of the collection metadata
+    /// Name of the NFT contract
     pub name: String,
-    /// Symbol of the collection metadata
+    /// Symbol of the NFT contract
     pub symbol: String,
     /// Optional extension of the collection metadata
     pub collection_info_extension: TCollectionExtensionMsg,

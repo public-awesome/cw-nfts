@@ -12,9 +12,9 @@ pub struct InstantiateMsg<TCollectionExtension> {
     pub expiration_days: u16,
 
     // -------- below is from cw721-base/src/msg.rs --------
-    /// Name of the collection metadata
+    /// Name of the NFT contract
     pub name: String,
-    /// Symbol of the collection metadata
+    /// Symbol of the NFT contract
     pub symbol: String,
     /// Optional extension of the collection metadata
     pub collection_info_extension: TCollectionExtension,
@@ -24,7 +24,7 @@ pub struct InstantiateMsg<TCollectionExtension> {
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
-    /// The creator is the only who can update collection metadata.
+    /// The creator is the only who can update collection info.
     pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,

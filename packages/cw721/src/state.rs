@@ -12,7 +12,7 @@ use crate::error::Cw721ContractError;
 use crate::traits::{Contains, Cw721CustomMsg, Cw721State, FromAttributesState, ToAttributesState};
 use crate::{traits::StateFactory, NftExtensionMsg};
 
-/// Creator owns this contract and can update collection metadata!
+/// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
 /// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
 /// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
@@ -26,7 +26,7 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 // Custom contracts may also provide different collection extension.
 // Please also note, each element in the collection extension is stored as a separate `Attribute`.
 
-/// Maximum length of the description field in the collection metadata.
+/// Maximum length of the description field in the collection info.
 pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
 /// Max increase/decrease of of royalty share percentage.
 pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
