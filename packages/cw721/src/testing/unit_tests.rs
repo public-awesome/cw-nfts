@@ -275,7 +275,7 @@ fn test_migrate() {
         name: "legacy_name".to_string(),
         symbol: "legacy_symbol".to_string(),
         extension: None,
-        updated_at: env.clone().block.time,
+        updated_at: env.block.time,
     };
     assert_eq!(collection_info, legacy_contract_info);
 
