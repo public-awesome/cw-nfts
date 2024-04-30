@@ -155,12 +155,52 @@
       "additionalProperties": false
     },
     {
+      "deprecated": true,
       "type": "object",
       "required": [
         "contract_info"
       ],
       "properties": {
         "contract_info": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_collection_info"
+      ],
+      "properties": {
+        "get_collection_info": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_minter_ownership"
+      ],
+      "properties": {
+        "get_minter_ownership": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_creator_ownership"
+      ],
+      "properties": {
+        "get_creator_ownership": {
           "type": "object",
           "additionalProperties": false
         }
@@ -280,6 +320,7 @@
       "additionalProperties": false
     },
     {
+      "deprecated": true,
       "type": "object",
       "required": [
         "minter"

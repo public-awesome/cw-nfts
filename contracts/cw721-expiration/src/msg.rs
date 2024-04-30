@@ -8,7 +8,7 @@ use cw_ownable::Ownership;
 pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
 
 #[cw_serde]
-pub struct InstantiateMsg {
+pub struct InstantiateMsg<TCollectionInfoExtension> {
     /// max 65535 days
     pub expiration_days: u16,
 
@@ -18,17 +18,22 @@ pub struct InstantiateMsg {
     /// Symbol of the NFT contract
     pub symbol: String,
 
+    pub collection_info_extension: TCollectionInfoExtension,
+
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
+
+    /// The creator is the only who can update collection info.
+    pub creator: Option<String>,
 
     pub withdraw_address: Option<String>,
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg<TMetadataExtension> {
+pub enum QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     // -------- below adds `include_expired_nft` prop to cw721/src/msg.rs --------
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::msg::OwnerOfResponse)]
@@ -121,27 +126,38 @@ pub enum QueryMsg<TMetadataExtension> {
     #[returns(cw721::msg::NumTokensResponse)]
     NumTokens {},
 
-    #[returns(cw721::state::CollectionInfo)]
+    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
+    #[returns(cw721::state::CollectionInfo<cw721::state::DefaultOptionCollectionInfoExtension>)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionInfo)]
+    #[returns(CollectionInfo<TCollectionInfoExtension>)]
     GetCollectionInfo {},
 
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
     Ownership {},
 
     #[returns(Ownership<Addr>)]
     GetMinterOwnership {},
 
+    #[returns(Ownership<Addr>)]
+    GetCreatorOwnership {},
+
     /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
     Minter {},
 
     /// Extension query
     #[returns(())]
     Extension { msg: TMetadataExtension },
+
+    /// This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error:
+    /// `cannot infer type for type parameter `TCollectionInfoExtension` declared on the enum `QueryMsg`
+    #[returns(())]
+    GetCollectionInfoExtension { msg: TCollectionInfoExtension },
 
     #[returns(Option<String>)]
     GetWithdrawAddress {},

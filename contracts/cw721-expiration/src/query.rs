@@ -9,23 +9,37 @@ use serde::Serialize;
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
-    Cw721ExpirationContract<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >
+    Cw721ExpirationContract<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<TMetadataExtension>,
+        msg: QueryMsg<TMetadataExtension, TCollectionInfoExtension>,
     ) -> Result<Binary, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
             TMetadataExtensionMsg,
+            TCollectionInfoExtension,
         >::default();
         match msg {
             // -------- msgs with `include_expired_nft` prop --------
@@ -150,12 +164,14 @@ where
             QueryMsg::NumTokens {} => Ok(to_json_binary(
                 &contract.base_contract.query_num_tokens(deps, env)?,
             )?),
+            #[allow(deprecated)]
             QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &contract.base_contract.query_collection_info(deps, env)?,
             )?),
             QueryMsg::GetCollectionInfo {} => Ok(to_json_binary(
                 &contract.base_contract.query_collection_info(deps, env)?,
             )?),
+            #[allow(deprecated)]
             QueryMsg::Ownership {} => Ok(to_json_binary(
                 &contract
                     .base_contract
@@ -166,11 +182,22 @@ where
                     .base_contract
                     .query_minter_ownership(deps.storage)?,
             )?),
+            QueryMsg::GetCreatorOwnership {} => Ok(to_json_binary(
+                &contract
+                    .base_contract
+                    .query_creator_ownership(deps.storage)?,
+            )?),
+            #[allow(deprecated)]
             QueryMsg::Minter {} => Ok(to_json_binary(
                 &contract.base_contract.query_minter(deps.storage)?,
             )?),
             QueryMsg::Extension { msg } => Ok(to_json_binary(
                 &contract.base_contract.query_extension(deps, env, msg)?,
+            )?),
+            QueryMsg::GetCollectionInfoExtension { msg } => Ok(to_json_binary(
+                &contract
+                    .base_contract
+                    .query_collection_info_extension(deps, env, msg)?,
             )?),
             QueryMsg::GetWithdrawAddress {} => Ok(to_json_binary(
                 &contract.base_contract.query_withdraw_address(deps)?,

@@ -6,7 +6,7 @@ use crate::{
         OwnerOfResponse,
     },
     query::Cw721Query,
-    state::DefaultOptionMetadataExtension,
+    state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
 };
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
@@ -27,9 +27,14 @@ pub fn instantiate(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721InstantiateMsg,
+    msg: Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = Cw721Contract::<
+        DefaultOptionMetadataExtension,
+        Empty,
+        Empty,
+        DefaultOptionCollectionInfoExtension,
+    >::default();
     contract.instantiate(deps, env, info, msg, "contract_name", "contract_version")
 }
 
@@ -37,18 +42,32 @@ pub fn execute(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    msg: Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty>,
+    msg: Cw721ExecuteMsg<
+        DefaultOptionMetadataExtension,
+        Empty,
+        DefaultOptionCollectionInfoExtension,
+    >,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = Cw721Contract::<
+        DefaultOptionMetadataExtension,
+        Empty,
+        Empty,
+        DefaultOptionCollectionInfoExtension,
+    >::default();
     contract.execute(deps, env, info, msg)
 }
 
 pub fn query(
     deps: Deps,
     env: Env,
-    msg: Cw721QueryMsg<DefaultOptionMetadataExtension>,
+    msg: Cw721QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>,
 ) -> StdResult<Binary> {
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = Cw721Contract::<
+        DefaultOptionMetadataExtension,
+        Empty,
+        Empty,
+        DefaultOptionCollectionInfoExtension,
+    >::default();
     contract.query(deps, env, msg)
 }
 
@@ -57,7 +76,12 @@ pub fn migrate(
     env: Env,
     msg: Cw721MigrateMsg,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = Cw721Contract::<
+        DefaultOptionMetadataExtension,
+        Empty,
+        Empty,
+        DefaultOptionCollectionInfoExtension,
+    >::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }
 
@@ -100,7 +124,7 @@ fn query_owner(querier: QuerierWrapper, cw721: &Addr, token_id: String) -> Addr 
     let resp: OwnerOfResponse = querier
         .query_wasm_smart(
             cw721,
-            &Cw721QueryMsg::<Empty>::OwnerOf {
+            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
                 token_id,
                 include_expired: None,
             },
@@ -113,7 +137,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: token_id.clone(),
             owner: sender.to_string(),
             token_uri: None,
@@ -129,7 +153,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         sender,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: "burner".to_string(),
             token_id: token_id.clone(),
         },
@@ -143,7 +167,7 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     app.execute_contract(
         Addr::unchecked("burner"),
         cw721,
-        &Cw721ExecuteMsg::<Empty, Empty>::Burn { token_id },
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Burn { token_id },
         &[],
     )
     .unwrap();
@@ -160,10 +184,12 @@ fn test_operator() {
         .instantiate_contract(
             code_id,
             other.clone(),
-            &Cw721InstantiateMsg {
+            &Cw721InstantiateMsg::<DefaultOptionCollectionInfoExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
                 minter: Some(MINTER_ADDR.to_string()),
+                creator: Some(CREATOR_ADDR.to_string()),
+                collection_info_extension: None,
                 withdraw_address: None,
             },
             &[],
@@ -177,7 +203,7 @@ fn test_operator() {
     app.execute_contract(
         minter,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
             token_uri: None,
@@ -192,7 +218,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::ApproveAll {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::ApproveAll {
             operator: other.to_string(),
             expires: Some(Expiration::Never {}),
         },
@@ -204,7 +230,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -216,7 +242,7 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty>::OwnerOf {
+            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -228,7 +254,7 @@ fn test_operator() {
         .execute_contract(
             nft_owner.clone(),
             cw721.clone(),
-            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -243,7 +269,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -255,7 +281,7 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty>::OwnerOf {
+            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -267,7 +293,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: other.to_string(),
             token_id: "1".to_string(),
         },
@@ -279,7 +305,7 @@ fn test_operator() {
         .wrap()
         .query_wasm_smart(
             &cw721,
-            &Cw721QueryMsg::<Empty>::OwnerOf {
+            &Cw721QueryMsg::<Empty, Empty>::OwnerOf {
                 token_id: "1".to_string(),
                 include_expired: None,
             },
@@ -292,7 +318,7 @@ fn test_operator() {
     app.execute_contract(
         other.clone(),
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
             recipient: nft_owner.to_string(),
             token_id: "1".to_string(),
         },
@@ -304,7 +330,7 @@ fn test_operator() {
     app.execute_contract(
         nft_owner,
         cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty>::RevokeAll {
+        &Cw721ExecuteMsg::<Empty, Empty, Empty>::RevokeAll {
             operator: other.to_string(),
         },
         &[],
@@ -316,7 +342,7 @@ fn test_operator() {
         .execute_contract(
             other.clone(),
             cw721,
-            &Cw721ExecuteMsg::<Empty, Empty>::TransferNft {
+            &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
                 recipient: other.to_string(),
                 token_id: "1".to_string(),
             },
@@ -387,7 +413,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -409,26 +435,44 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, legacy_creator_and_minter.to_string());
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(legacy_creator_and_minter));
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // case 2: migrate from v0.16 to latest by providing new creator and minter addr
     {
@@ -484,7 +528,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -502,26 +546,42 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v16::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, minter.to_string());
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
     }
     // case 3: migrate from v0.17 to latest by using existing minter addr
     {
@@ -578,7 +638,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -600,26 +660,44 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(legacy_creator_and_minter));
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // case 4: migrate from v0.17 to latest by providing new creator and minter addr
     {
@@ -675,7 +753,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -693,26 +771,42 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v17::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
     }
     // case 5: migrate from v0.18 to latest by using existing minter addr
     {
@@ -769,7 +863,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 other.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: other.to_string(),
                     token_uri: None,
@@ -791,26 +885,44 @@ fn test_migration_legacy_to_latest() {
         );
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(legacy_creator_and_minter.to_string()));
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
-        assert_eq!(minter_ownership.owner, Some(legacy_creator_and_minter));
+        assert_eq!(
+            minter_ownership.owner,
+            Some(legacy_creator_and_minter.clone())
+        );
+
+        // check creator ownership query works
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(legacy_creator_and_minter));
     }
     // case 6: migrate from v0.18 to latest by providing new creator and minter addr
     {
@@ -866,7 +978,7 @@ fn test_migration_legacy_to_latest() {
             .execute_contract(
                 legacy_creator_and_minter.clone(),
                 cw721.clone(),
-                &Cw721ExecuteMsg::<Empty, Empty>::Mint {
+                &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
                     token_id: "1".to_string(),
                     owner: legacy_creator_and_minter.to_string(),
                     token_uri: None,
@@ -884,26 +996,42 @@ fn test_migration_legacy_to_latest() {
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
+        #[allow(deprecated)]
         let m: MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check that the new response is backwards compatable when minter
         // is not None.
+        #[allow(deprecated)]
         let m: v18::MinterResponse = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Minter {})
+            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty, Empty>::Minter {})
             .unwrap();
         assert_eq!(m.minter, Some(minter.to_string()));
 
         // check minter ownership query works
         let minter_ownership: Ownership<Addr> = app
             .wrap()
-            .query_wasm_smart(&cw721, &Cw721QueryMsg::<Empty>::Ownership {})
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetMinterOwnership {},
+            )
             .unwrap();
         assert_eq!(minter_ownership.owner, Some(minter));
+
+        // check creator ownership query works
+        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator_ownership: Ownership<Addr> = app
+            .wrap()
+            .query_wasm_smart(
+                &cw721,
+                &Cw721QueryMsg::<Empty, Empty>::GetCreatorOwnership {},
+            )
+            .unwrap();
+        assert_eq!(creator_ownership.owner, Some(creator));
     }
 }
 
@@ -935,7 +1063,7 @@ fn test_instantiate_016_msg() {
     // assert withdraw address is None
     let withdraw_addr: Option<String> = app
         .wrap()
-        .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty>::GetWithdrawAddress {})
+        .query_wasm_smart(cw721, &Cw721QueryMsg::<Empty, Empty>::GetWithdrawAddress {})
         .unwrap();
     assert!(withdraw_addr.is_none());
 }

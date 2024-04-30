@@ -16,26 +16,41 @@ pub struct Cw721ExpirationContract<
     TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
+    // Extension defined in CollectionInfo.
+    TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
-    pub base_contract:
-        Cw721Contract<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>,
+    pub base_contract: Cw721Contract<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >,
 }
 
-impl<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg> Default
+impl<
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    > Default
     for Cw721ExpirationContract<
         'static,
         TMetadataExtension,
         TCustomResponseMessage,
         TMetadataExtensionMsg,
+        TCollectionInfoExtension,
     >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self {

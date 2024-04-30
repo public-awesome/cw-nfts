@@ -6,12 +6,24 @@ use serde::Serialize;
 
 use crate::Cw721Contract;
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
-    Cw721Query<TMetadataExtension>
-    for Cw721Contract<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    > Cw721Query<TMetadataExtension, TCollectionInfoExtension>
+    for Cw721Contract<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
 }

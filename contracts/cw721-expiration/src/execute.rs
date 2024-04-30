@@ -12,12 +12,25 @@ use crate::{
     CONTRACT_VERSION,
 };
 
-impl<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
-    Cw721ExpirationContract<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
+impl<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >
+    Cw721ExpirationContract<
+        'a,
+        TMetadataExtension,
+        TCustomResponseMessage,
+        TMetadataExtensionMsg,
+        TCollectionInfoExtension,
+    >
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TCustomResponseMessage: CustomMsg,
     TMetadataExtensionMsg: CustomMsg,
+    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     // -- instantiate --
     pub fn instantiate(
@@ -25,7 +38,7 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         if msg.expiration_days == 0 {
             return Err(ContractError::MinExpiration {});
@@ -34,6 +47,7 @@ where
             TMetadataExtension,
             TCustomResponseMessage,
             TMetadataExtensionMsg,
+            TCollectionInfoExtension,
         >::default();
         contract
             .expiration_days
@@ -45,7 +59,9 @@ where
             Cw721InstantiateMsg {
                 name: msg.name,
                 symbol: msg.symbol,
+                collection_info_extension: msg.collection_info_extension,
                 minter: msg.minter,
+                creator: msg.creator,
                 withdraw_address: msg.withdraw_address,
             },
             CONTRACT_NAME,
@@ -59,12 +75,13 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
     ) -> Result<Response<TCustomResponseMessage>, ContractError> {
         let contract = Cw721ExpirationContract::<
             TMetadataExtension,
             TCustomResponseMessage,
             TMetadataExtensionMsg,
+            TCollectionInfoExtension,
         >::default();
         match msg {
             Cw721ExecuteMsg::Mint {

@@ -12,7 +12,7 @@ use cw721::{
         TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
-    state::{CollectionInfo, DefaultOptionMetadataExtension},
+    state::{CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
 };
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -22,17 +22,23 @@ fn main() {
 
     // entry points - generate always with title for avoiding name suffixes like "..._empty_for_..." due to generics
     export_schema_with_title(
-        &schema_for!(Cw721InstantiateMsg),
+        &schema_for!(Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>),
         &out_dir,
         "Cw721InstantiateMsg",
     );
     export_schema_with_title(
-        &schema_for!(Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty>),
+        &schema_for!(
+            Cw721ExecuteMsg::<
+                DefaultOptionMetadataExtension,
+                Empty,
+                DefaultOptionCollectionInfoExtension,
+            >
+        ),
         &out_dir,
         "Cw721ExecuteMsg",
     );
     export_schema_with_title(
-        &schema_for!(Cw721QueryMsg<Empty>),
+        &schema_for!(Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension>),
         &out_dir,
         "Cw721QueryMsg",
     );
@@ -40,7 +46,11 @@ fn main() {
 
     // messages
     export_schema_with_title(&schema_for!(Cw721ReceiveMsg), &out_dir, "Cw721ReceiveMsg");
-    export_schema(&schema_for!(CollectionInfoMsg), &out_dir);
+    export_schema_with_title(
+        &schema_for!(CollectionInfoMsg<DefaultOptionCollectionInfoExtension>),
+        &out_dir,
+        "CollectionInfoMsg",
+    );
 
     // responses
     export_schema_with_title(
@@ -57,7 +67,11 @@ fn main() {
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
     export_schema(&schema_for!(OperatorResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
-    export_schema_with_title(&schema_for!(CollectionInfo), &out_dir, "CollectionInfo");
+    export_schema_with_title(
+        &schema_for!(CollectionInfo<DefaultOptionCollectionInfoExtension>),
+        &out_dir,
+        "CollectionInfo",
+    );
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);

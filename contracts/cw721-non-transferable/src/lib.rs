@@ -1,6 +1,6 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::state::DefaultOptionMetadataExtension;
+use cw721::state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension};
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
     Cw721Contract,
@@ -14,8 +14,13 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> =
-    Cw721Contract<'a, DefaultOptionMetadataExtension, Empty, Empty>;
+pub type Cw721NonTransferableContract<'a> = Cw721Contract<
+    'a,
+    DefaultOptionMetadataExtension,
+    Empty,
+    Empty,
+    DefaultOptionCollectionInfoExtension,
+>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -35,7 +40,7 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
     ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
@@ -50,7 +55,9 @@ pub mod entry {
         let cw721_base_instantiate_msg = Cw721InstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
+            collection_info_extension: msg.collection_info_extension,
             minter: msg.minter,
+            creator: msg.creator,
             withdraw_address: msg.withdraw_address,
         };
 
@@ -75,7 +82,11 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty>,
+        msg: Cw721ExecuteMsg<
+            DefaultOptionMetadataExtension,
+            Empty,
+            DefaultOptionCollectionInfoExtension,
+        >,
     ) -> Result<Response, Cw721ContractError> {
         let config = CONFIG.load(deps.storage)?;
         match config.admin {
