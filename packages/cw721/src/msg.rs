@@ -6,19 +6,10 @@ use cw_utils::Expiration;
 use crate::state::CollectionInfo;
 use crate::Approval;
 
-use cosmwasm_std::Empty;
-
 #[cw_serde]
-pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension> {
-    #[deprecated(since = "0.19.0", note = "Please use UpdateMinterOwnership instead")]
+pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg> {
     UpdateOwnership(Action),
-    UpdateMinterOwnership(Action),
-    UpdateCreatorOwnership(Action),
 
-    /// Update the collection, can only called by the contract creator
-    UpdateCollectionInfo {
-        collection_info: CollectionInfoMsg<TCollectionInfoExtension>,
-    },
     /// Transfer is a base message to move a token to another account without triggering actions
     TransferNft {
         recipient: String,
@@ -92,28 +83,23 @@ pub enum Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionI
 }
 
 #[cw_serde]
-pub struct Cw721InstantiateMsg<TCollectionInfoExtension> {
+pub struct Cw721InstantiateMsg {
     /// Name of the NFT contract
     pub name: String,
     /// Symbol of the NFT contract
     pub symbol: String,
-
-    pub collection_info_extension: TCollectionInfoExtension,
 
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
-    /// The creator is the only who can update collection info.
-    pub creator: Option<String>,
-
     pub withdraw_address: Option<String>,
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
+pub enum Cw721QueryMsg<TMetadataExtension> {
     /// Return the owner of the given token, error if token does not exist
     #[returns(OwnerOfResponse)]
     OwnerOf {
@@ -154,24 +140,11 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     #[returns(NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
-    #[returns(CollectionInfo<Empty>)]
+    #[returns(CollectionInfo)]
     ContractInfo {},
 
-    /// With MetaData Extension.
-    /// Returns top-level metadata about the contract
-    #[returns(CollectionInfo<TCollectionInfoExtension>)]
-    GetCollectionInfo {},
-
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
     Ownership {},
-
-    #[returns(Ownership<Addr>)]
-    GetMinterOwnership {},
-
-    #[returns(Ownership<Addr>)]
-    GetCreatorOwnership {},
 
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
@@ -205,7 +178,6 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     },
 
     /// Return the minter
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
     Minter {},
 
@@ -218,10 +190,6 @@ pub enum Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension> {
     /// Do not use - dummy extension query, needed for inferring type parameter during compile
     #[returns(())]
     Extension { msg: TMetadataExtension },
-
-    /// Do not use - dummy collection info extension query, needed for inferring type parameter during compile
-    #[returns(())]
-    GetCollectionInfoExtension { msg: TCollectionInfoExtension },
 }
 
 #[cw_serde]
@@ -233,10 +201,9 @@ pub enum Cw721MigrateMsg {
 }
 
 #[cw_serde]
-pub struct CollectionInfoMsg<TCollectionInfoExtension> {
+pub struct CollectionInfoMsg {
     pub name: String,
     pub symbol: String,
-    pub extension: TCollectionInfoExtension,
 }
 
 #[cw_serde]

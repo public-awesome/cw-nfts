@@ -12,39 +12,18 @@ pub struct Cw721Contract<
     TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
-    // Extension defined in CollectionInfo.
-    TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
-    pub config: Cw721Config<
-        'a,
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    >,
+    pub config: Cw721Config<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>,
 }
 
-impl<
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    > Default
-    for Cw721Contract<
-        'static,
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    >
+impl<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg> Default
+    for Cw721Contract<'static, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self {

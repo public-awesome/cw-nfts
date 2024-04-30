@@ -1,7 +1,7 @@
 use crate::Extension;
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Empty, Uint128};
-use cw721::{msg::Cw721QueryMsg, state::DefaultOptionCollectionInfoExtension};
+use cosmwasm_std::{Addr, Uint128};
+use cw721::msg::Cw721QueryMsg;
 use cw721_base::{
     msg::{
         AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
@@ -76,24 +76,16 @@ pub enum QueryMsg {
     #[returns(NumTokensResponse)]
     NumTokens {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetCollectionInfo instead")]
-    #[returns(CollectionInfo<Empty>)]
+    #[returns(CollectionInfo)]
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionInfo<DefaultOptionCollectionInfoExtension>)]
+    #[returns(CollectionInfo)]
     GetCollectionInfo {},
 
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
     Ownership {},
-
-    #[returns(Ownership<Addr>)]
-    GetMinterOwnership {},
-
-    #[returns(Ownership<Addr>)]
-    GetCreatorOwnership {},
 
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
@@ -127,7 +119,6 @@ pub enum QueryMsg {
     },
 
     /// Return the minter
-    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(MinterResponse)]
     Minter {},
 
@@ -139,11 +130,6 @@ pub enum QueryMsg {
     // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
     #[returns(())]
     Extension { msg: Extension },
-
-    #[returns(())]
-    GetCollectionInfoExtension {
-        msg: DefaultOptionCollectionInfoExtension,
-    },
 }
 
 // impl Default for Cw2981QueryMsg {
@@ -154,8 +140,8 @@ pub enum QueryMsg {
 
 // impl CustomMsg for Cw2981QueryMsg {}
 
-impl From<QueryMsg> for Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExtension> {
-    fn from(msg: QueryMsg) -> Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExtension> {
+impl From<QueryMsg> for Cw721QueryMsg<Extension> {
+    fn from(msg: QueryMsg) -> Cw721QueryMsg<Extension> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,
@@ -165,9 +151,7 @@ impl From<QueryMsg> for Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExte
                 include_expired,
             },
             QueryMsg::NumTokens {} => Cw721QueryMsg::NumTokens {},
-            #[allow(deprecated)]
-            QueryMsg::ContractInfo {} => Cw721QueryMsg::GetCollectionInfo {},
-            QueryMsg::GetCollectionInfo {} => Cw721QueryMsg::GetCollectionInfo {},
+            QueryMsg::ContractInfo {} => Cw721QueryMsg::ContractInfo {},
             QueryMsg::NftInfo { token_id } => Cw721QueryMsg::NftInfo { token_id },
             QueryMsg::AllNftInfo {
                 token_id,
@@ -190,8 +174,6 @@ impl From<QueryMsg> for Cw721QueryMsg<Extension, DefaultOptionCollectionInfoExte
             }
             #[allow(deprecated)]
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
-            QueryMsg::GetMinterOwnership {} => Cw721QueryMsg::GetMinterOwnership {},
-            QueryMsg::GetCreatorOwnership {} => Cw721QueryMsg::GetCreatorOwnership {},
             QueryMsg::GetWithdrawAddress {} => Cw721QueryMsg::GetWithdrawAddress {},
             QueryMsg::AllOperators {
                 owner,

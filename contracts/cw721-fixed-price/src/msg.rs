@@ -4,7 +4,7 @@ use cw20::Cw20ReceiveMsg;
 use cw721::state::DefaultOptionMetadataExtension;
 
 #[cw_serde]
-pub struct InstantiateMsg<TCollectionInfoExtension> {
+pub struct InstantiateMsg {
     pub owner: Addr,
     pub max_tokens: u32,
     pub unit_price: Uint128,
@@ -14,7 +14,6 @@ pub struct InstantiateMsg<TCollectionInfoExtension> {
     pub cw20_address: Addr,
     pub token_uri: String,
     pub extension: DefaultOptionMetadataExtension,
-    pub collection_info_extension: TCollectionInfoExtension,
     pub withdraw_address: Option<String>,
 }
 

@@ -2,10 +2,7 @@ use crate::{
     execute::Cw721Execute,
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
     query::{Cw721Query, MAX_LIMIT},
-    state::{
-        CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension,
-        Metadata, CREATOR, MINTER,
-    },
+    state::{CollectionInfo, DefaultOptionMetadataExtension, Metadata, MINTER},
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
@@ -22,28 +19,21 @@ use super::*;
 fn proper_cw2_initialization() {
     let mut deps = mock_dependencies();
 
-    Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default()
-    .instantiate(
-        deps.as_mut(),
-        mock_env(),
-        mock_info("larry", &[]),
-        Cw721InstantiateMsg {
-            name: "collection_name".into(),
-            symbol: "collection_symbol".into(),
-            collection_info_extension: None,
-            minter: Some("minter".into()),
-            creator: Some("creator".into()),
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap();
+    Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            mock_info("larry", &[]),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                minter: Some("minter".into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
 
     let minter = MINTER
         .get_ownership(deps.as_ref().storage)
@@ -51,13 +41,6 @@ fn proper_cw2_initialization() {
         .owner
         .map(|a| a.into_string());
     assert_eq!(minter, Some("minter".to_string()));
-
-    let creator = CREATOR
-        .get_ownership(deps.as_ref().storage)
-        .unwrap()
-        .owner
-        .map(|a| a.into_string());
-    assert_eq!(creator, Some("creator".to_string()));
 
     let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
     assert_eq!(
@@ -74,52 +57,36 @@ fn proper_owner_initialization() {
     let mut deps = mock_dependencies();
 
     let info_owner = mock_info("owner", &[]);
-    Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default()
-    .instantiate(
-        deps.as_mut(),
-        mock_env(),
-        info_owner.clone(),
-        Cw721InstantiateMsg {
-            name: "collection_name".into(),
-            symbol: "collection_symbol".into(),
-            collection_info_extension: None,
-            creator: None,
-            minter: None,
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap();
+    Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default()
+        .instantiate(
+            deps.as_mut(),
+            mock_env(),
+            info_owner.clone(),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                minter: None,
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
 
     let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
     assert_eq!(minter, Some(info_owner.sender));
-    let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
-    assert_eq!(creator, Some(Addr::unchecked("owner")));
 }
 
 #[test]
 fn use_metadata_extension() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default();
+    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
     let info = mock_info(CREATOR_ADDR, &[]);
     let init_msg = Cw721InstantiateMsg {
         name: "collection_name".into(),
         symbol: "collection_symbol".into(),
-        collection_info_extension: None,
         minter: None,
-        creator: None,
         withdraw_address: None,
     };
     let env = mock_env();
@@ -191,18 +158,12 @@ fn test_migrate() {
     // assert new data before migration:
     // - ownership and collection info throws NotFound Error
     MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
-    let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default();
+    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
     contract
         .query_collection_info(deps.as_ref(), env.clone())
         .unwrap_err();
     // - query in new minter and creator ownership store throws NotFound Error (in v16 it was stored outside cw_ownable, in dedicated "minter" store)
     MINTER.get_ownership(deps.as_ref().storage).unwrap_err();
-    CREATOR.get_ownership(deps.as_ref().storage).unwrap_err();
     // assert legacy data before migration:
     // - version
     let version = cw2::get_contract_version(deps.as_ref().storage)
@@ -226,23 +187,18 @@ fn test_migrate() {
         assert_eq!(token.owner.as_str(), "owner");
     }
 
-    Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default()
-    .migrate(
-        deps.as_mut(),
-        env.clone(),
-        crate::msg::Cw721MigrateMsg::WithUpdate {
-            minter: None,
-            creator: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap();
+    Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default()
+        .migrate(
+            deps.as_mut(),
+            env.clone(),
+            crate::msg::Cw721MigrateMsg::WithUpdate {
+                minter: None,
+                creator: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
 
     // version
     let version = cw2::get_contract_version(deps.as_ref().storage)
@@ -259,14 +215,6 @@ fn test_migrate() {
         .map(|a| a.into_string());
     assert_eq!(minter_ownership, Some("legacy_minter".to_string()));
 
-    // assert creator ownership
-    let creator_ownership = CREATOR
-        .get_ownership(deps.as_ref().storage)
-        .unwrap()
-        .owner
-        .map(|a| a.into_string());
-    assert_eq!(creator_ownership, Some("legacy_minter".to_string()));
-
     // assert collection info
     let collection_info = contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -274,8 +222,6 @@ fn test_migrate() {
     let legacy_contract_info = CollectionInfo {
         name: "legacy_name".to_string(),
         symbol: "legacy_symbol".to_string(),
-        extension: None,
-        updated_at: env.block.time,
     };
     assert_eq!(collection_info, legacy_contract_info);
 

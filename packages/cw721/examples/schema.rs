@@ -11,7 +11,7 @@ use cw721::{
         OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
-    state::{CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    state::{CollectionInfo, DefaultOptionMetadataExtension},
 };
 fn main() {
     let mut out_dir = current_dir().unwrap();
@@ -20,26 +20,16 @@ fn main() {
     remove_schemas(&out_dir).unwrap();
 
     export_schema_with_title(
-        &schema_for!(Cw721InstantiateMsg<DefaultOptionCollectionInfoExtension>),
+        &schema_for!(Cw721InstantiateMsg),
         &out_dir,
         "InstantiateMsg",
     );
     export_schema_with_title(
-        &schema_for!(
-            Cw721ExecuteMsg::<
-                DefaultOptionMetadataExtension,
-                Empty,
-                DefaultOptionCollectionInfoExtension,
-            >
-        ),
+        &schema_for!(Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty>),
         &out_dir,
         "ExecuteMsg",
     );
-    export_schema_with_title(
-        &schema_for!(Cw721QueryMsg<Empty, DefaultOptionCollectionInfoExtension>),
-        &out_dir,
-        "QueryMsg",
-    );
+    export_schema_with_title(&schema_for!(Cw721QueryMsg<Empty>), &out_dir, "QueryMsg");
     export_schema(&schema_for!(Cw721ReceiveMsg), &out_dir);
     export_schema_with_title(
         &schema_for!(NftInfoResponse<DefaultOptionMetadataExtension>),
@@ -55,11 +45,7 @@ fn main() {
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
     export_schema(&schema_for!(OperatorResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
-    export_schema_with_title(
-        &schema_for!(CollectionInfo<DefaultOptionCollectionInfoExtension>),
-        &out_dir,
-        "CollectionInfo",
-    );
+    export_schema_with_title(&schema_for!(CollectionInfo), &out_dir, "CollectionInfo");
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);

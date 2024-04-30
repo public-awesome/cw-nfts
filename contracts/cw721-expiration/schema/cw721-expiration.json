@@ -12,23 +12,6 @@
       "symbol"
     ],
     "properties": {
-      "collection_info_extension": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/CollectionInfoExtension_for_RoyaltyInfo"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      },
-      "creator": {
-        "description": "The creator is the only who can update collection info.",
-        "type": [
-          "string",
-          "null"
-        ]
-      },
       "expiration_days": {
         "description": "max 65535 days",
         "type": "integer",
@@ -57,93 +40,7 @@
         ]
       }
     },
-    "additionalProperties": false,
-    "definitions": {
-      "Addr": {
-        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
-        "type": "string"
-      },
-      "CollectionInfoExtension_for_RoyaltyInfo": {
-        "type": "object",
-        "required": [
-          "description",
-          "image"
-        ],
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "explicit_content": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "external_link": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image": {
-            "type": "string"
-          },
-          "royalty_info": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/RoyaltyInfo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "start_trading_time": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Timestamp"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "Decimal": {
-        "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
-        "type": "string"
-      },
-      "RoyaltyInfo": {
-        "type": "object",
-        "required": [
-          "payment_address",
-          "share"
-        ],
-        "properties": {
-          "payment_address": {
-            "$ref": "#/definitions/Addr"
-          },
-          "share": {
-            "$ref": "#/definitions/Decimal"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Timestamp": {
-        "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-        "allOf": [
-          {
-            "$ref": "#/definitions/Uint64"
-          }
-        ]
-      },
-      "Uint64": {
-        "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-        "type": "string"
-      }
-    }
+    "additionalProperties": false
   },
   "execute": null,
   "query": {
@@ -495,7 +392,6 @@
         "additionalProperties": false
       },
       {
-        "deprecated": true,
         "type": "object",
         "required": [
           "contract_info"
@@ -523,7 +419,6 @@
         "additionalProperties": false
       },
       {
-        "deprecated": true,
         "type": "object",
         "required": [
           "ownership"
@@ -550,21 +445,7 @@
         "additionalProperties": false
       },
       {
-        "type": "object",
-        "required": [
-          "get_creator_ownership"
-        ],
-        "properties": {
-          "get_creator_ownership": {
-            "type": "object",
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      },
-      {
         "description": "Return the minter",
-        "deprecated": true,
         "type": "object",
         "required": [
           "minter"
@@ -600,32 +481,6 @@
         "additionalProperties": false
       },
       {
-        "description": "This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error: `cannot infer type for type parameter `TCollectionInfoExtension` declared on the enum `QueryMsg`",
-        "type": "object",
-        "required": [
-          "get_collection_info_extension"
-        ],
-        "properties": {
-          "get_collection_info_extension": {
-            "type": "object",
-            "properties": {
-              "msg": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/CollectionInfoExtension_for_RoyaltyInfo"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "additionalProperties": false
-      },
-      {
         "type": "object",
         "required": [
           "get_withdraw_address"
@@ -640,93 +495,9 @@
       }
     ],
     "definitions": {
-      "Addr": {
-        "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
-        "type": "string"
-      },
-      "CollectionInfoExtension_for_RoyaltyInfo": {
-        "type": "object",
-        "required": [
-          "description",
-          "image"
-        ],
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "explicit_content": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "external_link": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image": {
-            "type": "string"
-          },
-          "royalty_info": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/RoyaltyInfo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "start_trading_time": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Timestamp"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "Decimal": {
-        "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
-        "type": "string"
-      },
       "Empty": {
         "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
         "type": "object"
-      },
-      "RoyaltyInfo": {
-        "type": "object",
-        "required": [
-          "payment_address",
-          "share"
-        ],
-        "properties": {
-          "payment_address": {
-            "$ref": "#/definitions/Addr"
-          },
-          "share": {
-            "$ref": "#/definitions/Decimal"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Timestamp": {
-        "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-        "allOf": [
-          {
-            "$ref": "#/definitions/Uint64"
-          }
-        ]
-      },
-      "Uint64": {
-        "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-        "type": "string"
       }
     }
   },
@@ -1323,121 +1094,21 @@
     },
     "contract_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollectionInfo_for_Nullable_CollectionInfoExtension_for_RoyaltyInfo",
+      "title": "CollectionInfo",
       "type": "object",
       "required": [
         "name",
-        "symbol",
-        "updated_at"
+        "symbol"
       ],
       "properties": {
-        "extension": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CollectionInfoExtension_for_RoyaltyInfo"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "name": {
           "type": "string"
         },
         "symbol": {
           "type": "string"
-        },
-        "updated_at": {
-          "$ref": "#/definitions/Timestamp"
         }
       },
-      "additionalProperties": false,
-      "definitions": {
-        "Addr": {
-          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
-          "type": "string"
-        },
-        "CollectionInfoExtension_for_RoyaltyInfo": {
-          "type": "object",
-          "required": [
-            "description",
-            "image"
-          ],
-          "properties": {
-            "description": {
-              "type": "string"
-            },
-            "explicit_content": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "external_link": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image": {
-              "type": "string"
-            },
-            "royalty_info": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/RoyaltyInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "start_trading_time": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Timestamp"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "Decimal": {
-          "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
-          "type": "string"
-        },
-        "RoyaltyInfo": {
-          "type": "object",
-          "required": [
-            "payment_address",
-            "share"
-          ],
-          "properties": {
-            "payment_address": {
-              "$ref": "#/definitions/Addr"
-            },
-            "share": {
-              "$ref": "#/definitions/Decimal"
-            }
-          },
-          "additionalProperties": false
-        },
-        "Timestamp": {
-          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Uint64"
-            }
-          ]
-        },
-        "Uint64": {
-          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-          "type": "string"
-        }
-      }
+      "additionalProperties": false
     },
     "extension": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1446,233 +1117,21 @@
     },
     "get_collection_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollectionInfo_for_Nullable_CollectionInfoExtension_for_RoyaltyInfo",
+      "title": "CollectionInfo",
       "type": "object",
       "required": [
         "name",
-        "symbol",
-        "updated_at"
+        "symbol"
       ],
       "properties": {
-        "extension": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CollectionInfoExtension_for_RoyaltyInfo"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "name": {
           "type": "string"
         },
         "symbol": {
           "type": "string"
-        },
-        "updated_at": {
-          "$ref": "#/definitions/Timestamp"
         }
       },
-      "additionalProperties": false,
-      "definitions": {
-        "Addr": {
-          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
-          "type": "string"
-        },
-        "CollectionInfoExtension_for_RoyaltyInfo": {
-          "type": "object",
-          "required": [
-            "description",
-            "image"
-          ],
-          "properties": {
-            "description": {
-              "type": "string"
-            },
-            "explicit_content": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "external_link": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image": {
-              "type": "string"
-            },
-            "royalty_info": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/RoyaltyInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "start_trading_time": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Timestamp"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "Decimal": {
-          "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
-          "type": "string"
-        },
-        "RoyaltyInfo": {
-          "type": "object",
-          "required": [
-            "payment_address",
-            "share"
-          ],
-          "properties": {
-            "payment_address": {
-              "$ref": "#/definitions/Addr"
-            },
-            "share": {
-              "$ref": "#/definitions/Decimal"
-            }
-          },
-          "additionalProperties": false
-        },
-        "Timestamp": {
-          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Uint64"
-            }
-          ]
-        },
-        "Uint64": {
-          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-          "type": "string"
-        }
-      }
-    },
-    "get_collection_info_extension": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Null",
-      "type": "null"
-    },
-    "get_creator_ownership": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Ownership_for_Addr",
-      "description": "The contract's ownership info",
-      "type": "object",
-      "properties": {
-        "owner": {
-          "description": "The contract's current owner. `None` if the ownership has been renounced.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Addr"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pending_expiry": {
-          "description": "The deadline for the pending owner to accept the ownership. `None` if there isn't a pending ownership transfer, or if a transfer exists and it doesn't have a deadline.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Expiration"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pending_owner": {
-          "description": "The account who has been proposed to take over the ownership. `None` if there isn't a pending ownership transfer.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Addr"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "definitions": {
-        "Addr": {
-          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
-          "type": "string"
-        },
-        "Expiration": {
-          "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
-          "oneOf": [
-            {
-              "description": "AtHeight will expire when `env.block.height` >= height",
-              "type": "object",
-              "required": [
-                "at_height"
-              ],
-              "properties": {
-                "at_height": {
-                  "type": "integer",
-                  "format": "uint64",
-                  "minimum": 0.0
-                }
-              },
-              "additionalProperties": false
-            },
-            {
-              "description": "AtTime will expire when `env.block.time` >= time",
-              "type": "object",
-              "required": [
-                "at_time"
-              ],
-              "properties": {
-                "at_time": {
-                  "$ref": "#/definitions/Timestamp"
-                }
-              },
-              "additionalProperties": false
-            },
-            {
-              "description": "Never will never expire. Used to express the empty variant",
-              "type": "object",
-              "required": [
-                "never"
-              ],
-              "properties": {
-                "never": {
-                  "type": "object",
-                  "additionalProperties": false
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
-        },
-        "Timestamp": {
-          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
-          "allOf": [
-            {
-              "$ref": "#/definitions/Uint64"
-            }
-          ]
-        },
-        "Uint64": {
-          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
-          "type": "string"
-        }
-      }
+      "additionalProperties": false
     },
     "get_minter_ownership": {
       "$schema": "http://json-schema.org/draft-07/schema#",

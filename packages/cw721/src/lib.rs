@@ -7,7 +7,7 @@ pub mod receiver;
 pub mod state;
 
 pub use cw_utils::Expiration;
-pub use state::{Approval, CollectionInfoExtension, RoyaltyInfo};
+pub use state::Approval;
 
 #[cfg(test)]
 pub mod testing;

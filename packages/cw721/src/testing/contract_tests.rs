@@ -1,23 +1,19 @@
 #![cfg(test)]
+
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response, StdError,
-    Timestamp, WasmMsg,
+    from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
 use crate::error::Cw721ContractError;
 use crate::msg::{
     ApprovalResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
-use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
+use crate::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
-use crate::state::{
-    CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension, CREATOR,
-    MINTER,
-};
+use crate::state::{CollectionInfo, DefaultOptionMetadataExtension, MINTER};
 use crate::{execute::Cw721Execute, query::Cw721Query, Approval, Expiration};
-use crate::{CollectionInfoExtension, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
@@ -29,14 +25,12 @@ const SYMBOL: &str = "MGK";
 
 fn setup_contract(
     deps: DepsMut<'_>,
-) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty, Empty> {
+) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty> {
     let contract = Cw721Contract::default();
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Empty {},
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -57,14 +51,12 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty, Empty>::default();
+    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Empty {},
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
@@ -86,8 +78,6 @@ fn proper_instantiation() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_info = contract
         .query_collection_info(deps.as_ref(), env.clone())
         .unwrap();
@@ -96,8 +86,6 @@ fn proper_instantiation() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Empty {},
-            updated_at: env.block.time
         }
     );
 
@@ -123,30 +111,12 @@ fn proper_instantiation() {
 #[test]
 fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default();
+    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
-    let collection_info_extension = Some(CollectionInfoExtension {
-        description: "description".to_string(),
-        image: "image".to_string(),
-        explicit_content: Some(true),
-        external_link: Some("external_link".to_string()),
-        start_trading_time: Some(Timestamp::from_seconds(0)),
-        royalty_info: Some(RoyaltyInfo {
-            payment_address: Addr::unchecked("payment_address"),
-            share: "0.1".parse().unwrap(),
-        }),
-    });
-    let msg = Cw721InstantiateMsg::<DefaultOptionCollectionInfoExtension> {
+    let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: collection_info_extension.clone(),
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let collection_info = mock_info("creator", &[]);
@@ -168,8 +138,6 @@ fn proper_instantiation_with_collection_info() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let info = contract
         .query_collection_info(deps.as_ref(), env.clone())
         .unwrap();
@@ -178,8 +146,6 @@ fn proper_instantiation_with_collection_info() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: collection_info_extension,
-            updated_at: env.block.time
         }
     );
 
@@ -289,120 +255,6 @@ fn minting() {
 }
 
 #[test]
-fn test_update_collection_info() {
-    let mut deps = mock_dependencies();
-    let contract = setup_contract(deps.as_mut());
-
-    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
-        collection_info: CollectionInfoMsg {
-            name: "new name".to_string(),
-            symbol: "NEW".to_string(),
-            extension: Empty {},
-        },
-    };
-
-    // Creator can update collection info
-    let creator_info = mock_info(CREATOR_ADDR, &[]);
-    let _ = contract
-        .execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
-            update_collection_info_msg,
-        )
-        .unwrap();
-
-    // Update the owner to "random". The new owner should be able to
-    // mint new tokens, the old one should not.
-    contract
-        .execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
-            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::TransferOwnership {
-                new_owner: "random".to_string(),
-                expiry: None,
-            }),
-        )
-        .unwrap();
-
-    // Creator does not change until ownership transfer completes.
-    // Pending ownership transfer should be discoverable via query.
-    let ownership: Ownership<Addr> = from_json(
-        contract
-            .query(
-                deps.as_ref(),
-                mock_env(),
-                Cw721QueryMsg::GetCreatorOwnership {},
-            )
-            .unwrap(),
-    )
-    .unwrap();
-
-    assert_eq!(
-        ownership,
-        Ownership::<Addr> {
-            owner: Some(Addr::unchecked(CREATOR_ADDR)),
-            pending_owner: Some(Addr::unchecked("random")),
-            pending_expiry: None,
-        }
-    );
-
-    // Accept the ownership transfer.
-    let random_info = mock_info("random", &[]);
-    contract
-        .execute(
-            deps.as_mut(),
-            mock_env(),
-            random_info.clone(),
-            Cw721ExecuteMsg::UpdateCreatorOwnership(Action::AcceptOwnership),
-        )
-        .unwrap();
-
-    // Creator changes after ownership transfer is accepted.
-    let creator_ownership: Ownership<Addr> = from_json(
-        contract
-            .query(
-                deps.as_ref(),
-                mock_env(),
-                Cw721QueryMsg::GetCreatorOwnership {},
-            )
-            .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(creator_ownership.owner, Some(random_info.sender.clone()));
-
-    let update_collection_info_msg = Cw721ExecuteMsg::UpdateCollectionInfo {
-        collection_info: CollectionInfoMsg {
-            name: "new name".to_string(),
-            symbol: "NEW".to_string(),
-            extension: Empty {},
-        },
-    };
-
-    // Old owner can not update.
-    let err: Cw721ContractError = contract
-        .execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info,
-            update_collection_info_msg.clone(),
-        )
-        .unwrap_err();
-    assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
-
-    // New owner can update.
-    let _ = contract
-        .execute(
-            deps.as_mut(),
-            mock_env(),
-            random_info,
-            update_collection_info_msg,
-        )
-        .unwrap();
-}
-
-#[test]
 fn test_update_minter() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
@@ -430,7 +282,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
+            Cw721ExecuteMsg::UpdateOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -441,11 +293,7 @@ fn test_update_minter() {
     // Pending ownership transfer should be discoverable via query.
     let ownership: Ownership<Addr> = from_json(
         contract
-            .query(
-                deps.as_ref(),
-                mock_env(),
-                Cw721QueryMsg::GetMinterOwnership {},
-            )
+            .query(deps.as_ref(), mock_env(), Cw721QueryMsg::Ownership {})
             .unwrap(),
     )
     .unwrap();
@@ -466,18 +314,14 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
+            Cw721ExecuteMsg::UpdateOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 
     // Minter changes after ownership transfer is accepted.
     let minter_ownership: Ownership<Addr> = from_json(
         contract
-            .query(
-                deps.as_ref(),
-                mock_env(),
-                Cw721QueryMsg::GetMinterOwnership {},
-            )
+            .query(deps.as_ref(), mock_env(), Cw721QueryMsg::Ownership {})
             .unwrap(),
     )
     .unwrap();
@@ -1103,21 +947,17 @@ fn test_set_withdraw_address() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    // other than creator cant set
+    // other than minter cant set
     let err = contract
-        .set_withdraw_address(
-            deps.as_mut(),
-            &Addr::unchecked(MINTER_ADDR),
-            "foo".to_string(),
-        )
+        .set_withdraw_address(deps.as_mut(), &Addr::unchecked("other"), "foo".to_string())
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
-    // creator can set
+    // minter can set
     contract
         .set_withdraw_address(
             deps.as_mut(),
-            &Addr::unchecked(CREATOR_ADDR),
+            &Addr::unchecked(MINTER_ADDR),
             "foo".to_string(),
         )
         .unwrap();
@@ -1137,13 +977,13 @@ fn test_remove_withdraw_address() {
 
     // other than creator cant remove
     let err = contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER_ADDR))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked("other"))
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // no withdraw address set yet
     let err = contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(CREATOR_ADDR))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER_ADDR))
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::NoWithdrawAddress {});
 
@@ -1151,12 +991,12 @@ fn test_remove_withdraw_address() {
     contract
         .set_withdraw_address(
             deps.as_mut(),
-            &Addr::unchecked(CREATOR_ADDR),
+            &Addr::unchecked(MINTER_ADDR),
             "foo".to_string(),
         )
         .unwrap();
     contract
-        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(CREATOR_ADDR))
+        .remove_withdraw_address(deps.as_mut().storage, &Addr::unchecked(MINTER_ADDR))
         .unwrap();
     assert!(!contract
         .config
@@ -1167,7 +1007,7 @@ fn test_remove_withdraw_address() {
     contract
         .set_withdraw_address(
             deps.as_mut(),
-            &Addr::unchecked(CREATOR_ADDR),
+            &Addr::unchecked(MINTER_ADDR),
             "foo".to_string(),
         )
         .unwrap();
@@ -1190,11 +1030,11 @@ fn test_withdraw_funds() {
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::NoWithdrawAddress {});
 
-    // set and withdraw by non-creator
+    // set and withdraw by non-owner
     contract
         .set_withdraw_address(
             deps.as_mut(),
-            &Addr::unchecked(CREATOR_ADDR),
+            &Addr::unchecked(MINTER_ADDR),
             "foo".to_string(),
         )
         .unwrap();

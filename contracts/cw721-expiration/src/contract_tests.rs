@@ -12,7 +12,7 @@ use cw721::msg::{
     OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{CollectionInfo, DefaultOptionCollectionInfoExtension, CREATOR, MINTER};
+use cw721::state::{CollectionInfo, MINTER};
 use cw721::{query::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
@@ -29,26 +29,14 @@ const SYMBOL: &str = "MGK";
 fn setup_contract(
     deps: DepsMut<'_>,
     expiration_days: u16,
-) -> Cw721ExpirationContract<
-    'static,
-    DefaultOptionMetadataExtension,
-    Empty,
-    Empty,
-    DefaultOptionCollectionInfoExtension,
-> {
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        DefaultOptionCollectionInfoExtension,
-    >::default();
+) -> Cw721ExpirationContract<'static, DefaultOptionMetadataExtension, Empty, Empty> {
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -60,20 +48,14 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        Option<Empty>,
-    >::default();
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Some(Empty {}),
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
@@ -88,8 +70,6 @@ fn proper_instantiation() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_info = contract
         .base_contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -99,8 +79,6 @@ fn proper_instantiation() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Some(Empty {}),
-            updated_at: env.block.time,
         }
     );
 
@@ -114,7 +92,7 @@ fn proper_instantiation() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), env)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -128,20 +106,14 @@ fn proper_instantiation() {
 #[test]
 fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionMetadataExtension,
-        Empty,
-        Empty,
-        Option<Empty>,
-    >::default();
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        collection_info_extension: Some(Empty {}),
         minter: Some(String::from(MINTER_ADDR)),
-        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
@@ -156,8 +128,6 @@ fn proper_instantiation_with_collection_info() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_info = contract
         .base_contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -167,8 +137,6 @@ fn proper_instantiation_with_collection_info() {
         CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
-            extension: Some(Empty {}),
-            updated_at: env.block.time,
         }
     );
 
@@ -182,7 +150,7 @@ fn proper_instantiation_with_collection_info() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), env)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -228,7 +196,7 @@ fn test_mint() {
     // ensure num tokens increases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref(), env)
         .unwrap();
     assert_eq!(1, count.count);
 
@@ -324,7 +292,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
+            Cw721ExecuteMsg::UpdateOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -356,7 +324,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
+            Cw721ExecuteMsg::UpdateOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 

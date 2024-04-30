@@ -9,30 +9,23 @@ use crate::state::CollectionInfo;
 use crate::Approval;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, CustomMsg, Empty, QuerierWrapper, StdResult, WasmMsg,
-    WasmQuery,
+    to_json_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 #[cw_serde]
-pub struct Cw721Contract<
-    TMetadataExtension,
-    TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension,
->(
+pub struct Cw721Contract<TMetadataExtension, TMetadataExtensionMsg: CustomMsg>(
     pub Addr,
     pub PhantomData<TMetadataExtension>,
     pub PhantomData<TMetadataExtensionMsg>,
-    pub PhantomData<TCollectionInfoExtension>,
 );
 
 #[allow(dead_code)]
-impl<TMetadataExtension, TMetadataExtensionMsg: CustomMsg, TCollectionInfoExtension>
-    Cw721Contract<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>
+impl<TMetadataExtension, TMetadataExtensionMsg: CustomMsg>
+    Cw721Contract<TMetadataExtension, TMetadataExtensionMsg>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     pub fn addr(&self) -> Addr {
         self.0.clone()
@@ -40,7 +33,7 @@ where
 
     pub fn call(
         &self,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg, TCollectionInfoExtension>,
+        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg>,
     ) -> StdResult<CosmosMsg> {
         let msg = to_json_binary(&msg)?;
         Ok(WasmMsg::Execute {
@@ -54,7 +47,7 @@ where
     pub fn query<T: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TMetadataExtension, TCollectionInfoExtension>,
+        req: Cw721QueryMsg<TMetadataExtension>,
     ) -> StdResult<T> {
         let query = WasmQuery::Smart {
             contract_addr: self.addr().into(),
@@ -134,11 +127,8 @@ where
     }
 
     /// With metadata extension
-    pub fn collection_info<U: DeserializeOwned>(
-        &self,
-        querier: &QuerierWrapper,
-    ) -> StdResult<CollectionInfo<U>> {
-        let req = Cw721QueryMsg::GetCollectionInfo {};
+    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
+        let req = Cw721QueryMsg::ContractInfo {};
         self.query(querier, req)
     }
 
@@ -193,11 +183,6 @@ where
     ) -> StdResult<TokensResponse> {
         let req = Cw721QueryMsg::AllTokens { start_after, limit };
         self.query(querier, req)
-    }
-
-    /// returns true if the contract supports the metadata extension
-    pub fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
-        self.collection_info::<Empty>(querier).is_ok()
     }
 
     /// returns true if the contract supports the enumerable extension

@@ -9,9 +9,8 @@ use cw721::{
         AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721ExecuteMsg, MinterResponse,
         NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
-    state::{CollectionInfo, DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
+    state::{CollectionInfo, DefaultOptionMetadataExtension},
 };
-#[allow(deprecated)]
 use cw721_non_transferable::{InstantiateMsg, QueryMsg};
 
 fn main() {
@@ -20,13 +19,9 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
+    export_schema_with_title(&schema_for!(InstantiateMsg), &out_dir, "InstantiateMsg");
     export_schema_with_title(
-        &schema_for!(InstantiateMsg<DefaultOptionCollectionInfoExtension>),
-        &out_dir,
-        "InstantiateMsg",
-    );
-    export_schema_with_title(
-        &schema_for!(Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty, DefaultOptionCollectionInfoExtension>),
+        &schema_for!(Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty>),
         &out_dir,
         "ExecuteMsg",
     );
@@ -44,11 +39,7 @@ fn main() {
     export_schema(&schema_for!(ApprovalResponse), &out_dir);
     export_schema(&schema_for!(ApprovalsResponse), &out_dir);
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
-    export_schema_with_title(
-        &schema_for!(CollectionInfo<DefaultOptionCollectionInfoExtension>),
-        &out_dir,
-        "CollectionInfo",
-    );
+    export_schema_with_title(&schema_for!(CollectionInfo), &out_dir, "CollectionInfo");
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);

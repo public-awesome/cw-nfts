@@ -30,10 +30,7 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721::{
-        msg::Cw721ExecuteMsg,
-        state::{DefaultOptionCollectionInfoExtension, DefaultOptionMetadataExtension},
-    };
+    use cw721::{msg::Cw721ExecuteMsg, state::DefaultOptionMetadataExtension};
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -41,14 +38,10 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionCollectionInfoExtension>,
+        msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
-            Empty,
-            Empty,
-            DefaultOptionCollectionInfoExtension,
-        >::default();
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
         contract.instantiate(deps, env, info, msg)
     }
 
@@ -57,18 +50,10 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            DefaultOptionMetadataExtension,
-            Empty,
-            DefaultOptionCollectionInfoExtension,
-        >,
+        msg: Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty>,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
-            Empty,
-            Empty,
-            DefaultOptionCollectionInfoExtension,
-        >::default();
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
         contract.execute(deps, env, info, msg)
     }
 
@@ -76,14 +61,10 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: QueryMsg<DefaultOptionMetadataExtension, DefaultOptionCollectionInfoExtension>,
+        msg: QueryMsg<DefaultOptionMetadataExtension>,
     ) -> Result<Binary, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionMetadataExtension,
-            Empty,
-            Empty,
-            DefaultOptionCollectionInfoExtension,
-        >::default();
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
         contract.query(deps, env, msg)
     }
 
@@ -98,7 +79,6 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
-    use cw721::state::DefaultOptionCollectionInfoExtension;
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
 
@@ -117,9 +97,7 @@ mod tests {
                 expiration_days: 0,
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
-                collection_info_extension: None,
                 minter: Some("minter".into()),
-                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )
@@ -135,9 +113,7 @@ mod tests {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                collection_info_extension: None,
                 minter: Some("minter".into()),
-                creator: Some("creator".into()),
                 withdraw_address: None,
             },
         )
@@ -154,15 +130,10 @@ mod tests {
 
         assert_eq!(
             1,
-            Cw721ExpirationContract::<
-                DefaultOptionMetadataExtension,
-                Empty,
-                Empty,
-                DefaultOptionCollectionInfoExtension,
-            >::default()
-            .expiration_days
-            .load(deps.as_ref().storage)
-            .unwrap()
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default()
+                .expiration_days
+                .load(deps.as_ref().storage)
+                .unwrap()
         );
     }
 }

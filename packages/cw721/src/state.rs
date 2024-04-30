@@ -1,23 +1,17 @@
 use std::marker::PhantomData;
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, BlockInfo, CustomMsg, Decimal, StdResult, Storage, Timestamp};
+use cosmwasm_std::{Addr, BlockInfo, CustomMsg, StdResult, Storage};
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-/// Creator owns this contract and can update collection info!
-/// !!! Important note here: !!!
-/// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
-/// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
-pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
-pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
+pub const MINTER: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 
 /// Default CollectionInfoExtension with RoyaltyInfo
-pub type DefaultOptionCollectionInfoExtension = Option<CollectionInfoExtension<RoyaltyInfo>>;
 pub type DefaultOptionMetadataExtension = Option<Metadata>;
 
 pub struct Cw721Config<
@@ -28,15 +22,12 @@ pub struct Cw721Config<
     TCustomResponseMessage,
     // Message passed for updating metadata.
     TMetadataExtensionMsg,
-    // Extension defined in CollectionInfo.
-    TCollectionInfoExtension,
 > where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
-    pub collection_info: Item<'a, CollectionInfo<TCollectionInfoExtension>>,
+    pub collection_info: Item<'a, CollectionInfo>,
     pub token_count: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
@@ -49,23 +40,11 @@ pub struct Cw721Config<
     pub(crate) _custom_execute: PhantomData<TMetadataExtensionMsg>,
 }
 
-impl<
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    > Default
-    for Cw721Config<
-        'static,
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    >
+impl<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg> Default
+    for Cw721Config<'static, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self::new(
@@ -79,24 +58,11 @@ where
     }
 }
 
-impl<
-        'a,
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    >
-    Cw721Config<
-        'a,
-        TMetadataExtension,
-        TCustomResponseMessage,
-        TMetadataExtensionMsg,
-        TCollectionInfoExtension,
-    >
+impl<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
+    Cw721Config<'a, TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg>
 where
     TMetadataExtension: Serialize + DeserializeOwned + Clone,
     TMetadataExtensionMsg: CustomMsg,
-    TCollectionInfoExtension: Serialize + DeserializeOwned + Clone,
 {
     fn new(
         collection_info_key: &'a str,
@@ -192,27 +158,9 @@ where
 }
 
 #[cw_serde]
-pub struct CollectionInfo<TCollectionInfoExtension> {
+pub struct CollectionInfo {
     pub name: String,
     pub symbol: String,
-    pub extension: TCollectionInfoExtension,
-    pub updated_at: Timestamp,
-}
-
-#[cw_serde]
-pub struct CollectionInfoExtension<TRoyaltyInfo> {
-    pub description: String,
-    pub image: String,
-    pub external_link: Option<String>,
-    pub explicit_content: Option<bool>,
-    pub start_trading_time: Option<Timestamp>,
-    pub royalty_info: Option<TRoyaltyInfo>,
-}
-
-#[cw_serde]
-pub struct RoyaltyInfo {
-    pub payment_address: Addr,
-    pub share: Decimal,
 }
 
 // see: https://docs.opensea.io/docs/metadata-standards

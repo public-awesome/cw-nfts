@@ -1,5 +1,4 @@
 use cosmwasm_std::{to_json_binary, Addr, Attribute, Binary};
-use cw721::state::DefaultOptionCollectionInfoExtension;
 use cw_multi_test::{App, ContractWrapper, Executor};
 
 #[test]
@@ -20,7 +19,7 @@ fn test_cw721_base_receive_succeed() {
         .execute_contract(
             admin.clone(),
             nft_contract,
-            &ExecuteMsg::<(), (), ()>::SendNft {
+            &ExecuteMsg::<(), ()>::SendNft {
                 contract: receiver_contract.to_string(),
                 token_id: "test".to_string(),
                 msg: to_json_binary(&InnerMsg::Succeed).unwrap(),
@@ -76,7 +75,7 @@ fn test_cw721_base_receive_fail() {
     let result = app.execute_contract(
         admin.clone(),
         nft_contract.clone(),
-        &ExecuteMsg::<(), (), ()>::SendNft {
+        &ExecuteMsg::<(), ()>::SendNft {
             contract: receiver_contract.to_string(),
             token_id: "test".to_string(),
             msg: to_json_binary(&InnerMsg::Fail).unwrap(),
@@ -89,7 +88,7 @@ fn test_cw721_base_receive_fail() {
     let result = app.execute_contract(
         admin,
         nft_contract,
-        &ExecuteMsg::<(), (), ()>::SendNft {
+        &ExecuteMsg::<(), ()>::SendNft {
             contract: receiver_contract.to_string(),
             token_id: "test".to_string(),
             msg: Binary::from(br#"{"invalid": "fields"}"#),
@@ -123,12 +122,10 @@ fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
         .instantiate_contract(
             nft_code_id,
             admin.clone(),
-            &base_msg::InstantiateMsg::<DefaultOptionCollectionInfoExtension> {
+            &base_msg::InstantiateMsg {
                 name: "nft".to_string(),
                 symbol: "NFT".to_string(),
-                collection_info_extension: None,
                 minter: Some(admin.to_string()),
-                creator: Some(admin.to_string()),
                 withdraw_address: None,
             },
             &[],
@@ -152,7 +149,7 @@ fn setup_contracts(app: &mut App, admin: Addr) -> Contracts {
     app.execute_contract(
         admin.clone(),
         nft_contract.clone(),
-        &base_msg::ExecuteMsg::<(), (), ()>::Mint {
+        &base_msg::ExecuteMsg::<(), ()>::Mint {
             token_id: "test".to_string(),
             owner: admin.to_string(),
             token_uri: Some("https://example.com".to_string()),
