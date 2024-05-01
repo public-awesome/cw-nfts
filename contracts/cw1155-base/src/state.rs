@@ -8,8 +8,8 @@ use cw1155::{Balance, Expiration};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 pub struct Cw1155Contract<'a, T>
-where
-    T: Serialize + DeserializeOwned + Clone,
+    where
+        T: Serialize + DeserializeOwned + Clone,
 {
     pub minter: Item<'a, Addr>,
     pub token_count: Map<'a, &'a str, Uint128>,
@@ -19,8 +19,8 @@ where
 }
 
 impl<'a, T> Default for Cw1155Contract<'static, T>
-where
-    T: Serialize + DeserializeOwned + Clone,
+    where
+        T: Serialize + DeserializeOwned + Clone,
 {
     fn default() -> Self {
         Self::new(
@@ -35,8 +35,8 @@ where
 }
 
 impl<'a, T> Cw1155Contract<'a, T>
-where
-    T: Serialize + DeserializeOwned + Clone,
+    where
+        T: Serialize + DeserializeOwned + Clone,
 {
     fn new(
         minter_key: &'a str,
@@ -47,7 +47,7 @@ where
         balances_token_id_key: &'a str,
     ) -> Self {
         let indexes = BalanceIndexes {
-            token_id: MultiIndex::new(balances_token_id_idx, balances_key, balances_token_id_key),
+            token_id: MultiIndex::new(|_, b| b.token_id.to_string(), balances_key, balances_token_id_key),
         };
         Self {
             minter: Item::new(minter_key),
@@ -101,12 +101,8 @@ pub struct BalanceIndexes<'a> {
 }
 
 impl<'a> IndexList<Balance> for BalanceIndexes<'a> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Balance>> + '_> {
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item=&'_ dyn Index<Balance>> + '_> {
         let v: Vec<&dyn Index<Balance>> = vec![&self.token_id];
         Box::new(v.into_iter())
     }
-}
-
-pub fn balances_token_id_idx(d: &Balance) -> String {
-    d.token_id.clone()
 }

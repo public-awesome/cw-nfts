@@ -1,11 +1,11 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_binary, Addr, Binary, Deps, Env, Order, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult, Uint128};
 
 use cw1155::{
-    AllBalancesResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
-    BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, MinterResponse,
+    AllBalancesResponse, Approval, ApprovalsForResponse, Balance, BalanceResponse,
+    BatchBalanceResponse, Cw1155QueryMsg, Expiration, MinterResponse,
     NumTokensResponse, TokenInfoResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
@@ -17,14 +17,14 @@ const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
 impl<'a, T> Cw1155Contract<'a, T>
-where
-    T: Serialize + DeserializeOwned + Clone,
+    where
+        T: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg) -> StdResult<Binary> {
         match msg {
             Cw1155QueryMsg::Minter {} => {
                 let minter = self.minter.load(deps.storage)?.to_string();
-                to_binary(&MinterResponse { minter })
+                to_json_binary(&MinterResponse { minter })
             }
             Cw1155QueryMsg::Balance { owner, token_id } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
@@ -36,7 +36,7 @@ where
                         token_id,
                         amount: Uint128::new(0),
                     });
-                to_binary(&BalanceResponse {
+                to_json_binary(&BalanceResponse {
                     balance: balance.amount,
                 })
             }
@@ -44,7 +44,7 @@ where
                 token_id,
                 start_after,
                 limit,
-            } => to_binary(&self.query_all_balances(deps, token_id, start_after, limit)?),
+            } => to_json_binary(&self.query_all_balances(deps, token_id, start_after, limit)?),
             Cw1155QueryMsg::BatchBalance { owner, token_ids } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 let balances = token_ids
@@ -61,19 +61,13 @@ where
                             .amount)
                     })
                     .collect::<StdResult<_>>()?;
-                to_binary(&BatchBalanceResponse { balances })
+                to_json_binary(&BatchBalanceResponse { balances })
             }
             Cw1155QueryMsg::NumTokens { token_id } => {
                 let count = self.token_count(deps.storage, &token_id)?;
-                to_binary(&NumTokensResponse { count })
+                to_json_binary(&NumTokensResponse { count })
             }
-            Cw1155QueryMsg::IsApprovedForAll { owner, operator } => {
-                let owner_addr = deps.api.addr_validate(&owner)?;
-                let operator_addr = deps.api.addr_validate(&operator)?;
-                let approved = self.check_can_approve(deps, &env, &owner_addr, &operator_addr)?;
-                to_binary(&IsApprovedForAllResponse { approved })
-            }
-            Cw1155QueryMsg::ApprovedForAll {
+            Cw1155QueryMsg::ApprovalsFor {
                 owner,
                 include_expired,
                 start_after,
@@ -81,7 +75,7 @@ where
             } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 let start_addr = maybe_addr(deps.api, start_after)?;
-                to_binary(&self.query_all_approvals(
+                to_json_binary(&self.query_all_approvals(
                     deps,
                     env,
                     owner_addr,
@@ -92,7 +86,7 @@ where
             }
             Cw1155QueryMsg::TokenInfo { token_id } => {
                 let token_info = self.tokens.load(deps.storage, &token_id)?;
-                to_binary(&TokenInfoResponse::<T> {
+                to_json_binary(&TokenInfoResponse::<T> {
                     token_uri: token_info.token_uri,
                     extension: token_info.extension,
                 })
@@ -103,18 +97,18 @@ where
                 limit,
             } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
-                to_binary(&self.query_tokens(deps, owner_addr, start_after, limit)?)
+                to_json_binary(&self.query_tokens(deps, owner_addr, start_after, limit)?)
             }
             Cw1155QueryMsg::AllTokens { start_after, limit } => {
-                to_binary(&self.query_all_tokens(deps, start_after, limit)?)
+                to_json_binary(&self.query_all_tokens(deps, start_after, limit)?)
             }
         }
     }
 }
 
 impl<'a, T> Cw1155Contract<'a, T>
-where
-    T: Serialize + DeserializeOwned + Clone,
+    where
+        T: Serialize + DeserializeOwned + Clone,
 {
     fn query_all_approvals(
         &self,
@@ -124,7 +118,7 @@ where
         include_expired: bool,
         start_after: Option<Addr>,
         limit: Option<u32>,
-    ) -> StdResult<ApprovedForAllResponse> {
+    ) -> StdResult<ApprovalsForResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
         let start = start_after.as_ref().map(Bound::exclusive);
 
@@ -138,7 +132,7 @@ where
             .take(limit)
             .map(build_approval)
             .collect::<StdResult<_>>()?;
-        Ok(ApprovedForAllResponse { operators })
+        Ok(ApprovalsForResponse { operators })
     }
 
     fn query_tokens(

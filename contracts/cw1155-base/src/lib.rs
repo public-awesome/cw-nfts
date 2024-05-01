@@ -1,11 +1,9 @@
 mod contract_tests;
-mod error;
 mod execute;
 mod msg;
 mod query;
 mod state;
 
-pub use crate::error::ContractError;
 pub use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
 pub use crate::state::Cw1155Contract;
 use cosmwasm_std::Empty;
@@ -20,6 +18,7 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cw1155::Cw1155ContractError;
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -39,7 +38,7 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: ExecuteMsg<Extension>,
-    ) -> Result<Response, ContractError> {
+    ) -> Result<Response, Cw1155ContractError> {
         let tract = Cw1155Contract::<Extension>::default();
         tract.execute(deps, env, info, msg)
     }

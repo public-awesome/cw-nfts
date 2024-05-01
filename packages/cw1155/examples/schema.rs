@@ -5,9 +5,9 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 use cosmwasm_std::Empty;
 
 use cw1155::{
-    AllBalancesResponse, ApprovedForAllResponse, BalanceResponse, BatchBalanceResponse,
-    Cw1155ExecuteMsg, Cw1155QueryMsg, Cw1155ReceiveMsg, IsApprovedForAllResponse, MinterResponse,
-    NumTokensResponse, TokenInfoResponse, TokensResponse,
+    AllBalancesResponse, ApprovalsForResponse, BalanceResponse, BatchBalanceResponse,
+    Cw1155ExecuteMsg, Cw1155QueryMsg, Cw1155ReceiveMsg, MinterResponse, NumTokensResponse,
+    TokenInfoResponse, TokensResponse,
 };
 
 type Extension = Empty;
@@ -24,8 +24,7 @@ fn main() {
     export_schema(&schema_for!(AllBalancesResponse), &out_dir);
     export_schema(&schema_for!(BatchBalanceResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
-    export_schema(&schema_for!(ApprovedForAllResponse), &out_dir);
-    export_schema(&schema_for!(IsApprovedForAllResponse), &out_dir);
+    export_schema(&schema_for!(ApprovalsForResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema_with_title(

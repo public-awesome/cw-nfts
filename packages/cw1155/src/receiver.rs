@@ -1,7 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{to_binary, Binary, CosmosMsg, StdResult, Uint128, WasmMsg};
+use cosmwasm_std::{Binary, CosmosMsg, StdResult, Uint128, WasmMsg, to_json_binary};
+use crate::TokenAmount;
 
 /// Cw1155ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
@@ -20,7 +21,7 @@ impl Cw1155ReceiveMsg {
     /// serializes the message
     pub fn into_binary(self) -> StdResult<Binary> {
         let msg = ReceiverExecuteMsg::Receive(self);
-        to_binary(&msg)
+        to_json_binary(&msg)
     }
 
     /// creates a cosmos_msg sending this struct to the named contract
@@ -41,7 +42,7 @@ impl Cw1155ReceiveMsg {
 pub struct Cw1155BatchReceiveMsg {
     pub operator: String,
     pub from: Option<String>,
-    pub batch: Vec<(String, Uint128)>,
+    pub batch: Vec<TokenAmount>,
     pub msg: Binary,
 }
 
@@ -49,7 +50,7 @@ impl Cw1155BatchReceiveMsg {
     /// serializes the message
     pub fn into_binary(self) -> StdResult<Binary> {
         let msg = ReceiverExecuteMsg::BatchReceive(self);
-        to_binary(&msg)
+        to_json_binary(&msg)
     }
 
     /// creates a cosmos_msg sending this struct to the named contract

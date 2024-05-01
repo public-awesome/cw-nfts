@@ -2,14 +2,15 @@
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{
-        to_binary, Addr, Binary, Empty, OverflowError, Response, StdError, Uint128,
+        from_json, to_json_binary, Addr, Binary, Empty, Event, OverflowError, Response, StdError,
+        Uint128,
     };
 
-    use crate::{ContractError, Cw1155Contract, ExecuteMsg, InstantiateMsg, MintMsg};
+    use crate::{Cw1155Contract, ExecuteMsg, InstantiateMsg, MintMsg};
     use cw1155::{
-        AllBalancesResponse, ApprovedForAllResponse, Balance, BalanceResponse,
-        BatchBalanceResponse, Cw1155BatchReceiveMsg, Cw1155QueryMsg, Expiration,
-        IsApprovedForAllResponse, NumTokensResponse, TokenInfoResponse, TokensResponse,
+        AllBalancesResponse, ApprovalsForResponse, Balance, BalanceResponse, BatchBalanceResponse,
+        Cw1155BatchReceiveMsg, Cw1155ContractError, Cw1155QueryMsg, Expiration, NumTokensResponse,
+        TokenAmount, TokenInfoResponse, TokensResponse,
     };
 
     #[test]
@@ -19,7 +20,7 @@ mod tests {
         // Summary of what it does:
         // - try mint without permission, fail
         // - mint with permission, success
-        // - query balance of receipant, success
+        // - query balance of recipient, success
         // - try transfer without approval, fail
         // - approve
         // - transfer again, success
@@ -52,7 +53,7 @@ mod tests {
         let mint_msg = ExecuteMsg::Mint(MintMsg::<Empty> {
             to: user1.clone(),
             token_id: token1.clone(),
-            value: 1u64.into(),
+            amount: 1u64.into(),
             token_uri: None,
             extension: None,
         });
@@ -63,7 +64,7 @@ mod tests {
                 mock_info(user1.as_ref(), &[]),
                 mint_msg.clone(),
             ),
-            Err(ContractError::Unauthorized {})
+            Err(Cw1155ContractError::Unauthorized {})
         ));
 
         // valid mint
@@ -76,16 +77,15 @@ mod tests {
                     mint_msg,
                 )
                 .unwrap(),
-            Response::new()
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token1)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("to", &user1)
+            Response::new().add_event(Event::new("mint_tokens").add_attributes(vec![
+                ("recipient", user1.as_str()),
+                ("tokens", &format!("{}:1", token1)),
+            ]))
         );
 
         // query balance
         assert_eq!(
-            to_binary(&BalanceResponse {
+            to_json_binary(&BalanceResponse {
                 balance: 1u64.into()
             }),
             contract.query(
@@ -102,7 +102,7 @@ mod tests {
             from: user1.clone(),
             to: user2.clone(),
             token_id: token1.clone(),
-            value: 1u64.into(),
+            amount: 1u64.into(),
             msg: None,
         };
 
@@ -114,7 +114,7 @@ mod tests {
                 mock_info(minter.as_ref(), &[]),
                 transfer_msg.clone(),
             ),
-            Err(ContractError::Unauthorized {})
+            Err(Cw1155ContractError::Unauthorized {})
         ));
 
         // approve
@@ -140,12 +140,11 @@ mod tests {
                     transfer_msg,
                 )
                 .unwrap(),
-            Response::new()
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token1)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user1)
-                .add_attribute("to", &user2)
+            Response::new().add_event(Event::new("transfer_tokens").add_attributes(vec![
+                ("sender", user1.as_str()),
+                ("recipient", user2.as_str()),
+                ("tokens", &format!("{}:1", token1)),
+            ]))
         );
 
         // query balance
@@ -158,7 +157,7 @@ mod tests {
                     token_id: token1.clone(),
                 }
             ),
-            to_binary(&BalanceResponse {
+            to_json_binary(&BalanceResponse {
                 balance: 1u64.into()
             }),
         );
@@ -171,7 +170,7 @@ mod tests {
                     token_id: token1.clone(),
                 }
             ),
-            to_binary(&BalanceResponse {
+            to_json_binary(&BalanceResponse {
                 balance: 0u64.into()
             }),
         );
@@ -185,7 +184,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user2.clone(),
                     token_id: token2.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: None,
                     extension: None,
                 }),
@@ -200,7 +199,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user2.clone(),
                     token_id: token3.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: None,
                     extension: None,
                 }),
@@ -212,9 +211,18 @@ mod tests {
             from: user2.clone(),
             to: user1.clone(),
             batch: vec![
-                (token1.clone(), 1u64.into()),
-                (token2.clone(), 1u64.into()),
-                (token3.clone(), 1u64.into()),
+                TokenAmount {
+                    token_id: token1.to_string(),
+                    amount: 1u64.into(),
+                },
+                TokenAmount {
+                    token_id: token2.to_string(),
+                    amount: 1u64.into(),
+                },
+                TokenAmount {
+                    token_id: token3.to_string(),
+                    amount: 1u64.into(),
+                },
             ],
             msg: None,
         };
@@ -225,7 +233,7 @@ mod tests {
                 mock_info(minter.as_ref(), &[]),
                 batch_transfer_msg.clone(),
             ),
-            Err(ContractError::Unauthorized {}),
+            Err(Cw1155ContractError::Unauthorized {}),
         ));
 
         // user2 approve
@@ -251,22 +259,11 @@ mod tests {
                     batch_transfer_msg,
                 )
                 .unwrap(),
-            Response::new()
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token1)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user2)
-                .add_attribute("to", &user1)
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token2)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user2)
-                .add_attribute("to", &user1)
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token3)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user2)
-                .add_attribute("to", &user1)
+            Response::new().add_event(Event::new("transfer_tokens").add_attributes(vec![
+                ("sender", user2.as_str()),
+                ("recipient", user1.as_str()),
+                ("tokens", &format!("{}:1,{}:1,{}:1", token1, token2, token3)),
+            ]))
         );
 
         // batch query
@@ -279,7 +276,7 @@ mod tests {
                     token_ids: vec![token1.clone(), token2.clone(), token3.clone()],
                 }
             ),
-            to_binary(&BatchBalanceResponse {
+            to_json_binary(&BatchBalanceResponse {
                 balances: vec![1u64.into(), 1u64.into(), 1u64.into()]
             }),
         );
@@ -297,19 +294,27 @@ mod tests {
             .unwrap();
 
         // query approval status
-        assert_eq!(
-            contract.query(
-                deps.as_ref(),
-                mock_env(),
-                Cw1155QueryMsg::IsApprovedForAll {
-                    owner: user1.clone(),
-                    operator: minter.clone(),
-                }
-            ),
-            to_binary(&IsApprovedForAllResponse { approved: false }),
-        );
+        let approvals: ApprovalsForResponse = from_json(
+            contract
+                .query(
+                    deps.as_ref(),
+                    mock_env(),
+                    Cw1155QueryMsg::ApprovalsFor {
+                        owner: user1.clone(),
+                        include_expired: None,
+                        start_after: None,
+                        limit: None,
+                    },
+                )
+                .unwrap(),
+        )
+        .unwrap();
+        assert!(!approvals
+            .operators
+            .iter()
+            .all(|approval| approval.spender == minter));
 
-        // tranfer without approval
+        // transfer without approval
         assert!(matches!(
             contract.execute(
                 deps.as_mut(),
@@ -319,11 +324,11 @@ mod tests {
                     from: user1.clone(),
                     to: user2,
                     token_id: token1.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     msg: None,
                 },
             ),
-            Err(ContractError::Unauthorized {})
+            Err(Cw1155ContractError::Unauthorized {})
         ));
 
         // burn token1
@@ -334,17 +339,15 @@ mod tests {
                     mock_env(),
                     mock_info(user1.as_ref(), &[]),
                     ExecuteMsg::Burn {
-                        from: user1.clone(),
                         token_id: token1.clone(),
-                        value: 1u64.into(),
-                    }
+                        amount: 1u64.into(),
+                    },
                 )
                 .unwrap(),
-            Response::new()
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token1)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user1)
+            Response::new().add_event(Event::new("burn_tokens").add_attributes(vec![
+                ("owner", user1.as_str()),
+                ("tokens", &format!("{}:1", token1)),
+            ]))
         );
 
         // burn them all
@@ -355,20 +358,23 @@ mod tests {
                     mock_env(),
                     mock_info(user1.as_ref(), &[]),
                     ExecuteMsg::BatchBurn {
-                        from: user1.clone(),
-                        batch: vec![(token2.clone(), 1u64.into()), (token3.clone(), 1u64.into())]
-                    }
+                        batch: vec![
+                            TokenAmount {
+                                token_id: token2.to_string(),
+                                amount: 1u64.into(),
+                            },
+                            TokenAmount {
+                                token_id: token3.to_string(),
+                                amount: 1u64.into(),
+                            },
+                        ],
+                    },
                 )
                 .unwrap(),
-            Response::new()
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token2)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user1)
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token3)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user1)
+            Response::new().add_event(Event::new("burn_tokens").add_attributes(vec![
+                ("owner", user1.as_str()),
+                ("tokens", &format!("{}:1,{}:1", token2, token3)),
+            ]))
         );
     }
 
@@ -398,7 +404,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user1.clone(),
                     token_id: token2.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: None,
                     extension: None,
                 }),
@@ -415,7 +421,10 @@ mod tests {
                     ExecuteMsg::BatchSendFrom {
                         from: user1.clone(),
                         to: receiver.clone(),
-                        batch: vec![(token2.clone(), 1u64.into())],
+                        batch: vec![TokenAmount {
+                            token_id: token2.to_string(),
+                            amount: 1u64.into(),
+                        },],
                         msg: Some(dummy_msg.clone()),
                     },
                 )
@@ -425,17 +434,20 @@ mod tests {
                     Cw1155BatchReceiveMsg {
                         operator: user1.clone(),
                         from: Some(user1.clone()),
-                        batch: vec![(token2.clone(), 1u64.into())],
+                        batch: vec![TokenAmount {
+                            token_id: token2.to_string(),
+                            amount: 1u64.into(),
+                        }],
                         msg: dummy_msg,
                     }
                     .into_cosmos_msg(receiver.clone())
                     .unwrap()
                 )
-                .add_attribute("action", "transfer")
-                .add_attribute("token_id", &token2)
-                .add_attribute("amount", 1u64.to_string())
-                .add_attribute("from", &user1)
-                .add_attribute("to", &receiver)
+                .add_event(Event::new("transfer_tokens").add_attributes(vec![
+                    ("sender", user1.as_str()),
+                    ("recipient", receiver.as_str()),
+                    ("tokens", &format!("{}:1", token2)),
+                ]))
         );
     }
 
@@ -466,7 +478,7 @@ mod tests {
                     ExecuteMsg::Mint(MintMsg::<Empty> {
                         to: users[0].clone(),
                         token_id: token_id.clone(),
-                        value: 1u64.into(),
+                        amount: 1u64.into(),
                         token_uri: None,
                         extension: None,
                     }),
@@ -483,7 +495,7 @@ mod tests {
                     ExecuteMsg::Mint(MintMsg::<Empty> {
                         to: user.clone(),
                         token_id: tokens[9].clone(),
-                        value: 1u64.into(),
+                        amount: 1u64.into(),
                         token_uri: None,
                         extension: None,
                     }),
@@ -499,7 +511,7 @@ mod tests {
                     token_id: tokens[0].clone(),
                 },
             ),
-            to_binary(&NumTokensResponse {
+            to_json_binary(&NumTokensResponse {
                 count: Uint128::new(1),
             })
         );
@@ -512,7 +524,7 @@ mod tests {
                     token_id: tokens[0].clone(),
                 },
             ),
-            to_binary(&NumTokensResponse {
+            to_json_binary(&NumTokensResponse {
                 count: Uint128::new(1),
             })
         );
@@ -524,10 +536,10 @@ mod tests {
                 Cw1155QueryMsg::AllBalances {
                     token_id: tokens[9].clone(),
                     start_after: None,
-                    limit: Some(5)
+                    limit: Some(5),
                 },
             ),
-            to_binary(&AllBalancesResponse {
+            to_json_binary(&AllBalancesResponse {
                 balances: users[..5]
                     .iter()
                     .map(|user| {
@@ -548,10 +560,10 @@ mod tests {
                 Cw1155QueryMsg::AllBalances {
                     token_id: tokens[9].clone(),
                     start_after: Some("user5".to_owned()),
-                    limit: Some(5)
+                    limit: Some(5),
                 },
             ),
-            to_binary(&AllBalancesResponse {
+            to_json_binary(&AllBalancesResponse {
                 balances: users[6..]
                     .iter()
                     .map(|user| {
@@ -575,7 +587,7 @@ mod tests {
                     limit: Some(5),
                 },
             ),
-            to_binary(&TokensResponse {
+            to_json_binary(&TokensResponse {
                 tokens: tokens[..5].to_owned()
             })
         );
@@ -590,7 +602,7 @@ mod tests {
                     limit: Some(5),
                 },
             ),
-            to_binary(&TokensResponse {
+            to_json_binary(&TokensResponse {
                 tokens: tokens[6..].to_owned()
             })
         );
@@ -604,7 +616,7 @@ mod tests {
                     limit: Some(5),
                 },
             ),
-            to_binary(&TokensResponse {
+            to_json_binary(&TokensResponse {
                 tokens: tokens[6..].to_owned()
             })
         );
@@ -617,7 +629,7 @@ mod tests {
                     token_id: "token5".to_owned()
                 },
             ),
-            to_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Empty> {
                 token_uri: None,
                 extension: None,
             }),
@@ -641,17 +653,17 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::ApprovedForAll {
+                Cw1155QueryMsg::ApprovalsFor {
                     owner: users[0].clone(),
                     include_expired: None,
                     start_after: Some(String::from("user2")),
                     limit: Some(1),
                 },
             ),
-            to_binary(&ApprovedForAllResponse {
+            to_json_binary(&ApprovalsForResponse {
                 operators: vec![cw1155::Approval {
                     spender: users[3].clone(),
-                    expires: Expiration::Never {}
+                    expires: Expiration::Never {},
                 }],
             })
         );
@@ -688,7 +700,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user1.clone(),
                     token_id: token1,
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: None,
                     extension: None,
                 }),
@@ -721,14 +733,25 @@ mod tests {
             )
             .unwrap();
 
-        let query_msg = Cw1155QueryMsg::IsApprovedForAll {
-            owner: user1,
-            operator: user2,
-        };
-        assert_eq!(
-            contract.query(deps.as_ref(), env, query_msg.clone()),
-            to_binary(&IsApprovedForAllResponse { approved: true })
-        );
+        let approvals: ApprovalsForResponse = from_json(
+            contract
+                .query(
+                    deps.as_ref(),
+                    mock_env(),
+                    Cw1155QueryMsg::ApprovalsFor {
+                        owner: user1.to_string(),
+                        include_expired: None,
+                        start_after: None,
+                        limit: None,
+                    },
+                )
+                .unwrap(),
+        )
+        .unwrap();
+        assert!(approvals
+            .operators
+            .iter()
+            .all(|approval| approval.spender == user2));
 
         let env = {
             let mut env = mock_env();
@@ -736,10 +759,25 @@ mod tests {
             env
         };
 
-        assert_eq!(
-            contract.query(deps.as_ref(), env, query_msg,),
-            to_binary(&IsApprovedForAllResponse { approved: false })
-        );
+        let approvals: ApprovalsForResponse = from_json(
+            contract
+                .query(
+                    deps.as_ref(),
+                    env,
+                    Cw1155QueryMsg::ApprovalsFor {
+                        owner: user1.to_string(),
+                        include_expired: None,
+                        start_after: None,
+                        limit: None,
+                    },
+                )
+                .unwrap(),
+        )
+        .unwrap();
+        assert!(!approvals
+            .operators
+            .iter()
+            .all(|approval| approval.spender == user2));
     }
 
     #[test]
@@ -759,35 +797,22 @@ mod tests {
             .unwrap();
         assert_eq!(0, res.messages.len());
 
-        contract
-            .execute(
-                deps.as_mut(),
-                env.clone(),
-                mock_info(minter.as_ref(), &[]),
-                ExecuteMsg::Mint(MintMsg::<Empty> {
-                    to: user1.clone(),
-                    token_id: token1.clone(),
-                    value: u128::MAX.into(),
-                    token_uri: None,
-                    extension: None,
-                }),
-            )
-            .unwrap();
+        let res = contract.execute(
+            deps.as_mut(),
+            env.clone(),
+            mock_info(minter.as_ref(), &[]),
+            ExecuteMsg::Mint(MintMsg::<Empty> {
+                to: user1.clone(),
+                token_id: token1.clone(),
+                amount: u128::MAX.into(),
+                token_uri: None,
+                extension: None,
+            }),
+        );
 
         assert!(matches!(
-            contract.execute(
-                deps.as_mut(),
-                env,
-                mock_info(minter.as_ref(), &[]),
-                ExecuteMsg::Mint(MintMsg::<Empty> {
-                    to: user1,
-                    token_id: token1,
-                    value: 1u64.into(),
-                    token_uri: None,
-                    extension: None,
-                }),
-            ),
-            Err(ContractError::Std(StdError::Overflow {
+            res,
+            Err(Cw1155ContractError::Std(StdError::Overflow {
                 source: OverflowError { .. },
                 ..
             }))
@@ -821,7 +846,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user1.clone(),
                     token_id: token1.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: Some(url1.clone()),
                     extension: None,
                 }),
@@ -834,9 +859,9 @@ mod tests {
                 mock_env(),
                 Cw1155QueryMsg::TokenInfo {
                     token_id: token1.clone()
-                }
+                },
             ),
-            to_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Empty> {
                 token_uri: Some(url1.clone()),
                 extension: None,
             })
@@ -851,7 +876,7 @@ mod tests {
                 ExecuteMsg::Mint(MintMsg::<Empty> {
                     to: user1,
                     token_id: token1.clone(),
-                    value: 1u64.into(),
+                    amount: 1u64.into(),
                     token_uri: Some(url2),
                     extension: None,
                 }),
@@ -863,9 +888,9 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::TokenInfo { token_id: token1 }
+                Cw1155QueryMsg::TokenInfo { token_id: token1 },
             ),
-            to_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Empty> {
                 token_uri: Some(url1),
                 extension: None,
             })

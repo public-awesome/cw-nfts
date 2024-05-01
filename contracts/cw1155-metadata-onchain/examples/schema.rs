@@ -4,9 +4,8 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, schema_for};
 
 use cw1155::{
-    AllBalancesResponse, ApprovedForAllResponse, BalanceResponse, BatchBalanceResponse,
-    Cw1155QueryMsg, IsApprovedForAllResponse, MinterResponse, NumTokensResponse, TokenInfoResponse,
-    TokensResponse,
+    AllBalancesResponse, ApprovalsForResponse, BalanceResponse, BatchBalanceResponse,
+    Cw1155QueryMsg, MinterResponse, NumTokensResponse, TokenInfoResponse, TokensResponse,
 };
 
 use cw1155_metadata_onchain::{ExecuteMsg, Extension, InstantiateMsg};
@@ -24,8 +23,7 @@ fn main() {
     export_schema(&schema_for!(AllBalancesResponse), &out_dir);
     export_schema(&schema_for!(BatchBalanceResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
-    export_schema(&schema_for!(ApprovedForAllResponse), &out_dir);
-    export_schema(&schema_for!(IsApprovedForAllResponse), &out_dir);
+    export_schema(&schema_for!(ApprovalsForResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema_with_title(

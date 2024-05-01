@@ -2,7 +2,7 @@ use cosmwasm_std::{OverflowError, StdError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ContractError {
+pub enum Cw1155ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 

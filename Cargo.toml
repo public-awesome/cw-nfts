@@ -18,6 +18,8 @@ cw20            = "^1.1"
 cw721           = { version = "*", path = "./packages/cw721" }
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
 cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
+cw1155 = { path = "./packages/cw1155", version = "*" }
+cw1155-base = { path = "./contracts/cw1155-base", version = "*" }
 cw-multi-test   = "^0.20"
 cw-ownable      = "^0.5"
 cw-storage-plus = "^1.1"

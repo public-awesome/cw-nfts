@@ -98,7 +98,7 @@ mod tests {
         let mint_msg = MintMsg {
             token_id: token_id.to_string(),
             to: "john".to_string(),
-            value: Uint128::new(1),
+            amount: Uint128::new(1),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
                 description: Some("Spaceship with Warp Drive".into()),
@@ -122,7 +122,7 @@ mod tests {
                 )
                 .unwrap(),
         )
-        .unwrap();
+            .unwrap();
 
         assert_eq!(res.token_uri, mint_msg.token_uri);
         assert_eq!(res.extension, mint_msg.extension);

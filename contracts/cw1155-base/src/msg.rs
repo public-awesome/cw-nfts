@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Binary, Uint128};
-use cw1155::Expiration;
+use cw1155::{Expiration, TokenAmount};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
@@ -25,7 +25,7 @@ pub enum ExecuteMsg<T> {
         /// If `to` is not contract, `msg` should be `None`
         to: String,
         token_id: String,
-        value: Uint128,
+        amount: Uint128,
         /// `None` means don't call the receiver interface
         msg: Option<Binary>,
     },
@@ -35,20 +35,18 @@ pub enum ExecuteMsg<T> {
         from: String,
         /// if `to` is not contract, `msg` should be `None`
         to: String,
-        batch: Vec<(String, Uint128)>,
+        batch: Vec<TokenAmount>,
         /// `None` means don't call the receiver interface
         msg: Option<Binary>,
     },
     /// Burn is a base message to burn tokens.
     Burn {
-        from: String,
         token_id: String,
-        value: Uint128,
+        amount: Uint128,
     },
     /// BatchBurn is a base message to burn multiple types of tokens in batch.
     BatchBurn {
-        from: String,
-        batch: Vec<(String, Uint128)>,
+        batch: Vec<TokenAmount>,
     },
     /// Allows operator to transfer / send any token from the owner's account.
     /// If expiration is set, then this allowance has a time/height limit
@@ -69,7 +67,7 @@ pub struct MintMsg<T> {
     /// The owner of the newly minted tokens
     pub to: String,
     /// The amount of the newly minted tokens
-    pub value: Uint128,
+    pub amount: Uint128,
 
     /// Only first mint can set `token_uri` and `extension`
     /// Metadata JSON Schema

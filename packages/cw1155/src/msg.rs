@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+use cosmwasm_schema::cw_serde;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -48,4 +50,16 @@ pub enum Cw1155ExecuteMsg {
 
     /// Remove previously granted ApproveAll permission
     RevokeAll { operator: String },
+}
+
+#[cw_serde]
+pub struct TokenAmount {
+    pub token_id: String,
+    pub amount: Uint128,
+}
+
+impl Display for TokenAmount {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.token_id, self.amount)
+    }
 }
