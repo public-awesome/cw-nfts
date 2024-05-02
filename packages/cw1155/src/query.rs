@@ -28,15 +28,18 @@ pub enum Cw1155QueryMsg {
     },
     /// Total number of tokens issued for the token id
     NumTokens { token_id: String },
-    /// List all operators that can access the owner's tokens.
-    /// Return type: ApprovalsForResponse.
-    ApprovalsFor {
+    /// List all operators that can access all of the owner's tokens.
+    /// Return type: ApprovedForAllResponse.
+    ApprovedForAll {
         owner: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
     },
+    /// Query approved status `owner` granted to `operator`.
+    /// Return type: IsApprovedForAllResponse
+    IsApprovedForAll { owner: String, operator: String },
 
     /// With MetaData Extension.
     /// Query metadata of token
@@ -96,8 +99,13 @@ pub struct Approval {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct ApprovalsForResponse {
+pub struct ApprovedForAllResponse {
     pub operators: Vec<Approval>,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+pub struct IsApprovedForAllResponse {
+    pub approved: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]

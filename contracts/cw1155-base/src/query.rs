@@ -4,8 +4,8 @@ use serde::Serialize;
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult, Uint128};
 
 use cw1155::{
-    AllBalancesResponse, Approval, ApprovalsForResponse, Balance, BalanceResponse,
-    BatchBalanceResponse, Cw1155QueryMsg, Expiration, MinterResponse,
+    AllBalancesResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
+    BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, MinterResponse,
     NumTokensResponse, TokenInfoResponse, TokensResponse,
 };
 use cw_storage_plus::Bound;
@@ -17,8 +17,8 @@ const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
 impl<'a, T> Cw1155Contract<'a, T>
-    where
-        T: Serialize + DeserializeOwned + Clone,
+where
+    T: Serialize + DeserializeOwned + Clone,
 {
     pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg) -> StdResult<Binary> {
         match msg {
@@ -67,7 +67,7 @@ impl<'a, T> Cw1155Contract<'a, T>
                 let count = self.token_count(deps.storage, &token_id)?;
                 to_json_binary(&NumTokensResponse { count })
             }
-            Cw1155QueryMsg::ApprovalsFor {
+            Cw1155QueryMsg::ApprovedForAll {
                 owner,
                 include_expired,
                 start_after,
@@ -83,6 +83,13 @@ impl<'a, T> Cw1155Contract<'a, T>
                     start_addr,
                     limit,
                 )?)
+            }
+            Cw1155QueryMsg::IsApprovedForAll { owner, operator } => {
+                let owner_addr = deps.api.addr_validate(&owner)?;
+                let operator_addr = deps.api.addr_validate(&operator)?;
+                let approved =
+                    self.verify_all_approval(deps.storage, &env, &owner_addr, &operator_addr);
+                to_json_binary(&IsApprovedForAllResponse { approved })
             }
             Cw1155QueryMsg::TokenInfo { token_id } => {
                 let token_info = self.tokens.load(deps.storage, &token_id)?;
@@ -107,8 +114,8 @@ impl<'a, T> Cw1155Contract<'a, T>
 }
 
 impl<'a, T> Cw1155Contract<'a, T>
-    where
-        T: Serialize + DeserializeOwned + Clone,
+where
+    T: Serialize + DeserializeOwned + Clone,
 {
     fn query_all_approvals(
         &self,
@@ -118,7 +125,7 @@ impl<'a, T> Cw1155Contract<'a, T>
         include_expired: bool,
         start_after: Option<Addr>,
         limit: Option<u32>,
-    ) -> StdResult<ApprovalsForResponse> {
+    ) -> StdResult<ApprovedForAllResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
         let start = start_after.as_ref().map(Bound::exclusive);
 
@@ -132,7 +139,7 @@ impl<'a, T> Cw1155Contract<'a, T>
             .take(limit)
             .map(build_approval)
             .collect::<StdResult<_>>()?;
-        Ok(ApprovalsForResponse { operators })
+        Ok(ApprovedForAllResponse { operators })
     }
 
     fn query_tokens(

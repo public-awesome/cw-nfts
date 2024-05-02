@@ -406,13 +406,9 @@ where
             amount: owner_balance.amount.min(amount),
         };
 
+        // todo - logic for checking approval on specific token
         // owner or operator can approve
-        if owner == operator
-            || match self.approves.may_load(storage, (owner, operator))? {
-                Some(ex) => !ex.is_expired(&env.block),
-                None => false,
-            }
-        {
+        if owner == operator || self.verify_all_approval(storage, env, owner, operator) {
             Ok(balance_update)
         } else {
             Err(Cw1155ContractError::Unauthorized {})
@@ -434,5 +430,18 @@ where
                 self.verify_approval(storage, &env, info, owner, token_id, *amount)
             })
             .collect()
+    }
+
+    pub fn verify_all_approval(
+        &self,
+        storage: &dyn Storage,
+        env: &Env,
+        owner: &Addr,
+        operator: &Addr,
+    ) -> bool {
+        match self.approves.load(storage, (owner, operator)) {
+            Ok(ex) => !ex.is_expired(&env.block),
+            Err(_) => false,
+        }
     }
 }
