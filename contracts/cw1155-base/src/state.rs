@@ -1,16 +1,17 @@
-use cosmwasm_schema::cw_serde;
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, Env, StdResult, Storage, Uint128};
+use cosmwasm_std::{Addr, CustomMsg, StdResult, Storage, Uint128};
 
-use cw1155::{Balance, Expiration};
+use cw1155::{Balance, Expiration, TokenApproval};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw1155Contract<'a, T>
+pub struct Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     pub minter: Item<'a, Addr>,
     // key: token id
@@ -23,11 +24,14 @@ where
     pub token_approves: Map<'a, (&'a str, &'a Addr, &'a Addr), TokenApproval>,
     // key: token id
     pub tokens: Map<'a, &'a str, TokenInfo<T>>,
+
+    pub(crate) _custom_query: PhantomData<Q>,
 }
 
-impl<'a, T> Default for Cw1155Contract<'static, T>
+impl<'a, T, Q> Default for Cw1155Contract<'static, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     fn default() -> Self {
         Self::new(
@@ -42,9 +46,10 @@ where
     }
 }
 
-impl<'a, T> Cw1155Contract<'a, T>
+impl<'a, T, Q> Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     fn new(
         minter_key: &'a str,
@@ -69,6 +74,7 @@ where
             approves: Map::new(approves_key),
             token_approves: Map::new(token_approves_key),
             tokens: Map::new(tokens_key),
+            _custom_query: PhantomData,
         }
     }
 
@@ -118,17 +124,5 @@ impl<'a> IndexList<Balance> for BalanceIndexes<'a> {
     fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Balance>> + '_> {
         let v: Vec<&dyn Index<Balance>> = vec![&self.token_id];
         Box::new(v.into_iter())
-    }
-}
-
-#[cw_serde]
-pub struct TokenApproval {
-    pub amount: Uint128,
-    pub expiration: Expiration,
-}
-
-impl TokenApproval {
-    pub fn is_expired(&self, env: &Env) -> bool {
-        self.expiration.is_expired(&env.block)
     }
 }

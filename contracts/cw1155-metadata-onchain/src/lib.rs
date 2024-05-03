@@ -1,7 +1,9 @@
+use cosmwasm_std::Empty;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-pub use cw1155_base::{ContractError, InstantiateMsg, MintMsg};
+use cw1155::Cw1155ExecuteMsg;
+pub use cw1155::{Cw1155ContractError, Cw1155InstantiateMsg, MintMsg};
 use cw2::set_contract_version;
 
 // Version info for migration
@@ -31,15 +33,16 @@ pub struct Metadata {
 
 pub type Extension = Metadata;
 
-pub type Cw1155MetadataContract<'a> = cw1155_base::Cw1155Contract<'a, Extension>;
-pub type ExecuteMsg = cw1155_base::ExecuteMsg<Extension>;
+pub type Cw1155MetadataContract<'a> = cw1155_base::Cw1155Contract<'a, Extension, Empty>;
+pub type ExecuteMsg = Cw1155ExecuteMsg<Extension>;
 
-#[cfg(not(feature = "library"))]
+// #[cfg(not(feature = "library"))]
 pub mod entry {
     use super::*;
 
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cw1155::Cw1155QueryMsg;
 
     // This makes a conscious choice on the various generics used by the contract
     #[entry_point]
@@ -47,12 +50,12 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg,
-    ) -> Result<Response, ContractError> {
+        msg: Cw1155InstantiateMsg,
+    ) -> Result<Response, Cw1155ContractError> {
         let res = Cw1155MetadataContract::default().instantiate(deps.branch(), env, info, msg)?;
         // Explicitly set contract name and version, otherwise set to cw1155-base info
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(ContractError::Std)?;
+            .map_err(Cw1155ContractError::Std)?;
         Ok(res)
     }
 
@@ -62,12 +65,12 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: ExecuteMsg,
-    ) -> Result<Response, ContractError> {
+    ) -> Result<Response, Cw1155ContractError> {
         Cw1155MetadataContract::default().execute(deps, env, info, msg)
     }
 
     #[entry_point]
-    pub fn query(deps: Deps, env: Env, msg: cw1155::Cw1155QueryMsg) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: Cw1155QueryMsg<Empty>) -> StdResult<Binary> {
         Cw1155MetadataContract::default().query(deps, env, msg)
     }
 }
@@ -87,7 +90,7 @@ mod tests {
         let contract = Cw1155MetadataContract::default();
 
         let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
+        let init_msg = Cw1155InstantiateMsg {
             minter: CREATOR.to_string(),
         };
         contract
@@ -122,7 +125,7 @@ mod tests {
                 )
                 .unwrap(),
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(res.token_uri, mint_msg.token_uri);
         assert_eq!(res.extension, mint_msg.extension);

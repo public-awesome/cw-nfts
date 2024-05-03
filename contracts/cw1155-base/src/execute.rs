@@ -1,35 +1,29 @@
+use crate::state::{Cw1155Contract, TokenInfo};
+use crate::{CONTRACT_NAME, CONTRACT_VERSION};
+use cosmwasm_std::{
+    Addr, Binary, CustomMsg, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult, Storage,
+    SubMsg, Uint128,
+};
+use cw1155::{
+    ApproveAllEvent, ApproveEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
+    Cw1155ExecuteMsg, Cw1155InstantiateMsg, Cw1155ReceiveMsg, Expiration, MintEvent, MintMsg,
+    RevokeAllEvent, RevokeEvent, TokenAmount, TokenApproval, TransferEvent,
+};
+use cw2::set_contract_version;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{
-    Addr, Binary, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult, Storage, SubMsg,
-    Uint128,
-};
-
-use cw1155::{
-    ApproveAllEvent, ApproveEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
-    Cw1155ReceiveMsg, Expiration, MintEvent, RevokeAllEvent, RevokeEvent, TokenAmount,
-    TransferEvent,
-};
-use cw2::set_contract_version;
-
-use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
-use crate::state::{Cw1155Contract, TokenApproval, TokenInfo};
-
-// Version info for migration
-const CONTRACT_NAME: &str = "crates.io:cw721-base";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-impl<'a, T> Cw1155Contract<'a, T>
+impl<'a, T, Q> Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     pub fn instantiate(
         &self,
         deps: DepsMut,
         _env: Env,
         _info: MessageInfo,
-        msg: InstantiateMsg,
+        msg: Cw1155InstantiateMsg,
     ) -> StdResult<Response> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -43,41 +37,51 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg<T>,
+        msg: Cw1155ExecuteMsg<T>,
     ) -> Result<Response, Cw1155ContractError> {
         let env = ExecuteEnv { deps, env, info };
         match msg {
-            ExecuteMsg::Mint(msg) => self.mint(env, msg),
-            ExecuteMsg::SendFrom {
+            // cw1155
+            Cw1155ExecuteMsg::SendBatch {
+                from,
+                to,
+                batch,
+                msg,
+            } => self.send_batch(env, from, to, batch, msg),
+            Cw1155ExecuteMsg::MintBatch(_) => {
+                todo!()
+            }
+            Cw1155ExecuteMsg::BurnBatch { from, batch } => self.burn_batch(env, from, batch),
+            Cw1155ExecuteMsg::ApproveAll { operator, expires } => {
+                self.approve_all(env, operator, expires)
+            }
+            Cw1155ExecuteMsg::RevokeAll { operator } => self.revoke_all(env, operator),
+
+            // cw721
+            Cw1155ExecuteMsg::Send {
                 from,
                 to,
                 token_id,
                 amount,
                 msg,
-            } => self.send_from(env, from, to, token_id, amount, msg),
-            ExecuteMsg::BatchSendFrom {
+            } => self.send(env, from, to, token_id, amount, msg),
+            Cw1155ExecuteMsg::Mint(msg) => self.mint(env, msg),
+            Cw1155ExecuteMsg::Burn {
                 from,
-                to,
-                batch,
-                msg,
-            } => self.batch_send_from(env, from, to, batch, msg),
-            ExecuteMsg::Burn { token_id, amount } => self.burn(env, token_id, amount),
-            ExecuteMsg::BatchBurn { batch } => self.batch_burn(env, batch),
-            ExecuteMsg::Approve {
+                token_id,
+                amount,
+            } => self.burn(env, from, token_id, amount),
+            Cw1155ExecuteMsg::Approve {
                 spender,
                 token_id,
                 amount,
                 expires,
             } => self.approve_token(env, spender, token_id, amount, expires),
-            ExecuteMsg::ApproveAll { operator, expires } => {
-                self.approve_all(env, operator, expires)
-            }
-            ExecuteMsg::Revoke {
+            Cw1155ExecuteMsg::Revoke {
                 spender,
                 token_id,
                 amount,
             } => self.revoke_token(env, spender, token_id, amount),
-            ExecuteMsg::RevokeAll { operator } => self.revoke_all(env, operator),
         }
     }
 }
@@ -90,9 +94,10 @@ pub struct ExecuteEnv<'a> {
 }
 
 // helper
-impl<'a, T> Cw1155Contract<'a, T>
+impl<'a, T, Q> Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     pub fn mint(&self, env: ExecuteEnv, msg: MintMsg<T>) -> Result<Response, Cw1155ContractError> {
         let ExecuteEnv {
@@ -137,10 +142,10 @@ where
         Ok(rsp)
     }
 
-    pub fn send_from(
+    pub fn send(
         &self,
         env: ExecuteEnv,
-        from: String,
+        from: Option<String>,
         to: String,
         token_id: String,
         amount: Uint128,
@@ -152,11 +157,15 @@ where
             info,
         } = env;
 
-        let from = deps.api.addr_validate(&from)?;
+        let from = &if let Some(from) = from {
+            deps.api.addr_validate(&from)?
+        } else {
+            info.sender.clone()
+        };
         let to = deps.api.addr_validate(&to)?;
 
         let balance_update =
-            self.verify_approval(deps.storage, &env, &info, &from, &token_id, amount)?;
+            self.verify_approval(deps.storage, &env, &info, from, &token_id, amount)?;
 
         let mut rsp = Response::default();
 
@@ -188,10 +197,10 @@ where
         Ok(rsp)
     }
 
-    pub fn batch_send_from(
+    pub fn send_batch(
         &self,
         env: ExecuteEnv,
-        from: String,
+        from: Option<String>,
         to: String,
         batch: Vec<TokenAmount>,
         msg: Option<Binary>,
@@ -202,10 +211,14 @@ where
             info,
         } = env;
 
-        let from = deps.api.addr_validate(&from)?;
+        let from = &if let Some(from) = from {
+            deps.api.addr_validate(&from)?
+        } else {
+            info.sender.clone()
+        };
         let to = deps.api.addr_validate(&to)?;
 
-        let batch = self.verify_approvals(deps.storage, &env, &info, &from, batch)?;
+        let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
 
         let mut rsp = Response::default();
         let event = self.update_transfer_state(
@@ -235,6 +248,7 @@ where
     pub fn burn(
         &self,
         env: ExecuteEnv,
+        from: Option<String>,
         token_id: String,
         amount: Uint128,
     ) -> Result<Response, Cw1155ContractError> {
@@ -244,7 +258,11 @@ where
             env,
         } = env;
 
-        let from = &info.sender;
+        let from = &if let Some(from) = from {
+            deps.api.addr_validate(&from)?
+        } else {
+            info.sender.clone()
+        };
 
         // whoever can transfer these tokens can burn
         let balance_update =
@@ -267,9 +285,10 @@ where
         Ok(rsp)
     }
 
-    pub fn batch_burn(
+    pub fn burn_batch(
         &self,
         env: ExecuteEnv,
+        from: Option<String>,
         batch: Vec<TokenAmount>,
     ) -> Result<Response, Cw1155ContractError> {
         let ExecuteEnv {
@@ -278,7 +297,11 @@ where
             env,
         } = env;
 
-        let from = &info.sender;
+        let from = &if let Some(from) = from {
+            deps.api.addr_validate(&from)?
+        } else {
+            info.sender.clone()
+        };
 
         let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
 

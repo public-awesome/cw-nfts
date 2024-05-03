@@ -1,60 +1,78 @@
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Uint128};
 use cw_utils::Expiration;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum Cw1155QueryMsg {
-    /// Query Minter.
-    /// Return type: MinterResponse.
-    Minter {},
+#[cw_serde]
+#[derive(QueryResponses)]
+pub enum Cw1155QueryMsg<Q: JsonSchema> {
+    // cw1155
     /// Returns the current balance of the given address, 0 if unset.
-    /// Return type: BalanceResponse.
-    Balance { owner: String, token_id: String },
-    /// Returns all current balances of the given token id. Supports pagination
-    /// Return type: AllBalancesResponse.
-    AllBalances {
-        token_id: String,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
+    #[returns(BalanceResponse)]
+    BalanceOf { owner: String, token_id: String },
     /// Returns the current balance of the given address for a batch of tokens, 0 if unset.
-    /// Return type: BatchBalanceResponse.
-    BatchBalance {
+    #[returns(BatchBalanceResponse)]
+    BalanceOfBatch {
         owner: String,
         token_ids: Vec<String>,
     },
-    /// Total number of tokens issued for the token id
-    NumTokens { token_id: String },
+    /// Query approved status `owner` granted to `operator`.
+    #[returns(IsApprovedForAllResponse)]
+    IsApprovedForAll { owner: String, operator: String },
     /// Return approvals that a token owner has
-    Approvals {
+    #[returns(Vec<crate::TokenApproval>)]
+    TokenApprovals {
         owner: String,
         token_id: String,
         include_expired: Option<bool>,
     },
     /// List all operators that can access all of the owner's tokens.
-    /// Return type: ApprovedForAllResponse.
-    ApprovedForAll {
+    #[returns(ApprovedForAllResponse)]
+    ApprovalsForAll {
         owner: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
         include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    /// Query approved status `owner` granted to `operator`.
-    /// Return type: IsApprovedForAllResponse
-    IsApprovedForAll { owner: String, operator: String },
+    /// Returns all current balances of the given token id. Supports pagination
+    #[returns(AllBalancesResponse)]
+    AllBalances {
+        token_id: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Total number of tokens issued
+    #[returns(cw721::NumTokensResponse)]
+    Supply {},
+    /// Total number of tokens issued for the token id
+    #[returns(cw721::NumTokensResponse)]
+    NumTokens { token_id: String },
 
+    // cw721
+    /// With MetaData Extension.
+    /// Returns top-level metadata about the contract.
+    #[returns(cw721::ContractInfoResponse)]
+    ContractInfo {},
+    /// Query Minter.
+    #[returns(MinterResponse)]
+    Minter {},
     /// With MetaData Extension.
     /// Query metadata of token
-    /// Return type: TokenInfoResponse.
+    #[returns(TokenInfoResponse<Q>)]
     TokenInfo { token_id: String },
-
+    /// With Enumerable extension.
+    /// Requires pagination. Lists all token_ids controlled by the contract.
+    #[returns(TokensResponse)]
+    AllTokenInfo {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
     /// With Enumerable extension.
     /// Returns all tokens owned by the given address, [] if unset.
-    /// Return type: TokensResponse.
+    #[returns(TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -62,11 +80,15 @@ pub enum Cw1155QueryMsg {
     },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-    /// Return type: TokensResponse.
+    #[returns(TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
     },
+
+    /// Extension query
+    #[returns(())]
+    Extension { msg: Q },
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]

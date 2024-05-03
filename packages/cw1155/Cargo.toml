@@ -10,6 +10,8 @@ homepage = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
 
 [dependencies]
+cw2 = { workspace = true }
+cw721 = { workspace = true }
 cw-utils = { workspace = true }
 cosmwasm-std = { workspace = true }
 schemars = { workspace = true }

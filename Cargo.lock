@@ -318,6 +318,8 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-utils 1.0.3",
+ "cw2 1.1.2",
+ "cw721 0.18.0",
  "schemars",
  "serde",
  "thiserror",

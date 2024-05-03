@@ -91,7 +91,7 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::Balance {
+                Cw1155QueryMsg::BalanceOf {
                     owner: user1.clone(),
                     token_id: token1.clone(),
                 }
@@ -152,7 +152,7 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::Balance {
+                Cw1155QueryMsg::BalanceOf {
                     owner: user2.clone(),
                     token_id: token1.clone(),
                 }
@@ -165,7 +165,7 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::Balance {
+                Cw1155QueryMsg::BalanceOf {
                     owner: user1.clone(),
                     token_id: token1.clone(),
                 }
@@ -271,7 +271,7 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::BatchBalance {
+                Cw1155QueryMsg::BalanceOfBatch {
                     owner: user1.clone(),
                     token_ids: vec![token1.clone(), token2.clone(), token3.clone()],
                 }
@@ -611,7 +611,7 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::AllTokens {
+                Cw1155QueryMsg::AllTokenInfo {
                     start_after: Some("token5".to_owned()),
                     limit: Some(5),
                 },

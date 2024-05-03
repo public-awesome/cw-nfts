@@ -1,7 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, Order, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Binary, CustomMsg, Deps, Env, Order, StdResult, Uint128};
 
 use cw1155::{
     AllBalancesResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
@@ -16,17 +16,18 @@ use crate::state::Cw1155Contract;
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T> Cw1155Contract<'a, T>
+impl<'a, T, Q> Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
-    pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg) -> StdResult<Binary> {
+    pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             Cw1155QueryMsg::Minter {} => {
                 let minter = self.minter.load(deps.storage)?.to_string();
                 to_json_binary(&MinterResponse { minter })
             }
-            Cw1155QueryMsg::Balance { owner, token_id } => {
+            Cw1155QueryMsg::BalanceOf { owner, token_id } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 let balance = self
                     .balances
@@ -45,7 +46,7 @@ where
                 start_after,
                 limit,
             } => to_json_binary(&self.query_all_balances(deps, token_id, start_after, limit)?),
-            Cw1155QueryMsg::BatchBalance { owner, token_ids } => {
+            Cw1155QueryMsg::BalanceOfBatch { owner, token_ids } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 let balances = token_ids
                     .into_iter()
@@ -67,7 +68,7 @@ where
                 let count = self.token_count(deps.storage, &token_id)?;
                 to_json_binary(&NumTokensResponse { count })
             }
-            Cw1155QueryMsg::Approvals {
+            Cw1155QueryMsg::TokenApprovals {
                 owner,
                 token_id,
                 include_expired,
@@ -88,7 +89,7 @@ where
                     .collect::<Vec<_>>();
                 to_json_binary(&approvals)
             }
-            Cw1155QueryMsg::ApprovedForAll {
+            Cw1155QueryMsg::ApprovalsForAll {
                 owner,
                 include_expired,
                 start_after,
@@ -127,16 +128,30 @@ where
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 to_json_binary(&self.query_tokens(deps, owner_addr, start_after, limit)?)
             }
-            Cw1155QueryMsg::AllTokens { start_after, limit } => {
+            Cw1155QueryMsg::AllTokenInfo { start_after, limit } => {
                 to_json_binary(&self.query_all_tokens(deps, start_after, limit)?)
+            }
+            Cw1155QueryMsg::ContractInfo {} => {
+                todo!()
+                // to_json_binary(&self.contract_info(deps)?)
+            }
+            Cw1155QueryMsg::Supply { .. } => {
+                todo!()
+            }
+            Cw1155QueryMsg::AllTokens { .. } => {
+                todo!()
+            }
+            Cw1155QueryMsg::Extension { .. } => {
+                todo!()
             }
         }
     }
 }
 
-impl<'a, T> Cw1155Contract<'a, T>
+impl<'a, T, Q> Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    Q: CustomMsg,
 {
     fn query_all_approvals(
         &self,
