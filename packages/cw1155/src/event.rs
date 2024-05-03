@@ -1,5 +1,5 @@
 use crate::TokenAmount;
-use cosmwasm_std::{attr, Addr, Event, Uint128};
+use cosmwasm_std::{attr, Addr, Attribute, Event, Uint128};
 
 /// Tracks token transfer actions
 pub struct TransferEvent {
@@ -20,19 +20,19 @@ impl TransferEvent {
 
 impl From<TransferEvent> for Event {
     fn from(event: TransferEvent) -> Self {
-        Event::new("transfer_tokens").add_attributes(vec![
+        Event::new(format!(
+            "transfer_{}",
+            if event.tokens.len() == 1 {
+                "single"
+            } else {
+                "batch"
+            }
+        ))
+        .add_attributes(vec![
             attr("sender", event.sender.as_str()),
             attr("recipient", event.recipient.as_str()),
-            attr(
-                "tokens",
-                event
-                    .tokens
-                    .iter()
-                    .map(|t| t.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
-            ),
         ])
+        .add_attributes(token_attributes(event.tokens))
     }
 }
 
@@ -53,18 +53,16 @@ impl MintEvent {
 
 impl From<MintEvent> for Event {
     fn from(event: MintEvent) -> Self {
-        Event::new("mint_tokens").add_attributes(vec![
-            attr("recipient", event.recipient.as_str()),
-            attr(
-                "tokens",
-                event
-                    .tokens
-                    .iter()
-                    .map(|t| t.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
-            ),
-        ])
+        Event::new(format!(
+            "mint_{}",
+            if event.tokens.len() == 1 {
+                "single"
+            } else {
+                "batch"
+            }
+        ))
+        .add_attribute("recipient", event.recipient.as_str())
+        .add_attributes(token_attributes(event.tokens))
     }
 }
 
@@ -85,18 +83,16 @@ impl BurnEvent {
 
 impl From<BurnEvent> for Event {
     fn from(event: BurnEvent) -> Self {
-        Event::new("burn_tokens").add_attributes(vec![
-            attr("sender", event.sender.as_str()),
-            attr(
-                "tokens",
-                event
-                    .tokens
-                    .iter()
-                    .map(|t| t.to_string())
-                    .collect::<Vec<_>>()
-                    .join(","),
-            ),
-        ])
+        Event::new(format!(
+            "burn_{}",
+            if event.tokens.len() == 1 {
+                "single"
+            } else {
+                "batch"
+            }
+        ))
+        .add_attribute("sender", event.sender.as_str())
+        .add_attributes(token_attributes(event.tokens))
     }
 }
 
@@ -206,4 +202,25 @@ impl From<RevokeAllEvent> for Event {
             attr("operator", event.operator.as_str()),
         ])
     }
+}
+
+pub fn token_attributes(tokens: Vec<TokenAmount>) -> Vec<Attribute> {
+    vec![
+        attr(
+            format!("token_id{}", if tokens.len() == 1 { "" } else { "s" }),
+            tokens
+                .iter()
+                .map(|t| t.token_id.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+        ),
+        attr(
+            format!("amount{}", if tokens.len() == 1 { "" } else { "s" }),
+            tokens
+                .iter()
+                .map(|t| t.amount.to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+        ),
+    ]
 }
