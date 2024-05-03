@@ -27,6 +27,8 @@ where
     ) -> StdResult<Response> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+        // todo - cw ownership
+
         let minter = deps.api.addr_validate(&msg.minter)?;
         self.minter.save(deps.storage, &minter)?;
         Ok(Response::default())
@@ -105,7 +107,7 @@ where
             info,
             env,
         } = env;
-        let to_addr = deps.api.addr_validate(&msg.to)?;
+        let to = deps.api.addr_validate(&msg.to)?;
 
         if info.sender != self.minter.load(deps.storage)? {
             return Err(Cw1155ContractError::Unauthorized {});
@@ -113,11 +115,11 @@ where
 
         let mut rsp = Response::default();
 
-        let event = self.update_transfer_state(
+        let event = self.update_balances(
             &mut deps,
             &env,
             None,
-            Some(to_addr),
+            Some(to),
             vec![TokenAmount {
                 token_id: msg.token_id.to_string(),
                 amount: msg.amount,
@@ -127,16 +129,11 @@ where
 
         // insert if not exist (if it is the first mint)
         if !self.tokens.has(deps.storage, &msg.token_id) {
-            // Add token info
             let token_info = TokenInfo {
                 token_uri: msg.token_uri,
                 extension: msg.extension,
             };
-
             self.tokens.save(deps.storage, &msg.token_id, &token_info)?;
-
-            // Increase num token
-            self.increment_tokens(deps.storage, &msg.token_id, &msg.amount)?;
         }
 
         Ok(rsp)
@@ -169,7 +166,7 @@ where
 
         let mut rsp = Response::default();
 
-        let event = self.update_transfer_state(
+        let event = self.update_balances(
             &mut deps,
             &env,
             Some(from.clone()),
@@ -221,7 +218,7 @@ where
         let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
 
         let mut rsp = Response::default();
-        let event = self.update_transfer_state(
+        let event = self.update_balances(
             &mut deps,
             &env,
             Some(from.clone()),
@@ -270,7 +267,7 @@ where
 
         let mut rsp = Response::default();
 
-        let event = self.update_transfer_state(
+        let event = self.update_balances(
             &mut deps,
             &env,
             Some(from.clone()),
@@ -306,7 +303,7 @@ where
         let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
 
         let mut rsp = Response::default();
-        let event = self.update_transfer_state(&mut deps, &env, Some(from.clone()), None, batch)?;
+        let event = self.update_balances(&mut deps, &env, Some(from.clone()), None, batch)?;
         rsp = rsp.add_event(event);
 
         Ok(rsp)
@@ -443,7 +440,7 @@ where
     /// When both are Some: transfer tokens
     ///
     /// Make sure permissions are checked before calling this.
-    fn update_transfer_state(
+    fn update_balances(
         &self,
         deps: &mut DepsMut,
         env: &Env,
