@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use cosmwasm_std::{Addr, CustomMsg, StdResult, Storage, Uint128};
 
 use cw1155::{Balance, Expiration, TokenApproval};
+use cw721::ContractInfoResponse;
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
 pub struct Cw1155Contract<'a, T, Q>
@@ -13,9 +14,10 @@ where
     T: Serialize + DeserializeOwned + Clone,
     Q: CustomMsg,
 {
-    pub minter: Item<'a, Addr>,
+    pub contract_info: Item<'a, ContractInfoResponse>,
+    pub supply: Item<'a, Uint128>, // total supply of all tokens
     // key: token id
-    pub token_count: Map<'a, &'a str, Uint128>,
+    pub token_count: Map<'a, &'a str, Uint128>, // total supply of a specific token
     // key: (owner, token id)
     pub balances: IndexedMap<'a, (Addr, String), Balance, BalanceIndexes<'a>>,
     // key: (owner, spender)
@@ -35,9 +37,10 @@ where
 {
     fn default() -> Self {
         Self::new(
-            "minter",
+            "cw1155_contract_info",
             "tokens",
             "token_count",
+            "supply",
             "balances",
             "balances__token_id",
             "approves",
@@ -52,9 +55,10 @@ where
     Q: CustomMsg,
 {
     fn new(
-        minter_key: &'a str,
+        contract_info_key: &'a str,
         tokens_key: &'a str,
         token_count_key: &'a str,
+        supply_key: &'a str,
         balances_key: &'a str,
         balances_token_id_key: &'a str,
         approves_key: &'a str,
@@ -68,12 +72,13 @@ where
             ),
         };
         Self {
-            minter: Item::new(minter_key),
+            contract_info: Item::new(contract_info_key),
+            tokens: Map::new(tokens_key),
             token_count: Map::new(token_count_key),
+            supply: Item::new(supply_key),
             balances: IndexedMap::new(balances_key, balances_indexes),
             approves: Map::new(approves_key),
             token_approves: Map::new(token_approves_key),
-            tokens: Map::new(tokens_key),
             _custom_query: PhantomData,
         }
     }

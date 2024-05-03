@@ -1,13 +1,16 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{to_json_binary, Addr, Binary, CustomMsg, Deps, Env, Order, StdResult, Uint128};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, CustomMsg, Deps, Empty, Env, Order, StdResult, Uint128,
+};
 
 use cw1155::{
     AllBalancesResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
-    BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, MinterResponse,
-    NumTokensResponse, TokenInfoResponse, TokensResponse,
+    BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, NumTokensResponse,
+    TokenInfoResponse, TokensResponse,
 };
+use cw721_base::{Cw721Contract, Extension};
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
@@ -24,8 +27,8 @@ where
     pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             Cw1155QueryMsg::Minter {} => {
-                let minter = self.minter.load(deps.storage)?.to_string();
-                to_json_binary(&MinterResponse { minter })
+                let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+                to_json_binary(&tract.minter(deps)?)
             }
             Cw1155QueryMsg::BalanceOf { owner, token_id } => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
@@ -132,8 +135,7 @@ where
                 to_json_binary(&self.query_all_tokens(deps, start_after, limit)?)
             }
             Cw1155QueryMsg::ContractInfo {} => {
-                todo!()
-                // to_json_binary(&self.contract_info(deps)?)
+                to_json_binary(&self.contract_info.load(deps.storage)?)
             }
             Cw1155QueryMsg::Supply { .. } => {
                 todo!()
@@ -141,8 +143,12 @@ where
             Cw1155QueryMsg::AllTokens { .. } => {
                 todo!()
             }
+            Cw1155QueryMsg::Ownership {} => {
+                to_json_binary(&cw_ownable::get_ownership(deps.storage)?)
+            }
+
             Cw1155QueryMsg::Extension { .. } => {
-                todo!()
+                unimplemented!()
             }
         }
     }

@@ -3,8 +3,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Uint128};
+use cw_ownable::cw_ownable_query;
 use cw_utils::Expiration;
 
+#[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum Cw1155QueryMsg<Q: JsonSchema> {
@@ -57,7 +59,7 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     #[returns(cw721::ContractInfoResponse)]
     ContractInfo {},
     /// Query Minter.
-    #[returns(MinterResponse)]
+    #[returns(cw721::MinterResponse)]
     Minter {},
     /// With MetaData Extension.
     /// Query metadata of token
@@ -150,10 +152,4 @@ pub struct TokensResponse {
     /// If there are more than `limit`, use `start_from` in future queries
     /// to achieve pagination.
     pub tokens: Vec<String>,
-}
-
-/// Shows who can mint these tokens
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct MinterResponse {
-    pub minter: String,
 }

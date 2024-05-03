@@ -8,10 +8,16 @@ use cw_utils::Expiration;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Cw1155InstantiateMsg {
+    /// Name of the token contract
+    pub name: String,
+    /// Symbol of the token contract
+    pub symbol: String,
+
     /// The minter is the only one who can create new tokens.
     /// This is designed for a base token platform that is controlled by an external program or
     /// contract.
-    pub minter: String,
+    /// If None, sender is the minter.
+    pub minter: Option<String>,
 }
 
 /// This is like Cw1155ExecuteMsg but we add a Mint command for a minter

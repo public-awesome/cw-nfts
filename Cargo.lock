@@ -317,6 +317,7 @@ version = "0.13.4"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-ownable",
  "cw-utils 1.0.3",
  "cw2 1.1.2",
  "cw721 0.18.0",
@@ -331,10 +332,13 @@ version = "0.13.4"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-ownable",
  "cw-storage-plus 1.2.0",
  "cw-utils 1.0.3",
  "cw1155",
  "cw2 1.1.2",
+ "cw721 0.18.0",
+ "cw721-base 0.18.0",
  "schemars",
  "serde",
 ]

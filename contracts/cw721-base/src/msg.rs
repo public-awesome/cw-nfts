@@ -161,7 +161,7 @@ pub enum QueryMsg<Q: JsonSchema> {
     },
 
     /// Return the minter
-    #[returns(MinterResponse)]
+    #[returns(cw721::MinterResponse)]
     Minter {},
 
     /// Extension query
@@ -170,10 +170,4 @@ pub enum QueryMsg<Q: JsonSchema> {
 
     #[returns(Option<String>)]
     GetWithdrawAddress {},
-}
-
-/// Shows who can mint these tokens
-#[cw_serde]
-pub struct MinterResponse {
-    pub minter: Option<String>,
 }

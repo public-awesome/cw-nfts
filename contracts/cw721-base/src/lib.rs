@@ -12,7 +12,7 @@ mod contract_tests;
 mod multi_tests;
 
 pub use crate::error::ContractError;
-pub use crate::msg::{ExecuteMsg, InstantiateMsg, MinterResponse, QueryMsg};
+pub use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 pub use crate::state::Cw721Contract;
 
 // These types are re-exported so that contracts interacting with this

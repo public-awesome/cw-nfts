@@ -147,3 +147,9 @@ pub struct TokensResponse {
     /// to achieve pagination.
     pub tokens: Vec<String>,
 }
+
+/// Shows who can mint these tokens
+#[cw_serde]
+pub struct MinterResponse {
+    pub minter: Option<String>,
+}

@@ -22,15 +22,23 @@ where
         &self,
         deps: DepsMut,
         _env: Env,
-        _info: MessageInfo,
+        info: MessageInfo,
         msg: Cw1155InstantiateMsg,
     ) -> StdResult<Response> {
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        // todo - cw ownership
+        let contract_info = cw721::ContractInfoResponse {
+            name: msg.name,
+            symbol: msg.symbol,
+        };
+        self.contract_info.save(deps.storage, &contract_info)?;
 
-        let minter = deps.api.addr_validate(&msg.minter)?;
-        self.minter.save(deps.storage, &minter)?;
+        let owner = match msg.minter {
+            Some(owner) => deps.api.addr_validate(&owner)?,
+            None => info.sender,
+        };
+        cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_ref()))?;
+
         Ok(Response::default())
     }
 
@@ -113,9 +121,7 @@ where
             env,
         } = env;
 
-        if info.sender != self.minter.load(deps.storage)? {
-            return Err(Cw1155ContractError::Unauthorized {});
-        }
+        cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         let to = deps.api.addr_validate(&recipient)?;
 
@@ -157,9 +163,7 @@ where
             env,
         } = env;
 
-        if info.sender != self.minter.load(deps.storage)? {
-            return Err(Cw1155ContractError::Unauthorized {});
-        }
+        cw_ownable::assert_owner(deps.storage, &info.sender)?;
 
         let to = deps.api.addr_validate(&recipient)?;
 

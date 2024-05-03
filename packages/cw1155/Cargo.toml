@@ -13,6 +13,7 @@ documentation = "https://docs.cosmwasm.com"
 cw2 = { workspace = true }
 cw721 = { workspace = true }
 cw-utils = { workspace = true }
+cw-ownable = { workspace = true }
 cosmwasm-std = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
