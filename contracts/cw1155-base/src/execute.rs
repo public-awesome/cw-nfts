@@ -50,8 +50,8 @@ where
                 batch,
                 msg,
             } => self.send_batch(env, from, to, batch, msg),
-            Cw1155ExecuteMsg::MintBatch(_) => {
-                todo!()
+            Cw1155ExecuteMsg::MintBatch { recipient, msgs } => {
+                self.mint_batch(env, recipient, msgs)
             }
             Cw1155ExecuteMsg::BurnBatch { from, batch } => self.burn_batch(env, from, batch),
             Cw1155ExecuteMsg::ApproveAll { operator, expires } => {
@@ -67,7 +67,7 @@ where
                 amount,
                 msg,
             } => self.send(env, from, to, token_id, amount, msg),
-            Cw1155ExecuteMsg::Mint(msg) => self.mint(env, msg),
+            Cw1155ExecuteMsg::Mint { recipient, msg } => self.mint(env, recipient, msg),
             Cw1155ExecuteMsg::Burn {
                 from,
                 token_id,
@@ -101,17 +101,23 @@ where
     T: Serialize + DeserializeOwned + Clone,
     Q: CustomMsg,
 {
-    pub fn mint(&self, env: ExecuteEnv, msg: MintMsg<T>) -> Result<Response, Cw1155ContractError> {
+    pub fn mint(
+        &self,
+        env: ExecuteEnv,
+        recipient: String,
+        msg: MintMsg<T>,
+    ) -> Result<Response, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             info,
             env,
         } = env;
-        let to = deps.api.addr_validate(&msg.to)?;
 
         if info.sender != self.minter.load(deps.storage)? {
             return Err(Cw1155ContractError::Unauthorized {});
         }
+
+        let to = deps.api.addr_validate(&recipient)?;
 
         let mut rsp = Response::default();
 
@@ -127,7 +133,7 @@ where
         )?;
         rsp = rsp.add_event(event);
 
-        // insert if not exist (if it is the first mint)
+        // store token info if not exist (if it is the first mint)
         if !self.tokens.has(deps.storage, &msg.token_id) {
             let token_info = TokenInfo {
                 token_uri: msg.token_uri,
@@ -135,6 +141,49 @@ where
             };
             self.tokens.save(deps.storage, &msg.token_id, &token_info)?;
         }
+
+        Ok(rsp)
+    }
+
+    pub fn mint_batch(
+        &self,
+        env: ExecuteEnv,
+        recipient: String,
+        msgs: Vec<MintMsg<T>>,
+    ) -> Result<Response, Cw1155ContractError> {
+        let ExecuteEnv {
+            mut deps,
+            info,
+            env,
+        } = env;
+
+        if info.sender != self.minter.load(deps.storage)? {
+            return Err(Cw1155ContractError::Unauthorized {});
+        }
+
+        let to = deps.api.addr_validate(&recipient)?;
+
+        let batch = msgs
+            .iter()
+            .map(|msg| {
+                // store token info if not exist (if it is the first mint)
+                if !self.tokens.has(deps.storage, &msg.token_id) {
+                    let token_info = TokenInfo {
+                        token_uri: msg.token_uri.clone(),
+                        extension: msg.extension.clone(),
+                    };
+                    self.tokens.save(deps.storage, &msg.token_id, &token_info)?;
+                }
+                Ok(TokenAmount {
+                    token_id: msg.token_id.to_string(),
+                    amount: msg.amount,
+                })
+            })
+            .collect::<StdResult<Vec<_>>>()?;
+
+        let mut rsp = Response::default();
+        let event = self.update_balances(&mut deps, &env, None, Some(to), batch)?;
+        rsp = rsp.add_event(event);
 
         Ok(rsp)
     }
