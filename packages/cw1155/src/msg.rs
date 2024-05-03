@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
 use cosmwasm_schema::cw_serde;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 use cosmwasm_std::{Binary, Uint128};
 use cw_utils::Expiration;

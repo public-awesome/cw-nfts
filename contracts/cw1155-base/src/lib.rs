@@ -9,6 +9,9 @@ pub use crate::state::Cw1155Contract;
 use cosmwasm_std::Empty;
 use cw1155::Cw1155QueryMsg;
 
+// todo - is this standard?
+pub const CW_ADDRESS_LENGTH: usize = 62;
+
 // This is a simple type to let us handle empty extensions
 pub type Extension = Option<Empty>;
 

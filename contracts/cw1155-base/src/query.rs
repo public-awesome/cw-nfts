@@ -67,6 +67,27 @@ where
                 let count = self.token_count(deps.storage, &token_id)?;
                 to_json_binary(&NumTokensResponse { count })
             }
+            Cw1155QueryMsg::Approvals {
+                owner,
+                token_id,
+                include_expired,
+            } => {
+                let owner = deps.api.addr_validate(&owner)?;
+                let approvals = self
+                    .token_approves
+                    .prefix((&token_id, &owner))
+                    .range(deps.storage, None, None, Order::Ascending)
+                    .filter_map(|approval| {
+                        let (_, approval) = approval.unwrap();
+                        if include_expired.unwrap_or(false) || !approval.is_expired(&env) {
+                            Some(approval)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                to_json_binary(&approvals)
+            }
             Cw1155QueryMsg::ApprovedForAll {
                 owner,
                 include_expired,

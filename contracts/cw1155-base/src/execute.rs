@@ -2,17 +2,19 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use cosmwasm_std::{
-    Addr, Binary, DepsMut, Env, Event, MessageInfo, Response, StdResult, Storage, SubMsg, Uint128,
+    Addr, Binary, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult, Storage, SubMsg,
+    Uint128,
 };
 
 use cw1155::{
-    ApproveAllEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
-    Cw1155ReceiveMsg, Expiration, MintEvent, RevokeAllEvent, TokenAmount, TransferEvent,
+    ApproveAllEvent, ApproveEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
+    Cw1155ReceiveMsg, Expiration, MintEvent, RevokeAllEvent, RevokeEvent, TokenAmount,
+    TransferEvent,
 };
 use cw2::set_contract_version;
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, MintMsg};
-use crate::state::{Cw1155Contract, TokenInfo};
+use crate::state::{Cw1155Contract, TokenApproval, TokenInfo};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-base";
@@ -61,9 +63,20 @@ where
             } => self.batch_send_from(env, from, to, batch, msg),
             ExecuteMsg::Burn { token_id, amount } => self.burn(env, token_id, amount),
             ExecuteMsg::BatchBurn { batch } => self.batch_burn(env, batch),
+            ExecuteMsg::Approve {
+                spender,
+                token_id,
+                amount,
+                expires,
+            } => self.approve_token(env, spender, token_id, amount, expires),
             ExecuteMsg::ApproveAll { operator, expires } => {
                 self.approve_all(env, operator, expires)
             }
+            ExecuteMsg::Revoke {
+                spender,
+                token_id,
+                amount,
+            } => self.revoke_token(env, spender, token_id, amount),
             ExecuteMsg::RevokeAll { operator } => self.revoke_all(env, operator),
         }
     }
@@ -82,7 +95,11 @@ where
     T: Serialize + DeserializeOwned + Clone,
 {
     pub fn mint(&self, env: ExecuteEnv, msg: MintMsg<T>) -> Result<Response, Cw1155ContractError> {
-        let ExecuteEnv { mut deps, info, .. } = env;
+        let ExecuteEnv {
+            mut deps,
+            info,
+            env,
+        } = env;
         let to_addr = deps.api.addr_validate(&msg.to)?;
 
         if info.sender != self.minter.load(deps.storage)? {
@@ -93,6 +110,7 @@ where
 
         let event = self.update_transfer_state(
             &mut deps,
+            &env,
             None,
             Some(to_addr),
             vec![TokenAmount {
@@ -144,6 +162,7 @@ where
 
         let event = self.update_transfer_state(
             &mut deps,
+            &env,
             Some(from.clone()),
             Some(to.clone()),
             vec![TokenAmount {
@@ -191,6 +210,7 @@ where
         let mut rsp = Response::default();
         let event = self.update_transfer_state(
             &mut deps,
+            &env,
             Some(from.clone()),
             Some(to.clone()),
             batch.to_vec(),
@@ -234,6 +254,7 @@ where
 
         let event = self.update_transfer_state(
             &mut deps,
+            &env,
             Some(from.clone()),
             None,
             vec![TokenAmount {
@@ -262,7 +283,48 @@ where
         let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
 
         let mut rsp = Response::default();
-        let event = self.update_transfer_state(&mut deps, Some(from.clone()), None, batch)?;
+        let event = self.update_transfer_state(&mut deps, &env, Some(from.clone()), None, batch)?;
+        rsp = rsp.add_event(event);
+
+        Ok(rsp)
+    }
+
+    pub fn approve_token(
+        &self,
+        env: ExecuteEnv,
+        operator: String,
+        token_id: String,
+        amount: Option<Uint128>,
+        expiration: Option<Expiration>,
+    ) -> Result<Response, Cw1155ContractError> {
+        let ExecuteEnv { deps, info, env } = env;
+
+        // reject expired data as invalid
+        let expiration = expiration.unwrap_or_default();
+        if expiration.is_expired(&env.block) {
+            return Err(Cw1155ContractError::Expired {});
+        }
+
+        // get sender's token balance to get valid approval amount
+        let balance = self
+            .balances
+            .load(deps.storage, (info.sender.clone(), token_id.to_string()))?;
+        let approval_amount = amount.unwrap_or(Uint128::MAX).min(balance.amount);
+
+        // store the approval
+        let operator = deps.api.addr_validate(&operator)?;
+        self.token_approves.save(
+            deps.storage,
+            (&token_id, &info.sender, &operator),
+            &TokenApproval {
+                amount: approval_amount,
+                expiration,
+            },
+        )?;
+
+        let mut rsp = Response::default();
+
+        let event = ApproveEvent::new(&info.sender, &operator, &token_id, approval_amount).into();
         rsp = rsp.add_event(event);
 
         Ok(rsp)
@@ -295,6 +357,46 @@ where
         Ok(rsp)
     }
 
+    pub fn revoke_token(
+        &self,
+        env: ExecuteEnv,
+        operator: String,
+        token_id: String,
+        amount: Option<Uint128>,
+    ) -> Result<Response, Cw1155ContractError> {
+        let ExecuteEnv { deps, info, .. } = env;
+        let operator = deps.api.addr_validate(&operator)?;
+
+        // get prev approval amount to get valid revoke amount
+        let prev_approval = self
+            .token_approves
+            .load(deps.storage, (&token_id, &info.sender, &operator))?;
+        let revoke_amount = amount.unwrap_or(Uint128::MAX).min(prev_approval.amount);
+
+        // remove or update approval
+        if revoke_amount == prev_approval.amount {
+            self.token_approves
+                .remove(deps.storage, (&token_id, &info.sender, &operator));
+        } else {
+            self.token_approves.update(
+                deps.storage,
+                (&token_id, &info.sender, &operator),
+                |prev| -> StdResult<_> {
+                    let mut new_approval = prev.unwrap();
+                    new_approval.amount = new_approval.amount.checked_sub(revoke_amount)?;
+                    Ok(new_approval)
+                },
+            )?;
+        }
+
+        let mut rsp = Response::default();
+
+        let event = RevokeEvent::new(&info.sender, &operator, &token_id, revoke_amount).into();
+        rsp = rsp.add_event(event);
+
+        Ok(rsp)
+    }
+
     pub fn revoke_all(
         &self,
         env: ExecuteEnv,
@@ -321,6 +423,7 @@ where
     fn update_transfer_state(
         &self,
         deps: &mut DepsMut,
+        env: &Env,
         from: Option<Addr>,
         to: Option<Addr>,
         tokens: Vec<TokenAmount>,
@@ -363,14 +466,41 @@ where
         }
 
         let event = if let Some(from) = &from {
+            for TokenAmount { token_id, amount } in &tokens {
+                // remove token approvals
+                for (operator, approval) in self
+                    .token_approves
+                    .prefix((&token_id, from))
+                    .range(deps.storage, None, None, Order::Ascending)
+                    .collect::<StdResult<Vec<_>>>()?
+                {
+                    if approval.is_expired(&env) || approval.amount <= *amount {
+                        self.token_approves
+                            .remove(deps.storage, (&token_id, &from, &operator));
+                    } else {
+                        self.token_approves.update(
+                            deps.storage,
+                            (&token_id, &from, &operator),
+                            |prev| -> StdResult<_> {
+                                let mut new_approval = prev.unwrap();
+                                new_approval.amount = new_approval.amount.checked_sub(*amount)?;
+                                Ok(new_approval)
+                            },
+                        )?;
+                    }
+                }
+
+                // decrement tokens if burning
+                if to.is_none() {
+                    self.decrement_tokens(deps.storage, token_id, amount)?;
+                }
+            }
+
             if let Some(to) = &to {
                 // transfer
                 TransferEvent::new(from, to, tokens).into()
             } else {
                 // burn
-                for TokenAmount { token_id, amount } in &tokens {
-                    self.decrement_tokens(deps.storage, token_id, amount)?;
-                }
                 BurnEvent::new(from, tokens).into()
             }
         } else if let Some(to) = &to {
@@ -401,18 +531,25 @@ where
         let owner_balance = self
             .balances
             .load(storage, (owner.clone(), token_id.to_string()))?;
-        let balance_update = TokenAmount {
+        let mut balance_update = TokenAmount {
             token_id: token_id.to_string(),
             amount: owner_balance.amount.min(amount),
         };
 
-        // todo - logic for checking approval on specific token
-        // owner or operator can approve
+        // owner or all operator can execute
         if owner == operator || self.verify_all_approval(storage, env, owner, operator) {
-            Ok(balance_update)
-        } else {
-            Err(Cw1155ContractError::Unauthorized {})
+            return Ok(balance_update);
         }
+
+        // token operator can execute up to approved amount
+        if let Some(token_approval) =
+            self.get_active_token_approval(storage, env, owner, operator, token_id)
+        {
+            balance_update.amount = balance_update.amount.min(token_approval.amount);
+            return Ok(balance_update);
+        }
+
+        Err(Cw1155ContractError::Unauthorized {})
     }
 
     /// returns valid token amounts if the sender can execute or is approved to execute on all provided tokens
@@ -442,6 +579,29 @@ where
         match self.approves.load(storage, (owner, operator)) {
             Ok(ex) => !ex.is_expired(&env.block),
             Err(_) => false,
+        }
+    }
+
+    pub fn get_active_token_approval(
+        &self,
+        storage: &dyn Storage,
+        env: &Env,
+        owner: &Addr,
+        operator: &Addr,
+        token_id: &str,
+    ) -> Option<TokenApproval> {
+        match self
+            .token_approves
+            .load(storage, (&token_id, owner, operator))
+        {
+            Ok(approval) => {
+                if !approval.is_expired(&env) {
+                    Some(approval)
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
         }
     }
 }

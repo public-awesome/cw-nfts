@@ -1,6 +1,5 @@
-use cosmwasm_std::{Addr, attr, Event};
 use crate::TokenAmount;
-
+use cosmwasm_std::{attr, Addr, Event, Uint128};
 
 /// Tracks token transfer actions
 pub struct TransferEvent {
@@ -21,13 +20,19 @@ impl TransferEvent {
 
 impl From<TransferEvent> for Event {
     fn from(event: TransferEvent) -> Self {
-        Event::new("transfer_tokens").add_attributes(
-            vec![
-                attr("sender", event.sender.as_str()),
-                attr("recipient", event.recipient.as_str()),
-                attr("tokens", event.tokens.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",")),
-            ]
-        )
+        Event::new("transfer_tokens").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr("recipient", event.recipient.as_str()),
+            attr(
+                "tokens",
+                event
+                    .tokens
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            ),
+        ])
     }
 }
 
@@ -48,12 +53,18 @@ impl MintEvent {
 
 impl From<MintEvent> for Event {
     fn from(event: MintEvent) -> Self {
-        Event::new("mint_tokens").add_attributes(
-            vec![
-                attr("recipient", event.recipient.as_str()),
-                attr("tokens", event.tokens.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",")),
-            ]
-        )
+        Event::new("mint_tokens").add_attributes(vec![
+            attr("recipient", event.recipient.as_str()),
+            attr(
+                "tokens",
+                event
+                    .tokens
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            ),
+        ])
     }
 }
 
@@ -74,12 +85,78 @@ impl BurnEvent {
 
 impl From<BurnEvent> for Event {
     fn from(event: BurnEvent) -> Self {
-        Event::new("burn_tokens").add_attributes(
-            vec![
-                attr("sender", event.sender.as_str()),
-                attr("tokens", event.tokens.iter().map(|t| t.to_string()).collect::<Vec<_>>().join(",")),
-            ]
-        )
+        Event::new("burn_tokens").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr(
+                "tokens",
+                event
+                    .tokens
+                    .iter()
+                    .map(|t| t.to_string())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            ),
+        ])
+    }
+}
+
+/// Tracks approve status changes
+pub struct ApproveEvent {
+    pub sender: Addr,
+    pub operator: Addr,
+    pub token_id: String,
+    pub amount: Uint128,
+}
+
+impl ApproveEvent {
+    pub fn new(sender: &Addr, operator: &Addr, token_id: &str, amount: Uint128) -> Self {
+        Self {
+            sender: sender.clone(),
+            operator: operator.clone(),
+            token_id: token_id.to_string(),
+            amount,
+        }
+    }
+}
+
+impl From<ApproveEvent> for Event {
+    fn from(event: ApproveEvent) -> Self {
+        Event::new("approve_single").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr("operator", event.operator.as_str()),
+            attr("token_id", event.token_id),
+            attr("amount", event.amount.to_string()),
+        ])
+    }
+}
+
+/// Tracks revoke status changes
+pub struct RevokeEvent {
+    pub sender: Addr,
+    pub operator: Addr,
+    pub token_id: String,
+    pub amount: Uint128,
+}
+
+impl RevokeEvent {
+    pub fn new(sender: &Addr, operator: &Addr, token_id: &str, amount: Uint128) -> Self {
+        Self {
+            sender: sender.clone(),
+            operator: operator.clone(),
+            token_id: token_id.to_string(),
+            amount,
+        }
+    }
+}
+
+impl From<RevokeEvent> for Event {
+    fn from(event: RevokeEvent) -> Self {
+        Event::new("revoke_single").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr("operator", event.operator.as_str()),
+            attr("token_id", event.token_id),
+            attr("amount", event.amount.to_string()),
+        ])
     }
 }
 
@@ -100,12 +177,10 @@ impl ApproveAllEvent {
 
 impl From<ApproveAllEvent> for Event {
     fn from(event: ApproveAllEvent) -> Self {
-        Event::new("approve_all").add_attributes(
-            vec![
-                attr("sender", event.sender.as_str()),
-                attr("operator", event.operator.as_str()),
-            ]
-        )
+        Event::new("approve_all").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr("operator", event.operator.as_str()),
+        ])
     }
 }
 
@@ -126,11 +201,9 @@ impl RevokeAllEvent {
 
 impl From<RevokeAllEvent> for Event {
     fn from(event: RevokeAllEvent) -> Self {
-        Event::new("revoke_all").add_attributes(
-            vec![
-                attr("sender", event.sender.as_str()),
-                attr("operator", event.operator.as_str()),
-            ]
-        )
+        Event::new("revoke_all").add_attributes(vec![
+            attr("sender", event.sender.as_str()),
+            attr("operator", event.operator.as_str()),
+        ])
     }
 }

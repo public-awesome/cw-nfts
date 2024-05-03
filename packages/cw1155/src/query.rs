@@ -28,6 +28,12 @@ pub enum Cw1155QueryMsg {
     },
     /// Total number of tokens issued for the token id
     NumTokens { token_id: String },
+    /// Return approvals that a token owner has
+    Approvals {
+        owner: String,
+        token_id: String,
+        include_expired: Option<bool>,
+    },
     /// List all operators that can access all of the owner's tokens.
     /// Return type: ApprovedForAllResponse.
     ApprovedForAll {
