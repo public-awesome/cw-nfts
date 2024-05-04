@@ -67,7 +67,7 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     TokenInfo { token_id: String },
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-    #[returns(TokensResponse)]
+    #[returns(TokenInfoResponse<Q>)]
     AllTokenInfo {
         start_after: Option<String>,
         limit: Option<u32>,
@@ -136,6 +136,12 @@ pub struct ApprovedForAllResponse {
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
 pub struct IsApprovedForAllResponse {
     pub approved: bool,
+}
+
+#[cw_serde]
+pub struct AllTokenInfoResponse<T> {
+    pub token_id: String,
+    pub info: TokenInfoResponse<T>,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
