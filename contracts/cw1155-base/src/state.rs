@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{Addr, CustomMsg, StdResult, Storage, Uint128};
+use cosmwasm_std::{Addr, CustomMsg, StdError, StdResult, Storage, Uint128};
 
 use cw1155::{Balance, Expiration, TokenApproval};
 use cw721::ContractInfoResponse;
@@ -96,8 +96,15 @@ where
         token_id: &'a str,
         amount: &Uint128,
     ) -> StdResult<Uint128> {
+        // increment token count
         let val = self.token_count(storage, token_id)? + amount;
         self.token_count.save(storage, token_id, &val)?;
+
+        // increment total supply
+        self.supply.update(storage, |prev| {
+            Ok::<Uint128, StdError>(prev.checked_add(*amount)?)
+        })?;
+
         Ok(val)
     }
 
@@ -107,8 +114,15 @@ where
         token_id: &'a str,
         amount: &Uint128,
     ) -> StdResult<Uint128> {
+        // decrement token count
         let val = self.token_count(storage, token_id)?.checked_sub(*amount)?;
         self.token_count.save(storage, token_id, &val)?;
+
+        // decrement total supply
+        self.supply.update(storage, |prev| {
+            Ok::<Uint128, StdError>(prev.checked_sub(*amount)?)
+        })?;
+
         Ok(val)
     }
 }

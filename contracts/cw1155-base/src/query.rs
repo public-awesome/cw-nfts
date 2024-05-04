@@ -137,8 +137,9 @@ where
             Cw1155QueryMsg::ContractInfo {} => {
                 to_json_binary(&self.contract_info.load(deps.storage)?)
             }
-            Cw1155QueryMsg::Supply { .. } => {
-                todo!()
+            Cw1155QueryMsg::Supply {} => {
+                let supply = self.supply.load(deps.storage)?;
+                to_json_binary(&NumTokensResponse { count: supply })
             }
             Cw1155QueryMsg::AllTokens { start_after, limit } => {
                 to_json_binary(&self.query_all_tokens(deps, start_after, limit)?)
