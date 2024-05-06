@@ -17,6 +17,8 @@ pub type Extension = Option<Empty>;
 pub type Cw1155BaseExecuteMsg = Cw1155ExecuteMsg<Extension>;
 pub type Cw1155BaseQueryMsg = Cw1155QueryMsg<Empty>;
 
+pub type Cw1155BaseContract<'a> = Cw1155Contract<'a, Extension, Empty>;
+
 pub mod entry {
     use super::*;
 
@@ -35,7 +37,7 @@ pub mod entry {
     ) -> StdResult<Response> {
         cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-        let tract = Cw1155Contract::<Extension, Empty>::default();
+        let tract = Cw1155BaseContract::default();
         tract.instantiate(deps, env, info, msg)
     }
 
@@ -46,13 +48,13 @@ pub mod entry {
         info: MessageInfo,
         msg: Cw1155ExecuteMsg<Extension>,
     ) -> Result<Response, Cw1155ContractError> {
-        let tract = Cw1155Contract::<Extension, Empty>::default();
+        let tract = Cw1155BaseContract::default();
         tract.execute(deps, env, info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn query(deps: Deps, env: Env, msg: Cw1155QueryMsg<Empty>) -> StdResult<Binary> {
-        let tract = Cw1155Contract::<Extension, Empty>::default();
+        let tract = Cw1155BaseContract::default();
         tract.query(deps, env, msg)
     }
 

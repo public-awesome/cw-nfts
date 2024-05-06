@@ -41,7 +41,7 @@ pub enum Cw1155ExecuteMsg<T> {
     /// Mint a batch of tokens, can only be called by the contract minter
     MintBatch {
         recipient: String,
-        msgs: Vec<MintMsg<T>>,
+        msgs: Vec<Cw1155MintMsg<T>>,
     },
     /// BatchBurn is a base message to burn multiple types of tokens in batch.
     BurnBatch {
@@ -72,7 +72,10 @@ pub enum Cw1155ExecuteMsg<T> {
         msg: Option<Binary>,
     },
     /// Mint a new NFT, can only be called by the contract minter
-    Mint { recipient: String, msg: MintMsg<T> },
+    Mint {
+        recipient: String,
+        msg: Cw1155MintMsg<T>,
+    },
     /// Burn is a base message to burn tokens.
     Burn {
         /// check approval if from is Some, otherwise assume sender is owner
@@ -99,7 +102,7 @@ pub enum Cw1155ExecuteMsg<T> {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MintMsg<T> {
+pub struct Cw1155MintMsg<T> {
     pub token_id: String,
     /// The amount of the newly minted tokens
     pub amount: Uint128,

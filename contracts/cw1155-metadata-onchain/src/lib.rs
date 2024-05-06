@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cw1155::Cw1155ExecuteMsg;
-pub use cw1155::{Cw1155ContractError, Cw1155InstantiateMsg, MintMsg};
+pub use cw1155::{Cw1155ContractError, Cw1155InstantiateMsg, Cw1155MintMsg};
 use cw2::set_contract_version;
 
 // Version info for migration
@@ -98,7 +98,7 @@ mod tests {
             .unwrap();
 
         let token_id = "Enterprise";
-        let mint_msg = MintMsg {
+        let mint_msg = Cw1155MintMsg {
             token_id: token_id.to_string(),
             to: "john".to_string(),
             amount: Uint128::new(1),

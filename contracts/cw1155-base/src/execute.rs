@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw1155::{
     ApproveAllEvent, ApproveEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
-    Cw1155ExecuteMsg, Cw1155InstantiateMsg, Cw1155ReceiveMsg, Expiration, MintEvent, MintMsg,
+    Cw1155ExecuteMsg, Cw1155InstantiateMsg, Cw1155MintMsg, Cw1155ReceiveMsg, Expiration, MintEvent,
     RevokeAllEvent, RevokeEvent, TokenAmount, TokenApproval, TransferEvent,
 };
 use cw2::set_contract_version;
@@ -25,19 +25,25 @@ where
         info: MessageInfo,
         msg: Cw1155InstantiateMsg,
     ) -> StdResult<Response> {
+        // store contract version
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
+        // store contract info
         let contract_info = cw721::ContractInfoResponse {
             name: msg.name,
             symbol: msg.symbol,
         };
         self.contract_info.save(deps.storage, &contract_info)?;
 
+        // store minter
         let owner = match msg.minter {
             Some(owner) => deps.api.addr_validate(&owner)?,
             None => info.sender,
         };
         cw_ownable::initialize_owner(deps.storage, deps.api, Some(owner.as_ref()))?;
+
+        // store total supply
+        self.supply.save(deps.storage, &Uint128::zero())?;
 
         Ok(Response::default())
     }
@@ -113,7 +119,7 @@ where
         &self,
         env: ExecuteEnv,
         recipient: String,
-        msg: MintMsg<T>,
+        msg: Cw1155MintMsg<T>,
     ) -> Result<Response, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
@@ -155,7 +161,7 @@ where
         &self,
         env: ExecuteEnv,
         recipient: String,
-        msgs: Vec<MintMsg<T>>,
+        msgs: Vec<Cw1155MintMsg<T>>,
     ) -> Result<Response, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
@@ -505,7 +511,7 @@ where
             for TokenAmount { token_id, amount } in tokens.iter() {
                 self.balances.update(
                     deps.storage,
-                    (from.clone(), token_id.clone()),
+                    (from.clone(), token_id.to_string()),
                     |balance: Option<Balance>| -> StdResult<_> {
                         let mut new_balance = balance.unwrap();
                         new_balance.amount = new_balance.amount.checked_sub(*amount)?;
@@ -519,7 +525,7 @@ where
             for TokenAmount { token_id, amount } in tokens.iter() {
                 self.balances.update(
                     deps.storage,
-                    (to.clone(), token_id.clone()),
+                    (to.clone(), token_id.to_string()),
                     |balance: Option<Balance>| -> StdResult<_> {
                         let mut new_balance: Balance = if let Some(balance) = balance {
                             balance
