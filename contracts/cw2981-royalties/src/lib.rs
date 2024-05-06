@@ -58,7 +58,8 @@ pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
 pub mod entry {
     use super::*;
 
-    use cosmwasm_std::entry_point;
+    use crate::error::ContractError;
+    use cosmwasm_std::{entry_point, to_json_binary};
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
     #[entry_point]

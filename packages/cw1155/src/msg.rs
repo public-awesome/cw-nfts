@@ -115,6 +115,7 @@ pub struct Cw1155MintMsg<T> {
 }
 
 #[cw_serde]
+#[derive(Eq)]
 pub struct TokenAmount {
     pub token_id: String,
     pub amount: Uint128,

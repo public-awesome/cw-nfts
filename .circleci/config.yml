@@ -25,7 +25,7 @@ workflows:
 jobs:
   contract_cw1155_base:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.65.0
     working_directory: ~/project/contracts/cw1155-base
     steps:
       - checkout:
@@ -35,7 +35,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw1155-base-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw1155-base-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -57,11 +57,11 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw1155-base-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw1155-base-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
 
   contract_cw1155_metadata_onchain:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.65.0
     working_directory: ~/project/contracts/cw1155-metadata-onchain
     steps:
       - checkout:
@@ -71,7 +71,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw1155-metadata-onchain-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw1155-metadata-onchain-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -93,11 +93,11 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw1155-metadata-onchain-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw1155-metadata-onchain-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
 
   contract_cw1155_royalties:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.65.0
     working_directory: ~/project/contracts/cw1155-royalties
     steps:
       - checkout:
@@ -107,7 +107,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw1155-royalties-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw1155-royalties-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -129,7 +129,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw1155-royalties-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw1155-royalties-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
 
   contract_cw721_base:
     docker:
@@ -278,7 +278,7 @@ jobs:
 
   package_cw1155:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.65.0
     working_directory: ~/project/packages/cw1155
     steps:
       - checkout:
@@ -288,7 +288,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
       - restore_cache:
           keys:
-            - cargocache-v2-cw1155:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-cw1155:1.65.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Build library for native target
           command: cargo build --locked
@@ -311,7 +311,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-cw1155:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-cw1155:1.65.0-{{ checksum "~/project/Cargo.lock" }}
 
   lint:
     docker:
