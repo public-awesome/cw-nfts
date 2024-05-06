@@ -80,7 +80,7 @@ mod tests {
     use super::*;
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{from_binary, Uint128};
+    use cosmwasm_std::{from_json, Uint128};
 
     const CREATOR: &str = "creator";
 
@@ -91,7 +91,9 @@ mod tests {
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = Cw1155InstantiateMsg {
-            minter: CREATOR.to_string(),
+            name: "name".to_string(),
+            symbol: "symbol".to_string(),
+            minter: Some(CREATOR.to_string()),
         };
         contract
             .instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg)
@@ -100,7 +102,6 @@ mod tests {
         let token_id = "Enterprise";
         let mint_msg = Cw1155MintMsg {
             token_id: token_id.to_string(),
-            to: "john".to_string(),
             amount: Uint128::new(1),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: Some(Metadata {
@@ -109,12 +110,15 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let exec_msg = Cw1155MetadataExecuteMsg::Mint(mint_msg.clone());
+        let exec_msg = Cw1155MetadataExecuteMsg::Mint {
+            recipient: "john".to_string(),
+            msg: mint_msg.clone(),
+        };
         contract
             .execute(deps.as_mut(), mock_env(), info, exec_msg)
             .unwrap();
 
-        let res: cw1155::TokenInfoResponse<Extension> = from_binary(
+        let res: cw1155::TokenInfoResponse<Extension> = from_json(
             &contract
                 .query(
                     deps.as_ref(),
