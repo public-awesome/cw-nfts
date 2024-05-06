@@ -5,15 +5,16 @@ pub mod query;
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_json_binary, Empty};
+use cosmwasm_std::Empty;
 use cw721_base::Cw721Contract;
 pub use cw721_base::InstantiateMsg;
 
-use crate::error::ContractError;
 use crate::msg::Cw2981QueryMsg;
 
 // Version info for migration
+#[cfg(not(feature = "library"))]
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
+#[cfg(not(feature = "library"))]
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cw_serde]
@@ -122,6 +123,7 @@ mod tests {
 
     use cosmwasm_std::{from_json, Uint128};
 
+    use crate::error::ContractError;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw721::Cw721Query;
 

@@ -119,7 +119,7 @@ mod tests {
             .unwrap();
 
         let res: cw1155::TokenInfoResponse<Extension> = from_json(
-            &contract
+            contract
                 .query(
                     deps.as_ref(),
                     mock_env(),

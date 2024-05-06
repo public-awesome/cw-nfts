@@ -30,7 +30,7 @@ where
     pub(crate) _custom_query: PhantomData<Q>,
 }
 
-impl<'a, T, Q> Default for Cw1155Contract<'static, T, Q>
+impl<'a, T, Q> Default for Cw1155Contract<'a, T, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
     Q: CustomMsg,
@@ -54,6 +54,7 @@ where
     T: Serialize + DeserializeOwned + Clone,
     Q: CustomMsg,
 {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         contract_info_key: &'a str,
         tokens_key: &'a str,

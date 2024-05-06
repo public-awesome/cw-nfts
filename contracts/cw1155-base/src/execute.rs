@@ -553,7 +553,7 @@ where
                     .range(deps.storage, None, None, Order::Ascending)
                     .collect::<StdResult<Vec<_>>>()?
                 {
-                    if approval.is_expired(&env) || approval.amount <= *amount {
+                    if approval.is_expired(env) || approval.amount <= *amount {
                         self.token_approves
                             .remove(deps.storage, (&token_id, &from, &operator));
                     } else {
@@ -643,7 +643,7 @@ where
         tokens
             .iter()
             .map(|TokenAmount { token_id, amount }| {
-                self.verify_approval(storage, &env, info, owner, token_id, *amount)
+                self.verify_approval(storage, env, info, owner, token_id, *amount)
             })
             .collect()
     }
@@ -674,7 +674,7 @@ where
             .load(storage, (&token_id, owner, operator))
         {
             Ok(approval) => {
-                if !approval.is_expired(&env) {
+                if !approval.is_expired(env) {
                     Some(approval)
                 } else {
                     None
