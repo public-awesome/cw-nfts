@@ -10,7 +10,7 @@ use cw1155::{
     BalanceResponse, BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse,
     NumTokensResponse, TokenInfoResponse, TokensResponse,
 };
-use cw721_base::{Cw721Contract, Extension};
+use cw721_base::Cw721Contract;
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
@@ -27,7 +27,7 @@ where
     pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg<Q>) -> StdResult<Binary> {
         match msg {
             Cw1155QueryMsg::Minter {} => {
-                let tract = Cw721Contract::<Extension, Empty, Empty, Empty>::default();
+                let tract = Cw721Contract::<T, Empty, Empty, Q>::default();
                 to_json_binary(&tract.minter(deps)?)
             }
             Cw1155QueryMsg::BalanceOf { owner, token_id } => {
