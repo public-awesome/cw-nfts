@@ -743,7 +743,8 @@ mod tests {
             .unwrap();
 
         // invalid expires should be rejected
-        assert!(contract.execute(
+        assert!(contract
+            .execute(
                 deps.as_mut(),
                 env.clone(),
                 mock_info(user1.as_ref(), &[]),
@@ -751,7 +752,8 @@ mod tests {
                     operator: user2.clone(),
                     expires: Some(Expiration::AtHeight(5)),
                 },
-            ).is_err());
+            )
+            .is_err());
 
         contract
             .execute(
