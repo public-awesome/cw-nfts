@@ -31,7 +31,7 @@ pub struct Metadata {
     pub youtube_url: Option<String>,
 }
 
-pub type Extension = Metadata;
+pub type Extension = Option<Metadata>;
 
 pub type Cw1155MetadataContract<'a> = cw1155_base::Cw1155Contract<'a, Extension, Empty>;
 pub type Cw1155MetadataExecuteMsg = Cw1155ExecuteMsg<Extension>;

@@ -1,6 +1,4 @@
-use std::fs::create_dir_all;
-
-use cosmwasm_schema::{remove_schemas, write_api};
+use cosmwasm_schema::write_api;
 
 use cw1155::Cw1155InstantiateMsg;
 use cw1155_royalties::{Cw1155RoyaltiesExecuteMsg, Cw1155RoyaltiesQueryMsg};

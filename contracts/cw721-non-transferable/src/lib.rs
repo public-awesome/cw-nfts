@@ -3,7 +3,6 @@ use cosmwasm_std::Empty;
 pub use cw721_base::{
     entry::{execute as _execute, query as _query},
     ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg as Cw721BaseInstantiateMsg,
-    MinterResponse,
 };
 
 pub mod msg;

@@ -660,7 +660,7 @@ mod tests {
                     token_id: "token5".to_owned()
                 },
             ),
-            to_json_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Option<Empty>> {
                 token_uri: None,
                 extension: None,
             }),
@@ -951,7 +951,7 @@ mod tests {
                     token_id: token1.clone()
                 },
             ),
-            to_json_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Option<Empty>> {
                 token_uri: Some(url1.clone()),
                 extension: None,
             })
@@ -982,7 +982,7 @@ mod tests {
                 mock_env(),
                 Cw1155QueryMsg::TokenInfo { token_id: token1 },
             ),
-            to_json_binary(&TokenInfoResponse::<Empty> {
+            to_json_binary(&TokenInfoResponse::<Option<Empty>> {
                 token_uri: Some(url1),
                 extension: None,
             })

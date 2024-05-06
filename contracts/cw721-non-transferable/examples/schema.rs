@@ -5,9 +5,10 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721ExecuteMsg,
-    NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+    MinterResponse, NftInfoResponse, NumTokensResponse, OperatorsResponse, OwnerOfResponse,
+    TokensResponse,
 };
-use cw721_non_transferable::{Extension, InstantiateMsg, MinterResponse, QueryMsg};
+use cw721_non_transferable::{Extension, InstantiateMsg, QueryMsg};
 
 fn main() {
     let mut out_dir = current_dir().unwrap();

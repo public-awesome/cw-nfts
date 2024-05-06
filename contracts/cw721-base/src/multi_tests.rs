@@ -1,8 +1,6 @@
 use cosmwasm_std::{to_json_binary, Addr, Empty, QuerierWrapper, WasmMsg};
-use cw721::OwnerOfResponse;
+use cw721::{MinterResponse, OwnerOfResponse};
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
-
-use crate::MinterResponse;
 
 fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(

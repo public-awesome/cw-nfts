@@ -13,7 +13,7 @@ use cosmwasm_std::Empty;
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type MinterResponse = cw721_base::msg::MinterResponse;
+pub type MinterResponse = cw721::MinterResponse;
 pub type Extension = Option<Empty>;
 
 pub type TokenInfo = cw721_base::state::TokenInfo<Extension>;

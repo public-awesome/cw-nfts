@@ -7,13 +7,11 @@ use cosmwasm_std::{
 
 use cw721::{
     Approval, ApprovalResponse, ContractInfoResponse, Cw721Query, Cw721ReceiveMsg, Expiration,
-    NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+    MinterResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
 };
 use cw_ownable::OwnershipError;
 
-use crate::{
-    ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, MinterResponse, QueryMsg,
-};
+use crate::{ContractError, Cw721Contract, ExecuteMsg, Extension, InstantiateMsg, QueryMsg};
 
 const MINTER: &str = "merlin";
 const CONTRACT_NAME: &str = "Magic Power";

@@ -1,10 +1,9 @@
 use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, Env, StdResult};
 use cw721::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, ContractInfoResponse, Cw721Query,
-    NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-    TokensResponse,
+    MinterResponse, NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
-use cw721_base::MinterResponse;
 
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract, Extension};
 

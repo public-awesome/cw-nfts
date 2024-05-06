@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-pub use cw721_base::{ContractError, InstantiateMsg, MinterResponse};
+pub use cw721_base::{ContractError, InstantiateMsg};
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-metadata-onchain";
