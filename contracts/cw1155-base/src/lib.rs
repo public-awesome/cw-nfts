@@ -5,15 +5,17 @@ mod state;
 
 pub use crate::state::Cw1155Contract;
 use cosmwasm_std::Empty;
-use cw1155::Cw1155QueryMsg;
-
-// This is a simple type to let us handle empty extensions
-pub type Extension = Option<Empty>;
+use cw1155::{Cw1155ExecuteMsg, Cw1155QueryMsg};
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw1155-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const EXPECTED_FROM_VERSION: &str = CONTRACT_VERSION;
+
+// This is a simple type to let us handle empty extensions
+pub type Extension = Option<Empty>;
+pub type Cw1155BaseExecuteMsg = Cw1155ExecuteMsg<Extension>;
+pub type Cw1155BaseQueryMsg = Cw1155QueryMsg<Empty>;
 
 pub mod entry {
     use super::*;

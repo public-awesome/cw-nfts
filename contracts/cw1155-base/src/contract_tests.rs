@@ -6,7 +6,7 @@ mod tests {
         Uint128,
     };
 
-    use crate::{Cw1155Contract, ExecuteMsg, InstantiateMsg, MintMsg};
+    use crate::{Cw1155BaseExecuteMsg, Cw1155Contract, InstantiateMsg, MintMsg};
     use cw1155::{
         AllBalancesResponse, ApprovalsForResponse, Balance, BalanceResponse, BatchBalanceResponse,
         Cw1155BatchReceiveMsg, Cw1155ContractError, Cw1155QueryMsg, Expiration, NumTokensResponse,

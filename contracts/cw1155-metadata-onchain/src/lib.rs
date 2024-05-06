@@ -34,7 +34,7 @@ pub struct Metadata {
 pub type Extension = Metadata;
 
 pub type Cw1155MetadataContract<'a> = cw1155_base::Cw1155Contract<'a, Extension, Empty>;
-pub type ExecuteMsg = Cw1155ExecuteMsg<Extension>;
+pub type Cw1155MetadataExecuteMsg = Cw1155ExecuteMsg<Extension>;
 
 // #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -64,7 +64,7 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg,
+        msg: Cw1155MetadataExecuteMsg,
     ) -> Result<Response, Cw1155ContractError> {
         Cw1155MetadataContract::default().execute(deps, env, info, msg)
     }
@@ -109,7 +109,7 @@ mod tests {
                 ..Metadata::default()
             }),
         };
-        let exec_msg = ExecuteMsg::Mint(mint_msg.clone());
+        let exec_msg = Cw1155MetadataExecuteMsg::Mint(mint_msg.clone());
         contract
             .execute(deps.as_mut(), mock_env(), info, exec_msg)
             .unwrap();

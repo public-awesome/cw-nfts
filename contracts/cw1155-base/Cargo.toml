@@ -29,7 +29,7 @@ cw-utils = { workspace = true }
 cw2 = { workspace = true }
 cw1155 = { workspace = true }
 cw721 = { workspace = true }
-cw721-base = { workspace = true }
+cw721-base = { workspace = true, features = ["library"] }
 cw-ownable = { workspace = true }
 cw-storage-plus = { workspace = true }
 cosmwasm-std = { workspace = true }
