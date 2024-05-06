@@ -64,7 +64,6 @@ crates=(
   cw721-fixed-price
   cw721-metadata-onchain
   cw721-non-transferable
-  cw2981-royalties
 )
 
 for crate in $crates; do
