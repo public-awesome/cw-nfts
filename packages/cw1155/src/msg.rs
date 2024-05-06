@@ -111,7 +111,7 @@ pub struct Cw1155MintMsg<T> {
     /// Metadata JSON Schema
     pub token_uri: Option<String>,
     /// Any custom extension used by this contract
-    pub extension: Option<T>,
+    pub extension: T,
 }
 
 #[cw_serde]

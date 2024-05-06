@@ -3,7 +3,7 @@ use cw2::VersionError;
 use cw_ownable::OwnershipError;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum Cw1155ContractError {
     #[error("StdError: {0}")]
     Std(#[from] StdError),

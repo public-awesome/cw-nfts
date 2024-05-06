@@ -149,7 +149,7 @@ pub struct TokenInfoResponse<T> {
     /// Should be a url point to a json file
     pub token_uri: Option<String>,
     /// You can add any custom metadata here when you extend cw1155-base
-    pub extension: Option<T>,
+    pub extension: T,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]

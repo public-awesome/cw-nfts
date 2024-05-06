@@ -7,7 +7,7 @@ pub use query::{check_royalties, query_royalties_info};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Empty};
 use cw721_base::Cw721Contract;
-pub use cw721_base::{InstantiateMsg, MinterResponse};
+pub use cw721_base::InstantiateMsg;
 
 use crate::error::ContractError;
 use crate::msg::Cw2981QueryMsg;

@@ -358,6 +358,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw1155-royalties"
+version = "0.13.4"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw1155",
+ "cw1155-base",
+ "cw2 1.1.2",
+ "cw2981-royalties",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cw2"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
