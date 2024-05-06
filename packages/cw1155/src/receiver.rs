@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Binary, CosmosMsg, StdResult, Uint128, WasmMsg, to_json_binary};
 use crate::TokenAmount;
+use cosmwasm_std::{to_json_binary, Binary, CosmosMsg, StdResult, Uint128, WasmMsg};
 
 /// Cw1155ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
