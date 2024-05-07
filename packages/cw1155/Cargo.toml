@@ -1,13 +1,13 @@
 [package]
 name = "cw1155"
-version = "0.13.4"
 authors = ["shab <dirtyshab@protonmail.com>"]
-edition = "2018"
 description = "Definition and types for the CosmWasm-1155 interface"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
 [dependencies]
 cw2 = { workspace = true }

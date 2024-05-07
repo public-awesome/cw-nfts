@@ -313,7 +313,7 @@ dependencies = [
 
 [[package]]
 name = "cw1155"
-version = "0.13.4"
+version = "0.18.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -328,7 +328,7 @@ dependencies = [
 
 [[package]]
 name = "cw1155-base"
-version = "0.13.4"
+version = "0.18.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -345,7 +345,7 @@ dependencies = [
 
 [[package]]
 name = "cw1155-metadata-onchain"
-version = "0.13.4"
+version = "0.18.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "cw1155-royalties"
-version = "0.13.4"
+version = "0.18.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",

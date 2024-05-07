@@ -758,7 +758,7 @@ mod tests {
         contract
             .execute(
                 deps.as_mut(),
-                env.clone(),
+                env,
                 mock_info(user1.as_ref(), &[]),
                 Cw1155BaseExecuteMsg::ApproveAll {
                     operator: user2.clone(),
@@ -799,7 +799,7 @@ mod tests {
                     deps.as_ref(),
                     env,
                     Cw1155QueryMsg::ApprovalsForAll {
-                        owner: user1.to_string(),
+                        owner: user1,
                         include_expired: None,
                         start_after: None,
                         limit: None,
@@ -863,7 +863,7 @@ mod tests {
             Cw1155BaseExecuteMsg::Mint {
                 recipient: user1.clone(),
                 msg: Cw1155MintMsg {
-                    token_id: token1.clone(),
+                    token_id: token1,
                     amount: 1u128.into(),
                     token_uri: None,
                     extension: None,
@@ -882,12 +882,12 @@ mod tests {
         // minting one more of a different token id should fail
         let res = contract.execute(
             deps.as_mut(),
-            env.clone(),
+            env,
             mock_info(minter.as_ref(), &[]),
             Cw1155BaseExecuteMsg::Mint {
-                recipient: user1.clone(),
+                recipient: user1,
                 msg: Cw1155MintMsg {
-                    token_id: token2.clone(),
+                    token_id: token2,
                     amount: 1u128.into(),
                     token_uri: None,
                     extension: None,

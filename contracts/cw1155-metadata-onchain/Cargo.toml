@@ -1,13 +1,13 @@
 [package]
 name = "cw1155-metadata-onchain"
-version = "0.13.4"
 authors = ["shab <dirtyshab@protonmail.com>"]
-edition = "2018"
 description = "Example extending CW1155 Token to store metadata on chain"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.

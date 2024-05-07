@@ -1,13 +1,16 @@
 [package]
 name = "cw1155-royalties"
-version = "0.13.4"
-authors = ["shab <dirtyshab@protonmail.com>"]
-edition = "2018"
-description = "Example extending CW1155 Token to store royalties on chain"
-license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-nfts"
-homepage = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
+authors = [
+  "Alex Lynham <alex@lynh.am>",
+  "shab <dirtyshab@protonmail.com>"
+]
+description = "Basic implementation of royalties for cw1155 with token level royalties"
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.

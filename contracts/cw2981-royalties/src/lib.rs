@@ -118,6 +118,7 @@ pub mod entry {
 }
 
 #[cfg(test)]
+#[cfg(not(feature = "library"))]
 mod tests {
     use super::*;
     use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
