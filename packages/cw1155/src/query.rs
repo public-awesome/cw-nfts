@@ -1,6 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Addr, Uint128};
 use cw_ownable::cw_ownable_query;
@@ -93,34 +92,34 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     Extension { msg: Q },
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct BalanceResponse {
     pub balance: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct AllBalancesResponse {
     pub balances: Vec<Balance>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Balance {
     pub token_id: String,
     pub owner: Addr,
     pub amount: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct BatchBalanceResponse {
     pub balances: Vec<Uint128>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct NumTokensResponse {
     pub count: Uint128,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct Approval {
     /// Account that can transfer/send the token
     pub spender: String,
@@ -128,12 +127,12 @@ pub struct Approval {
     pub expires: Expiration,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct ApprovedForAllResponse {
     pub operators: Vec<Approval>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct IsApprovedForAllResponse {
     pub approved: bool,
 }
@@ -144,7 +143,7 @@ pub struct AllTokenInfoResponse<T> {
     pub info: TokenInfoResponse<T>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct TokenInfoResponse<T> {
     /// Should be a url point to a json file
     pub token_uri: Option<String>,
@@ -152,7 +151,7 @@ pub struct TokenInfoResponse<T> {
     pub extension: T,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
+#[cw_serde]
 pub struct TokensResponse {
     /// Contains all token_ids in lexicographical ordering
     /// If there are more than `limit`, use `start_from` in future queries

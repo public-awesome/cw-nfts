@@ -213,7 +213,7 @@ where
             info,
         } = env;
 
-        let from = &if let Some(from) = from {
+        let from = if let Some(from) = from {
             deps.api.addr_validate(&from)?
         } else {
             info.sender.clone()
@@ -221,7 +221,7 @@ where
         let to = deps.api.addr_validate(&to)?;
 
         let balance_update =
-            self.verify_approval(deps.storage, &env, &info, from, &token_id, amount)?;
+            self.verify_approval(deps.storage, &env, &info, &from, &token_id, amount)?;
 
         let mut rsp = Response::default();
 
@@ -267,14 +267,14 @@ where
             info,
         } = env;
 
-        let from = &if let Some(from) = from {
+        let from = if let Some(from) = from {
             deps.api.addr_validate(&from)?
         } else {
             info.sender.clone()
         };
         let to = deps.api.addr_validate(&to)?;
 
-        let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
+        let batch = self.verify_approvals(deps.storage, &env, &info, &from, batch)?;
 
         let mut rsp = Response::default();
         let event = self.update_balances(
@@ -314,7 +314,7 @@ where
             env,
         } = env;
 
-        let from = &if let Some(from) = from {
+        let from = if let Some(from) = from {
             deps.api.addr_validate(&from)?
         } else {
             info.sender.clone()
@@ -322,17 +322,17 @@ where
 
         // whoever can transfer these tokens can burn
         let balance_update =
-            self.verify_approval(deps.storage, &env, &info, from, &token_id, amount)?;
+            self.verify_approval(deps.storage, &env, &info, &from, &token_id, amount)?;
 
         let mut rsp = Response::default();
 
         let event = self.update_balances(
             &mut deps,
             &env,
-            Some(from.clone()),
+            Some(from),
             None,
             vec![TokenAmount {
-                token_id: token_id.to_string(),
+                token_id,
                 amount: balance_update.amount,
             }],
         )?;
@@ -353,16 +353,16 @@ where
             env,
         } = env;
 
-        let from = &if let Some(from) = from {
+        let from = if let Some(from) = from {
             deps.api.addr_validate(&from)?
         } else {
             info.sender.clone()
         };
 
-        let batch = self.verify_approvals(deps.storage, &env, &info, from, batch)?;
+        let batch = self.verify_approvals(deps.storage, &env, &info, &from, batch)?;
 
         let mut rsp = Response::default();
-        let event = self.update_balances(&mut deps, &env, Some(from.clone()), None, batch)?;
+        let event = self.update_balances(&mut deps, &env, Some(from), None, batch)?;
         rsp = rsp.add_event(event);
 
         Ok(rsp)
@@ -549,17 +549,17 @@ where
                 // remove token approvals
                 for (operator, approval) in self
                     .token_approves
-                    .prefix((&token_id, from))
+                    .prefix((token_id, from))
                     .range(deps.storage, None, None, Order::Ascending)
                     .collect::<StdResult<Vec<_>>>()?
                 {
                     if approval.is_expired(env) || approval.amount <= *amount {
                         self.token_approves
-                            .remove(deps.storage, (&token_id, &from, &operator));
+                            .remove(deps.storage, (token_id, from, &operator));
                     } else {
                         self.token_approves.update(
                             deps.storage,
-                            (&token_id, &from, &operator),
+                            (token_id, from, &operator),
                             |prev| -> StdResult<_> {
                                 let mut new_approval = prev.unwrap();
                                 new_approval.amount = new_approval.amount.checked_sub(*amount)?;
@@ -671,7 +671,7 @@ where
     ) -> Option<TokenApproval> {
         match self
             .token_approves
-            .load(storage, (&token_id, owner, operator))
+            .load(storage, (token_id, owner, operator))
         {
             Ok(approval) => {
                 if !approval.is_expired(env) {

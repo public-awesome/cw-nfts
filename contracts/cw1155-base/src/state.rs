@@ -1,6 +1,6 @@
-use schemars::JsonSchema;
+use cosmwasm_schema::cw_serde;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{Addr, CustomMsg, StdError, StdResult, Storage, Uint128};
@@ -128,7 +128,7 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct TokenInfo<T> {
     /// Metadata JSON Schema
     pub token_uri: Option<String>,

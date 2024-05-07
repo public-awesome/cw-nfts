@@ -1,12 +1,10 @@
 use cosmwasm_schema::cw_serde;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
 use cosmwasm_std::{Binary, Env, Uint128};
 use cw_utils::Expiration;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Cw1155InstantiateMsg {
     /// Name of the token contract
     pub name: String,
@@ -23,8 +21,7 @@ pub struct Cw1155InstantiateMsg {
 /// This is like Cw1155ExecuteMsg but we add a Mint command for a minter
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum Cw1155ExecuteMsg<T> {
     // cw1155
     /// BatchSendFrom is a base message to move multiple types of tokens in batch,
@@ -101,7 +98,7 @@ pub enum Cw1155ExecuteMsg<T> {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct Cw1155MintMsg<T> {
     pub token_id: String,
     /// The amount of the newly minted tokens
