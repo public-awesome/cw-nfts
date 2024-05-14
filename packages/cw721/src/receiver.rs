@@ -39,6 +39,6 @@ impl Cw721ReceiveMsg {
 /// This is just a helper to properly serialize the above message.
 /// The actual receiver should include this variant in the larger ExecuteMsg enum
 #[cw_serde]
-enum ReceiverExecuteMsg {
+pub enum ReceiverExecuteMsg {
     ReceiveNft(Cw721ReceiveMsg),
 }
