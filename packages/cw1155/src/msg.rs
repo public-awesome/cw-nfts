@@ -22,7 +22,7 @@ pub struct Cw1155InstantiateMsg {
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
 #[cw_serde]
-pub enum Cw1155ExecuteMsg<T> {
+pub enum Cw1155ExecuteMsg<T, E> {
     // cw1155
     /// BatchSendFrom is a base message to move multiple types of tokens in batch,
     /// if `env.sender` is the owner or has sufficient pre-approval.
@@ -96,6 +96,9 @@ pub enum Cw1155ExecuteMsg<T> {
         /// Optional amount to revoke. If None, revoke entire amount.
         amount: Option<Uint128>,
     },
+
+    /// Extension msg
+    Extension { msg: E },
 }
 
 #[cw_serde]

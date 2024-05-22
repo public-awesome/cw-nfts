@@ -14,10 +14,10 @@ pub const EXPECTED_FROM_VERSION: &str = CONTRACT_VERSION;
 
 // This is a simple type to let us handle empty extensions
 pub type Extension = Option<Empty>;
-pub type Cw1155BaseExecuteMsg = Cw1155ExecuteMsg<Extension>;
+pub type Cw1155BaseExecuteMsg = Cw1155ExecuteMsg<Extension, Empty>;
 pub type Cw1155BaseQueryMsg = Cw1155QueryMsg<Empty>;
 
-pub type Cw1155BaseContract<'a> = Cw1155Contract<'a, Extension, Empty>;
+pub type Cw1155BaseContract<'a> = Cw1155Contract<'a, Extension, Empty, Empty, Empty>;
 
 pub mod entry {
     use super::*;
@@ -25,7 +25,7 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-    use cw1155::{Cw1155ContractError, Cw1155ExecuteMsg, Cw1155InstantiateMsg};
+    use cw1155::{Cw1155ContractError, Cw1155InstantiateMsg};
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -46,14 +46,14 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw1155ExecuteMsg<Extension>,
+        msg: Cw1155BaseExecuteMsg,
     ) -> Result<Response, Cw1155ContractError> {
         let tract = Cw1155BaseContract::default();
         tract.execute(deps, env, info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn query(deps: Deps, env: Env, msg: Cw1155QueryMsg<Empty>) -> StdResult<Binary> {
+    pub fn query(deps: Deps, env: Env, msg: Cw1155BaseQueryMsg) -> StdResult<Binary> {
         let tract = Cw1155BaseContract::default();
         tract.query(deps, env, msg)
     }

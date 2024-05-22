@@ -19,9 +19,11 @@ use crate::state::{Cw1155Contract, TokenInfo};
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
 
-impl<'a, T, Q> Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     pub fn query(&self, deps: Deps, env: Env, msg: Cw1155QueryMsg<Q>) -> StdResult<Binary> {
@@ -155,9 +157,11 @@ where
     }
 }
 
-impl<'a, T, Q> Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     fn query_all_approvals(

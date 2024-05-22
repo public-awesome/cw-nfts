@@ -1,3 +1,4 @@
+use cosmwasm_std::Empty;
 use cw1155::{Cw1155ExecuteMsg, Cw1155QueryMsg};
 pub use cw1155::{Cw1155InstantiateMsg, Cw1155MintMsg};
 use cw1155_base::Cw1155Contract;
@@ -15,8 +16,8 @@ pub use error::Cw1155RoyaltiesContractError;
 const CONTRACT_NAME: &str = "crates.io:cw1155-royalties";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw1155RoyaltiesContract<'a> = Cw1155Contract<'a, Extension, Cw2981QueryMsg>;
-pub type Cw1155RoyaltiesExecuteMsg = Cw1155ExecuteMsg<Extension>;
+pub type Cw1155RoyaltiesContract<'a> = Cw1155Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesExecuteMsg = Cw1155ExecuteMsg<Extension, Empty>;
 pub type Cw1155RoyaltiesQueryMsg = Cw1155QueryMsg<Cw2981QueryMsg>;
 
 #[cfg(not(feature = "library"))]
@@ -83,7 +84,7 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: Cw1155RoyaltiesQueryMsg) -> StdResult<Binary> {
         match msg {
-            Cw1155RoyaltiesQueryMsg::Extension { msg } => match msg {
+            Cw1155RoyaltiesQueryMsg::Extension { msg: ext_msg } => match ext_msg {
                 Cw2981QueryMsg::RoyaltyInfo {
                     token_id,
                     sale_price,

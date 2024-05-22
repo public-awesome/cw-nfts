@@ -33,8 +33,9 @@ pub struct Metadata {
 
 pub type Extension = Option<Metadata>;
 
-pub type Cw1155MetadataContract<'a> = cw1155_base::Cw1155Contract<'a, Extension, Empty>;
-pub type Cw1155MetadataExecuteMsg = Cw1155ExecuteMsg<Extension>;
+pub type Cw1155MetadataContract<'a> =
+    cw1155_base::Cw1155Contract<'a, Extension, Empty, Empty, Empty>;
+pub type Cw1155MetadataExecuteMsg = Cw1155ExecuteMsg<Extension, Empty>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {

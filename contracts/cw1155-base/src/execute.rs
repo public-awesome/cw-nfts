@@ -13,9 +13,11 @@ use cw2::set_contract_version;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-impl<'a, T, Q> Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     pub fn instantiate(
@@ -53,7 +55,7 @@ where
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw1155ExecuteMsg<T>,
+        msg: Cw1155ExecuteMsg<T, E>,
     ) -> Result<Response, Cw1155ContractError> {
         let env = ExecuteEnv { deps, env, info };
         match msg {
@@ -98,6 +100,7 @@ where
                 token_id,
                 amount,
             } => self.revoke_token(env, spender, token_id, amount),
+            Cw1155ExecuteMsg::Extension { .. } => unimplemented!(),
         }
     }
 }
@@ -110,9 +113,11 @@ pub struct ExecuteEnv<'a> {
 }
 
 // helper
-impl<'a, T, Q> Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     pub fn mint(

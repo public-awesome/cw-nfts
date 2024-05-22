@@ -9,9 +9,10 @@ use cw1155::{Balance, Expiration, TokenApproval};
 use cw721::ContractInfoResponse;
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 
-pub struct Cw1155Contract<'a, T, Q>
+pub struct Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     pub contract_info: Item<'a, ContractInfoResponse>,
@@ -27,12 +28,16 @@ where
     // key: token id
     pub tokens: Map<'a, &'a str, TokenInfo<T>>,
 
+    pub(crate) _custom_response: PhantomData<C>,
     pub(crate) _custom_query: PhantomData<Q>,
+    pub(crate) _custom_execute: PhantomData<E>,
 }
 
-impl<'a, T, Q> Default for Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Default for Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     fn default() -> Self {
@@ -49,9 +54,11 @@ where
     }
 }
 
-impl<'a, T, Q> Cw1155Contract<'a, T, Q>
+impl<'a, T, C, E, Q> Cw1155Contract<'a, T, C, E, Q>
 where
     T: Serialize + DeserializeOwned + Clone,
+    C: CustomMsg,
+    E: CustomMsg,
     Q: CustomMsg,
 {
     #[allow(clippy::too_many_arguments)]
@@ -80,7 +87,9 @@ where
             balances: IndexedMap::new(balances_key, balances_indexes),
             approves: Map::new(approves_key),
             token_approves: Map::new(token_approves_key),
+            _custom_execute: PhantomData,
             _custom_query: PhantomData,
+            _custom_response: PhantomData,
         }
     }
 
