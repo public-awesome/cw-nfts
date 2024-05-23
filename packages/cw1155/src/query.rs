@@ -47,10 +47,9 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     },
     /// Total number of tokens issued
     #[returns(cw721::NumTokensResponse)]
-    Supply {},
-    /// Total number of tokens issued for the token id
-    #[returns(cw721::NumTokensResponse)]
-    NumTokens { token_id: String },
+    NumTokens {
+        token_id: Option<String>, // optional token id to get supply of, otherwise total supply
+    },
 
     // cw721
     /// With MetaData Extension.

@@ -69,10 +69,6 @@ where
                     .collect::<StdResult<_>>()?;
                 to_json_binary(&BatchBalanceResponse { balances })
             }
-            Cw1155QueryMsg::NumTokens { token_id } => {
-                let count = self.token_count(deps.storage, &token_id)?;
-                to_json_binary(&NumTokensResponse { count })
-            }
             Cw1155QueryMsg::TokenApprovals {
                 owner,
                 token_id,
@@ -139,9 +135,13 @@ where
             Cw1155QueryMsg::ContractInfo {} => {
                 to_json_binary(&self.contract_info.load(deps.storage)?)
             }
-            Cw1155QueryMsg::Supply {} => {
-                let supply = self.supply.load(deps.storage)?;
-                to_json_binary(&NumTokensResponse { count: supply })
+            Cw1155QueryMsg::NumTokens { token_id } => {
+                let count = if let Some(token_id) = token_id {
+                    self.token_count(deps.storage, &token_id)?
+                } else {
+                    self.supply.load(deps.storage)?
+                };
+                to_json_binary(&NumTokensResponse { count })
             }
             Cw1155QueryMsg::AllTokens { start_after, limit } => {
                 to_json_binary(&self.query_all_tokens(deps, start_after, limit)?)

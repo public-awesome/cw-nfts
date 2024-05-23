@@ -539,7 +539,7 @@ mod tests {
                 deps.as_ref(),
                 mock_env(),
                 Cw1155QueryMsg::NumTokens {
-                    token_id: tokens[0].clone(),
+                    token_id: Some(tokens[0].clone()),
                 },
             ),
             to_json_binary(&NumTokensResponse {
@@ -552,7 +552,7 @@ mod tests {
                 deps.as_ref(),
                 mock_env(),
                 Cw1155QueryMsg::NumTokens {
-                    token_id: tokens[0].clone(),
+                    token_id: Some(tokens[0].clone()),
                 },
             ),
             to_json_binary(&NumTokensResponse {
