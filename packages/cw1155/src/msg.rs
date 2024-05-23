@@ -2,6 +2,7 @@ use cosmwasm_schema::cw_serde;
 use std::fmt::{Display, Formatter};
 
 use cosmwasm_std::{Binary, Env, Uint128};
+use cw_ownable::cw_ownable_execute;
 use cw_utils::Expiration;
 
 #[cw_serde]
@@ -21,6 +22,7 @@ pub struct Cw1155InstantiateMsg {
 /// This is like Cw1155ExecuteMsg but we add a Mint command for a minter
 /// to make this stand-alone. You will likely want to remove mint and
 /// use other control logic in any contract that inherits this.
+#[cw_ownable_execute]
 #[cw_serde]
 pub enum Cw1155ExecuteMsg<T, E> {
     // cw1155

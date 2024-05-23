@@ -26,7 +26,7 @@ where
         _env: Env,
         info: MessageInfo,
         msg: Cw1155InstantiateMsg,
-    ) -> StdResult<Response> {
+    ) -> StdResult<Response<C>> {
         // store contract version
         set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
@@ -56,7 +56,7 @@ where
         env: Env,
         info: MessageInfo,
         msg: Cw1155ExecuteMsg<T, E>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let env = ExecuteEnv { deps, env, info };
         match msg {
             // cw1155
@@ -100,6 +100,8 @@ where
                 token_id,
                 amount,
             } => self.revoke_token(env, spender, token_id, amount),
+            Cw1155ExecuteMsg::UpdateOwnership(action) => Self::update_ownership(env, action),
+
             Cw1155ExecuteMsg::Extension { .. } => unimplemented!(),
         }
     }
@@ -125,7 +127,7 @@ where
         env: ExecuteEnv,
         recipient: String,
         msg: Cw1155MintMsg<T>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             info,
@@ -167,7 +169,7 @@ where
         env: ExecuteEnv,
         recipient: String,
         msgs: Vec<Cw1155MintMsg<T>>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             info,
@@ -211,7 +213,7 @@ where
         token_id: String,
         amount: Uint128,
         msg: Option<Binary>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             env,
@@ -228,7 +230,7 @@ where
         let balance_update =
             self.verify_approval(deps.storage, &env, &info, &from, &token_id, amount)?;
 
-        let mut rsp = Response::default();
+        let mut rsp = Response::<C>::default();
 
         let event = self.update_balances(
             &mut deps,
@@ -265,7 +267,7 @@ where
         to: String,
         batch: Vec<TokenAmount>,
         msg: Option<Binary>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             env,
@@ -281,7 +283,7 @@ where
 
         let batch = self.verify_approvals(deps.storage, &env, &info, &from, batch)?;
 
-        let mut rsp = Response::default();
+        let mut rsp = Response::<C>::default();
         let event = self.update_balances(
             &mut deps,
             &env,
@@ -312,7 +314,7 @@ where
         from: Option<String>,
         token_id: String,
         amount: Uint128,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             info,
@@ -351,7 +353,7 @@ where
         env: ExecuteEnv,
         from: Option<String>,
         batch: Vec<TokenAmount>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv {
             mut deps,
             info,
@@ -380,7 +382,7 @@ where
         token_id: String,
         amount: Option<Uint128>,
         expiration: Option<Expiration>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv { deps, info, env } = env;
 
         // reject expired data as invalid
@@ -419,7 +421,7 @@ where
         env: ExecuteEnv,
         operator: String,
         expires: Option<Expiration>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv { deps, info, env } = env;
 
         // reject expired data as invalid
@@ -447,7 +449,7 @@ where
         operator: String,
         token_id: String,
         amount: Option<Uint128>,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv { deps, info, .. } = env;
         let operator = deps.api.addr_validate(&operator)?;
 
@@ -485,7 +487,7 @@ where
         &self,
         env: ExecuteEnv,
         operator: String,
-    ) -> Result<Response, Cw1155ContractError> {
+    ) -> Result<Response<C>, Cw1155ContractError> {
         let ExecuteEnv { deps, info, .. } = env;
         let operator_addr = deps.api.addr_validate(&operator)?;
         self.approves
@@ -687,5 +689,14 @@ where
             }
             Err(_) => None,
         }
+    }
+
+    pub fn update_ownership(
+        env: ExecuteEnv,
+        action: cw_ownable::Action,
+    ) -> Result<Response<C>, Cw1155ContractError> {
+        let ExecuteEnv { deps, info, env } = env;
+        let ownership = cw_ownable::update_ownership(deps, &env.block, &info.sender, action)?;
+        Ok(Response::new().add_attributes(ownership.into_attributes()))
     }
 }
