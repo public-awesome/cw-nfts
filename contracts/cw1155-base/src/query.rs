@@ -7,8 +7,8 @@ use cosmwasm_std::{
 
 use cw1155::{
     AllBalancesResponse, AllTokenInfoResponse, Approval, ApprovedForAllResponse, Balance,
-    BalanceResponse, BatchBalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse,
-    NumTokensResponse, TokenInfoResponse, TokensResponse,
+    BalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, NumTokensResponse,
+    OwnerToken, TokenInfoResponse, TokensResponse,
 };
 use cw721_base::Cw721Contract;
 use cw_storage_plus::Bound;
@@ -32,7 +32,7 @@ where
                 let tract = Cw721Contract::<T, Empty, Empty, Q>::default();
                 to_json_binary(&tract.minter(deps)?)
             }
-            Cw1155QueryMsg::BalanceOf { owner, token_id } => {
+            Cw1155QueryMsg::BalanceOf(OwnerToken { owner, token_id }) => {
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 let balance = self
                     .balances
@@ -51,23 +51,21 @@ where
                 start_after,
                 limit,
             } => to_json_binary(&self.query_all_balances(deps, token_id, start_after, limit)?),
-            Cw1155QueryMsg::BalanceOfBatch { owner, token_ids } => {
-                let owner_addr = deps.api.addr_validate(&owner)?;
-                let balances = token_ids
+            Cw1155QueryMsg::BalanceOfBatch(batch) => {
+                let balances = batch
                     .into_iter()
-                    .map(|token_id| -> StdResult<_> {
-                        Ok(self
-                            .balances
-                            .may_load(deps.storage, (owner_addr.clone(), token_id.clone()))?
+                    .map(|OwnerToken { owner, token_id }| {
+                        let owner = Addr::unchecked(owner);
+                        self.balances
+                            .load(deps.storage, (owner.clone(), token_id.to_string()))
                             .unwrap_or(Balance {
-                                owner: owner_addr.clone(),
+                                owner,
                                 token_id,
                                 amount: Uint128::new(0),
                             })
-                            .amount)
                     })
-                    .collect::<StdResult<_>>()?;
-                to_json_binary(&BatchBalanceResponse { balances })
+                    .collect::<Vec<_>>();
+                to_json_binary(&balances)
             }
             Cw1155QueryMsg::TokenApprovals {
                 owner,

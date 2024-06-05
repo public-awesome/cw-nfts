@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use std::fmt::{Display, Formatter};
 
-use cosmwasm_std::{Binary, Env, Uint128};
+use cosmwasm_std::{Addr, Binary, Env, Uint128};
 use cw_ownable::cw_ownable_execute;
 use cw_utils::Expiration;
 
@@ -139,4 +139,25 @@ impl TokenApproval {
     pub fn is_expired(&self, env: &Env) -> bool {
         self.expiration.is_expired(&env.block)
     }
+}
+
+#[cw_serde]
+pub struct OwnerToken {
+    pub owner: String,
+    pub token_id: String,
+}
+
+#[cw_serde]
+pub struct Balance {
+    pub token_id: String,
+    pub owner: Addr,
+    pub amount: Uint128,
+}
+
+#[cw_serde]
+pub struct Approval {
+    /// Account that can transfer/send the token
+    pub spender: String,
+    /// When the Approval expires (maybe Expiration::never)
+    pub expires: Expiration,
 }

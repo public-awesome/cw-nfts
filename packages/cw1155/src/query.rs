@@ -1,24 +1,21 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use schemars::JsonSchema;
 
-use cosmwasm_std::{Addr, Uint128};
+use crate::{Approval, Balance, OwnerToken};
+use cosmwasm_std::Uint128;
 use cw_ownable::cw_ownable_query;
-use cw_utils::Expiration;
 
 #[cw_ownable_query]
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum Cw1155QueryMsg<Q: JsonSchema> {
     // cw1155
-    /// Returns the current balance of the given address, 0 if unset.
+    /// Returns the current balance of the given account, 0 if unset.
     #[returns(BalanceResponse)]
-    BalanceOf { owner: String, token_id: String },
-    /// Returns the current balance of the given address for a batch of tokens, 0 if unset.
-    #[returns(BatchBalanceResponse)]
-    BalanceOfBatch {
-        owner: String,
-        token_ids: Vec<String>,
-    },
+    BalanceOf(OwnerToken),
+    /// Returns the current balance of the given batch of accounts/tokens, 0 if unset.
+    #[returns(Vec<crate::Balance>)]
+    BalanceOfBatch(Vec<OwnerToken>),
     /// Query approved status `owner` granted to `operator`.
     #[returns(IsApprovedForAllResponse)]
     IsApprovedForAll { owner: String, operator: String },
@@ -102,28 +99,8 @@ pub struct AllBalancesResponse {
 }
 
 #[cw_serde]
-pub struct Balance {
-    pub token_id: String,
-    pub owner: Addr,
-    pub amount: Uint128,
-}
-
-#[cw_serde]
-pub struct BatchBalanceResponse {
-    pub balances: Vec<Uint128>,
-}
-
-#[cw_serde]
 pub struct NumTokensResponse {
     pub count: Uint128,
-}
-
-#[cw_serde]
-pub struct Approval {
-    /// Account that can transfer/send the token
-    pub spender: String,
-    /// When the Approval expires (maybe Expiration::never)
-    pub expires: Expiration,
 }
 
 #[cw_serde]

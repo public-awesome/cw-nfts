@@ -10,9 +10,9 @@ mod tests {
     use crate::{Cw1155BaseContract, Cw1155BaseExecuteMsg, Cw1155BaseQueryMsg};
     use cw1155::{
         AllBalancesResponse, ApprovedForAllResponse, Balance, BalanceResponse,
-        BatchBalanceResponse, Cw1155BatchReceiveMsg, Cw1155ContractError, Cw1155InstantiateMsg,
-        Cw1155MintMsg, Cw1155QueryMsg, Expiration, NumTokensResponse, TokenAmount,
-        TokenInfoResponse, TokensResponse,
+        Cw1155BatchReceiveMsg, Cw1155ContractError, Cw1155InstantiateMsg, Cw1155MintMsg,
+        Cw1155QueryMsg, Expiration, NumTokensResponse, OwnerToken, TokenAmount, TokenInfoResponse,
+        TokensResponse,
     };
 
     #[test]
@@ -98,10 +98,10 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155BaseQueryMsg::BalanceOf {
+                Cw1155BaseQueryMsg::BalanceOf(OwnerToken {
                     owner: user1.clone(),
                     token_id: token1.clone(),
-                }
+                })
             ),
         );
 
@@ -160,10 +160,10 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::BalanceOf {
+                Cw1155BaseQueryMsg::BalanceOf(OwnerToken {
                     owner: user2.clone(),
                     token_id: token1.clone(),
-                }
+                })
             ),
             to_json_binary(&BalanceResponse {
                 balance: 1u64.into()
@@ -173,10 +173,10 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::BalanceOf {
+                Cw1155BaseQueryMsg::BalanceOf(OwnerToken {
                     owner: user1.clone(),
                     token_id: token1.clone(),
-                }
+                })
             ),
             to_json_binary(&BalanceResponse {
                 balance: 0u64.into()
@@ -284,14 +284,38 @@ mod tests {
             contract.query(
                 deps.as_ref(),
                 mock_env(),
-                Cw1155QueryMsg::BalanceOfBatch {
-                    owner: user1.clone(),
-                    token_ids: vec![token1.clone(), token2.clone(), token3.clone()],
-                }
+                Cw1155BaseQueryMsg::BalanceOfBatch(vec![
+                    OwnerToken {
+                        owner: user1.clone(),
+                        token_id: token1.clone(),
+                    },
+                    OwnerToken {
+                        owner: user1.clone(),
+                        token_id: token2.clone(),
+                    },
+                    OwnerToken {
+                        owner: user1.clone(),
+                        token_id: token3.clone(),
+                    }
+                ]),
             ),
-            to_json_binary(&BatchBalanceResponse {
-                balances: vec![1u64.into(), 1u64.into(), 1u64.into()]
-            }),
+            to_json_binary(&vec![
+                Balance {
+                    token_id: token1.to_string(),
+                    owner: Addr::unchecked(user1.to_string()),
+                    amount: Uint128::one(),
+                },
+                Balance {
+                    token_id: token2.to_string(),
+                    owner: Addr::unchecked(user1.to_string()),
+                    amount: Uint128::one(),
+                },
+                Balance {
+                    token_id: token3.to_string(),
+                    owner: Addr::unchecked(user1.to_string()),
+                    amount: Uint128::one(),
+                }
+            ]),
         );
 
         // user1 revoke approval
