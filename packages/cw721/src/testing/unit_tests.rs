@@ -1345,7 +1345,7 @@ fn test_nft_mint() {
         assert_eq!(res.extension, None);
         // mint with empty token_uri
         let exec_msg = Cw721ExecuteMsg::Mint {
-            token_id: token_id.to_string(),
+            token_id: token_id.to_string(), // already minted/claimed
             owner: "john".to_string(),
             token_uri: "".to_string().into(), // empty token_uri
             extension: None,
@@ -1353,10 +1353,7 @@ fn test_nft_mint() {
         let err = contract
             .execute(deps.as_mut(), &env, &info, exec_msg)
             .unwrap_err();
-        assert_eq!(
-            err,
-            Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
-        );
+        assert_eq!(err, Cw721ContractError::Claimed {});
         // non-minter cant mint
         let info = mock_info("john", &[]);
         let exec_msg = Cw721ExecuteMsg::Mint {
@@ -1407,13 +1404,13 @@ fn test_nft_mint() {
         let nft_1 = "1";
         let uri_1 = Some("https://starships.example.com/Starship/Enterprise.json".into());
         let extension_1_msg = Some(NftExtensionMsg {
-            description: Some(Some("description1".into())),
-            name: Some(Some("name1".to_string())),
-            attributes: Some(Some(vec![Trait {
+            description: Some("description1".into()),
+            name: Some("name1".to_string()),
+            attributes: Some(vec![Trait {
                 display_type: None,
                 trait_type: "type1".to_string(),
                 value: "value1".to_string(),
-            }])),
+            }]),
             ..NftExtensionMsg::default()
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
@@ -1448,13 +1445,13 @@ fn test_nft_mint() {
         let nft_2 = "2";
         let uri_2 = Some("ipfs://foo.bar".into());
         let extension_2_msg = Some(NftExtensionMsg {
-            description: Some(Some("other_description".into())),
-            name: Some(Some("name1".to_string())),
-            attributes: Some(Some(vec![Trait {
+            description: Some("other_description".into()),
+            name: Some("name1".to_string()),
+            attributes: Some(vec![Trait {
                 display_type: None,
                 trait_type: "type1".to_string(),
                 value: "value1".to_string(),
-            }])),
+            }]),
             ..NftExtensionMsg::default()
         });
         let exec_msg = Cw721ExecuteMsg::Mint {

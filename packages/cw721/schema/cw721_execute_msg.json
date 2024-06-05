@@ -306,10 +306,10 @@
       "description": "Custom msg execution. This is a no-op in default implementation.",
       "type": "object",
       "required": [
-        "extension"
+        "get_extension"
       ],
       "properties": {
-        "extension": {
+        "get_extension": {
           "type": "object",
           "required": [
             "msg"
@@ -351,6 +351,7 @@
               "type": "string"
             },
             "token_uri": {
+              "description": "NOTE: Empty string is handled as None",
               "type": [
                 "string",
                 "null"
@@ -631,6 +632,7 @@
       "type": "object",
       "properties": {
         "animation_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
@@ -658,12 +660,14 @@
           ]
         },
         "external_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
           ]
         },
         "image": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
@@ -682,6 +686,7 @@
           ]
         },
         "youtube_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"

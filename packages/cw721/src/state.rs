@@ -249,15 +249,15 @@ impl Cw721State for NftExtension {}
 impl From<NftExtensionMsg> for NftExtension {
     fn from(msg: NftExtensionMsg) -> Self {
         NftExtension {
-            image: msg.image.flatten(),
-            image_data: msg.image_data.flatten(),
-            external_url: msg.external_url.flatten(),
-            description: msg.description.flatten(),
-            name: msg.name.flatten(),
-            attributes: msg.attributes.flatten(),
-            background_color: msg.background_color.flatten(),
-            animation_url: msg.animation_url.flatten(),
-            youtube_url: msg.youtube_url.flatten(),
+            image: msg.image,
+            image_data: msg.image_data,
+            external_url: msg.external_url,
+            description: msg.description,
+            name: msg.name,
+            attributes: msg.attributes,
+            background_color: msg.background_color,
+            animation_url: msg.animation_url,
+            youtube_url: msg.youtube_url,
         }
     }
 }

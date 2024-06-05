@@ -104,7 +104,8 @@ pub enum Cw721ExecuteMsg<
     /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
     UpdateNftInfo {
         token_id: String,
-        token_uri: Option<Option<String>>,
+        /// NOTE: Empty string is handled as None
+        token_uri: Option<String>,
         extension: TNftExtensionMsg,
     },
 
@@ -872,7 +873,8 @@ pub struct NftInfoMsg<TNftExtensionMsg> {
     /// Universal resource identifier for this NFT
     /// Should point to a JSON file that conforms to the ERC721
     /// Metadata JSON Schema
-    pub token_uri: Option<Option<String>>,
+    /// NOTE: Empty string is handled as None
+    pub token_uri: Option<String>,
 
     /// You can add any custom metadata here when you extend cw721-base
     pub extension: TNftExtensionMsg,
@@ -896,8 +898,8 @@ where
             // Some: update only token uri and extension in existing NFT (but not owner and approvals)
             Some(current) => {
                 let mut updated = current.clone();
-                if let Some(token_uri) = &self.token_uri {
-                    updated.token_uri = token_uri.clone();
+                if self.token_uri.is_some() {
+                    updated.token_uri = empty_as_none(self.token_uri.clone());
                 }
                 // update extension
                 // current extension is a nested option in option, so we need to flatten it
@@ -909,10 +911,11 @@ where
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
                 let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
+                let token_uri = empty_as_none(self.token_uri.clone());
                 Ok(NftInfo {
                     owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
                     approvals: vec![],
-                    token_uri: self.token_uri.clone().flatten(),
+                    token_uri,
                     extension,
                 })
             }
@@ -936,8 +939,9 @@ where
             assert_creator(deps.storage, &info.sender)?;
         }
         // validate token_uri is a URL
-        if let Some(token_uri) = &self.token_uri.clone().flatten() {
-            Url::parse(token_uri)?;
+        let token_uri = empty_as_none(self.token_uri.clone());
+        if let Some(token_uri) = token_uri {
+            Url::parse(token_uri.as_str())?;
         }
         Ok(())
     }
@@ -946,15 +950,19 @@ where
 #[cw_serde]
 #[derive(Default)]
 pub struct NftExtensionMsg {
-    pub image: Option<Option<String>>,
-    pub image_data: Option<Option<String>>,
-    pub external_url: Option<Option<String>>,
-    pub description: Option<Option<String>>,
-    pub name: Option<Option<String>>,
-    pub attributes: Option<Option<Vec<Trait>>>,
-    pub background_color: Option<Option<String>>,
-    pub animation_url: Option<Option<String>>,
-    pub youtube_url: Option<Option<String>>,
+    /// NOTE: Empty string is handled as None
+    pub image: Option<String>,
+    pub image_data: Option<String>,
+    /// NOTE: Empty string is handled as None
+    pub external_url: Option<String>,
+    pub description: Option<String>,
+    pub name: Option<String>,
+    pub attributes: Option<Vec<Trait>>,
+    pub background_color: Option<String>,
+    /// NOTE: Empty string is handled as None
+    pub animation_url: Option<String>,
+    /// NOTE: Empty string is handled as None
+    pub youtube_url: Option<String>,
 }
 
 impl Cw721CustomMsg for NftExtensionMsg {}
@@ -962,15 +970,15 @@ impl Cw721CustomMsg for NftExtensionMsg {}
 impl From<NftExtension> for NftExtensionMsg {
     fn from(extension: NftExtension) -> Self {
         NftExtensionMsg {
-            image: Some(extension.image),
-            image_data: Some(extension.image_data),
-            external_url: Some(extension.external_url),
-            description: Some(extension.description),
-            name: Some(extension.name),
-            attributes: Some(extension.attributes),
-            background_color: Some(extension.background_color),
-            animation_url: Some(extension.animation_url),
-            youtube_url: Some(extension.youtube_url),
+            image: extension.image,
+            image_data: extension.image_data,
+            external_url: extension.external_url,
+            description: extension.description,
+            name: extension.name,
+            attributes: extension.attributes,
+            background_color: extension.background_color,
+            animation_url: extension.animation_url,
+            youtube_url: extension.youtube_url,
         }
     }
 }
@@ -989,34 +997,34 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
             Some(current) => {
                 let mut updated = current.clone();
                 if self.image.is_some() {
-                    updated.image = self.image.clone().flatten();
+                    updated.image = empty_as_none(self.image.clone());
                 }
                 if self.image_data.is_some() {
-                    updated.image_data = self.image_data.clone().flatten();
+                    updated.image_data = self.image_data.clone();
                 }
                 if self.external_url.is_some() {
-                    updated.external_url = self.external_url.clone().flatten();
+                    updated.external_url = empty_as_none(self.external_url.clone());
                 }
                 if self.description.is_some() {
-                    updated.description = self.description.clone().flatten();
+                    updated.description = self.description.clone();
                 }
                 if self.name.is_some() {
-                    updated.name = self.name.clone().flatten();
+                    updated.name = self.name.clone();
                 }
                 if self.attributes.is_some() {
-                    updated.attributes = match self.attributes.clone().flatten() {
+                    updated.attributes = match self.attributes.clone() {
                         Some(attributes) => Some(attributes.create(deps, env, info, None)?),
                         None => None,
                     };
                 }
                 if self.background_color.is_some() {
-                    updated.background_color = self.background_color.clone().flatten();
+                    updated.background_color = self.background_color.clone();
                 }
                 if self.animation_url.is_some() {
-                    updated.animation_url = self.animation_url.clone().flatten();
+                    updated.animation_url = empty_as_none(self.animation_url.clone());
                 }
                 if self.youtube_url.is_some() {
-                    updated.youtube_url = self.youtube_url.clone().flatten();
+                    updated.youtube_url = empty_as_none(self.youtube_url.clone());
                 }
                 Ok(updated)
             }
@@ -1024,7 +1032,7 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
             None => {
                 let mut new_metadata: NftExtension = self.clone().into();
                 if self.attributes.is_some() {
-                    new_metadata.attributes = match self.attributes.clone().flatten() {
+                    new_metadata.attributes = match self.attributes.clone() {
                         Some(attributes) => Some(attributes.create(deps, env, info, None)?),
                         None => None,
                     };
@@ -1060,41 +1068,49 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
             assert_creator(deps.storage, &info.sender)?;
         }
         // check URLs
-        if let Some(image) = &self.image.clone().flatten() {
+        let image = empty_as_none(self.image.clone());
+        if let Some(image) = &image {
             Url::parse(image)?;
         }
-        if let Some(url) = &self.external_url.clone().flatten() {
+        let external_url = empty_as_none(self.external_url.clone());
+        if let Some(url) = &external_url {
             Url::parse(url)?;
         }
-        if let Some(animation_url) = &self.animation_url.clone().flatten() {
+        let animation_url = empty_as_none(self.animation_url.clone());
+        if let Some(animation_url) = &animation_url {
             Url::parse(animation_url)?;
         }
-        if let Some(youtube_url) = &self.youtube_url.clone().flatten() {
+        let youtube_url = empty_as_none(self.youtube_url.clone());
+        if let Some(youtube_url) = &youtube_url {
             Url::parse(youtube_url)?;
         }
         // Strings must not be empty
-        if let Some(image_data) = &self.image_data.clone().flatten() {
+        if let Some(image_data) = &self.image_data.clone() {
             if image_data.is_empty() {
                 return Err(Cw721ContractError::MetadataImageDataEmpty {});
             }
         }
-        if let Some(desc) = &self.description.clone().flatten() {
+        if let Some(desc) = &self.description.clone() {
             if desc.is_empty() {
                 return Err(Cw721ContractError::MetadataDescriptionEmpty {});
             }
         }
-        if let Some(name) = &self.name.clone().flatten() {
+        if let Some(name) = &self.name.clone() {
             if name.is_empty() {
                 return Err(Cw721ContractError::MetadataNameEmpty {});
             }
         }
-        if let Some(background_color) = &self.background_color.clone().flatten() {
+        if let Some(background_color) = &self.background_color.clone() {
             if background_color.is_empty() {
                 return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
             }
         }
         Ok(())
     }
+}
+
+fn empty_as_none(value: Option<String>) -> Option<String> {
+    value.filter(|v| !v.is_empty())
 }
 
 impl<TMsg, TState> StateFactory<Option<TState>> for Option<TMsg>
