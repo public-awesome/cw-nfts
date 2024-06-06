@@ -161,16 +161,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmwasm-storage"
-version = "1.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66de2ab9db04757bcedef2b5984fbe536903ada4a8a9766717a4a71197ef34f6"
-dependencies = [
- "cosmwasm-std",
- "serde",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -303,12 +293,10 @@ dependencies = [
 
 [[package]]
 name = "cw-paginate-storage"
-version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8693baa8dc275f86c5b4f6b86702994e859ac1657e19c5cbcb55d295592a5c04"
+version = "2.4.2"
+source = "git+https://github.com/DA0-DA0/dao-contracts.git#bb8224ef1285266f4c8f11448e361f66c6a7e879"
 dependencies = [
  "cosmwasm-std",
- "cosmwasm-storage",
  "cw-storage-plus 1.2.0",
  "serde",
 ]
