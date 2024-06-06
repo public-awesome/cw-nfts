@@ -27,7 +27,7 @@ pub type DefaultOptionalNftExtensionMsg = Option<NftExtensionMsg>;
 pub type MetaData = NftExtension;
 #[deprecated(
     since = "0.19.0",
-    note = "Please use `CollectionInfo<DefaultOptionalCollectionExtension>` instead"
+    note = "Please use `CollectionInfoAndExtensionResponse<DefaultOptionalCollectionExtension>` instead"
 )]
 pub type ContractInfoResponse =
     CollectionInfoAndExtensionResponse<DefaultOptionalCollectionExtension>;
