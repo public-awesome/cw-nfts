@@ -317,9 +317,9 @@ fn test_mint() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut());
 
-    let token_id = "petrify".to_string();
+    let token_id1 = "petrify".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
-        token_id: token_id.clone(),
+        token_id: token_id1.clone(),
         owner: String::from("medusa"),
         token_uri: Some("invalid_uri".to_string()),
         extension: None,
@@ -340,7 +340,7 @@ fn test_mint() {
     let info_random = mock_info("random", &[]);
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
-        token_id: token_id.clone(),
+        token_id: token_id1.clone(),
         owner: String::from("medusa"),
         token_uri: Some(token_uri.clone()),
         extension: None,
@@ -367,7 +367,7 @@ fn test_mint() {
 
     // this nft info is correct
     let info = contract
-        .query_nft_info(deps.as_ref().storage, token_id.clone())
+        .query_nft_info(deps.as_ref().storage, token_id1.clone())
         .unwrap();
     assert_eq!(
         info,
@@ -379,7 +379,7 @@ fn test_mint() {
 
     // owner info is correct
     let owner = contract
-        .query_owner_of(deps.as_ref(), &mock_env(), token_id.clone(), true)
+        .query_owner_of(deps.as_ref(), &mock_env(), token_id1.clone(), true)
         .unwrap();
     assert_eq!(
         owner,
@@ -391,7 +391,7 @@ fn test_mint() {
 
     // Cannot mint same token_id again
     let mint_msg2 = Cw721ExecuteMsg::Mint {
-        token_id: token_id.clone(),
+        token_id: token_id1.clone(),
         owner: String::from("hercules"),
         token_uri: None,
         extension: None,
@@ -408,7 +408,111 @@ fn test_mint() {
         .query_all_tokens(deps.as_ref(), &env, None, None)
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
-    assert_eq!(vec![token_id], tokens.tokens);
+    assert_eq!(vec![token_id1.clone()], tokens.tokens);
+
+    // minter mints another one
+    let token_id2 = "id2".to_string();
+    let mint_msg = Cw721ExecuteMsg::Mint {
+        token_id: token_id2.clone(),
+        owner: String::from("medusa"),
+        token_uri: Some("".to_string()), // empty token uri
+        extension: None,
+    };
+    let _ = contract
+        .execute(deps.as_mut(), &env, &info_minter, mint_msg)
+        .unwrap();
+
+    // ensure num tokens increases
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
+    assert_eq!(2, count.count);
+
+    // unknown nft returns error
+    let _ = contract
+        .query_nft_info(deps.as_ref().storage, "unknown".to_string())
+        .unwrap_err();
+
+    // this nft info is correct
+    let info = contract
+        .query_nft_info(deps.as_ref().storage, token_id2.clone())
+        .unwrap();
+    assert_eq!(
+        info,
+        NftInfoResponse::<DefaultOptionalNftExtension> {
+            token_uri: None,
+            extension: None,
+        }
+    );
+
+    // owner info is correct
+    let owner = contract
+        .query_owner_of(deps.as_ref(), &mock_env(), token_id2.clone(), true)
+        .unwrap();
+    assert_eq!(
+        owner,
+        OwnerOfResponse {
+            owner: String::from("medusa"),
+            approvals: vec![],
+        }
+    );
+
+    // list the token_ids
+    let tokens = contract
+        .query_all_tokens(deps.as_ref(), &env, None, None)
+        .unwrap();
+    assert_eq!(2, tokens.tokens.len());
+    assert_eq!(vec![token_id2.clone(), token_id1.clone()], tokens.tokens);
+
+    // minter mints another one
+    let token_id3 = "id3".to_string();
+    let mint_msg = Cw721ExecuteMsg::Mint {
+        token_id: token_id3.clone(),
+        owner: String::from("medusa"),
+        token_uri: None, // empty token uri
+        extension: None,
+    };
+    let _ = contract
+        .execute(deps.as_mut(), &env, &info_minter, mint_msg)
+        .unwrap();
+
+    // ensure num tokens increases
+    let count = contract.query_num_tokens(deps.as_ref().storage).unwrap();
+    assert_eq!(3, count.count);
+
+    // unknown nft returns error
+    let _ = contract
+        .query_nft_info(deps.as_ref().storage, "unknown".to_string())
+        .unwrap_err();
+
+    // this nft info is correct
+    let info = contract
+        .query_nft_info(deps.as_ref().storage, token_id3.clone())
+        .unwrap();
+    assert_eq!(
+        info,
+        NftInfoResponse::<DefaultOptionalNftExtension> {
+            token_uri: None,
+            extension: None,
+        }
+    );
+
+    // owner info is correct
+    let owner = contract
+        .query_owner_of(deps.as_ref(), &mock_env(), token_id3.clone(), true)
+        .unwrap();
+    assert_eq!(
+        owner,
+        OwnerOfResponse {
+            owner: String::from("medusa"),
+            approvals: vec![],
+        }
+    );
+
+    // list the token_ids
+    let tokens = contract
+        .query_all_tokens(deps.as_ref(), &env, None, None)
+        .unwrap();
+    assert_eq!(3, tokens.tokens.len());
+    assert_eq!(vec![token_id2, token_id3, token_id1], tokens.tokens);
 }
 
 #[test]
