@@ -8,6 +8,7 @@ use cw_utils::Expiration;
 
 use crate::{
     error::Cw721ContractError,
+    helpers::value_or_empty,
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
@@ -375,7 +376,7 @@ where
         .add_attribute("owner", owner)
         .add_attribute("token_id", token_id);
     if let Some(token_uri) = token_uri {
-        res = res.add_attribute("token_uri", token_uri);
+        res = res.add_attribute("token_uri", value_or_empty(&token_uri));
     }
     Ok(res)
 }

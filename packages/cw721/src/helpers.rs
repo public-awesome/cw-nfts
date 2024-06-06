@@ -17,6 +17,15 @@ use cosmwasm_std::{
 };
 use serde::de::DeserializeOwned;
 
+/// Returns "empty" if the string is empty, otherwise the string itself
+pub fn value_or_empty(value: &str) -> String {
+    if value.is_empty() {
+        "empty".to_string()
+    } else {
+        value.to_string()
+    }
+}
+
 #[deprecated(since = "0.19.0", note = "Please use `Cw721Helper` instead")]
 pub type Cw721Contract = Cw721Helper<
     DefaultOptionalNftExtension,

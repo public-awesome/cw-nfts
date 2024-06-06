@@ -254,7 +254,7 @@ fn test_operator() {
         &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
             token_id: "1".to_string(),
             owner: nft_owner.to_string(),
-            token_uri: None,
+            token_uri: Some("".to_string()), // empty uri, response contains attribute with value "empty"
             extension: Empty::default(),
         },
         &[],
