@@ -235,19 +235,6 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          name: Install dependencies
-          command: |
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            source $HOME/.cargo/env
-            rustup target add wasm32-unknown-unknown
-      - run:
-          name: Install cosmwasm-check
-          # Uses --debug for compilation speed
-          command: |
-            source $HOME/.cargo/env
-            cargo install --debug --version 1.1.0 --locked cosmwasm-check
-
-      - run:
           # We cannot mount local folders, see https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
           name: Prepare volume with source code
           command: |
@@ -269,6 +256,18 @@ jobs:
           command: |
             ls -l artifacts
             cat artifacts/checksums.txt
+      - run:
+          name: Install Rust and Cargo
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup target add wasm32-unknown-unknown
+      - run:
+          name: Install cosmwasm-check
+          # Uses --debug for compilation speed
+          command: |
+            source $HOME/.cargo/env
+            cargo install --debug --version 1.1.0 --locked cosmwasm-check
       - run:
           name: Check wasm contracts
           command: |
