@@ -231,7 +231,7 @@ jobs:
     steps:
       - run:
           name: Install Docker client
-          command: apk add docker-cli
+          command: apk add docker-cli libgcc
       - setup_remote_docker
       - checkout
       - run:
