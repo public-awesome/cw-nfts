@@ -257,11 +257,11 @@ jobs:
             ls -l artifacts
             cat artifacts/checksums.txt
       - run:
-        name: Install dependencies
-        command: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
-          rustup target add wasm32-unknown-unknown
+          name: Install dependencies
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup target add wasm32-unknown-unknown
       - run:
           name: Install check_contract
           # Uses --debug for compilation speed
