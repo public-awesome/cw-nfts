@@ -230,8 +230,8 @@ jobs:
       - image: cibuilds/github:0.13
     steps:
       - run:
-          name: Install Docker client
-          command: apk add docker-cli libgcc build-base
+          name: Install Docker client, rust/cargo libs (build-base)
+          command: apk add docker-cli build-base
       - setup_remote_docker
       - checkout
       - run:
@@ -269,11 +269,6 @@ jobs:
           command: |
             ls -l artifacts
             cat artifacts/checksums.txt
-      - save_cache:
-          paths:
-            - /usr/local/cargo/registry
-            - target
-          key: cargocache-wasm-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Check wasm contracts
           command: |
