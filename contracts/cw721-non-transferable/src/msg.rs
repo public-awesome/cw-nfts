@@ -1,5 +1,7 @@
 use cosmwasm_schema::cw_serde;
-use cw721::{msg::Cw721QueryMsg, state::DefaultOptionMetadataExtension};
+// expose to all others using contract, so others dont need to import cw721
+pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
+use cw721::state::DefaultOptionMetadataExtension;
 
 #[cw_serde]
 pub struct InstantiateMsg {

@@ -1,6 +1,8 @@
 use cosmwasm_std::CustomMsg;
+
 // expose to all others using contract, so others dont need to import cw721
 pub use cw721::state::*;
+
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 

@@ -132,14 +132,6 @@ pub enum QueryMsg {
     Extension { msg: Extension },
 }
 
-// impl Default for Cw2981QueryMsg {
-//     fn default() -> Self {
-//         Cw2981QueryMsg::CheckRoyalties {}
-//     }
-// }
-
-// impl CustomMsg for Cw2981QueryMsg {}
-
 impl From<QueryMsg> for Cw721QueryMsg<Extension> {
     fn from(msg: QueryMsg) -> Cw721QueryMsg<Extension> {
         match msg {

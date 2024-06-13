@@ -348,7 +348,8 @@ pub trait Cw721Execute<
         info: MessageInfo,
         action: Action,
     ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
-        let ownership = MINTER.update_ownership(deps, &env.block, &info.sender, action)?;
+        let ownership =
+            MINTER.update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new()
             .add_attribute("update_minter_ownership", info.sender)
             .add_attributes(ownership.into_attributes()))

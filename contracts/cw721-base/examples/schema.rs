@@ -1,7 +1,7 @@
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
 use cosmwasm_std::Empty;
 use cw721::state::DefaultOptionMetadataExtension;
-use cw721_expiration::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use cw721_base::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use std::env::current_dir;
 use std::fs::create_dir_all;
 

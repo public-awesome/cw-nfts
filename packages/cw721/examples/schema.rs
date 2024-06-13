@@ -6,9 +6,10 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 use cosmwasm_std::Empty;
 use cw721::{
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, Cw721ExecuteMsg,
-        Cw721InstantiateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OperatorResponse,
-        OperatorsResponse, OwnerOfResponse, TokensResponse,
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, CollectionInfoMsg,
+        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
+        NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+        TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
     state::{CollectionInfo, DefaultOptionMetadataExtension},
@@ -19,18 +20,29 @@ fn main() {
     create_dir_all(&out_dir).unwrap();
     remove_schemas(&out_dir).unwrap();
 
+    // entry points - generate always with title for avoiding name suffixes like "..._empty_for_..." due to generics
     export_schema_with_title(
         &schema_for!(Cw721InstantiateMsg),
         &out_dir,
-        "InstantiateMsg",
+        "Cw721InstantiateMsg",
     );
     export_schema_with_title(
         &schema_for!(Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty>),
         &out_dir,
-        "ExecuteMsg",
+        "Cw721ExecuteMsg",
     );
-    export_schema_with_title(&schema_for!(Cw721QueryMsg<Empty>), &out_dir, "QueryMsg");
-    export_schema(&schema_for!(Cw721ReceiveMsg), &out_dir);
+    export_schema_with_title(
+        &schema_for!(Cw721QueryMsg<Empty>),
+        &out_dir,
+        "Cw721QueryMsg",
+    );
+    export_schema_with_title(&schema_for!(Cw721MigrateMsg), &out_dir, "Cw721MigrateMsg");
+
+    // messages
+    export_schema_with_title(&schema_for!(Cw721ReceiveMsg), &out_dir, "Cw721ReceiveMsg");
+    export_schema(&schema_for!(CollectionInfoMsg), &out_dir);
+
+    // responses
     export_schema_with_title(
         &schema_for!(NftInfoResponse<DefaultOptionMetadataExtension>),
         &out_dir,
@@ -47,6 +59,7 @@ fn main() {
     export_schema(&schema_for!(OperatorsResponse), &out_dir);
     export_schema_with_title(&schema_for!(CollectionInfo), &out_dir, "CollectionInfo");
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
+    export_schema(&schema_for!(MinterResponse), &out_dir);
     export_schema(&schema_for!(NumTokensResponse), &out_dir);
     export_schema(&schema_for!(TokensResponse), &out_dir);
 }

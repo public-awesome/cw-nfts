@@ -1,8 +1,11 @@
-use crate::{DefaultOptionMetadataExtension, MinterResponse};
+use crate::DefaultOptionMetadataExtension;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw721::state::CollectionInfo;
 use cw_ownable::Ownership;
+
+// expose to all others using contract, so others dont need to import cw721
+pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
 
 #[cw_serde]
 pub struct InstantiateMsg {

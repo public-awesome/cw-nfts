@@ -1,4 +1,8 @@
 use cosmwasm_std::{CustomMsg, Timestamp};
+
+// expose to all others using contract, so others dont need to import cw721
+pub use cw721::state::*;
+
 use cw721_base::Cw721Contract;
 use cw_storage_plus::{Item, Map};
 use serde::de::DeserializeOwned;
