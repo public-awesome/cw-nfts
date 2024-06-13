@@ -235,6 +235,16 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
+          name: Install dependencies
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup target add wasm32-unknown-unknown
+      - run:
+          name: Install check_contract
+          # Uses --debug for compilation speed
+          command: cargo install --debug --version 1.1.0 --locked -- cosmwasm-check
+      - run:
           # We cannot mount local folders, see https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
           name: Prepare volume with source code
           command: |
@@ -247,7 +257,7 @@ jobs:
             docker cp ./contracts with_code:/code
             docker cp ./packages with_code:/code
       - run:
-          name: Build development contracts
+          name: Build and optimize contracts
           command: |
             docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.16.0
             docker cp with_code:/code/artifacts ./artifacts
@@ -256,16 +266,6 @@ jobs:
           command: |
             ls -l artifacts
             cat artifacts/checksums.txt
-      - run:
-          name: Install dependencies
-          command: |
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            source $HOME/.cargo/env
-            rustup target add wasm32-unknown-unknown
-      - run:
-          name: Install check_contract
-          # Uses --debug for compilation speed
-          command: cargo install --debug --version 1.1.0 --locked -- cosmwasm-check
       - save_cache:
           paths:
             - /usr/local/cargo/registry
