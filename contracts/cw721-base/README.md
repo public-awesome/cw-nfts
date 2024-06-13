@@ -32,7 +32,7 @@ If provided, it is expected that the _token_uri_ points to a JSON file following
 
 ## Running this contract
 
-You will need Rust 1.65+ with `wasm32-unknown-unknown` target installed.
+You will need Rust 1.71+ with `wasm32-unknown-unknown` target installed.
 
 You can run unit tests on this via:
 
