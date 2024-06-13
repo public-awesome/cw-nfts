@@ -226,27 +226,42 @@ jobs:
   # We also sanity-check the resultant wasm files.
   wasm-build:
     docker:
-      - image: rust:1.78.0
+      # Image from https://github.com/cibuilds/github, based on alpine
+      - image: cibuilds/github:0.13
     steps:
-      - checkout:
-          path: ~/project
       - run:
-          name: Version information
-          command: rustc --version; cargo --version; rustup --version
-      - restore_cache:
-          keys:
-            - cargocache-wasm-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
+          name: Install Docker client
+          command: apk add docker-cli
+      - setup_remote_docker
+      - checkout
       - run:
-          name: Add wasm32 target
-          command: rustup target add wasm32-unknown-unknown
-      - run:
-          name: Build Wasm Release
+          # We cannot mount local folders, see https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
+          name: Prepare volume with source code
           command: |
-            for C in ./contracts/*/
-            do
-              echo "Compiling `basename $C`..."
-              (cd $C && cargo build --release --target wasm32-unknown-unknown --lib --locked)
-            done
+            # create a dummy container which will hold a volume with config
+            docker create -v /code --name with_code alpine /bin/true
+            # copy a config file into this volume
+            docker cp Cargo.toml with_code:/code
+            docker cp Cargo.lock with_code:/code
+            # copy code into this volume
+            docker cp ./contracts with_code:/code
+            docker cp ./packages with_code:/code
+      - run:
+          name: Build development contracts
+          command: |
+            docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.16.0
+            docker cp with_code:/code/artifacts ./artifacts
+      - run:
+          name: List artifacts and checksums
+          command: |
+            ls -l artifacts
+            cat artifacts/checksums.txt
+      - run:
+        name: Install dependencies
+        command: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup target add wasm32-unknown-unknown
       - run:
           name: Install check_contract
           # Uses --debug for compilation speed
@@ -258,7 +273,7 @@ jobs:
           key: cargocache-wasm-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Check wasm contracts
-          command: cosmwasm-check ./target/wasm32-unknown-unknown/release/*.wasm
+          command: cosmwasm-check ./artifacts/*.wasm
 
   # This job roughly follows the instructions from https://circleci.com/blog/publishing-to-github-releases-via-circleci/
   build_and_upload_contracts:
