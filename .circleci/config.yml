@@ -4,8 +4,9 @@ workflows:
   test:
     jobs:
       - contract_cw721_base
-      - contract_cw721_metadata_onchain
+      - contract_cw721_expiration
       - contract_cw721_fixed_price
+      - contract_cw721_receiver_tester
       - package_cw721
       - lint
       - wasm-build
@@ -21,7 +22,7 @@ workflows:
 jobs:
   contract_cw721_base:
     docker:
-      - image: rust:1.65.0
+      - image: rust:1.78.0
     working_directory: ~/project/contracts/cw721-base
     steps:
       - checkout:
@@ -31,34 +32,22 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw721-base-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw721-base-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
             RUST_BACKTRACE: 1
           command: cargo unit-test --locked
-      - run:
-          name: Build and run schema generator
-          command: cargo schema --locked
-      - run:
-          name: Ensure checked-in schemas are up-to-date
-          command: |
-            CHANGES_IN_REPO=$(git status --porcelain | grep -v '/schema/raw/' || true)
-            if [[ -n "$CHANGES_IN_REPO" ]]; then
-              echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
-              git status && git --no-pager diff
-              exit 1
-            fi
       - save_cache:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw721-base-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw721-base-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
 
-  contract_cw721_metadata_onchain:
+  contract_cw721_expiration:
     docker:
-      - image: rust:1.65.0
-    working_directory: ~/project/contracts/cw721-metadata-onchain
+      - image: rust:1.78.0
+    working_directory: ~/project/contracts/cw721-expiration
     steps:
       - checkout:
           path: ~/project
@@ -67,7 +56,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw721-metadata-onchain-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw721-expiration-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -89,11 +78,11 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw721-metadata-onchain-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw721-expiration-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
 
   contract_cw721_fixed_price:
     docker:
-      - image: rust:1.65.0
+      - image: rust:1.78.0
     working_directory: ~/project/contracts/cw721-fixed-price
     steps:
       - checkout:
@@ -103,7 +92,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version
       - restore_cache:
           keys:
-            - cargocache-cw721-fixed-price-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-cw721-fixed-price-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Unit Tests
           environment:
@@ -125,11 +114,47 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-cw721-fixed-price-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-cw721-fixed-price-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
+
+  contract_cw721_receiver_tester:
+    docker:
+      - image: rust:1.78.0
+    working_directory: ~/project/contracts/cw721-receiver-tester
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Version information
+          command: rustc --version; cargo --version; rustup --version
+      - restore_cache:
+          keys:
+            - cargocache-cw721-receiver-tester-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
+      - run:
+          name: Unit Tests
+          environment:
+            RUST_BACKTRACE: 1
+          command: cargo unit-test --locked
+      - run:
+          name: Build and run schema generator
+          command: cargo schema --locked
+      - run:
+          name: Ensure checked-in schemas are up-to-date
+          command: |
+            CHANGES_IN_REPO=$(git status --porcelain | grep -v '/schema/raw/' || true)
+            if [[ -n "$CHANGES_IN_REPO" ]]; then
+              echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
+              git status && git --no-pager diff
+              exit 1
+            fi
+      - save_cache:
+          paths:
+            - /usr/local/cargo/registry
+            - target
+          key: cargocache-cw721-receiver-tester-rust:1.78.0-{{ checksum "~/project/Cargo.lock" }}
 
   package_cw721:
     docker:
-      - image: rust:1.65.0
+      - image: rust:1.78.0
     working_directory: ~/project/packages/cw721
     steps:
       - checkout:
@@ -166,7 +191,7 @@ jobs:
 
   lint:
     docker:
-      - image: rust:1.65.0
+      - image: rust:1.78.0
     steps:
       - checkout
       - run:
@@ -174,7 +199,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
       - restore_cache:
           keys:
-            - cargocache-v2-lint-rust:1.65.0-{{ checksum "Cargo.lock" }}
+            - cargocache-v2-lint-rust:1.78.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Add rustfmt component
           command: rustup component add rustfmt
@@ -193,7 +218,7 @@ jobs:
             - target/debug/.fingerprint
             - target/debug/build
             - target/debug/deps
-          key: cargocache-v2-lint-rust:1.65.0-{{ checksum "Cargo.lock" }}
+          key: cargocache-v2-lint-rust:1.78.0-{{ checksum "Cargo.lock" }}
 
   # This runs one time on the top level to ensure all contracts compile properly into wasm.
   # We don't run the wasm build per contract build, and then reuse a lot of the same dependencies, so this speeds up CI time
@@ -201,39 +226,53 @@ jobs:
   # We also sanity-check the resultant wasm files.
   wasm-build:
     docker:
-      - image: rust:1.65.0
+      # Image from https://github.com/cibuilds/github, based on alpine
+      - image: cibuilds/github:0.13
     steps:
-      - checkout:
-          path: ~/project
       - run:
-          name: Version information
-          command: rustc --version; cargo --version; rustup --version
-      - restore_cache:
-          keys:
-            - cargocache-wasm-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+          name: Install Docker client, rust/cargo libs (build-base)
+          command: apk add docker-cli build-base
+      - setup_remote_docker
+      - checkout
       - run:
-          name: Add wasm32 target
-          command: rustup target add wasm32-unknown-unknown
-      - run:
-          name: Build Wasm Release
+          # We cannot mount local folders, see https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
+          name: Prepare volume with source code
           command: |
-            for C in ./contracts/*/
-            do
-              echo "Compiling `basename $C`..."
-              (cd $C && cargo build --release --target wasm32-unknown-unknown --lib --locked)
-            done
+            # create a dummy container which will hold a volume with config
+            docker create -v /code --name with_code alpine /bin/true
+            # copy a config file into this volume
+            docker cp Cargo.toml with_code:/code
+            docker cp Cargo.lock with_code:/code
+            # copy code into this volume
+            docker cp ./contracts with_code:/code
+            docker cp ./packages with_code:/code
       - run:
-          name: Install check_contract
+          name: Build and optimize contracts
+          command: |
+            docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.16.0
+            docker cp with_code:/code/artifacts ./artifacts
+      - run:
+          name: List artifacts and checksums
+          command: |
+            ls -l artifacts
+            cat artifacts/checksums.txt
+      - run:
+          name: Install Rust and Cargo
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup target add wasm32-unknown-unknown
+      - run:
+          name: Install cosmwasm-check
           # Uses --debug for compilation speed
-          command: cargo install --debug --version 1.1.0 --locked -- cosmwasm-check
-      - save_cache:
-          paths:
-            - /usr/local/cargo/registry
-            - target
-          key: cargocache-wasm-rust:1.65.0-{{ checksum "~/project/Cargo.lock" }}
+          command: |
+            source $HOME/.cargo/env
+            cargo install --debug --version 1.1.0 --locked cosmwasm-check
       - run:
           name: Check wasm contracts
-          command: cosmwasm-check ./target/wasm32-unknown-unknown/release/*.wasm
+          command: |
+            source $HOME/.cargo/env
+            cosmwasm-check ./artifacts/*.wasm
 
   # This job roughly follows the instructions from https://circleci.com/blog/publishing-to-github-releases-via-circleci/
   build_and_upload_contracts:
@@ -261,7 +300,7 @@ jobs:
       - run:
           name: Build development contracts
           command: |
-            docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.12.13
+            docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.16.0
             docker cp with_code:/code/artifacts ./artifacts
       - run:
           name: Show data

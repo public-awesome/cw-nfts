@@ -3,6 +3,18 @@
   "title": "Cw721ExecuteMsg",
   "oneOf": [
     {
+      "type": "object",
+      "required": [
+        "update_ownership"
+      ],
+      "properties": {
+        "update_ownership": {
+          "$ref": "#/definitions/Action"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Transfer is a base message to move a token to another account without triggering actions",
       "type": "object",
       "required": [
@@ -175,6 +187,52 @@
       "additionalProperties": false
     },
     {
+      "description": "Mint a new NFT, can only be called by the contract minter",
+      "type": "object",
+      "required": [
+        "mint"
+      ],
+      "properties": {
+        "mint": {
+          "type": "object",
+          "required": [
+            "owner",
+            "token_id"
+          ],
+          "properties": {
+            "extension": {
+              "description": "Any custom extension used by this contract",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Metadata"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "owner": {
+              "description": "The owner of the newly minter NFT",
+              "type": "string"
+            },
+            "token_id": {
+              "description": "Unique ID of the NFT",
+              "type": "string"
+            },
+            "token_uri": {
+              "description": "Universal resource identifier for this NFT Should point to a JSON file that conforms to the ERC721 Metadata JSON Schema",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Burn an NFT the sender has access to",
       "type": "object",
       "required": [
@@ -195,12 +253,162 @@
         }
       },
       "additionalProperties": false
+    },
+    {
+      "description": "Extension msg",
+      "type": "object",
+      "required": [
+        "extension"
+      ],
+      "properties": {
+        "extension": {
+          "type": "object",
+          "required": [
+            "msg"
+          ],
+          "properties": {
+            "msg": {
+              "$ref": "#/definitions/Empty"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Sets address to send withdrawn fees to. Only owner can call this.",
+      "type": "object",
+      "required": [
+        "set_withdraw_address"
+      ],
+      "properties": {
+        "set_withdraw_address": {
+          "type": "object",
+          "required": [
+            "address"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Removes the withdraw address, so fees are sent to the contract. Only owner can call this.",
+      "type": "object",
+      "required": [
+        "remove_withdraw_address"
+      ],
+      "properties": {
+        "remove_withdraw_address": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Withdraw from the contract to the given address. Anyone can call this, which is okay since withdraw address has been set by owner.",
+      "type": "object",
+      "required": [
+        "withdraw_funds"
+      ],
+      "properties": {
+        "withdraw_funds": {
+          "type": "object",
+          "required": [
+            "amount"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/Coin"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
+    "Action": {
+      "description": "Actions that can be taken to alter the contract's ownership",
+      "oneOf": [
+        {
+          "description": "Propose to transfer the contract's ownership to another account, optionally with an expiry time.\n\nCan only be called by the contract's current owner.\n\nAny existing pending ownership transfer is overwritten.",
+          "type": "object",
+          "required": [
+            "transfer_ownership"
+          ],
+          "properties": {
+            "transfer_ownership": {
+              "type": "object",
+              "required": [
+                "new_owner"
+              ],
+              "properties": {
+                "expiry": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Expiration"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "new_owner": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Accept the pending ownership transfer.\n\nCan only be called by the pending owner.",
+          "type": "string",
+          "enum": [
+            "accept_ownership"
+          ]
+        },
+        {
+          "description": "Give up the contract's ownership and the possibility of appointing a new owner.\n\nCan only be invoked by the contract's current owner.\n\nAny existing pending ownership transfer is canceled.",
+          "type": "string",
+          "enum": [
+            "renounce_ownership"
+          ]
+        }
+      ]
+    },
     "Binary": {
       "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
       "type": "string"
+    },
+    "Coin": {
+      "type": "object",
+      "required": [
+        "amount",
+        "denom"
+      ],
+      "properties": {
+        "amount": {
+          "$ref": "#/definitions/Uint128"
+        },
+        "denom": {
+          "type": "string"
+        }
+      }
+    },
+    "Empty": {
+      "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+      "type": "object"
     },
     "Expiration": {
       "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
@@ -249,6 +457,69 @@
         }
       ]
     },
+    "Metadata": {
+      "type": "object",
+      "properties": {
+        "animation_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attributes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "background_color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_data": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "youtube_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "Timestamp": {
       "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
       "allOf": [
@@ -256,6 +527,32 @@
           "$ref": "#/definitions/Uint64"
         }
       ]
+    },
+    "Trait": {
+      "type": "object",
+      "required": [
+        "trait_type",
+        "value"
+      ],
+      "properties": {
+        "display_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trait_type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Uint128": {
+      "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
+      "type": "string"
     },
     "Uint64": {
       "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",

@@ -1,6 +1,7 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Empty;
-use cw721_base::msg::QueryMsg as Cw721QueryMsg;
+// expose to all others using contract, so others dont need to import cw721
+pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
+use cw721::state::DefaultOptionMetadataExtension;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -14,6 +15,8 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum QueryMsg {
     Admin {},
+
+    // -- below copied from Cw721QueryMsg
     OwnerOf {
         token_id: String,
         include_expired: Option<bool>,
@@ -35,6 +38,7 @@ pub enum QueryMsg {
     },
     NumTokens {},
     ContractInfo {},
+
     NftInfo {
         token_id: String,
     },
@@ -52,10 +56,12 @@ pub enum QueryMsg {
         limit: Option<u32>,
     },
     Minter {},
+
+    GetWithdrawAddress {},
 }
 
-impl From<QueryMsg> for Cw721QueryMsg<Empty> {
-    fn from(msg: QueryMsg) -> Cw721QueryMsg<Empty> {
+impl From<QueryMsg> for Cw721QueryMsg<DefaultOptionMetadataExtension> {
+    fn from(msg: QueryMsg) -> Cw721QueryMsg<DefaultOptionMetadataExtension> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,
@@ -87,7 +93,11 @@ impl From<QueryMsg> for Cw721QueryMsg<Empty> {
                 Cw721QueryMsg::AllTokens { start_after, limit }
             }
             QueryMsg::Minter {} => Cw721QueryMsg::Minter {},
-            _ => unreachable!("cannot convert {:?} to Cw721QueryMsg", msg),
+            QueryMsg::GetWithdrawAddress {} => Cw721QueryMsg::GetWithdrawAddress {},
+            QueryMsg::AllOperators { .. } => unreachable!("AllOperators is not supported!"),
+            QueryMsg::Approval { .. } => unreachable!("Approval is not supported!"),
+            QueryMsg::Approvals { .. } => unreachable!("Approvals is not supported!"),
+            QueryMsg::Admin { .. } => unreachable!("Approvals is not supported!"),
         }
     }
 }

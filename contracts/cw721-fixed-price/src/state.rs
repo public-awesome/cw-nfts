@@ -1,6 +1,9 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
-use cw721_base::Extension;
+
+// expose to all others using contract, so others dont need to import cw721
+pub use cw721::state::*;
+
 use cw_storage_plus::Item;
 
 #[cw_serde]
@@ -13,7 +16,7 @@ pub struct Config {
     pub name: String,
     pub symbol: String,
     pub token_uri: String,
-    pub extension: Extension,
+    pub extension: DefaultOptionMetadataExtension,
     pub unused_token_id: u32,
 }
 

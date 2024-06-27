@@ -8,20 +8,20 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
+use cw721::state::DefaultOptionMetadataExtension;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type MinterResponse = cw721_base::msg::MinterResponse;
-pub type Extension = Option<Empty>;
+pub type MinterResponse = cw721::msg::MinterResponse;
 
-pub type TokenInfo = cw721_base::state::TokenInfo<Extension>;
+pub type NftInfo = cw721::state::NftInfo<DefaultOptionMetadataExtension>;
 
 pub mod entry {
     use crate::{
         error::ContractError,
-        msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+        msg::{InstantiateMsg, QueryMsg},
         state::Cw721ExpirationContract,
     };
 
@@ -30,17 +30,19 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
+    use cw721::{msg::Cw721ExecuteMsg, state::DefaultOptionMetadataExtension};
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn instantiate(
-        mut deps: DepsMut,
+        deps: DepsMut,
         env: Env,
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
-        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-        Cw721ExpirationContract::default().instantiate(deps.branch(), env, info, msg)
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+        contract.instantiate(deps, env, info, msg)
     }
 
     #[entry_point]
@@ -48,19 +50,28 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: ExecuteMsg,
+        msg: Cw721ExecuteMsg<DefaultOptionMetadataExtension, Empty>,
     ) -> Result<Response, ContractError> {
-        Cw721ExpirationContract::default().execute(deps, env, info, msg)
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+        contract.execute(deps, env, info, msg)
     }
 
     #[entry_point]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
-        Cw721ExpirationContract::default().query(deps, env, msg)
+    pub fn query(
+        deps: Deps,
+        env: Env,
+        msg: QueryMsg<DefaultOptionMetadataExtension>,
+    ) -> Result<Binary, ContractError> {
+        let contract =
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+        contract.query(deps, env, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
-        Ok(Response::default())
+        // TODO: allow migration e.g. from cw721-base
+        panic!("This contract does not support migrations")
     }
 }
 
@@ -84,9 +95,9 @@ mod tests {
             mock_info("mrt", &[]),
             InstantiateMsg {
                 expiration_days: 0,
-                name: "".into(),
-                symbol: "".into(),
-                minter: Some("mrt".into()),
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                minter: Some("minter".into()),
                 withdraw_address: None,
             },
         )
@@ -102,7 +113,7 @@ mod tests {
                 expiration_days: 1,
                 name: "".into(),
                 symbol: "".into(),
-                minter: Some("mrt".into()),
+                minter: Some("minter".into()),
                 withdraw_address: None,
             },
         )
@@ -119,7 +130,7 @@ mod tests {
 
         assert_eq!(
             1,
-            Cw721ExpirationContract::default()
+            Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default()
                 .expiration_days
                 .load(deps.as_ref().storage)
                 .unwrap()

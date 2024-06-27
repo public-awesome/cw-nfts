@@ -3,33 +3,40 @@
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg,
+    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
-use cw721::{
-    Approval, ApprovalResponse, ContractInfoResponse, Cw721ReceiveMsg, Expiration, NftInfoResponse,
-    OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+use cw721::error::Cw721ContractError;
+use cw721::msg::{
+    ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
+    OwnerOfResponse, TokensResponse,
 };
-use cw_ownable::OwnershipError;
+use cw721::receiver::Cw721ReceiveMsg;
+use cw721::state::{CollectionInfo, MINTER};
+use cw721::{query::Cw721Query, Approval, Expiration};
+use cw_ownable::{Action, Ownership, OwnershipError};
 
 use crate::state::Cw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::ExecuteMsg, msg::InstantiateMsg, msg::QueryMsg, Extension,
-    MinterResponse,
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionMetadataExtension,
 };
-use cw721_base::ContractError as Cw721ContractError;
 
-const MINTER: &str = "merlin";
+const MINTER_ADDR: &str = "minter";
+const CREATOR_ADDR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(deps: DepsMut<'_>, expiration_days: u16) -> Cw721ExpirationContract<'static> {
-    let contract = Cw721ExpirationContract::default();
+fn setup_contract(
+    deps: DepsMut<'_>,
+    expiration_days: u16,
+) -> Cw721ExpirationContract<'static, DefaultOptionMetadataExtension, Empty, Empty> {
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        minter: Some(String::from(MINTER)),
+        minter: Some(String::from(MINTER_ADDR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -41,41 +48,115 @@ fn setup_contract(deps: DepsMut<'_>, expiration_days: u16) -> Cw721ExpirationCon
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721ExpirationContract::default();
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
-        minter: Some(String::from(MINTER)),
-        withdraw_address: None,
+        minter: Some(String::from(MINTER_ADDR)),
+        withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
+    let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
     let res = contract
-        .instantiate(deps.as_mut(), mock_env(), info, msg)
+        .instantiate(deps.as_mut(), env.clone(), info, msg)
         .unwrap();
     assert_eq!(0, res.messages.len());
 
     // it worked, let's query the state
-    let res = contract.minter(deps.as_ref()).unwrap();
-    assert_eq!(Some(MINTER.to_string()), res.minter);
-    let info = contract.contract_info(deps.as_ref()).unwrap();
+    let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let collection_info = contract
+        .base_contract
+        .query_collection_info(deps.as_ref(), env.clone())
+        .unwrap();
     assert_eq!(
-        info,
-        ContractInfoResponse {
+        collection_info,
+        CollectionInfo {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
         }
     );
 
-    let count = contract.num_tokens(deps.as_ref()).unwrap();
+    let withdraw_address = contract
+        .base_contract
+        .config
+        .withdraw_address
+        .may_load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
+
+    let count = contract
+        .base_contract
+        .query_num_tokens(deps.as_ref(), env)
+        .unwrap();
     assert_eq!(0, count.count);
 
     // list the token_ids
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, None, false)
+        .unwrap();
+    assert_eq!(0, tokens.tokens.len());
+}
+
+#[test]
+fn proper_instantiation_with_collection_info() {
+    let mut deps = mock_dependencies();
+    let contract =
+        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+
+    let msg = InstantiateMsg {
+        expiration_days: 1,
+        name: CONTRACT_NAME.to_string(),
+        symbol: SYMBOL.to_string(),
+        minter: Some(String::from(MINTER_ADDR)),
+        withdraw_address: Some(String::from(CREATOR_ADDR)),
+    };
+    let info = mock_info("creator", &[]);
+    let env = mock_env();
+
+    // we can just call .unwrap() to assert this was a success
+    let res = contract
+        .instantiate(deps.as_mut(), env.clone(), info, msg)
+        .unwrap();
+    assert_eq!(0, res.messages.len());
+
+    // it worked, let's query the state
+    let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let collection_info = contract
+        .base_contract
+        .query_collection_info(deps.as_ref(), env.clone())
+        .unwrap();
+    assert_eq!(
+        collection_info,
+        CollectionInfo {
+            name: CONTRACT_NAME.to_string(),
+            symbol: SYMBOL.to_string(),
+        }
+    );
+
+    let withdraw_address = contract
+        .base_contract
+        .config
+        .withdraw_address
+        .may_load(deps.as_ref().storage)
+        .unwrap();
+    assert_eq!(Some(CREATOR_ADDR.to_string()), withdraw_address);
+
+    let count = contract
+        .base_contract
+        .query_num_tokens(deps.as_ref(), env)
+        .unwrap();
+    assert_eq!(0, count.count);
+
+    // list the token_ids
+    let tokens = contract
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, None, false)
         .unwrap();
     assert_eq!(0, tokens.tokens.len());
 }
@@ -88,7 +169,7 @@ fn test_mint() {
     let token_id = "atomize".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/atomize".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: String::from("medusa"),
         token_uri: Some(token_uri.clone()),
@@ -97,8 +178,9 @@ fn test_mint() {
 
     // random cannot mint
     let random = mock_info("random", &[]);
+    let env = mock_env();
     let err = contract
-        .execute(deps.as_mut(), mock_env(), random, mint_msg.clone())
+        .execute(deps.as_mut(), env.clone(), random, mint_msg.clone())
         .unwrap_err();
     assert_eq!(
         err,
@@ -106,27 +188,30 @@ fn test_mint() {
     );
 
     // minter can mint
-    let allowed = mock_info(MINTER, &[]);
+    let allowed = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg)
         .unwrap();
 
     // ensure num tokens increases
-    let count = contract.num_tokens(deps.as_ref()).unwrap();
+    let count = contract
+        .base_contract
+        .query_num_tokens(deps.as_ref(), env)
+        .unwrap();
     assert_eq!(1, count.count);
 
     // unknown nft returns error
     let _ = contract
-        .nft_info(deps.as_ref(), mock_env(), "unknown".to_string(), false)
+        .query_nft_info_include_expired_nft(deps.as_ref(), mock_env(), "unknown".to_string(), false)
         .unwrap_err();
 
     // this nft info is correct
     let info = contract
-        .nft_info(deps.as_ref(), mock_env(), token_id.clone(), false)
+        .query_nft_info_include_expired_nft(deps.as_ref(), mock_env(), token_id.clone(), false)
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<Extension> {
+        NftInfoResponse::<DefaultOptionMetadataExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }
@@ -134,7 +219,13 @@ fn test_mint() {
 
     // owner info is correct
     let owner = contract
-        .owner_of(deps.as_ref(), mock_env(), token_id.clone(), true, false)
+        .query_owner_of_include_expired_nft(
+            deps.as_ref(),
+            mock_env(),
+            token_id.clone(),
+            true,
+            false,
+        )
         .unwrap();
     assert_eq!(
         owner,
@@ -152,14 +243,14 @@ fn test_mint() {
     assert_eq!(mint_timestamp, mock_env().block.time);
 
     // Cannot mint same token_id again
-    let mint_msg2 = ExecuteMsg::Mint {
+    let mint_msg2 = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: String::from("hercules"),
         token_uri: None,
         extension: None,
     };
 
-    let allowed = mock_info(MINTER, &[]);
+    let allowed = mock_info(MINTER_ADDR, &[]);
     let err = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg2)
         .unwrap_err();
@@ -167,7 +258,7 @@ fn test_mint() {
 
     // list the token_ids
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, None, false)
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id], tokens.tokens);
@@ -181,7 +272,7 @@ fn test_update_minter() {
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id,
         owner: String::from("medusa"),
         token_uri: Some(token_uri.clone()),
@@ -189,7 +280,7 @@ fn test_update_minter() {
     };
 
     // Minter can mint
-    let minter_info = mock_info(MINTER, &[]);
+    let minter_info = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), minter_info.clone(), mint_msg)
         .unwrap();
@@ -201,7 +292,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::TransferOwnership {
+            Cw721ExecuteMsg::UpdateOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -209,26 +300,18 @@ fn test_update_minter() {
         .unwrap();
 
     // Minter does not change until ownership transfer completes.
-    let minter: MinterResponse = from_json(
-        contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
-            .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(minter.minter, Some(MINTER.to_string()));
-
     // Pending ownership transfer should be discoverable via query.
-    let ownership: cw_ownable::Ownership<Addr> = from_json(
+    let ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Ownership {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
 
     assert_eq!(
         ownership,
-        cw_ownable::Ownership::<Addr> {
-            owner: Some(Addr::unchecked(MINTER)),
+        Ownership::<Addr> {
+            owner: Some(Addr::unchecked(MINTER_ADDR)),
             pending_owner: Some(Addr::unchecked("random")),
             pending_expiry: None,
         }
@@ -241,20 +324,20 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            ExecuteMsg::UpdateOwnership(cw_ownable::Action::AcceptOwnership),
+            Cw721ExecuteMsg::UpdateOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 
     // Minter changes after ownership transfer is accepted.
-    let minter: MinterResponse = from_json(
+    let minter_ownership: Ownership<Addr> = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .query(deps.as_ref(), mock_env(), QueryMsg::GetMinterOwnership {})
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some("random".to_string()));
+    assert_eq!(minter_ownership.owner, Some(random_info.sender.clone()));
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
         owner: String::from("medusa"),
         token_uri: Some(token_uri),
@@ -284,20 +367,20 @@ fn test_burn() {
     let token_id = "petrify".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: MINTER.to_string(),
+        owner: MINTER_ADDR.to_string(),
         token_uri: Some(token_uri),
         extension: None,
     };
 
-    let burn_msg = ExecuteMsg::Burn {
+    let burn_msg = Cw721ExecuteMsg::Burn {
         token_id: token_id.clone(),
     };
 
     // mint some NFT
     let mut env = mock_env();
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     let _ = contract
         .execute(deps.as_mut(), env.clone(), minter.clone(), mint_msg.clone())
         .unwrap();
@@ -318,17 +401,25 @@ fn test_burn() {
         .unwrap();
 
     // ensure num tokens decreases
-    let count = contract.num_tokens(deps.as_ref()).unwrap();
+    let count = contract
+        .base_contract
+        .query_num_tokens(deps.as_ref(), env.clone())
+        .unwrap();
     assert_eq!(0, count.count);
 
     // trying to get nft returns error
     let _ = contract
-        .nft_info(deps.as_ref(), env.clone(), "petrify".to_string(), false)
+        .query_nft_info_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            "petrify".to_string(),
+            false,
+        )
         .unwrap_err();
 
     // list the token_ids
     let tokens = contract
-        .all_tokens(deps.as_ref(), env.clone(), None, None, false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), env.clone(), None, None, false)
         .unwrap();
     assert!(tokens.tokens.is_empty());
 
@@ -364,7 +455,7 @@ fn test_transfer_nft() {
     let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
     let owner = "owner";
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: String::from(owner),
         token_uri: Some(token_uri),
@@ -372,14 +463,14 @@ fn test_transfer_nft() {
     };
 
     let mut env = mock_env();
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // random cannot transfer
     let random = mock_info("random", &[]);
-    let transfer_msg = ExecuteMsg::TransferNft {
+    let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: String::from("random"),
         token_id: token_id.clone(),
     };
@@ -395,7 +486,7 @@ fn test_transfer_nft() {
     // owner can
     let owner_info = mock_info(owner, &[]);
     let new_owner = "random";
-    let transfer_msg = ExecuteMsg::TransferNft {
+    let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: String::from(new_owner),
         token_id: token_id.clone(),
     };
@@ -444,7 +535,7 @@ fn test_send_nft() {
     let token_id = "melt".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/melt".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: String::from("venus"),
         token_uri: Some(token_uri),
@@ -452,14 +543,14 @@ fn test_send_nft() {
     };
 
     let mut env = mock_env();
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
     let target = String::from("another_contract");
-    let send_msg = ExecuteMsg::SendNft {
+    let send_msg = Cw721ExecuteMsg::SendNft {
         contract: target.clone(),
         token_id: token_id.clone(),
         msg: msg.clone(),
@@ -530,7 +621,7 @@ fn test_approve_revoke() {
     let token_id = "grow".to_string();
     let token_uri = "https://www.merriam-webster.com/dictionary/grow".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: String::from("demeter"),
         token_uri: Some(token_uri),
@@ -538,14 +629,14 @@ fn test_approve_revoke() {
     };
 
     let mut env = mock_env();
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), env.clone(), minter, mint_msg)
         .unwrap();
 
     // token owner shows in approval query
     let res = contract
-        .approval(
+        .query_approval_include_expired_nft(
             deps.as_ref(),
             env.clone(),
             token_id.clone(),
@@ -558,14 +649,14 @@ fn test_approve_revoke() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: String::from("demeter"),
+                spender: Addr::unchecked("demeter"),
                 expires: Expiration::Never {}
             }
         }
     );
 
     // Give random transferring power
-    let approve_msg = ExecuteMsg::Approve {
+    let approve_msg = Cw721ExecuteMsg::Approve {
         spender: String::from("random"),
         token_id: token_id.clone(),
         expires: None,
@@ -585,7 +676,7 @@ fn test_approve_revoke() {
 
     // test approval query
     let res = contract
-        .approval(
+        .query_approval_include_expired_nft(
             deps.as_ref(),
             env.clone(),
             token_id.clone(),
@@ -598,7 +689,7 @@ fn test_approve_revoke() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: String::from("random"),
+                spender: Addr::unchecked("random"),
                 expires: Expiration::Never {}
             }
         }
@@ -606,7 +697,7 @@ fn test_approve_revoke() {
 
     // random can now transfer
     let random = mock_info("random", &[]);
-    let transfer_msg = ExecuteMsg::TransferNft {
+    let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id.clone(),
     };
@@ -618,7 +709,7 @@ fn test_approve_revoke() {
     let query_msg = QueryMsg::OwnerOf {
         token_id: token_id.clone(),
         include_expired: None,
-        include_invalid: None,
+        include_expired_nft: None,
     };
     let res: OwnerOfResponse = from_json(
         contract
@@ -635,7 +726,7 @@ fn test_approve_revoke() {
     );
 
     // Approve, revoke, and check for empty, to test revoke
-    let approve_msg = ExecuteMsg::Approve {
+    let approve_msg = Cw721ExecuteMsg::Approve {
         spender: String::from("random"),
         token_id: token_id.clone(),
         expires: None,
@@ -650,7 +741,7 @@ fn test_approve_revoke() {
         )
         .unwrap();
 
-    let revoke_msg = ExecuteMsg::Revoke {
+    let revoke_msg = Cw721ExecuteMsg::Revoke {
         spender: String::from("random"),
         token_id: token_id.clone(),
     };
@@ -720,19 +811,19 @@ fn test_approve_all_revoke_all() {
     let token_id2 = "grow2".to_string();
     let token_uri2 = "https://www.merriam-webster.com/dictionary/grow2".to_string();
 
-    let mint_msg1 = ExecuteMsg::Mint {
+    let mint_msg1 = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
         owner: String::from("demeter"),
         token_uri: Some(token_uri1),
         extension: None,
     };
 
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg1)
         .unwrap();
 
-    let mint_msg2 = ExecuteMsg::Mint {
+    let mint_msg2 = Cw721ExecuteMsg::Mint {
         token_id: token_id2.clone(),
         owner: String::from("demeter"),
         token_uri: Some(token_uri2),
@@ -745,12 +836,12 @@ fn test_approve_all_revoke_all() {
 
     // paginate the token_ids
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, Some(1), false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, Some(1), false)
         .unwrap();
     assert_eq!(1, tokens.tokens.len());
     assert_eq!(vec![token_id1.clone()], tokens.tokens);
     let tokens = contract
-        .all_tokens(
+        .query_all_tokens_include_expired_nft(
             deps.as_ref(),
             mock_env(),
             Some(token_id1.clone()),
@@ -762,7 +853,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(vec![token_id2.clone()], tokens.tokens);
 
     // demeter gives random full (operator) power over her tokens
-    let approve_all_msg = ExecuteMsg::ApproveAll {
+    let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
         operator: String::from("random"),
         expires: None,
     };
@@ -780,7 +871,7 @@ fn test_approve_all_revoke_all() {
 
     // random can now transfer
     let random = mock_info("random", &[]);
-    let transfer_msg = ExecuteMsg::TransferNft {
+    let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: String::from("person"),
         token_id: token_id1,
     };
@@ -796,7 +887,7 @@ fn test_approve_all_revoke_all() {
     };
     let msg: CosmosMsg = CosmosMsg::Wasm(inner_msg);
 
-    let send_msg = ExecuteMsg::SendNft {
+    let send_msg = Cw721ExecuteMsg::SendNft {
         contract: String::from("another_contract"),
         token_id: token_id2,
         msg: to_json_binary(&msg).unwrap(),
@@ -806,7 +897,7 @@ fn test_approve_all_revoke_all() {
         .unwrap();
 
     // Approve_all, revoke_all, and check for empty, to test revoke_all
-    let approve_all_msg = ExecuteMsg::ApproveAll {
+    let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
         operator: String::from("operator"),
         expires: None,
     };
@@ -818,7 +909,8 @@ fn test_approve_all_revoke_all() {
 
     // query for operator should return approval
     let res = contract
-        .operator(
+        .base_contract
+        .query_operator(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -830,14 +922,14 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorResponse {
             approval: Approval {
-                spender: String::from("operator"),
+                spender: Addr::unchecked("operator"),
                 expires: Expiration::Never {}
             }
         }
     );
 
     // query for other should throw error
-    let res = contract.operator(
+    let res = contract.base_contract.query_operator(
         deps.as_ref(),
         mock_env(),
         String::from("person"),
@@ -850,7 +942,8 @@ fn test_approve_all_revoke_all() {
     }
 
     let res = contract
-        .operators(
+        .base_contract
+        .query_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -863,7 +956,7 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![cw721::Approval {
-                spender: String::from("operator"),
+                spender: Addr::unchecked("operator"),
                 expires: Expiration::Never {}
             }]
         }
@@ -871,7 +964,7 @@ fn test_approve_all_revoke_all() {
 
     // second approval
     let buddy_expires = Expiration::AtHeight(1234567);
-    let approve_all_msg = ExecuteMsg::ApproveAll {
+    let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
         operator: String::from("buddy"),
         expires: Some(buddy_expires),
     };
@@ -882,7 +975,8 @@ fn test_approve_all_revoke_all() {
 
     // and paginate queries
     let res = contract
-        .operators(
+        .base_contract
+        .query_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -895,13 +989,14 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![cw721::Approval {
-                spender: String::from("buddy"),
+                spender: Addr::unchecked("buddy"),
                 expires: buddy_expires,
             }]
         }
     );
     let res = contract
-        .operators(
+        .base_contract
+        .query_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -914,13 +1009,13 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![cw721::Approval {
-                spender: String::from("operator"),
+                spender: Addr::unchecked("operator"),
                 expires: Expiration::Never {}
             }]
         }
     );
 
-    let revoke_all_msg = ExecuteMsg::RevokeAll {
+    let revoke_all_msg = Cw721ExecuteMsg::RevokeAll {
         operator: String::from("operator"),
     };
     contract
@@ -928,7 +1023,7 @@ fn test_approve_all_revoke_all() {
         .unwrap();
 
     // query for operator should return error
-    let res = contract.operator(
+    let res = contract.base_contract.query_operator(
         deps.as_ref(),
         mock_env(),
         String::from("person"),
@@ -942,7 +1037,8 @@ fn test_approve_all_revoke_all() {
 
     // Approvals are removed / cleared without affecting others
     let res = contract
-        .operators(
+        .base_contract
+        .query_operators(
             deps.as_ref(),
             mock_env(),
             String::from("person"),
@@ -955,7 +1051,7 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![cw721::Approval {
-                spender: String::from("buddy"),
+                spender: Addr::unchecked("buddy"),
                 expires: buddy_expires,
             }]
         }
@@ -965,7 +1061,8 @@ fn test_approve_all_revoke_all() {
     let mut late_env = mock_env();
     late_env.block.height = 1234568; //expired
     let res = contract
-        .operators(
+        .base_contract
+        .query_operators(
             deps.as_ref(),
             late_env.clone(),
             String::from("person"),
@@ -977,7 +1074,7 @@ fn test_approve_all_revoke_all() {
     assert_eq!(0, res.operators.len());
 
     // query operator should also return error
-    let res = contract.operator(
+    let res = contract.base_contract.query_operator(
         deps.as_ref(),
         late_env,
         String::from("person"),
@@ -995,7 +1092,7 @@ fn test_approve_all_revoke_all() {
 fn test_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
@@ -1004,7 +1101,7 @@ fn test_tokens_by_owner() {
     let ceres = String::from("ceres");
     let token_id3 = "sing".to_string();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
         owner: demeter.clone(),
         token_uri: None,
@@ -1014,7 +1111,7 @@ fn test_tokens_by_owner() {
         .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg)
         .unwrap();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id2.clone(),
         owner: ceres.clone(),
         token_uri: None,
@@ -1024,7 +1121,7 @@ fn test_tokens_by_owner() {
         .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg)
         .unwrap();
 
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id3.clone(),
         owner: demeter.clone(),
         token_uri: None,
@@ -1037,16 +1134,16 @@ fn test_tokens_by_owner() {
     // get all tokens in order:
     let expected = vec![token_id1.clone(), token_id2.clone(), token_id3.clone()];
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, None, false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, None, false)
         .unwrap();
     assert_eq!(&expected, &tokens.tokens);
     // paginate
     let tokens = contract
-        .all_tokens(deps.as_ref(), mock_env(), None, Some(2), false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), mock_env(), None, Some(2), false)
         .unwrap();
     assert_eq!(&expected[..2], &tokens.tokens[..]);
     let tokens = contract
-        .all_tokens(
+        .query_all_tokens_include_expired_nft(
             deps.as_ref(),
             mock_env(),
             Some(expected[1].clone()),
@@ -1061,7 +1158,7 @@ fn test_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .tokens(
+        .query_tokens_include_expired_nft(
             deps.as_ref(),
             mock_env(),
             demeter.clone(),
@@ -1072,13 +1169,13 @@ fn test_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
-        .tokens(deps.as_ref(), mock_env(), ceres, None, None, false)
+        .query_tokens_include_expired_nft(deps.as_ref(), mock_env(), ceres, None, None, false)
         .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .tokens(
+        .query_tokens_include_expired_nft(
             deps.as_ref(),
             mock_env(),
             demeter.clone(),
@@ -1089,7 +1186,7 @@ fn test_tokens_by_owner() {
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
-        .tokens(
+        .query_tokens_include_expired_nft(
             deps.as_ref(),
             mock_env(),
             demeter,
@@ -1105,13 +1202,13 @@ fn test_tokens_by_owner() {
 fn test_nft_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner,
         token_uri: None,
@@ -1123,7 +1220,7 @@ fn test_nft_info() {
 
     // assert valid nft is returned
     contract
-        .nft_info(deps.as_ref(), env.clone(), token_id.clone(), false)
+        .query_nft_info_include_expired_nft(deps.as_ref(), env.clone(), token_id.clone(), false)
         .unwrap();
 
     // assert invalid nft throws error
@@ -1131,7 +1228,7 @@ fn test_nft_info() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .nft_info(deps.as_ref(), env, token_id.clone(), false)
+        .query_nft_info_include_expired_nft(deps.as_ref(), env, token_id.clone(), false)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1147,13 +1244,13 @@ fn test_nft_info() {
 fn test_all_nft_info() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner,
         token_uri: None,
@@ -1165,7 +1262,13 @@ fn test_all_nft_info() {
 
     // assert valid nft is returned
     contract
-        .all_nft_info(deps.as_ref(), env.clone(), token_id.clone(), false, false)
+        .query_all_nft_info_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            token_id.clone(),
+            false,
+            false,
+        )
         .unwrap();
 
     // assert invalid nft throws error
@@ -1173,7 +1276,7 @@ fn test_all_nft_info() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .all_nft_info(deps.as_ref(), env, token_id.clone(), false, false)
+        .query_all_nft_info_include_expired_nft(deps.as_ref(), env, token_id.clone(), false, false)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1189,13 +1292,13 @@ fn test_all_nft_info() {
 fn test_owner_of() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner,
         token_uri: None,
@@ -1207,7 +1310,13 @@ fn test_owner_of() {
 
     // assert valid nft is returned
     contract
-        .owner_of(deps.as_ref(), env.clone(), token_id.clone(), false, false)
+        .query_owner_of_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            token_id.clone(),
+            false,
+            false,
+        )
         .unwrap();
 
     // assert invalid nft throws error
@@ -1215,7 +1324,7 @@ fn test_owner_of() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .owner_of(deps.as_ref(), env, token_id.clone(), false, false)
+        .query_owner_of_include_expired_nft(deps.as_ref(), env, token_id.clone(), false, false)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1231,13 +1340,13 @@ fn test_owner_of() {
 fn test_approval() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: owner.clone(),
         token_uri: None,
@@ -1249,7 +1358,7 @@ fn test_approval() {
 
     // assert valid nft is returned
     contract
-        .approval(
+        .query_approval_include_expired_nft(
             deps.as_ref(),
             env.clone(),
             token_id.clone(),
@@ -1264,7 +1373,14 @@ fn test_approval() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .approval(deps.as_ref(), env, token_id.clone(), owner, false, false)
+        .query_approval_include_expired_nft(
+            deps.as_ref(),
+            env,
+            token_id.clone(),
+            owner,
+            false,
+            false,
+        )
         .unwrap_err();
     assert_eq!(
         error,
@@ -1280,13 +1396,13 @@ fn test_approval() {
 fn test_approvals() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner,
         token_uri: None,
@@ -1298,7 +1414,13 @@ fn test_approvals() {
 
     // assert valid nft is returned
     contract
-        .approvals(deps.as_ref(), env.clone(), token_id.clone(), false, false)
+        .query_approvals_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            token_id.clone(),
+            false,
+            false,
+        )
         .unwrap();
 
     // assert invalid nft throws error
@@ -1306,7 +1428,7 @@ fn test_approvals() {
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let error = contract
-        .approvals(deps.as_ref(), env, token_id.clone(), false, false)
+        .query_approvals_include_expired_nft(deps.as_ref(), env, token_id.clone(), false, false)
         .unwrap_err();
     assert_eq!(
         error,
@@ -1322,13 +1444,13 @@ fn test_approvals() {
 fn test_tokens() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: owner.clone(),
         token_uri: None,
@@ -1340,20 +1462,34 @@ fn test_tokens() {
 
     // assert valid nft is returned
     contract
-        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .query_tokens_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            owner.clone(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
 
     // assert invalid nft is not returned
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner.clone(), None, None, false)
+        .query_tokens_include_expired_nft(
+            deps.as_ref(),
+            env.clone(),
+            owner.clone(),
+            None,
+            None,
+            false,
+        )
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
     // assert invalid nft is returned
     let tokens = contract
-        .tokens(deps.as_ref(), env, owner, None, None, true)
+        .query_tokens_include_expired_nft(deps.as_ref(), env, owner, None, None, true)
         .unwrap();
     assert_eq!(
         tokens,
@@ -1367,13 +1503,13 @@ fn test_tokens() {
 fn test_all_tokens() {
     let mut deps = mock_dependencies();
     let contract = setup_contract(deps.as_mut(), 1);
-    let minter = mock_info(MINTER, &[]);
+    let minter = mock_info(MINTER_ADDR, &[]);
 
     let token_id = "grow1".to_string();
     let owner = String::from("ark");
 
     let mut env = mock_env();
-    let mint_msg = ExecuteMsg::Mint {
+    let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
         owner: owner.clone(),
         token_uri: None,
@@ -1385,20 +1521,20 @@ fn test_all_tokens() {
 
     // assert valid nft is returned
     contract
-        .all_tokens(deps.as_ref(), env.clone(), None, None, false)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), env.clone(), None, None, false)
         .unwrap();
 
     // assert invalid nft is not returned
     let expiration = env.block.time.plus_days(1);
     env.block.time = expiration;
     let tokens = contract
-        .tokens(deps.as_ref(), env.clone(), owner, None, None, false)
+        .query_tokens_include_expired_nft(deps.as_ref(), env.clone(), owner, None, None, false)
         .unwrap();
     assert_eq!(tokens, TokensResponse { tokens: vec![] });
 
     // assert invalid nft is returned
     let tokens = contract
-        .all_tokens(deps.as_ref(), env, None, None, true)
+        .query_all_tokens_include_expired_nft(deps.as_ref(), env, None, None, true)
         .unwrap();
     assert_eq!(
         tokens,

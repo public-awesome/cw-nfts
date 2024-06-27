@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cw721::Cw721ReceiveMsg;
+use cw721::receiver::Cw721ReceiveMsg;
 
 #[cw_serde]
 pub struct InstantiateMsg {}
