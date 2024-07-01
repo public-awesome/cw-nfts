@@ -54,7 +54,7 @@
           ],
           "properties": {
             "collection_info": {
-              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionExtensionResponse_for_RoyaltyInfo"
+              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionExtension_for_RoyaltyInfo"
             }
           },
           "additionalProperties": false
@@ -497,7 +497,7 @@
         }
       }
     },
-    "CollectionExtensionResponse_for_RoyaltyInfo": {
+    "CollectionExtension_for_RoyaltyInfo": {
       "type": "object",
       "required": [
         "description",
@@ -545,13 +545,13 @@
       },
       "additionalProperties": false
     },
-    "CollectionInfoMsg_for_Nullable_CollectionExtensionResponse_for_RoyaltyInfo": {
+    "CollectionInfoMsg_for_Nullable_CollectionExtension_for_RoyaltyInfo": {
       "type": "object",
       "properties": {
         "extension": {
           "anyOf": [
             {
-              "$ref": "#/definitions/CollectionExtensionResponse_for_RoyaltyInfo"
+              "$ref": "#/definitions/CollectionExtension_for_RoyaltyInfo"
             },
             {
               "type": "null"
