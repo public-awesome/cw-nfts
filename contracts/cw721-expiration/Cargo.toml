@@ -25,11 +25,11 @@ cosmwasm-std    = { workspace = true }
 cw-ownable      = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2             = { workspace = true }
-cw721             = { workspace = true }
+cw721           = { workspace = true }
 cw721-base      = { workspace = true, features = ["library"] }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }
 
 [dev-dependencies]
-cw-multi-test   = { workspace = true }
+cw-multi-test   = { workspace = true, features = ["cosmwasm_1_2"] }
