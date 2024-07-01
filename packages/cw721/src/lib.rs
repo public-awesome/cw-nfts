@@ -9,13 +9,13 @@ pub mod traits;
 
 pub use cw_utils::Expiration;
 use msg::{
-    CollectionExtensionMsg, CollectionExtensionResponse, CollectionInfoAndExtensionResponse,
-    NftExtensionMsg, RoyaltyInfoResponse,
+    CollectionExtensionMsg, CollectionInfoAndExtensionResponse, NftExtensionMsg,
+    RoyaltyInfoResponse,
 };
-pub use state::{Approval, Attribute, NftExtension, RoyaltyInfo};
+pub use state::{Approval, Attribute, CollectionExtension, NftExtension, RoyaltyInfo};
 
 /// Default CollectionExtension using `Option<CollectionExtension<RoyaltyInfo>>`
-pub type DefaultOptionalCollectionExtension = Option<CollectionExtensionResponse<RoyaltyInfo>>;
+pub type DefaultOptionalCollectionExtension = Option<CollectionExtension<RoyaltyInfo>>;
 pub type DefaultOptionalCollectionExtensionMsg =
     Option<CollectionExtensionMsg<RoyaltyInfoResponse>>;
 /// Default NftExtension using `Option<NftExtension>`.

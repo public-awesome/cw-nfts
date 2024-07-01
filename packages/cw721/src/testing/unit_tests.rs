@@ -10,9 +10,8 @@ use crate::{
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
-    CollectionExtensionResponse, DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension,
-    DefaultOptionalNftExtensionMsg, RoyaltyInfo,
+    CollectionExtension, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, RoyaltyInfo,
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
@@ -295,7 +294,7 @@ fn test_instantiation_with_collection_info() {
         let mut deps = mock_dependencies();
 
         let info_creator = mock_info(CREATOR_ADDR, &[]);
-        let extension = Some(CollectionExtensionResponse {
+        let extension = Some(CollectionExtension {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
@@ -604,7 +603,7 @@ fn test_collection_info_update() {
         let mut deps = mock_dependencies();
         let env = mock_env();
         let info_creator = mock_info(CREATOR_ADDR, &[]);
-        let expected_instantiated_extension = Some(CollectionExtensionResponse {
+        let expected_instantiated_extension = Some(CollectionExtension {
             description: "description".into(),
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
@@ -738,7 +737,7 @@ fn test_collection_info_update() {
         assert_eq!(collection_info.symbol, "new_collection_symbol");
         assert_eq!(
             collection_info.extension,
-            Some(CollectionExtensionResponse {
+            Some(CollectionExtension {
                 description: "new_description".into(),
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),
@@ -795,7 +794,7 @@ fn test_collection_info_update() {
         assert_eq!(collection_info.symbol, "new_collection_symbol");
         assert_eq!(
             collection_info.extension,
-            Some(CollectionExtensionResponse {
+            Some(CollectionExtension {
                 description: "new_description".into(),
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),

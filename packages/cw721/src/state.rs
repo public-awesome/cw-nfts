@@ -241,6 +241,18 @@ impl FromAttributesState for Empty {
     }
 }
 
+#[cw_serde]
+pub struct CollectionExtension<TRoyaltyInfo> {
+    pub description: String,
+    pub image: String,
+    pub external_link: Option<String>,
+    pub explicit_content: Option<bool>,
+    pub start_trading_time: Option<Timestamp>,
+    pub royalty_info: Option<TRoyaltyInfo>,
+}
+
+impl Cw721State for CollectionExtension<RoyaltyInfo> {}
+
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
 #[derive(Default)]

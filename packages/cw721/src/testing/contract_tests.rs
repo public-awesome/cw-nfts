@@ -18,7 +18,7 @@ use crate::{
     Approval, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, Expiration,
 };
-use crate::{CollectionExtensionResponse, CollectionInfoAndExtensionResponse, RoyaltyInfo};
+use crate::{CollectionExtension, CollectionInfoAndExtensionResponse, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
@@ -201,7 +201,7 @@ fn test_instantiate_with_collection_info_and_extension() {
     let info = contract
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
-    let collection_info_extension_expected = Some(CollectionExtensionResponse {
+    let collection_info_extension_expected = Some(CollectionExtension {
         description: "description".to_string(),
         image: "https://moonphases.org".to_string(),
         explicit_content: Some(true),
@@ -292,7 +292,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
     let info = contract
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
-    let collection_info_extension_expected = Some(CollectionExtensionResponse {
+    let collection_info_extension_expected = Some(CollectionExtension {
         description: "description".to_string(),
         image: "https://moonphases.org".to_string(),
         explicit_content: None,

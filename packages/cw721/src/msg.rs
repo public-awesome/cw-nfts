@@ -13,7 +13,7 @@ use url::Url;
 use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
-    Attribute, CollectionExtensionAttributes, CollectionInfo, NftInfo, Trait,
+    Attribute, CollectionExtension, CollectionExtensionAttributes, CollectionInfo, NftInfo, Trait,
     ATTRIBUTE_DESCRIPTION, ATTRIBUTE_EXPLICIT_CONTENT, ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE,
     ATTRIBUTE_ROYALTY_INFO, ATTRIBUTE_START_TRADING_TIME, CREATOR,
     MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
@@ -380,7 +380,7 @@ impl<TRoyaltyInfoResponse> Cw721CustomMsg for CollectionExtensionMsg<TRoyaltyInf
 {
 }
 
-impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
+impl StateFactory<CollectionExtension<RoyaltyInfo>>
     for CollectionExtensionMsg<RoyaltyInfoResponse>
 {
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
@@ -389,8 +389,8 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
         deps: Option<Deps>,
         env: Option<&Env>,
         info: Option<&MessageInfo>,
-        current: Option<&CollectionExtensionResponse<RoyaltyInfo>>,
-    ) -> Result<CollectionExtensionResponse<RoyaltyInfo>, Cw721ContractError> {
+        current: Option<&CollectionExtension<RoyaltyInfo>>,
+    ) -> Result<CollectionExtension<RoyaltyInfo>, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
         match current {
             // Some: update existing metadata
@@ -439,7 +439,7 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
                     // current royalty is none and new royalty is none
                     None => None,
                 };
-                let new = CollectionExtensionResponse {
+                let new = CollectionExtension {
                     description: self.description.clone().unwrap_or_default(),
                     image: self.image.clone().unwrap_or_default(),
                     external_link: self.external_link.clone(),
@@ -458,7 +458,7 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
         deps: Option<Deps>,
         _env: Option<&Env>,
         info: Option<&MessageInfo>,
-        _current: Option<&CollectionExtensionResponse<RoyaltyInfo>>,
+        _current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
         let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let sender = info.map(|i| i.sender.clone());
@@ -697,19 +697,7 @@ where
     }
 }
 
-#[cw_serde]
-pub struct CollectionExtensionResponse<TRoyaltyInfo> {
-    pub description: String,
-    pub image: String,
-    pub external_link: Option<String>,
-    pub explicit_content: Option<bool>,
-    pub start_trading_time: Option<Timestamp>,
-    pub royalty_info: Option<TRoyaltyInfo>,
-}
-
-impl Cw721State for CollectionExtensionResponse<RoyaltyInfo> {}
-
-impl<TRoyaltyInfo> ToAttributesState for CollectionExtensionResponse<TRoyaltyInfo>
+impl<TRoyaltyInfo> ToAttributesState for CollectionExtension<TRoyaltyInfo>
 where
     TRoyaltyInfo: Serialize,
 {
@@ -744,7 +732,7 @@ where
     }
 }
 
-impl<TRoyaltyInfo> FromAttributesState for CollectionExtensionResponse<TRoyaltyInfo>
+impl<TRoyaltyInfo> FromAttributesState for CollectionExtension<TRoyaltyInfo>
 where
     TRoyaltyInfo: ToAttributesState + FromAttributesState,
 {
@@ -786,7 +774,7 @@ where
         } else {
             None
         };
-        Ok(CollectionExtensionResponse {
+        Ok(CollectionExtension {
             description,
             image,
             external_link,

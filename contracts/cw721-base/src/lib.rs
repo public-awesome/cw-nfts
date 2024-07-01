@@ -27,57 +27,23 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 )]
 pub type Extension = DefaultOptionalNftExtension;
 
-/// `cw721-base` contains nft and collection extension explicitly defining `NftExtension` for metadata on chain for ease of use.
-/// There are 2 possibiities for using metadata on chain:
+/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing handle contract with:
+/// - no extensions: `TNftExtension: Empty` and `TCollectionExtension: Empty`
+/// - opionated `DefaultOptionalNftExtension` and `DefaultOptionalCollectionExtension`.
+///   - `DefaultOptionalNftExtension`: either with nft metadata (`Some<NftExtension>`) or none `None`.
+///   - `DefaultOptionalCollectionExtension`: either with collection metadata (`Some<CollectionExtension>`) or none `None`.
 ///
-/// cw721-metadata-onchain:
-///
-/// ```rust
-/// // instantiate:
-/// let contract = Cw721MetadataContract::default();
-/// let info = mock_info(CREATOR, &[]);
-/// let init_msg = Cw721InstantiateMsg {
-///     name: "SpaceShips".to_string(),
-///     symbol: "SPACE".to_string(),
-///     collection_info_extension: None,
-///     minter: None,
-///     creator: None,
-///     withdraw_address: None,
-/// };
-/// // ...
-/// // mint:
-/// let token_id = "Enterprise";
-/// let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-/// let extension = Some(NftExtensionMsg {
-///     description: Some("description1".into()),
-///     name: Some("name1".to_string()),
-///     attributes: Some(vec![Trait {
-///         display_type: None,
-///         trait_type: "type1".to_string(),
-///         value: "value1".to_string(),
-///     }]),
-///     ..NftExtensionMsg::default()
-/// });
-/// let exec_msg = ExecuteMsg::Mint {
-///     token_id: token_id.to_string(),
-///     owner: "john".to_string(),
-///     token_uri: token_uri.clone(),
-///     extension: extension.clone(),
-/// };
-/// // ...
-/// ```
-///
-/// cw721-base with metadata onchain:
+/// Example:
 /// ```rust
 /// // instantiate:
 /// let contract = Cw721Contract::<
-///     DefaultOptionalNftExtension, // use `Option<Empty>` for no nft metadata
-///     DefaultOptionalNftExtensionMsg, // use `Option<Empty>` for no nft metadata
-///     DefaultOptionalCollectionExtension, // use `Option<Empty>` for no collection metadata
-///     DefaultOptionalCollectionExtensionMsg, // use `Option<Empty>` for no collection metadata
-///     Empty,
-///     Empty,
-///     Empty,
+///     DefaultOptionalNftExtension, // use `Option<Empty>` or `Empty` for no nft metadata
+///     DefaultOptionalNftExtensionMsg, // use `Option<Empty>` or `Empty` for no nft metadata
+///     DefaultOptionalCollectionExtension, // use `Option<Empty>` or `Empty` for no collection metadata
+///     DefaultOptionalCollectionExtensionMsg, // use `Option<Empty>` or `Empty` for no collection metadata
+///     Empty, // no custom extension msg
+///     Empty, // no custom query msg
+///     Empty, // no custom response msg
 /// >::default();
 /// let info = mock_info(CREATOR, &[]);
 /// let init_msg = Cw721InstantiateMsg {
