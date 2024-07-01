@@ -3,7 +3,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cw_ownable::Ownership;
 
-// expose to all others using contract, so others dont need to import cw721
+// expose so other libs dont need to import cw721-base
 pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
 
 #[cw_serde]

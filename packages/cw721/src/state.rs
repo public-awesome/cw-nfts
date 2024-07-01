@@ -286,6 +286,12 @@ impl From<NftExtensionMsg> for NftExtension {
     }
 }
 
+impl Contains for Empty {
+    fn contains(&self, _other: &Empty) -> bool {
+        true
+    }
+}
+
 impl Contains for NftExtension {
     fn contains(&self, other: &NftExtension) -> bool {
         fn is_equal(a: &Option<String>, b: &Option<String>) -> bool {

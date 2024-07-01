@@ -1,9 +1,21 @@
-use cosmwasm_std::CustomMsg;
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721::query::*;
-use cw721::traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
+use cosmwasm_std::{CustomMsg, Empty};
 
-use crate::Cw721Contract;
+// expose so other libs dont need to import cw721
+pub use cw721::query::*;
+
+use cw721::{
+    traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState},
+    DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
+};
+
+use crate::{Cw721Contract, DefaultCw721Contract, EmptyCw721Contract};
+
+impl<'a> Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
+    for DefaultCw721Contract<'a>
+{
+}
+
+impl<'a> Cw721Query<Empty, Empty, Empty> for EmptyCw721Contract<'a> {}
 
 impl<
         'a,

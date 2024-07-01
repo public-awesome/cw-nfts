@@ -1,24 +1,21 @@
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg,
 };
 
 use cw721_base::error::Cw721ContractError;
+use cw721_base::msg::CollectionInfoAndExtensionResponse;
 use cw721_base::msg::{
     ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
     OwnerOfResponse, TokensResponse,
 };
 use cw721_base::receiver::Cw721ReceiveMsg;
 use cw721_base::state::{CREATOR, MINTER};
-use cw721_base::{
-    msg::CollectionInfoAndExtensionResponse, DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg,
-};
 use cw721_base::{traits::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
-use crate::state::Cw721ExpirationContract;
+use crate::state::DefaultCw721ExpirationContract;
 use crate::{
     error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionalNftExtension,
 };
@@ -31,25 +28,8 @@ const SYMBOL: &str = "MGK";
 fn setup_contract(
     deps: DepsMut<'_>,
     expiration_days: u16,
-) -> Cw721ExpirationContract<
-    'static,
-    DefaultOptionalNftExtension,
-    DefaultOptionalNftExtensionMsg,
-    DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg,
-    Empty,
-    Empty,
-    Empty,
-> {
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+) -> DefaultCw721ExpirationContract<'static> {
+    let contract = DefaultCw721ExpirationContract::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
@@ -68,15 +48,7 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = DefaultCw721ExpirationContract::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
@@ -139,15 +111,7 @@ fn proper_instantiation() {
 #[test]
 fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
-    let contract = Cw721ExpirationContract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = DefaultCw721ExpirationContract::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,

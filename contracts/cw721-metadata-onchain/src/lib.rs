@@ -96,16 +96,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// };
 /// //...
 /// ```
-pub type Cw721MetadataContract<'a> = cw721_base::Cw721Contract<
-    'a,
-    DefaultOptionalNftExtension,
-    DefaultOptionalNftExtensionMsg,
-    DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg,
-    Empty,
-    Empty,
-    Empty,
->;
+pub type Cw721MetadataContract<'a> = cw721_base::state::DefaultCw721Contract<'a>;
 pub type InstantiateMsg = cw721_base::msg::InstantiateMsg<DefaultOptionalCollectionExtensionMsg>;
 pub type ExecuteMsg = cw721_base::msg::ExecuteMsg<
     DefaultOptionalNftExtensionMsg,

@@ -1,13 +1,9 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::{
-    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
-};
-pub use cw721_base::{
-    entry::{execute as _execute, query as _query},
-    Cw721Contract,
-};
+use cw721_base::state::DefaultCw721Contract;
+pub use cw721_base::Cw721Contract;
+
+use cw721_base::entry::{execute as _execute, query as _query};
 
 pub mod msg;
 pub mod query;
@@ -17,16 +13,7 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> = Cw721Contract<
-    'a,
-    DefaultOptionalNftExtension,
-    DefaultOptionalNftExtensionMsg,
-    DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg,
-    Empty,
-    Empty,
-    Empty,
->;
+pub type Cw721NonTransferableContract<'a> = DefaultCw721Contract<'a>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {

@@ -1,5 +1,9 @@
 use cosmwasm_std::Timestamp;
-use cw721_base::error::Cw721ContractError;
+
+// expose so other libs dont need to import cw721-base
+#[allow(unused_imports)]
+pub use cw721_base::error::*;
+
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
