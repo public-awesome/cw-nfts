@@ -12,10 +12,7 @@ pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Empty};
-pub use cw721_base::{
-    entry::{execute as _execute, query as _query},
-    Cw721Contract,
-};
+pub use cw721_base::entry::{execute as _execute, query as _query};
 
 use crate::error::ContractError;
 

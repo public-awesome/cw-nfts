@@ -1,6 +1,6 @@
 [package]
-name          = "cw721-base"
-description   = "Basic implementation cw721 NFTs"
+name          = "cw721-metadata-onchain"
+description   = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
 authors       = [
   "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
@@ -27,9 +27,8 @@ library = []
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
-cw-ownable      = { workspace = true }
 cw2             = { workspace = true }
 cw721           = { workspace = true }
+cw721-base      = { workspace = true, features = ["library"] }
+schemars        = { workspace = true }
 serde           = { workspace = true }
-
-[dev-dependencies]
