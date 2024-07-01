@@ -1,7 +1,7 @@
 mod contract_tests;
 mod execute;
 mod query;
-mod state;
+pub mod state;
 
 pub use crate::state::Cw1155Contract;
 use cosmwasm_std::Empty;
