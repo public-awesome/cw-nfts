@@ -8,7 +8,7 @@ license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
 homepage      = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
-rust-version  = "1.79"
+rust-version  = "1.78"
 
 [workspace.dependencies]
 cosmwasm-schema = "^1.5"
@@ -37,6 +37,10 @@ url             = "^2.5"
 codegen-units = 1
 incremental   = false
 
+[profile.release.package.cw721-expiration]
+codegen-units = 1
+incremental   = false
+
 [profile.release.package.cw721-metadata-onchain]
 codegen-units = 1
 incremental   = false
@@ -49,7 +53,11 @@ incremental   = false
 codegen-units = 1
 incremental   = false
 
-[profile.release.package.cw721-receiver]
+[profile.release.package.cw721-receiver-tester]
+codegen-units = 1
+incremental   = false
+
+[profile.release.package.cw2981-royalties]
 codegen-units = 1
 incremental   = false
 
