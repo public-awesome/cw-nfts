@@ -29,4 +29,4 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true, features = ["cosmwasm_1_2"] }
-cw721-base = { workspace = true, features = ["library"] }
+cw721-base = { workspace = true }
