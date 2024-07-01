@@ -67,18 +67,6 @@ pub enum Cw721ContractError {
     #[error("InvalidRoyalties: {0}")]
     InvalidRoyalties(String),
 
-    #[error("Image data in metadata must not be empty")]
-    MetadataImageDataEmpty {},
-
-    #[error("Description in metadata must not be empty")]
-    MetadataDescriptionEmpty {},
-
-    #[error("Name in metadata must not be empty")]
-    MetadataNameEmpty {},
-
-    #[error("Background color in metadata must not be empty")]
-    MetadataBackgroundColorEmpty {},
-
     #[error("Trait type in metadata must not be empty")]
     TraitTypeEmpty {},
 

@@ -1821,129 +1821,209 @@ fn test_update_nft_metadata() {
         Cw721ContractError::ParseError(ParseError::RelativeUrlWithoutBase)
     );
 
-    // invalid image data (empty)
-    let err: Cw721ContractError = app
-        .execute_contract(
-            creator.clone(),
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-            >::UpdateNftInfo {
-                token_id: "1".to_string(),
-                token_uri: None,
-                extension: Some(NftExtensionMsg {
-                    name: None,
-                    description: None,
-                    image: None,
-                    image_data: Some("".to_string()),
-                    external_url: None,
-                    attributes: None,
-                    background_color: None,
-                    animation_url: None,
-                    youtube_url: None,
-                }),
-            },
-            &[],
-        )
-        .unwrap_err()
-        .downcast()
-        .unwrap();
-    assert_eq!(err, Cw721ContractError::MetadataImageDataEmpty {});
+    // no image data (empty)
+    app.execute_contract(
+        creator.clone(),
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::UpdateNftInfo {
+            token_id: "1".to_string(),
+            token_uri: None,
+            extension: Some(NftExtensionMsg {
+                name: None,
+                description: None,
+                image: None,
+                image_data: Some("".to_string()),
+                external_url: None,
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
+        },
+        &[],
+    )
+    .unwrap();
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: None,
+            external_url: Some("https://github.com".to_string()),
+            description: Some("description".to_string()),
+            name: Some("name".to_string()),
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: Some("background_color".to_string()),
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
 
-    // invalid description (empty)
-    let err: Cw721ContractError = app
-        .execute_contract(
-            creator.clone(),
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-            >::UpdateNftInfo {
-                token_id: "1".to_string(),
-                token_uri: None,
-                extension: Some(NftExtensionMsg {
-                    name: None,
-                    description: Some("".to_string()),
-                    image: None,
-                    image_data: None,
-                    external_url: None,
-                    attributes: None,
-                    background_color: None,
-                    animation_url: None,
-                    youtube_url: None,
-                }),
-            },
-            &[],
-        )
-        .unwrap_err()
-        .downcast()
-        .unwrap();
-    assert_eq!(err, Cw721ContractError::MetadataDescriptionEmpty {});
+    // no description (empty)
+    app.execute_contract(
+        creator.clone(),
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::UpdateNftInfo {
+            token_id: "1".to_string(),
+            token_uri: None,
+            extension: Some(NftExtensionMsg {
+                name: None,
+                description: Some("".to_string()),
+                image: None,
+                image_data: None,
+                external_url: None,
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
+        },
+        &[],
+    )
+    .unwrap();
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: None,
+            external_url: Some("https://github.com".to_string()),
+            description: None,
+            name: Some("name".to_string()),
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: Some("background_color".to_string()),
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
 
-    // invalid metadata name (empty)
-    let err: Cw721ContractError = app
-        .execute_contract(
-            creator.clone(),
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-            >::UpdateNftInfo {
-                token_id: "1".to_string(),
-                token_uri: None,
-                extension: Some(NftExtensionMsg {
-                    name: Some("".to_string()),
-                    description: None,
-                    image: None,
-                    image_data: None,
-                    external_url: None,
-                    attributes: None,
-                    background_color: None,
-                    animation_url: None,
-                    youtube_url: None,
-                }),
-            },
-            &[],
-        )
-        .unwrap_err()
-        .downcast()
-        .unwrap();
-    assert_eq!(err, Cw721ContractError::MetadataNameEmpty {});
+    // no metadata name (empty)
+    app.execute_contract(
+        creator.clone(),
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::UpdateNftInfo {
+            token_id: "1".to_string(),
+            token_uri: None,
+            extension: Some(NftExtensionMsg {
+                name: Some("".to_string()),
+                description: None,
+                image: None,
+                image_data: None,
+                external_url: None,
+                attributes: None,
+                background_color: None,
+                animation_url: None,
+                youtube_url: None,
+            }),
+        },
+        &[],
+    )
+    .unwrap();
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: None,
+            external_url: Some("https://github.com".to_string()),
+            description: None,
+            name: None,
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: Some("background_color".to_string()),
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
 
-    // invalid background color (empty)
-    let err: Cw721ContractError = app
-        .execute_contract(
-            creator.clone(),
-            cw721.clone(),
-            &Cw721ExecuteMsg::<
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-            >::UpdateNftInfo {
-                token_id: "1".to_string(),
-                token_uri: None,
-                extension: Some(NftExtensionMsg {
-                    name: None,
-                    description: None,
-                    image: None,
-                    image_data: None,
-                    external_url: None,
-                    attributes: None,
-                    background_color: Some("".to_string()),
-                    animation_url: None,
-                    youtube_url: None,
-                }),
-            },
-            &[],
-        )
-        .unwrap_err()
-        .downcast()
-        .unwrap();
-    assert_eq!(err, Cw721ContractError::MetadataBackgroundColorEmpty {});
+    // no background color (empty)
+    app.execute_contract(
+        creator.clone(),
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::UpdateNftInfo {
+            token_id: "1".to_string(),
+            token_uri: None,
+            extension: Some(NftExtensionMsg {
+                name: None,
+                description: None,
+                image: None,
+                image_data: None,
+                external_url: None,
+                attributes: None,
+                background_color: Some("".to_string()),
+                animation_url: None,
+                youtube_url: None,
+            }),
+        },
+        &[],
+    )
+    .unwrap();
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: None,
+            external_url: Some("https://github.com".to_string()),
+            description: None,
+            name: None,
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: None,
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
 
     // invalid trait type (empty)
     let err: Cw721ContractError = app

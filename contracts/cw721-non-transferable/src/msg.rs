@@ -53,7 +53,7 @@ pub enum QueryMsg {
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
-    GetCollectionInfo {},
+    GetCollectionInfoAndExtension {},
 
     #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
@@ -100,7 +100,9 @@ impl From<QueryMsg>
             QueryMsg::NumTokens {} => Cw721QueryMsg::NumTokens {},
             #[allow(deprecated)]
             QueryMsg::ContractInfo {} => Cw721QueryMsg::GetCollectionInfoAndExtension {},
-            QueryMsg::GetCollectionInfo {} => Cw721QueryMsg::GetCollectionInfoAndExtension {},
+            QueryMsg::GetCollectionInfoAndExtension {} => {
+                Cw721QueryMsg::GetCollectionInfoAndExtension {}
+            }
             QueryMsg::NftInfo { token_id } => Cw721QueryMsg::NftInfo { token_id },
             QueryMsg::AllNftInfo {
                 token_id,

@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Env, MessageInfo, StdResult,
-    Storage, Timestamp,
+    from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Empty, Env, MessageInfo,
+    StdResult, Storage, Timestamp,
 };
 use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
@@ -207,6 +207,12 @@ pub struct RoyaltyInfo {
 impl Cw721State for RoyaltyInfo {}
 impl Cw721CustomMsg for RoyaltyInfo {}
 
+impl ToAttributesState for Empty {
+    fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
+        Ok(vec![])
+    }
+}
+
 impl ToAttributesState for RoyaltyInfo {
     fn to_attributes_state(&self) -> Result<Vec<Attribute>, Cw721ContractError> {
         Ok(vec![Attribute {
@@ -226,6 +232,12 @@ impl FromAttributesState for RoyaltyInfo {
             })?
             .value::<RoyaltyInfo>()?;
         Ok(royalty_info)
+    }
+}
+
+impl FromAttributesState for Empty {
+    fn from_attributes_state(_attributes: &[Attribute]) -> Result<Self, Cw721ContractError> {
+        Ok(Empty {})
     }
 }
 

@@ -397,10 +397,10 @@ impl StateFactory<CollectionExtensionResponse<RoyaltyInfo>>
             Some(current) => {
                 let mut updated = current.clone();
                 if let Some(description) = &self.description {
-                    updated.description = description.clone();
+                    updated.description.clone_from(description);
                 }
                 if let Some(image) = &self.image {
-                    updated.image = image.clone();
+                    updated.image.clone_from(image)
                 }
                 if let Some(external_link) = &self.external_link {
                     updated.external_link = Some(external_link.clone());
@@ -638,10 +638,10 @@ where
             Some(current) => {
                 let mut updated = current.clone();
                 if let Some(name) = &self.name {
-                    updated.name = name.clone();
+                    updated.name.clone_from(name);
                 }
                 if let Some(symbol) = &self.symbol {
-                    updated.symbol = symbol.clone();
+                    updated.symbol.clone_from(symbol);
                 }
                 let current_extension = current.extension.clone();
                 let updated_extension =
@@ -1000,16 +1000,16 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
                     updated.image = empty_as_none(self.image.clone());
                 }
                 if self.image_data.is_some() {
-                    updated.image_data = self.image_data.clone();
+                    updated.image_data = empty_as_none(self.image_data.clone());
                 }
                 if self.external_url.is_some() {
                     updated.external_url = empty_as_none(self.external_url.clone());
                 }
                 if self.description.is_some() {
-                    updated.description = self.description.clone();
+                    updated.description = empty_as_none(self.description.clone());
                 }
                 if self.name.is_some() {
-                    updated.name = self.name.clone();
+                    updated.name = empty_as_none(self.name.clone());
                 }
                 if self.attributes.is_some() {
                     updated.attributes = match self.attributes.clone() {
@@ -1018,7 +1018,7 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
                     };
                 }
                 if self.background_color.is_some() {
-                    updated.background_color = self.background_color.clone();
+                    updated.background_color = empty_as_none(self.background_color.clone())
                 }
                 if self.animation_url.is_some() {
                     updated.animation_url = empty_as_none(self.animation_url.clone());
@@ -1084,32 +1084,12 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
         if let Some(youtube_url) = &youtube_url {
             Url::parse(youtube_url)?;
         }
-        // Strings must not be empty
-        if let Some(image_data) = &self.image_data.clone() {
-            if image_data.is_empty() {
-                return Err(Cw721ContractError::MetadataImageDataEmpty {});
-            }
-        }
-        if let Some(desc) = &self.description.clone() {
-            if desc.is_empty() {
-                return Err(Cw721ContractError::MetadataDescriptionEmpty {});
-            }
-        }
-        if let Some(name) = &self.name.clone() {
-            if name.is_empty() {
-                return Err(Cw721ContractError::MetadataNameEmpty {});
-            }
-        }
-        if let Some(background_color) = &self.background_color.clone() {
-            if background_color.is_empty() {
-                return Err(Cw721ContractError::MetadataBackgroundColorEmpty {});
-            }
-        }
+        // no need to validate simple strings: image_data, description, name, and background_color
         Ok(())
     }
 }
 
-fn empty_as_none(value: Option<String>) -> Option<String> {
+pub fn empty_as_none(value: Option<String>) -> Option<String> {
     value.filter(|v| !v.is_empty())
 }
 
