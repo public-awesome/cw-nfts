@@ -33,11 +33,11 @@
       ]
     },
     "name": {
-      "description": "Name of the collection metadata",
+      "description": "Name of the NFT contract",
       "type": "string"
     },
     "symbol": {
-      "description": "Symbol of the collection metadata",
+      "description": "Symbol of the NFT contract",
       "type": "string"
     },
     "withdraw_address": {

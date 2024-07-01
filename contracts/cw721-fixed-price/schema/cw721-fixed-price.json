@@ -47,14 +47,14 @@
         "minimum": 0.0
       },
       "name": {
-        "description": "Name of the collection metadata",
+        "description": "Name of the NFT contract",
         "type": "string"
       },
       "owner": {
         "$ref": "#/definitions/Addr"
       },
       "symbol": {
-        "description": "Symbol of the collection metadata",
+        "description": "Symbol of the NFT contract",
         "type": "string"
       },
       "token_code_id": {

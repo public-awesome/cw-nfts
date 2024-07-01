@@ -20,7 +20,7 @@
       ]
     },
     "creator": {
-      "description": "The creator is the only who can update collection metadata.",
+      "description": "The creator is the only who can update collection info.",
       "type": [
         "string",
         "null"
@@ -40,11 +40,11 @@
       ]
     },
     "name": {
-      "description": "Name of the collection metadata",
+      "description": "Name of the NFT contract",
       "type": "string"
     },
     "symbol": {
-      "description": "Symbol of the collection metadata",
+      "description": "Symbol of the NFT contract",
       "type": "string"
     },
     "withdraw_address": {
