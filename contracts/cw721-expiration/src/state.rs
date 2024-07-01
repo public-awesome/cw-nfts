@@ -1,4 +1,5 @@
 use cosmwasm_std::Timestamp;
+
 // expose so other libs dont need to import cw721-base
 pub use cw721::state::*;
 pub use cw721_base::state::*;
