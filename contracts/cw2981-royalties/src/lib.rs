@@ -53,51 +53,6 @@ pub struct MetadataWithRoyalty {
 impl Cw721State for MetadataWithRoyalty {}
 impl Cw721CustomMsg for MetadataWithRoyalty {}
 
-// impl Update<DefaultOptionMetadataExtensionWithRoyaltyMsg> for MetadataWithRoyalty {
-//     fn update(
-//         &self,
-//         msg: &DefaultOptionMetadataExtensionWithRoyaltyMsg,
-//     ) -> Result<Self, ContractError> {
-//         msg.validate()?;
-//         let mut metadata = self.clone();
-//         metadata.image = msg.image.clone().or(self.image.clone());
-//         metadata.image_data = msg.image_data.clone().or(self.image_data.clone());
-//         metadata.external_url = msg.external_url.clone().or(self.external_url.clone());
-//         metadata.description = msg.description.clone().or(self.description.clone());
-//         metadata.name = msg.name.clone().or(self.name.clone());
-//         metadata.attributes = msg.attributes.clone().or(self.attributes.clone());
-//         metadata.background_color = msg
-//             .background_color
-//             .clone()
-//             .or(self.background_color.clone());
-//         metadata.animation_url = msg.animation_url.clone().or(self.animation_url.clone());
-//         metadata.youtube_url = msg.youtube_url.clone().or(self.youtube_url.clone());
-//         Ok(metadata)
-//     }
-// }
-
-// impl Update<DefaultOptionMetadataExtensionWithRoyaltyMsg> for Option<MetadataWithRoyalty> {
-//     fn update(
-//         &self,
-//         msg: &DefaultOptionMetadataExtensionWithRoyaltyMsg,
-//     ) -> Result<Self, ContractError> {
-//         match self {
-//             Some(metadata) => Ok(Some(metadata.update(msg)?)),
-//             None => {
-//                 let metadata = msg.clone();
-//                 metadata.validate()?;
-//                 Ok(Some(metadata))
-//             }
-//         }
-//     }
-// }
-
-// impl Validate for MetadataWithRoyalty {
-//     fn validate(&self) -> Result<(), ContractError> {
-//         Ok(())
-//     }
-// }
-
 #[cfg(not(feature = "library"))]
 pub mod entry {
     use self::msg::QueryMsg;
