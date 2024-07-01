@@ -27,7 +27,7 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 )]
 pub type Extension = DefaultOptionalNftExtension;
 
-/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing handle contract with:
+/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing contract handling with:
 /// - no extensions: `TNftExtension: Empty` and `TCollectionExtension: Empty`
 /// - opionated `DefaultOptionalNftExtension` and `DefaultOptionalCollectionExtension`.
 ///   - `DefaultOptionalNftExtension`: either with nft metadata (`Some<NftExtension>`) or none `None`.

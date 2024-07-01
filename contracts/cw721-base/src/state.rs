@@ -7,7 +7,7 @@ use cw721::traits::{Cw721CustomMsg, Cw721State};
 #[deprecated(since = "0.19.0", note = "Please use `NftInfo`")]
 pub type TokenInfo<TNftExtension> = NftInfo<TNftExtension>;
 
-/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing handle contract with:
+/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing contract handling with:
 /// - no extensions: `TNftExtension: Empty` and `TCollectionExtension: Empty`
 /// - opionated `DefaultOptionalNftExtension` and `DefaultOptionalCollectionExtension`.
 ///   - `DefaultOptionalNftExtension`: either with nft metadata (`Some<NftExtension>`) or none `None`.
