@@ -1,8 +1,8 @@
 use crate::state::{Cw1155Contract, TokenInfo};
 use crate::{CONTRACT_NAME, CONTRACT_VERSION};
 use cosmwasm_std::{
-    Addr, Binary, CustomMsg, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult, Storage,
-    SubMsg, Uint128,
+    Addr, BankMsg, Binary, CustomMsg, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult,
+    Storage, SubMsg, Uint128,
 };
 use cw1155::{
     ApproveAllEvent, ApproveEvent, Balance, BurnEvent, Cw1155BatchReceiveMsg, Cw1155ContractError,
@@ -242,10 +242,10 @@ where
                 amount: balance_update.amount,
             }],
         )?;
-        rsp = rsp.add_event(event);
+        rsp.events.push(event);
 
         if let Some(msg) = msg {
-            rsp.messages = vec![SubMsg::new(
+            rsp.messages.push(SubMsg::new(
                 Cw1155ReceiveMsg {
                     operator: info.sender.to_string(),
                     from: Some(from.to_string()),
@@ -253,8 +253,17 @@ where
                     token_id,
                     msg,
                 }
-                .into_cosmos_msg(to)?,
-            )]
+                .into_cosmos_msg(&info, to)?,
+            ));
+        } else {
+            // transfer funds along to recipient
+            if info.funds.len() > 0 {
+                let transfer_msg = BankMsg::Send {
+                    to_address: to.to_string(),
+                    amount: info.funds.to_vec(),
+                };
+                rsp.messages.push(SubMsg::new(transfer_msg));
+            }
         }
 
         Ok(rsp)
@@ -291,19 +300,28 @@ where
             Some(to.clone()),
             batch.to_vec(),
         )?;
-        rsp = rsp.add_event(event);
+        rsp.events.push(event);
 
         if let Some(msg) = msg {
-            rsp.messages = vec![SubMsg::new(
+            rsp.messages.push(SubMsg::new(
                 Cw1155BatchReceiveMsg {
                     operator: info.sender.to_string(),
                     from: Some(from.to_string()),
                     batch,
                     msg,
                 }
-                .into_cosmos_msg(to)?,
-            )]
-        };
+                .into_cosmos_msg(&info, to)?,
+            ));
+        } else {
+            // transfer funds along to recipient
+            if info.funds.len() > 0 {
+                let transfer_msg = BankMsg::Send {
+                    to_address: to.to_string(),
+                    amount: info.funds.to_vec(),
+                };
+                rsp.messages.push(SubMsg::new(transfer_msg));
+            }
+        }
 
         Ok(rsp)
     }

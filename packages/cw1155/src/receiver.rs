@@ -1,6 +1,6 @@
 use crate::TokenAmount;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_json_binary, Binary, CosmosMsg, StdResult, Uint128, WasmMsg};
+use cosmwasm_std::{to_json_binary, Binary, CosmosMsg, MessageInfo, StdResult, Uint128, WasmMsg};
 use schemars::JsonSchema;
 
 /// Cw1155ReceiveMsg should be de/serialized under `Receive()` variant in a ExecuteMsg
@@ -23,7 +23,11 @@ impl Cw1155ReceiveMsg {
     }
 
     /// creates a cosmos_msg sending this struct to the named contract
-    pub fn into_cosmos_msg<T: Into<String>, C>(self, contract_addr: T) -> StdResult<CosmosMsg<C>>
+    pub fn into_cosmos_msg<T: Into<String>, C>(
+        self,
+        info: &MessageInfo,
+        contract_addr: T,
+    ) -> StdResult<CosmosMsg<C>>
     where
         C: Clone + std::fmt::Debug + PartialEq + JsonSchema,
     {
@@ -31,7 +35,7 @@ impl Cw1155ReceiveMsg {
         let execute = WasmMsg::Execute {
             contract_addr: contract_addr.into(),
             msg,
-            funds: vec![],
+            funds: info.funds.to_vec(),
         };
         Ok(execute.into())
     }
@@ -54,7 +58,11 @@ impl Cw1155BatchReceiveMsg {
     }
 
     /// creates a cosmos_msg sending this struct to the named contract
-    pub fn into_cosmos_msg<T: Into<String>, C>(self, contract_addr: T) -> StdResult<CosmosMsg<C>>
+    pub fn into_cosmos_msg<T: Into<String>, C>(
+        self,
+        info: &MessageInfo,
+        contract_addr: T,
+    ) -> StdResult<CosmosMsg<C>>
     where
         C: Clone + std::fmt::Debug + PartialEq + JsonSchema,
     {
@@ -62,7 +70,7 @@ impl Cw1155BatchReceiveMsg {
         let execute = WasmMsg::Execute {
             contract_addr: contract_addr.into(),
             msg,
-            funds: vec![],
+            funds: info.funds.to_vec(),
         };
         Ok(execute.into())
     }

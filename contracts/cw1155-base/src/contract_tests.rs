@@ -280,41 +280,47 @@ mod tests {
 
         // batch query
         assert_eq!(
-            contract.query(
-                deps.as_ref(),
-                mock_env(),
-                Cw1155BaseQueryMsg::BalanceOfBatch(vec![
-                    OwnerToken {
-                        owner: user1.clone(),
-                        token_id: token1.clone(),
-                    },
-                    OwnerToken {
-                        owner: user1.clone(),
-                        token_id: token2.clone(),
-                    },
-                    OwnerToken {
-                        owner: user1.clone(),
-                        token_id: token3.clone(),
-                    }
-                ]),
+            from_json(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::BalanceOfBatch(vec![
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token1.clone(),
+                            },
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token2.clone(),
+                            },
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token3.clone(),
+                            }
+                        ]),
+                    )
+                    .unwrap()
             ),
-            to_json_binary(&vec![
-                Balance {
-                    token_id: token1.to_string(),
-                    owner: Addr::unchecked(user1.to_string()),
-                    amount: Uint128::one(),
-                },
-                Balance {
-                    token_id: token2.to_string(),
-                    owner: Addr::unchecked(user1.to_string()),
-                    amount: Uint128::one(),
-                },
-                Balance {
-                    token_id: token3.to_string(),
-                    owner: Addr::unchecked(user1.to_string()),
-                    amount: Uint128::one(),
-                }
-            ]),
+            Ok(BalancesResponse {
+                balances: vec![
+                    Balance {
+                        token_id: token1.to_string(),
+                        owner: Addr::unchecked(user1.to_string()),
+                        amount: Uint128::one(),
+                    },
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(user1.to_string()),
+                        amount: Uint128::one(),
+                    },
+                    Balance {
+                        token_id: token3.to_string(),
+                        owner: Addr::unchecked(user1.to_string()),
+                        amount: Uint128::one(),
+                    }
+                ]
+            }),
         );
 
         // user1 revoke approval
@@ -428,6 +434,7 @@ mod tests {
         let minter = String::from("minter");
         let user1 = String::from("user1");
         let token2 = "token2".to_owned();
+        let operator_info = mock_info("operator", &[]);
         let dummy_msg = Binary::default();
 
         let mut deps = mock_dependencies();
@@ -437,7 +444,7 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), mock_env(), mock_info("operator", &[]), msg)
+            .instantiate(deps.as_mut(), mock_env(), operator_info.clone(), msg)
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -487,7 +494,7 @@ mod tests {
                         }],
                         msg: dummy_msg,
                     }
-                    .into_cosmos_msg(receiver.clone())
+                    .into_cosmos_msg(&operator_info, receiver.clone())
                     .unwrap()
                 )
                 .add_event(Event::new("transfer_single").add_attributes(vec![
