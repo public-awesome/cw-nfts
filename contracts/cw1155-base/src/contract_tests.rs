@@ -9,10 +9,9 @@ mod tests {
 
     use crate::{Cw1155BaseContract, Cw1155BaseExecuteMsg, Cw1155BaseQueryMsg};
     use cw1155::{
-        AllBalancesResponse, ApprovedForAllResponse, Balance, BalanceResponse,
-        Cw1155BatchReceiveMsg, Cw1155ContractError, Cw1155InstantiateMsg, Cw1155MintMsg,
-        Cw1155QueryMsg, Expiration, NumTokensResponse, OwnerToken, TokenAmount, TokenInfoResponse,
-        TokensResponse,
+        ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155BatchReceiveMsg,
+        Cw1155ContractError, Cw1155InstantiateMsg, Cw1155MintMsg, Cw1155QueryMsg, Expiration,
+        NumTokensResponse, OwnerToken, TokenAmount, TokenInfoResponse, TokensResponse,
     };
 
     #[test]
@@ -594,7 +593,7 @@ mod tests {
                     limit: Some(5),
                 },
             ),
-            to_json_binary(&AllBalancesResponse {
+            to_json_binary(&BalancesResponse {
                 balances: users[..5]
                     .iter()
                     .map(|user| {
@@ -618,7 +617,7 @@ mod tests {
                     limit: Some(5),
                 },
             ),
-            to_json_binary(&AllBalancesResponse {
+            to_json_binary(&BalancesResponse {
                 balances: users[6..]
                     .iter()
                     .map(|user| {

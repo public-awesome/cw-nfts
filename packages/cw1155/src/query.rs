@@ -14,7 +14,7 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     #[returns(BalanceResponse)]
     BalanceOf(OwnerToken),
     /// Returns the current balance of the given batch of accounts/tokens, 0 if unset.
-    #[returns(Vec<crate::Balance>)]
+    #[returns(BalancesResponse)]
     BalanceOfBatch(Vec<OwnerToken>),
     /// Query approved status `owner` granted to `operator`.
     #[returns(IsApprovedForAllResponse)]
@@ -36,7 +36,7 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
         limit: Option<u32>,
     },
     /// Returns all current balances of the given token id. Supports pagination
-    #[returns(AllBalancesResponse)]
+    #[returns(BalancesResponse)]
     AllBalances {
         token_id: String,
         start_after: Option<String>,
@@ -94,7 +94,7 @@ pub struct BalanceResponse {
 }
 
 #[cw_serde]
-pub struct AllBalancesResponse {
+pub struct BalancesResponse {
     pub balances: Vec<Balance>,
 }
 

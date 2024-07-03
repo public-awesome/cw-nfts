@@ -13,7 +13,7 @@ pub use crate::msg::{
     TokenAmount, TokenApproval,
 };
 pub use crate::query::{
-    AllBalancesResponse, AllTokenInfoResponse, ApprovedForAllResponse, BalanceResponse,
+    AllTokenInfoResponse, ApprovedForAllResponse, BalanceResponse, BalancesResponse,
     Cw1155QueryMsg, IsApprovedForAllResponse, NumTokensResponse, TokenInfoResponse, TokensResponse,
 };
 

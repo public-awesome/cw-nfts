@@ -6,8 +6,8 @@ use cosmwasm_std::{
 };
 
 use cw1155::{
-    AllBalancesResponse, AllTokenInfoResponse, Approval, ApprovedForAllResponse, Balance,
-    BalanceResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, NumTokensResponse,
+    AllTokenInfoResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
+    BalancesResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, NumTokensResponse,
     OwnerToken, TokenInfoResponse, TokensResponse,
 };
 use cw721_base::Cw721Contract;
@@ -61,11 +61,11 @@ where
                             .unwrap_or(Balance {
                                 owner,
                                 token_id,
-                                amount: Uint128::new(0),
+                                amount: Uint128::zero(),
                             })
                     })
                     .collect::<Vec<_>>();
-                to_json_binary(&balances)
+                to_json_binary(&BalancesResponse { balances })
             }
             Cw1155QueryMsg::TokenApprovals {
                 owner,
@@ -128,7 +128,7 @@ where
                 to_json_binary(&self.query_owner_tokens(deps, owner_addr, start_after, limit)?)
             }
             Cw1155QueryMsg::AllTokenInfo { start_after, limit } => {
-                to_json_binary(&self.query_all_token_infos(deps, start_after, limit)?)
+                to_json_binary(&self.query_all_token_info(deps, start_after, limit)?)
             }
             Cw1155QueryMsg::ContractInfo {} => {
                 to_json_binary(&self.contract_info.load(deps.storage)?)
@@ -222,7 +222,7 @@ where
         Ok(TokensResponse { tokens })
     }
 
-    fn query_all_token_infos(
+    fn query_all_token_info(
         &self,
         deps: Deps,
         start_after: Option<String>,
@@ -260,7 +260,7 @@ where
         token_id: String,
         start_after: Option<String>,
         limit: Option<u32>,
-    ) -> StdResult<AllBalancesResponse> {
+    ) -> StdResult<BalancesResponse> {
         let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
 
         let start = if let Some(start_after) = start_after {
@@ -283,7 +283,7 @@ where
             })
             .collect();
 
-        Ok(AllBalancesResponse { balances })
+        Ok(BalancesResponse { balances })
     }
 }
 
