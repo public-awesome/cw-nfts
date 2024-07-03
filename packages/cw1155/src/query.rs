@@ -61,13 +61,6 @@ pub enum Cw1155QueryMsg<Q: JsonSchema> {
     #[returns(TokenInfoResponse<Q>)]
     TokenInfo { token_id: String },
     /// With Enumerable extension.
-    /// Requires pagination. Lists all token_ids controlled by the contract.
-    #[returns(TokenInfoResponse<Q>)]
-    AllTokenInfo {
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
-    /// With Enumerable extension.
     /// Returns all tokens owned by the given address, [] if unset.
     #[returns(TokensResponse)]
     Tokens {

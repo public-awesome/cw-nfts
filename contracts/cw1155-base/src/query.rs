@@ -6,15 +6,15 @@ use cosmwasm_std::{
 };
 
 use cw1155::{
-    AllTokenInfoResponse, Approval, ApprovedForAllResponse, Balance, BalanceResponse,
-    BalancesResponse, Cw1155QueryMsg, Expiration, IsApprovedForAllResponse, NumTokensResponse,
-    OwnerToken, TokenInfoResponse, TokensResponse,
+    Approval, ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155QueryMsg,
+    Expiration, IsApprovedForAllResponse, NumTokensResponse, OwnerToken, TokenInfoResponse,
+    TokensResponse,
 };
 use cw721_base::Cw721Contract;
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
-use crate::state::{Cw1155Contract, TokenInfo};
+use crate::state::Cw1155Contract;
 
 const DEFAULT_LIMIT: u32 = 10;
 const MAX_LIMIT: u32 = 100;
@@ -127,9 +127,6 @@ where
                 let owner_addr = deps.api.addr_validate(&owner)?;
                 to_json_binary(&self.query_owner_tokens(deps, owner_addr, start_after, limit)?)
             }
-            Cw1155QueryMsg::AllTokenInfo { start_after, limit } => {
-                to_json_binary(&self.query_all_token_info(deps, start_after, limit)?)
-            }
             Cw1155QueryMsg::ContractInfo {} => {
                 to_json_binary(&self.contract_info.load(deps.storage)?)
             }
@@ -220,38 +217,6 @@ where
             .take(limit)
             .collect::<StdResult<_>>()?;
         Ok(TokensResponse { tokens })
-    }
-
-    fn query_all_token_info(
-        &self,
-        deps: Deps,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    ) -> StdResult<Vec<AllTokenInfoResponse<T>>> {
-        let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-        let start = start_after.as_ref().map(|s| Bound::exclusive(s.as_str()));
-        let tokens = self
-            .tokens
-            .range(deps.storage, start, None, Order::Ascending)
-            .take(limit)
-            .map(|item| {
-                let (
-                    token_id,
-                    TokenInfo {
-                        token_uri,
-                        extension,
-                    },
-                ) = item.unwrap();
-                AllTokenInfoResponse {
-                    token_id,
-                    info: TokenInfoResponse {
-                        token_uri,
-                        extension,
-                    },
-                }
-            })
-            .collect::<Vec<_>>();
-        Ok(tokens)
     }
 
     fn query_all_balances(
