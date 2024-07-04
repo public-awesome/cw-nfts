@@ -7,12 +7,11 @@ use cw721::traits::{Cw721CustomMsg, Cw721Execute, Cw721State};
 use cw721::traits::{FromAttributesState, StateFactory, ToAttributesState};
 use cw721::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, EmptyOptionalCollectionExtension,
+    EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtension, EmptyOptionalNftExtensionMsg,
 };
 
-use crate::{Cw721Contract, DefaultCw721Contract, EmptyCw721Contract};
-
-impl<'a> Cw721Execute<Empty, Empty, Empty, Empty, Empty, Empty> for EmptyCw721Contract<'a> {}
+use crate::{Cw721Contract, DefaultOptionalCw721Contract, EmptyOptionalCw721Contract};
 
 impl<'a>
     Cw721Execute<
@@ -22,7 +21,19 @@ impl<'a>
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
-    > for DefaultCw721Contract<'a>
+    > for DefaultOptionalCw721Contract<'a>
+{
+}
+
+impl<'a>
+    Cw721Execute<
+        EmptyOptionalNftExtension,
+        EmptyOptionalNftExtensionMsg,
+        EmptyOptionalCollectionExtension,
+        EmptyOptionalCollectionExtensionMsg,
+        Empty,
+        Empty,
+    > for EmptyOptionalCw721Contract<'a>
 {
 }
 

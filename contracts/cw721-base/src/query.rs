@@ -6,16 +6,20 @@ pub use cw721::query::*;
 use cw721::{
     traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState},
     DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
+    EmptyOptionalCollectionExtension, EmptyOptionalNftExtension,
 };
 
-use crate::{Cw721Contract, DefaultCw721Contract, EmptyCw721Contract};
+use crate::{Cw721Contract, DefaultOptionalCw721Contract, EmptyOptionalCw721Contract};
 
 impl<'a> Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
-    for DefaultCw721Contract<'a>
+    for DefaultOptionalCw721Contract<'a>
 {
 }
 
-impl<'a> Cw721Query<Empty, Empty, Empty> for EmptyCw721Contract<'a> {}
+impl<'a> Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
+    for EmptyOptionalCw721Contract<'a>
+{
+}
 
 impl<
         'a,

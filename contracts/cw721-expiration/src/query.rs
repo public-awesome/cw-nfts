@@ -1,10 +1,10 @@
 use cosmwasm_std::{to_json_binary, Binary, CustomMsg, Deps, Empty, Env, StdResult};
-use cw721::{DefaultOptionalCollectionExtension, DefaultOptionalNftExtension};
 use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
 use cw721_base::traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
+use cw721_base::{DefaultOptionalCollectionExtension, DefaultOptionalNftExtension};
 
 // expose so other libs dont need to import cw721-base
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ impl DefaultCw721ExpirationContract<'static> {
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
+        msg: QueryMsg<Empty>,
     ) -> Result<Binary, ContractError> {
         let contract = DefaultCw721ExpirationContract::default();
         match msg {
@@ -387,49 +387,14 @@ impl DefaultCw721ExpirationContract<'static> {
     }
 }
 
-impl<
-        'a,
-        TNftExtension,
-        TNftExtensionMsg,
-        TCollectionExtension,
-        TCollectionExtensionMsg,
-        TExtensionMsg,
-        TExtensionQueryMsg,
-        TCustomResponseMsg,
-    >
-    Cw721ExpirationContract<
-        'a,
-        TNftExtension,
-        TNftExtensionMsg,
-        TCollectionExtension,
-        TCollectionExtensionMsg,
-        TExtensionMsg,
-        TExtensionQueryMsg,
-        TCustomResponseMsg,
-    >
-where
-    TNftExtension: Cw721State + Contains,
-    TNftExtensionMsg: Cw721CustomMsg,
-    TCollectionExtension: Cw721State + FromAttributesState,
-    TCollectionExtensionMsg: Cw721CustomMsg,
-    TExtensionQueryMsg: Cw721CustomMsg,
-    TCustomResponseMsg: CustomMsg,
-{
+impl<'a> Cw721ExpirationContract<'a> {
     pub fn query(
         &self,
         deps: Deps,
         env: Env,
-        msg: QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
+        msg: QueryMsg<Empty>,
     ) -> Result<Binary, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            TNftExtension,
-            TNftExtensionMsg,
-            TCollectionExtension,
-            TCollectionExtensionMsg,
-            TExtensionMsg,
-            TExtensionQueryMsg,
-            TCustomResponseMsg,
-        >::default();
+        let contract = Cw721ExpirationContract::default();
         match msg {
             // -------- msgs with `include_expired_nft` prop --------
             QueryMsg::OwnerOf {
@@ -620,7 +585,7 @@ where
         env: Env,
         token_id: String,
         include_expired_nft: bool,
-    ) -> Result<NftInfoResponse<TNftExtension>, ContractError> {
+    ) -> Result<NftInfoResponse<DefaultOptionalNftExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
@@ -632,9 +597,9 @@ where
         deps: Deps,
         env: Env,
         token_id: String,
-        _extension: TNftExtension,
+        _extension: DefaultOptionalNftExtension,
         include_expired_nft: bool,
-    ) -> Result<NftInfoResponse<TNftExtension>, ContractError> {
+    ) -> Result<NftInfoResponse<DefaultOptionalNftExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }
@@ -753,7 +718,7 @@ where
         token_id: String,
         include_expired_approval: bool,
         include_expired_nft: bool,
-    ) -> Result<AllNftInfoResponse<TNftExtension>, ContractError> {
+    ) -> Result<AllNftInfoResponse<DefaultOptionalNftExtension>, ContractError> {
         if !include_expired_nft {
             self.assert_nft_expired(deps, &env, token_id.as_str())?;
         }

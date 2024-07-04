@@ -1,6 +1,6 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721_base::state::DefaultCw721Contract;
+use cw721_base::state::EmptyOptionalCw721Contract;
 pub use cw721_base::Cw721Contract;
 
 use cw721_base::entry::{execute as _execute, query as _query};
@@ -13,7 +13,7 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> = DefaultCw721Contract<'a>;
+pub type Cw721NonTransferableContract<'a> = EmptyOptionalCw721Contract<'a>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -23,17 +23,17 @@ pub mod entry {
     use cosmwasm_std::{
         entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     };
-    use cw721::error::Cw721ContractError;
-    use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
-    use cw721::traits::Cw721Execute;
-    use cw721::{DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg};
+    use cw721_base::error::Cw721ContractError;
+    use cw721_base::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+    use cw721_base::traits::Cw721Execute;
+    use cw721_base::{EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtensionMsg};
 
     #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
+        msg: InstantiateMsg<EmptyOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let admin_addr: Option<Addr> = msg
             .admin
@@ -76,8 +76,8 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtensionMsg,
+            EmptyOptionalNftExtensionMsg,
+            EmptyOptionalCollectionExtensionMsg,
             Empty,
         >,
     ) -> Result<Response, Cw721ContractError> {

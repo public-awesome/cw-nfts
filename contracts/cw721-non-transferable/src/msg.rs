@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 
 use cosmwasm_std::Empty;
 // expose to all others using contract, so others dont need to import cw721
-pub use cw721::{
+pub use cw721_base::{
     msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, Cw721QueryMsg},
     *,
 };
@@ -84,11 +84,11 @@ pub enum QueryMsg {
 }
 
 impl From<QueryMsg>
-    for Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
+    for Cw721QueryMsg<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
 {
     fn from(
         msg: QueryMsg,
-    ) -> Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty> {
+    ) -> Cw721QueryMsg<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,

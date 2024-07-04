@@ -8,13 +8,14 @@ pub use cw721::state::*;
 use cw721::{
     traits::{Cw721CustomMsg, Cw721State},
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, EmptyOptionalCollectionExtension,
+    EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtension, EmptyOptionalNftExtensionMsg,
 };
 
 #[deprecated(since = "0.19.0", note = "Please use `NftInfo`")]
 pub type TokenInfo<TNftExtension> = NftInfo<TNftExtension>;
 
-/// Opionated version of `Cw721Contract` with default extensions using:
+/// Opionated version of generic `Cw721Contract` with default onchain nft and collection extensions using:
 /// - `DefaultOptionalNftExtension` for NftInfo extension (onchain metadata).
 /// - `DefaultOptionalNftExtensionMsg` for NftInfo extension msg for onchain metadata.
 /// - `DefaultOptionalCollectionExtension` for CollectionInfo extension (onchain attributes).
@@ -22,7 +23,7 @@ pub type TokenInfo<TNftExtension> = NftInfo<TNftExtension>;
 /// - `Empty` for custom extension msg for custom contract logic.
 /// - `Empty` for custom query msg for custom contract logic.
 /// - `Empty` for custom response msg for custom contract logic.
-pub struct DefaultCw721Contract<'a> {
+pub struct DefaultOptionalCw721Contract<'a> {
     pub config: Cw721Config<'a, DefaultOptionalNftExtension>,
     pub(crate) _collection_extension: PhantomData<DefaultOptionalCollectionExtension>,
     pub(crate) _nft_extension_msg: PhantomData<DefaultOptionalNftExtensionMsg>,
@@ -32,7 +33,7 @@ pub struct DefaultCw721Contract<'a> {
     pub(crate) _custom_response_msg: PhantomData<Empty>,
 }
 
-impl Default for DefaultCw721Contract<'static> {
+impl Default for DefaultOptionalCw721Contract<'static> {
     fn default() -> Self {
         Self {
             config: Cw721Config::<DefaultOptionalNftExtension>::default(),
@@ -46,7 +47,7 @@ impl Default for DefaultCw721Contract<'static> {
     }
 }
 
-/// Opionated version of `Cw721Contract` with empty extensions using:
+/// Opionated version of generic `Cw721Contract` with empty onchain nft and collection extensions using:
 /// - `Empty` for NftInfo extension (onchain metadata).
 /// - `Empty` for NftInfo extension msg for onchain metadata.
 /// - `Empty` for CollectionInfo extension (onchain attributes).
@@ -54,20 +55,20 @@ impl Default for DefaultCw721Contract<'static> {
 /// - `Empty` for custom extension msg for custom contract logic.
 /// - `Empty` for custom query msg for custom contract logic.
 /// - `Empty` for custom response msg for custom contract logic.
-pub struct EmptyCw721Contract<'a> {
-    pub config: Cw721Config<'a, Empty>,
-    pub(crate) _collection_extension: PhantomData<Empty>,
-    pub(crate) _nft_extension_msg: PhantomData<Empty>,
-    pub(crate) _collection_extension_msg: PhantomData<Empty>,
+pub struct EmptyOptionalCw721Contract<'a> {
+    pub config: Cw721Config<'a, EmptyOptionalNftExtension>,
+    pub(crate) _collection_extension: PhantomData<EmptyOptionalCollectionExtension>,
+    pub(crate) _nft_extension_msg: PhantomData<EmptyOptionalNftExtensionMsg>,
+    pub(crate) _collection_extension_msg: PhantomData<EmptyOptionalCollectionExtensionMsg>,
     pub(crate) _extension_msg: PhantomData<Empty>,
     pub(crate) _extension_query_msg: PhantomData<Empty>,
     pub(crate) _custom_response_msg: PhantomData<Empty>,
 }
 
-impl Default for EmptyCw721Contract<'static> {
+impl Default for EmptyOptionalCw721Contract<'static> {
     fn default() -> Self {
         Self {
-            config: Cw721Config::<Empty>::default(),
+            config: Cw721Config::<EmptyOptionalNftExtension>::default(),
             _collection_extension: PhantomData,
             _nft_extension_msg: PhantomData,
             _collection_extension_msg: PhantomData,
@@ -78,11 +79,23 @@ impl Default for EmptyCw721Contract<'static> {
     }
 }
 
-/// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing contract handling with:
-/// - no extensions: `TNftExtension: Empty` and `TCollectionExtension: Empty`
+/// Generic `Cw721Contract` which may be extended by other contracts with custom onchain nft and collection extensions.
+///
+/// Contract with generic onchain nft and collection extensions allows handling with:
+/// - no extensions: by defining all extensions as `Empty` or `Option<Empty>`.
 /// - opionated `DefaultOptionalNftExtension` and `DefaultOptionalCollectionExtension`.
 ///   - `DefaultOptionalNftExtension`: either with nft metadata (`Some<NftExtension>`) or none `None`.
 ///   - `DefaultOptionalCollectionExtension`: either with collection metadata (`Some<CollectionExtension>`) or none `None`.
+/// - custom extensions: by defining custom extensions.
+///
+/// Generics:
+/// - `TNftExtension` for NftInfo extension (onchain metadata).
+/// - `TNftExtensionMsg` for NftInfo extension msg for onchain metadata.
+/// - `TCollectionExtension` for CollectionInfo extension (onchain attributes).
+/// - `TCollectionExtensionMsg` for CollectionInfo extension msg for onchain collection attributes.
+/// - `TExtensionMsg` for custom extension msg for custom contract logic.
+/// - `TExtensionQueryMsg` for custom query msg for custom contract logic.
+/// - `TCustomResponseMsg` for custom response msg for custom contract logic.
 ///
 /// Example:
 /// ```rust

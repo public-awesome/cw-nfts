@@ -4,15 +4,15 @@ use crate::{
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Deps, Empty, Env, MessageInfo, Uint128};
-use cw721::{
+use cw721_base::msg::{
+    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
+    NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+};
+use cw721_base::{
     error::Cw721ContractError,
     execute::{assert_creator, assert_minter},
     msg::{empty_as_none, CollectionInfoAndExtensionResponse, Cw721QueryMsg},
     traits::StateFactory,
-};
-use cw721_base::msg::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
-    NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
 use cw_ownable::Ownership;
 use url::Url;
@@ -149,12 +149,10 @@ pub enum QueryMsg {
     GetCollectionInfoExtension { msg: Empty },
 }
 
-impl From<QueryMsg>
-    for Cw721QueryMsg<DefaultOptionMetadataExtensionWithRoyalty, Option<Empty>, Empty>
-{
+impl From<QueryMsg> for Cw721QueryMsg<DefaultOptionMetadataExtensionWithRoyalty, Empty, Empty> {
     fn from(
         msg: QueryMsg,
-    ) -> Cw721QueryMsg<DefaultOptionMetadataExtensionWithRoyalty, Option<Empty>, Empty> {
+    ) -> Cw721QueryMsg<DefaultOptionMetadataExtensionWithRoyalty, Empty, Empty> {
         match msg {
             QueryMsg::OwnerOf {
                 token_id,

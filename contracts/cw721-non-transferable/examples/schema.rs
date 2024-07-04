@@ -4,7 +4,7 @@ use std::fs::create_dir_all;
 use cosmwasm_schema::{export_schema_with_title, remove_schemas, schema_for};
 
 use cosmwasm_std::Empty;
-use cw721::{
+use cw721_base::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtensionMsg,
 };

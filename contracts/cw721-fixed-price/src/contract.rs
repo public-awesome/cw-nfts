@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::error::ContractError;
 use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG};
@@ -11,11 +9,12 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use cw20::Cw20ReceiveMsg;
-use cw721::helpers::Cw721Helper;
-use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg};
-use cw721::{
+use cw721_base::helpers::DefaultCw721Helper;
+use cw721_base::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg};
+use cw721_base::traits::Cw721Calls;
+use cw721_base::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
+    DefaultOptionalNftExtensionMsg,
 };
 use cw_utils::parse_reply_instantiate_data;
 
@@ -178,27 +177,11 @@ pub fn execute_receive(
 
     match config.cw721_address.clone() {
         Some(cw721) => {
-            let callback = Cw721Helper::<
-                DefaultOptionalNftExtension,
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtension,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-                Empty,
-            >(
-                cw721,
-                PhantomData,
-                PhantomData,
-                PhantomData,
-                PhantomData,
-                PhantomData,
-                PhantomData,
-            )
-            .call(mint_msg)?;
+            let msg = DefaultCw721Helper::new(cw721).call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
 
-            Ok(Response::new().add_message(callback))
+            Ok(Response::new().add_message(msg))
         }
         None => Err(ContractError::Cw721NotLinked {}),
     }
@@ -209,7 +192,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info, MOCK_CONTRACT_ADDR};
     use cosmwasm_std::{from_json, to_json_binary, CosmosMsg, SubMsgResponse, SubMsgResult};
-    use cw721::DefaultOptionalNftExtensionMsg;
+    use cw721_base::DefaultOptionalNftExtensionMsg;
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";

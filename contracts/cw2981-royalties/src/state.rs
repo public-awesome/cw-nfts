@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use cosmwasm_std::Empty;
 // expose to all others using contract, so others dont need to import cw721
-pub use cw721::state::*;
-use cw721::traits::Contains;
+pub use cw721_base::state::*;
+use cw721_base::traits::Contains;
 
 use crate::{
     DefaultOptionMetadataExtensionWithRoyalty, DefaultOptionMetadataExtensionWithRoyaltyMsg,
@@ -15,9 +15,9 @@ pub type TokenInfo<TNftExtension> = NftInfo<TNftExtension>;
 
 pub struct Cw2981Contract<'a> {
     pub config: Cw721Config<'a, DefaultOptionMetadataExtensionWithRoyalty>,
-    pub(crate) _collection_extension: PhantomData<Option<Empty>>,
+    pub(crate) _collection_extension: PhantomData<Empty>,
     pub(crate) _nft_extension_msg: PhantomData<DefaultOptionMetadataExtensionWithRoyaltyMsg>,
-    pub(crate) _collection_extension_msg: PhantomData<Option<Empty>>,
+    pub(crate) _collection_extension_msg: PhantomData<Empty>,
     pub(crate) _extension_msg: PhantomData<Empty>,
     pub(crate) _extension_query_msg: PhantomData<Empty>,
     pub(crate) _custom_response_msg: PhantomData<Empty>,

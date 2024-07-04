@@ -2,13 +2,13 @@ use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
 use crate::state::Cw2981Contract;
 use crate::DefaultOptionMetadataExtensionWithRoyalty;
 use cosmwasm_std::{Decimal, Deps, Empty, StdResult, Uint128};
-use cw721::traits::Cw721Query;
+use cw721_base::traits::Cw721Query;
 
 impl
     Cw721Query<
         DefaultOptionMetadataExtensionWithRoyalty,
-        Option<Empty>, // no collection extension
-        Empty,         // no extension query
+        Empty, // no collection extension
+        Empty, // no extension query
     > for Cw2981Contract<'_>
 {
 }

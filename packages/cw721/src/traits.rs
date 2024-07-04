@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
 use cosmwasm_std::{
-    to_json_binary, Addr, Api, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo,
-    Response, StdResult, Storage,
+    to_json_binary, Addr, Api, Binary, Coin, CosmosMsg, CustomMsg, Deps, DepsMut, Empty, Env,
+    MessageInfo, QuerierWrapper, Response, StdResult, Storage, WasmMsg, WasmQuery,
 };
 use cw_ownable::{Action, Ownership};
 use cw_utils::Expiration;
@@ -37,6 +37,7 @@ use crate::{
 use crate::{
     msg::AllInfoResponse,
     query::{query_all_info, query_nft_by_extension},
+    Approval,
 };
 
 /// This is an exact copy of `CustomMsg`, since implementing a trait for a type from another crate is not possible.
@@ -54,6 +55,7 @@ pub trait Cw721State: Serialize + DeserializeOwned + Clone + Debug {}
 
 impl Cw721State for Empty {}
 impl<T> Cw721State for Option<T> where T: Cw721State {}
+
 impl Cw721CustomMsg for Empty {}
 impl<T> Cw721CustomMsg for Option<T> where T: Cw721CustomMsg {}
 
@@ -134,6 +136,7 @@ where
     }
 }
 
+/// Trait with generic onchain nft and collection extensions used to execute the contract logic and contains default implementations for all messages.
 pub trait Cw721Execute<
     // NftInfo extension (onchain metadata).
     TNftExtension,
@@ -464,6 +467,7 @@ pub trait Cw721Execute<
     }
 }
 
+/// Trait with generic onchain nft and collection extensions used to query the contract state and contains default implementations for all queries.
 pub trait Cw721Query<
     // NftInfo extension (onchain metadata).
     TNftExtension,
@@ -787,5 +791,193 @@ pub trait Cw721Query<
 
     fn query_withdraw_address(&self, deps: Deps) -> StdResult<Option<String>> {
         query_withdraw_address(deps)
+    }
+}
+
+/// Generic trait with onchain nft and collection extensions used to call query and execute messages for a given CW721 addr.
+pub trait Cw721Calls<
+    TNftExtension,
+    TNftExtensionMsg,
+    TCollectionExtension,
+    TCollectionExtensionMsg,
+    TExtensionMsg,
+    TExtensionQueryMsg,
+> where
+    TNftExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
+{
+    /// Returns the CW721 address.
+    fn addr(&self) -> Addr;
+
+    /// Executes the CW721 contract with the given message.
+    fn call(
+        &self,
+        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg, TExtensionMsg>,
+    ) -> StdResult<CosmosMsg> {
+        let msg = to_json_binary(&msg)?;
+        Ok(WasmMsg::Execute {
+            contract_addr: self.addr().into(),
+            msg,
+            funds: vec![],
+        }
+        .into())
+    }
+
+    /// Queries the CW721 contract with the given message.
+    fn query<T: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+        req: Cw721QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
+    ) -> StdResult<T> {
+        let query = WasmQuery::Smart {
+            contract_addr: self.addr().into(),
+            msg: to_json_binary(&req)?,
+        }
+        .into();
+        querier.query(&query)
+    }
+
+    /*** queries ***/
+    fn owner_of<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: bool,
+    ) -> StdResult<OwnerOfResponse> {
+        let req = Cw721QueryMsg::OwnerOf {
+            token_id: token_id.into(),
+            include_expired: Some(include_expired),
+        };
+        self.query(querier, req)
+    }
+
+    fn approval<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        spender: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalResponse> {
+        let req = Cw721QueryMsg::Approval {
+            token_id: token_id.into(),
+            spender: spender.into(),
+            include_expired,
+        };
+        let res: ApprovalResponse = self.query(querier, req)?;
+        Ok(res)
+    }
+
+    fn approvals<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: Option<bool>,
+    ) -> StdResult<ApprovalsResponse> {
+        let req = Cw721QueryMsg::Approvals {
+            token_id: token_id.into(),
+            include_expired,
+        };
+        let res: ApprovalsResponse = self.query(querier, req)?;
+        Ok(res)
+    }
+
+    fn all_operators<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        owner: T,
+        include_expired: bool,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<Vec<Approval>> {
+        let req = Cw721QueryMsg::AllOperators {
+            owner: owner.into(),
+            include_expired: Some(include_expired),
+            start_after,
+            limit,
+        };
+        let res: OperatorsResponse = self.query(querier, req)?;
+        Ok(res.operators)
+    }
+
+    fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
+        let req = Cw721QueryMsg::NumTokens {};
+        let res: NumTokensResponse = self.query(querier, req)?;
+        Ok(res.count)
+    }
+
+    /// This is a helper to get the metadata and extension data in one call
+    fn collection_info<U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+    ) -> StdResult<CollectionInfoAndExtensionResponse<U>> {
+        let req = Cw721QueryMsg::GetCollectionInfoAndExtension {};
+        self.query(querier, req)
+    }
+
+    /// With NFT onchain metadata
+    fn nft_info<T: Into<String>, U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+    ) -> StdResult<NftInfoResponse<U>> {
+        let req = Cw721QueryMsg::NftInfo {
+            token_id: token_id.into(),
+        };
+        self.query(querier, req)
+    }
+
+    /// With NFT onchain metadata
+    fn all_nft_info<T: Into<String>, U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+        token_id: T,
+        include_expired: bool,
+    ) -> StdResult<AllNftInfoResponse<U>> {
+        let req = Cw721QueryMsg::AllNftInfo {
+            token_id: token_id.into(),
+            include_expired: Some(include_expired),
+        };
+        self.query(querier, req)
+    }
+
+    /// With enumerable extension
+    fn tokens<T: Into<String>>(
+        &self,
+        querier: &QuerierWrapper,
+        owner: T,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<TokensResponse> {
+        let req = Cw721QueryMsg::Tokens {
+            owner: owner.into(),
+            start_after,
+            limit,
+        };
+        self.query(querier, req)
+    }
+
+    /// With enumerable extension
+    fn all_tokens(
+        &self,
+        querier: &QuerierWrapper,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<TokensResponse> {
+        let req = Cw721QueryMsg::AllTokens { start_after, limit };
+        self.query(querier, req)
+    }
+
+    /// returns true if the contract supports the metadata extension
+    fn has_metadata(&self, querier: &QuerierWrapper) -> bool {
+        self.collection_info::<Empty>(querier).is_ok()
+    }
+
+    /// returns true if the contract supports the enumerable extension
+    fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
+        self.tokens(querier, self.addr(), None, Some(1)).is_ok()
     }
 }

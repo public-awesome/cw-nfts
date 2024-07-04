@@ -4,7 +4,7 @@ pub mod msg;
 pub mod query;
 pub mod state;
 
-pub use crate::state::{Cw721Contract, DefaultCw721Contract, EmptyCw721Contract};
+pub use crate::state::{Cw721Contract, DefaultOptionalCw721Contract, EmptyOptionalCw721Contract};
 
 // expose so other libs dont need to import cw721
 pub use cw721::*;
@@ -27,7 +27,7 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
     since = "0.19.0",
     note = "Please use `DefaultOptionNftExtension` instead"
 )]
-pub type Extension = DefaultOptionalNftExtension;
+pub type Extension = EmptyOptionalNftExtension;
 
 /// `cw721-base` with `TNftExtension` and `TCollectionExtension` allowing contract handling with:
 /// - no extensions: `TNftExtension: Empty` and `TCollectionExtension: Empty`
@@ -93,10 +93,8 @@ pub mod entry {
         error::Cw721ContractError,
         msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
         traits::{Cw721Execute, Cw721Query},
-        DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-        DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
     };
-    use state::DefaultCw721Contract;
+    use state::EmptyOptionalCw721Contract;
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]
@@ -104,9 +102,9 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
+        msg: Cw721InstantiateMsg<EmptyOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
-        let contract = DefaultCw721Contract::default();
+        let contract = EmptyOptionalCw721Contract::default();
         contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 
@@ -116,12 +114,12 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtensionMsg,
+            EmptyOptionalNftExtensionMsg,
+            EmptyOptionalCollectionExtensionMsg,
             Empty,
         >,
     ) -> Result<Response, Cw721ContractError> {
-        let contract = DefaultCw721Contract::default();
+        let contract = EmptyOptionalCw721Contract::default();
         contract.execute(deps, &env, &info, msg)
     }
 
@@ -129,9 +127,9 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
+        msg: Cw721QueryMsg<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>,
     ) -> Result<Binary, Cw721ContractError> {
-        let contract = DefaultCw721Contract::default();
+        let contract = EmptyOptionalCw721Contract::default();
         contract.query(deps, &env, msg)
     }
 
@@ -141,7 +139,7 @@ pub mod entry {
         env: Env,
         msg: Cw721MigrateMsg,
     ) -> Result<Response, Cw721ContractError> {
-        let contract = DefaultCw721Contract::default();
+        let contract = EmptyOptionalCw721Contract::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 }
@@ -152,22 +150,17 @@ mod tests {
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw721::traits::{Cw721Execute, Cw721Query};
-    use cw721::{
-        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg},
-        state::Trait,
-        NftExtension,
-    };
-    use state::DefaultCw721Contract;
+    use msg::{ExecuteMsg, InstantiateMsg};
 
     const CREATOR: &str = "creator";
 
     // here we test cw721-base can be used with nft extension, test without nft extension is already covered in package tests
     #[test]
-    fn use_metadata_extension() {
+    fn use_empty_metadata_extension() {
         let mut deps = mock_dependencies();
-        let contract = DefaultCw721Contract::default();
+        let contract = EmptyOptionalCw721Contract::default();
         let info = mock_info(CREATOR, &[]);
-        let init_msg = Cw721InstantiateMsg {
+        let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             collection_info_extension: None,
@@ -181,21 +174,8 @@ mod tests {
 
         let token_id = "Enterprise";
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension = Some(NftExtensionMsg {
-            description: Some("description1".into()),
-            name: Some("name1".to_string()),
-            attributes: Some(vec![Trait {
-                display_type: None,
-                trait_type: "type1".to_string(),
-                value: "value1".to_string(),
-            }]),
-            ..NftExtensionMsg::default()
-        });
-        let exec_msg = Cw721ExecuteMsg::<
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-        >::Mint {
+        let extension = Some(Empty {});
+        let exec_msg = ExecuteMsg::Mint {
             token_id: token_id.to_string(),
             owner: "john".to_string(),
             token_uri: token_uri.clone(),
@@ -209,18 +189,6 @@ mod tests {
             .query_nft_info(deps.as_ref().storage, token_id.into())
             .unwrap();
         assert_eq!(res.token_uri, token_uri);
-        assert_eq!(
-            res.extension,
-            Some(NftExtension {
-                description: Some("description1".into()),
-                name: Some("name1".to_string()),
-                attributes: Some(vec![Trait {
-                    display_type: None,
-                    trait_type: "type1".to_string(),
-                    value: "value1".to_string(),
-                }]),
-                ..NftExtension::default()
-            })
-        );
+        assert_eq!(res.extension, Some(Empty {}));
     }
 }

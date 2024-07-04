@@ -42,17 +42,9 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
+        msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721ExpirationContract::default();
         contract.instantiate(deps, env, info, msg)
     }
 
@@ -67,33 +59,13 @@ pub mod entry {
             Empty,
         >,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721ExpirationContract::default();
         contract.execute(deps, env, info, msg)
     }
 
     #[entry_point]
-    pub fn query(
-        deps: Deps,
-        env: Env,
-        msg: QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
-    ) -> Result<Binary, ContractError> {
-        let contract = Cw721ExpirationContract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> Result<Binary, ContractError> {
+        let contract = Cw721ExpirationContract::default();
         contract.query(deps, env, msg)
     }
 
@@ -166,18 +138,10 @@ mod tests {
 
         assert_eq!(
             1,
-            Cw721ExpirationContract::<
-                DefaultOptionalNftExtension,
-                DefaultOptionalNftExtensionMsg,
-                DefaultOptionalCollectionExtension,
-                DefaultOptionalCollectionExtensionMsg,
-                Empty,
-                Empty,
-                Empty,
-            >::default()
-            .expiration_days
-            .load(deps.as_ref().storage)
-            .unwrap()
+            Cw721ExpirationContract::default()
+                .expiration_days
+                .load(deps.as_ref().storage)
+                .unwrap()
         );
     }
 }

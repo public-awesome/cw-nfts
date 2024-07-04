@@ -698,7 +698,7 @@ pub fn migrate_legacy_collection_info(
     _msg: &Cw721MigrateMsg,
     response: Response,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Config::<Option<Empty>>::default();
+    let contract = Cw721Config::<Empty>::default();
     match contract.collection_info.may_load(storage)? {
         Some(_) => Ok(response),
         None => {

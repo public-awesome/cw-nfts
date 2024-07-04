@@ -1,6 +1,6 @@
 use cosmwasm_std::Empty;
-use cw721::traits::{Cw721Execute, Cw721Query};
-use cw721::{
+use cw721_base::traits::{Cw721Execute, Cw721Query};
+use cw721_base::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
 };
@@ -96,14 +96,15 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// };
 /// //...
 /// ```
-pub type Cw721MetadataContract<'a> = cw721_base::state::DefaultCw721Contract<'a>;
-pub type InstantiateMsg = cw721_base::msg::InstantiateMsg<DefaultOptionalCollectionExtensionMsg>;
-pub type ExecuteMsg = cw721_base::msg::ExecuteMsg<
+pub type Cw721MetadataContract<'a> = cw721_base::state::DefaultOptionalCw721Contract<'a>;
+pub type InstantiateMsg =
+    cw721_base::msg::Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>;
+pub type ExecuteMsg = cw721_base::msg::Cw721ExecuteMsg<
     DefaultOptionalNftExtensionMsg,
     DefaultOptionalCollectionExtensionMsg,
     Empty,
 >;
-pub type QueryMsg = cw721_base::msg::QueryMsg<
+pub type QueryMsg = cw721_base::msg::Cw721QueryMsg<
     DefaultOptionalNftExtension,
     DefaultOptionalCollectionExtension,
     Empty,
@@ -115,8 +116,8 @@ pub mod entry {
 
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721::error::Cw721ContractError;
-    use cw721::msg::Cw721InstantiateMsg;
+    use cw721_base::error::Cw721ContractError;
+    use cw721_base::msg::Cw721InstantiateMsg;
 
     // This makes a conscious choice on the various generics used by the contract
     #[entry_point]
@@ -157,7 +158,7 @@ mod tests {
     use super::*;
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721::{
+    use cw721_base::{
         msg::{Cw721InstantiateMsg, NftExtensionMsg},
         state::Trait,
         NftExtension,

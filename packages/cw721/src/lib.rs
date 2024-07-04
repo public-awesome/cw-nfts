@@ -7,6 +7,7 @@ pub mod receiver;
 pub mod state;
 pub mod traits;
 
+use cosmwasm_std::Empty;
 pub use cw_utils::Expiration;
 use msg::{
     CollectionExtensionMsg, CollectionInfoAndExtensionResponse, NftExtensionMsg,
@@ -14,13 +15,26 @@ use msg::{
 };
 pub use state::{Approval, Attribute, CollectionExtension, NftExtension, RoyaltyInfo};
 
-/// Default CollectionExtension using `Option<CollectionExtension<RoyaltyInfo>>`
+/// Type for `Option<CollectionExtension<RoyaltyInfo>>`
 pub type DefaultOptionalCollectionExtension = Option<CollectionExtension<RoyaltyInfo>>;
+/// Type for `Option<Empty>`
+pub type EmptyOptionalCollectionExtension = Option<Empty>;
+
+/// Type for `Option<CollectionExtensionMsg<RoyaltyInfoResponse>>`
 pub type DefaultOptionalCollectionExtensionMsg =
     Option<CollectionExtensionMsg<RoyaltyInfoResponse>>;
-/// Default NftExtension using `Option<NftExtension>`.
+/// Type for `Option<Empty>`
+pub type EmptyOptionalCollectionExtensionMsg = Option<Empty>;
+
+/// Type for `Option<NftExtension>`.
 pub type DefaultOptionalNftExtension = Option<NftExtension>;
+/// Type for `Option<Empty>`
+pub type EmptyOptionalNftExtension = Option<Empty>;
+
+/// Type for `Option<NftExtensionMsg>`.
 pub type DefaultOptionalNftExtensionMsg = Option<NftExtensionMsg>;
+/// Type for `Option<Empty>`
+pub type EmptyOptionalNftExtensionMsg = Option<Empty>;
 
 // explicit type for better distinction.
 #[deprecated(since = "0.19.0", note = "Please use `NftExtension` instead")]
