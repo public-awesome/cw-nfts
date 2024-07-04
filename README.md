@@ -36,7 +36,7 @@ for more interactive discussion on these themes.
 
 ### `cw721` Package
 
-tl;dr: contracts may use `Cw721OnchainExtensions` for onchain, `Cw721BaseExtensions` for offchain nft extension and onchain collection extension, `Cw721EmptyExtensions` for no extensions, or `Cw721Extensions` for custom metadata. These extension implements `Cw721Query` and `Cw721Execute` traits. Both traits provide default implemtation. A contract may customize and adjust specific trait functions.
+tl;dr: contracts may use `Cw721OnchainExtensions` for onchain, `Cw721BaseExtensions` for offchain nft extension and optional onchain collection extension, `Cw721EmptyExtensions` for no extensions, or `Cw721Extensions` for custom metadata. These extension implements `Cw721Query` and `Cw721Execute` traits. Both traits provide default implemtations. A contract may customize and adjust specific trait functions.
 
 [traits.rs](./packages/cw721/src/traits.rs) in `cw721` package provides `Cw721Query` and `Cw721Execute` provides. Both traits have default implementations and may be customized by contracts. Default
 queries and operations are provided in [query.rs](./packages/cw721/src/query.rs) and [execute.rs](./packages/cw721/src/execute.rs).
