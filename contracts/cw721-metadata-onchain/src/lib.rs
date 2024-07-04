@@ -1,6 +1,6 @@
 use cosmwasm_std::Empty;
-use cw721_base::traits::{Cw721Execute, Cw721Query};
-use cw721_base::{
+use cw721::traits::{Cw721Execute, Cw721Query};
+use cw721::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
 };
@@ -96,15 +96,14 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// };
 /// //...
 /// ```
-pub type Cw721MetadataContract<'a> = cw721_base::state::DefaultOptionalCw721Contract<'a>;
-pub type InstantiateMsg =
-    cw721_base::msg::Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>;
-pub type ExecuteMsg = cw721_base::msg::Cw721ExecuteMsg<
+pub type Cw721MetadataContract<'a> = cw721::extension::Cw721OnchainExtensions<'a>;
+pub type InstantiateMsg = cw721::msg::Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>;
+pub type ExecuteMsg = cw721::msg::Cw721ExecuteMsg<
     DefaultOptionalNftExtensionMsg,
     DefaultOptionalCollectionExtensionMsg,
     Empty,
 >;
-pub type QueryMsg = cw721_base::msg::Cw721QueryMsg<
+pub type QueryMsg = cw721::msg::Cw721QueryMsg<
     DefaultOptionalNftExtension,
     DefaultOptionalCollectionExtension,
     Empty,
@@ -116,10 +115,9 @@ pub mod entry {
 
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721_base::error::Cw721ContractError;
-    use cw721_base::msg::Cw721InstantiateMsg;
+    use cw721::error::Cw721ContractError;
+    use cw721::msg::Cw721InstantiateMsg;
 
-    // This makes a conscious choice on the various generics used by the contract
     #[entry_point]
     pub fn instantiate(
         mut deps: DepsMut,
@@ -158,7 +156,7 @@ mod tests {
     use super::*;
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721_base::{
+    use cw721::{
         msg::{Cw721InstantiateMsg, NftExtensionMsg},
         state::Trait,
         NftExtension,
@@ -189,7 +187,6 @@ mod tests {
 
         let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
         assert_eq!(version.contract, CONTRACT_NAME);
-        assert_ne!(version.contract, cw721_base::CONTRACT_NAME);
     }
 
     #[test]

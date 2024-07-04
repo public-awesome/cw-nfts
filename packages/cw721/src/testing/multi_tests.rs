@@ -1,5 +1,6 @@
 use crate::{
     error::Cw721ContractError,
+    extension::Cw721OnchainExtensions,
     msg::{
         Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
         NumTokensResponse, OwnerOfResponse,
@@ -19,8 +20,6 @@ use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
 use url::ParseError;
 
-use super::contract::Cw721Contract;
-
 pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
 pub const OTHER_ADDR: &str = "other";
@@ -32,15 +31,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
     contract.instantiate_with_version(deps, &env, &info, msg, "contract_name", "contract_version")
 }
 
@@ -54,15 +45,7 @@ pub fn execute(
         Empty,
     >,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
     contract.execute(deps, &env, &info, msg)
 }
 
@@ -71,15 +54,7 @@ pub fn query(
     env: Env,
     msg: Cw721QueryMsg<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
 ) -> Result<Binary, Cw721ContractError> {
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
     contract.query(deps, &env, msg)
 }
 
@@ -88,15 +63,7 @@ pub fn migrate(
     env: Env,
     msg: Cw721MigrateMsg,
 ) -> Result<Response, Cw721ContractError> {
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }
 

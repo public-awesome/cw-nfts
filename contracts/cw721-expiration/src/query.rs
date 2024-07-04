@@ -1,14 +1,10 @@
 use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, StdResult};
-use cw721_base::msg::{
+use cw721::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721_base::traits::Cw721Query;
-use cw721_base::DefaultOptionalNftExtension;
-
-// expose so other libs dont need to import cw721-base
-#[allow(unused_imports)]
-pub use cw721_base::query::*;
+use cw721::traits::Cw721Query;
+use cw721::DefaultOptionalNftExtension;
 
 use crate::state::DefaultCw721ExpirationContract;
 use crate::{error::ContractError, msg::QueryMsg, state::Cw721ExpirationContract};

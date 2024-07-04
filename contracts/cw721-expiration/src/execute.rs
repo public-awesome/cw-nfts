@@ -5,16 +5,12 @@ use crate::{
     CONTRACT_NAME, CONTRACT_VERSION,
 };
 use cosmwasm_std::{Binary, DepsMut, Empty, Env, MessageInfo, Response};
-use cw721_base::{
+use cw721::{
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
     traits::Cw721Execute,
     Expiration,
 };
-use cw721_base::{DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg};
-
-// expose so other libs dont need to import cw721-base
-#[allow(unused_imports)]
-pub use cw721_base::execute::*;
+use cw721::{DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg};
 
 impl DefaultCw721ExpirationContract<'static> {
     // -- instantiate --

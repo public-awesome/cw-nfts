@@ -1,5 +1,6 @@
 use crate::{
     error::Cw721ContractError,
+    extension::Cw721OnchainExtensions,
     msg::{
         CollectionExtensionMsg, CollectionInfoAndExtensionResponse, CollectionInfoMsg,
         Cw721ExecuteMsg, Cw721InstantiateMsg, NftExtensionMsg, RoyaltyInfoResponse,
@@ -10,20 +11,16 @@ use crate::{
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
-    CollectionExtension, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, RoyaltyInfo,
+    CollectionExtension, RoyaltyInfo,
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env, mock_info},
-    Addr, Api, Decimal, Empty, Timestamp,
+    Addr, Api, Decimal, Timestamp,
 };
 use cw2::ContractVersion;
 use cw_ownable::Action;
 use cw_storage_plus::Item;
-use unit_tests::{
-    contract::Cw721Contract,
-    multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER_ADDR},
-};
+use unit_tests::multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER_ADDR};
 
 use super::*;
 
@@ -32,86 +29,62 @@ fn test_instantiation() {
     let mut deps = mock_dependencies();
 
     // error on empty name
-    let err = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default()
-    .instantiate_with_version(
-        deps.as_mut(),
-        &mock_env(),
-        &mock_info("mr-t", &[]),
-        Cw721InstantiateMsg {
-            name: "".into(),
-            symbol: "collection_symbol".into(),
-            collection_info_extension: None,
-            creator: None,
-            minter: None,
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap_err();
+    let err = Cw721OnchainExtensions::default()
+        .instantiate_with_version(
+            deps.as_mut(),
+            &mock_env(),
+            &mock_info("mr-t", &[]),
+            Cw721InstantiateMsg {
+                name: "".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: None,
+                minter: None,
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap_err();
     assert_eq!(err, Cw721ContractError::CollectionNameEmpty {});
 
     // error on empty symbol
-    let err = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default()
-    .instantiate_with_version(
-        deps.as_mut(),
-        &mock_env(),
-        &mock_info("mr-t", &[]),
-        Cw721InstantiateMsg {
-            name: "collection_name".into(),
-            symbol: "".into(),
-            collection_info_extension: None,
-            creator: None,
-            minter: None,
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap_err();
+    let err = Cw721OnchainExtensions::default()
+        .instantiate_with_version(
+            deps.as_mut(),
+            &mock_env(),
+            &mock_info("mr-t", &[]),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "".into(),
+                collection_info_extension: None,
+                creator: None,
+                minter: None,
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap_err();
     assert_eq!(err, Cw721ContractError::CollectionSymbolEmpty {});
 
-    Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default()
-    .instantiate_with_version(
-        deps.as_mut(),
-        &mock_env(),
-        &mock_info("larry", &[]),
-        Cw721InstantiateMsg {
-            name: "collection_name".into(),
-            symbol: "collection_symbol".into(),
-            collection_info_extension: None,
-            minter: Some("minter".into()),
-            creator: Some("creator".into()),
-            withdraw_address: None,
-        },
-        "contract_name",
-        "contract_version",
-    )
-    .unwrap();
+    Cw721OnchainExtensions::default()
+        .instantiate_with_version(
+            deps.as_mut(),
+            &mock_env(),
+            &mock_info("larry", &[]),
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                minter: Some("minter".into()),
+                creator: Some("creator".into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
 
     // assert minter and creator
     let minter = MINTER
@@ -146,31 +119,23 @@ fn test_instantiation_with_proper_minter_and_creator() {
         let mut deps = mock_dependencies();
 
         let info_minter_and_creator = mock_info("minter_and_creator", &[]);
-        Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_minter_and_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: None,
-                creator: None,
-                minter: None,
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_minter_and_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: None,
+                    creator: None,
+                    minter: None,
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(info_minter_and_creator.sender.clone()));
@@ -182,31 +147,23 @@ fn test_instantiation_with_proper_minter_and_creator() {
         let mut deps = mock_dependencies();
 
         let info = mock_info(OTHER_ADDR, &[]);
-        Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: None,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: None,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
@@ -218,31 +175,23 @@ fn test_instantiation_with_proper_minter_and_creator() {
         let mut deps = mock_dependencies();
 
         let info = mock_info(MINTER_ADDR, &[]);
-        Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: None,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: None,
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: None,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: None,
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(info.sender));
@@ -254,31 +203,23 @@ fn test_instantiation_with_proper_minter_and_creator() {
         let mut deps = mock_dependencies();
 
         let info = mock_info(CREATOR_ADDR, &[]);
-        Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: None,
-                creator: None,
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: None,
+                    creator: None,
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
@@ -323,44 +264,28 @@ fn test_instantiation_with_collection_info() {
                     .unwrap(),
             }),
         });
-        Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap();
+        Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap();
 
         // validate data
-        let collection_info = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .query_collection_info_and_extension(deps.as_ref())
-        .unwrap();
+        let collection_info = Cw721OnchainExtensions::default()
+            .query_collection_info_and_extension(deps.as_ref())
+            .unwrap();
         assert_eq!(collection_info.name, "collection_name");
         assert_eq!(collection_info.symbol, "collection_symbol");
         assert_eq!(collection_info.extension, extension);
@@ -385,31 +310,23 @@ fn test_instantiation_with_collection_info() {
                     .unwrap(),
             }),
         });
-        let err = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap_err();
+        let err = Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap_err();
         assert_eq!(
             err,
             Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
@@ -430,31 +347,23 @@ fn test_instantiation_with_collection_info() {
                     .unwrap(),
             }),
         });
-        let err = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap_err();
+        let err = Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap_err();
         assert_eq!(
             err,
             Cw721ContractError::ParseError(url::ParseError::RelativeUrlWithoutBase)
@@ -475,31 +384,23 @@ fn test_instantiation_with_collection_info() {
                     .unwrap(),
             }),
         });
-        let err = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap_err();
+        let err = Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap_err();
         assert_eq!(err, Cw721ContractError::CollectionDescriptionEmpty {});
 
         // description too long
@@ -517,31 +418,23 @@ fn test_instantiation_with_collection_info() {
                     .unwrap(),
             }),
         });
-        let err = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap_err();
+        let err = Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap_err();
         assert_eq!(
             err,
             Cw721ContractError::CollectionDescriptionTooLong {
@@ -561,31 +454,23 @@ fn test_instantiation_with_collection_info() {
                 share: (MAX_ROYALTY_SHARE_PCT * 2).to_string().parse().unwrap(),
             }),
         });
-        let err = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .instantiate_with_version(
-            deps.as_mut(),
-            &mock_env(),
-            &info_creator,
-            Cw721InstantiateMsg {
-                name: "collection_name".into(),
-                symbol: "collection_symbol".into(),
-                collection_info_extension: extension_msg,
-                creator: Some(CREATOR_ADDR.into()),
-                minter: Some(MINTER_ADDR.into()),
-                withdraw_address: None,
-            },
-            "contract_name",
-            "contract_version",
-        )
-        .unwrap_err();
+        let err = Cw721OnchainExtensions::default()
+            .instantiate_with_version(
+                deps.as_mut(),
+                &mock_env(),
+                &info_creator,
+                Cw721InstantiateMsg {
+                    name: "collection_name".into(),
+                    symbol: "collection_symbol".into(),
+                    collection_info_extension: extension_msg,
+                    creator: Some(CREATOR_ADDR.into()),
+                    minter: Some(MINTER_ADDR.into()),
+                    withdraw_address: None,
+                },
+                "contract_name",
+                "contract_version",
+            )
+            .unwrap_err();
         assert_eq!(
             err,
             Cw721ContractError::InvalidRoyalties(format!(
@@ -631,15 +516,7 @@ fn test_collection_info_update() {
                     .unwrap(),
             }),
         });
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
         contract
             .instantiate_with_version(
                 deps.as_mut(),
@@ -722,17 +599,9 @@ fn test_collection_info_update() {
             .unwrap();
 
         // validate data
-        let collection_info = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .query_collection_info_and_extension(deps.as_ref())
-        .unwrap();
+        let collection_info = Cw721OnchainExtensions::default()
+            .query_collection_info_and_extension(deps.as_ref())
+            .unwrap();
         assert_eq!(collection_info.name, "new_collection_name");
         assert_eq!(collection_info.symbol, "new_collection_symbol");
         assert_eq!(
@@ -779,17 +648,9 @@ fn test_collection_info_update() {
             )
             .unwrap();
         // validate data
-        let collection_info = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default()
-        .query_collection_info_and_extension(deps.as_ref())
-        .unwrap();
+        let collection_info = Cw721OnchainExtensions::default()
+            .query_collection_info_and_extension(deps.as_ref())
+            .unwrap();
         assert_eq!(collection_info.name, "new_collection_name");
         assert_eq!(collection_info.symbol, "new_collection_symbol");
         assert_eq!(
@@ -830,15 +691,7 @@ fn test_collection_info_update() {
                     .unwrap(),
             }),
         });
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
         contract
             .instantiate_with_version(
                 deps.as_mut(),
@@ -1090,15 +943,7 @@ fn test_collection_info_update() {
                     .unwrap(),
             }),
         });
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
         contract
             .instantiate_with_version(
                 deps.as_mut(),
@@ -1215,15 +1060,7 @@ fn test_collection_info_update() {
                     .unwrap(),
             }),
         });
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
         contract
             .instantiate_with_version(
                 deps.as_mut(),
@@ -1294,15 +1131,7 @@ fn test_nft_mint() {
     // case 1: mint without onchain metadata
     {
         let mut deps = mock_dependencies();
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
 
         let info = mock_info(CREATOR_ADDR, &[]);
         let init_msg = Cw721InstantiateMsg {
@@ -1369,15 +1198,7 @@ fn test_nft_mint() {
     // case 2: mint with onchain metadata
     {
         let mut deps = mock_dependencies();
-        let contract = Cw721Contract::<
-            DefaultOptionalNftExtension,
-            DefaultOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtension,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-            Empty,
-            Empty,
-        >::default();
+        let contract = Cw721OnchainExtensions::default();
 
         let info = mock_info(CREATOR_ADDR, &[]);
         let init_msg = Cw721InstantiateMsg {
@@ -1562,15 +1383,7 @@ fn test_migrate_v16_onchain_metadata_contract() {
     // assert new data before migration:
     // - minter, creator, and collection metadata throws NotFound Error
     MINTER.item.load(deps.as_ref().storage).unwrap_err(); // cw_ownable in v16 is used for minter
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
     contract
         .query_collection_info_and_extension(deps.as_ref())
         .unwrap_err();
@@ -1622,26 +1435,18 @@ fn test_migrate_v16_onchain_metadata_contract() {
     );
 
     // migrate
-    Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default()
-    .migrate(
-        deps.as_mut(),
-        env.clone(),
-        crate::msg::Cw721MigrateMsg::WithUpdate {
-            minter: None,
-            creator: None,
-        },
-        "contract_name",
-        "new_contract_version",
-    )
-    .unwrap();
+    Cw721OnchainExtensions::default()
+        .migrate(
+            deps.as_mut(),
+            env.clone(),
+            crate::msg::Cw721MigrateMsg::WithUpdate {
+                minter: None,
+                creator: None,
+            },
+            "contract_name",
+            "new_contract_version",
+        )
+        .unwrap();
 
     // assert version has changed
     let version = cw2::get_contract_version(deps.as_ref().storage)

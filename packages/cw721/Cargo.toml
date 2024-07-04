@@ -12,6 +12,9 @@ repository    = { workspace = true }
 homepage      = { workspace = true }
 documentation = { workspace = true }
 
+[lib]
+doctest      = false # disable doc tests
+
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }

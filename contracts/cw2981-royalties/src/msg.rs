@@ -4,11 +4,11 @@ use crate::{
 };
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Deps, Empty, Env, MessageInfo, Uint128};
-use cw721_base::msg::{
+use cw721::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, MinterResponse, NftInfoResponse,
     NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
 };
-use cw721_base::{
+use cw721::{
     error::Cw721ContractError,
     execute::{assert_creator, assert_minter},
     msg::{empty_as_none, CollectionInfoAndExtensionResponse, Cw721QueryMsg},

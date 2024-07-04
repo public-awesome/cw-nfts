@@ -1,11 +1,7 @@
 use cosmwasm_schema::cw_serde;
 
 use cosmwasm_std::Empty;
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721_base::{
-    msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, Cw721QueryMsg},
-    *,
-};
+use cw721::{msg::Cw721QueryMsg, EmptyOptionalCollectionExtension, EmptyOptionalNftExtension};
 
 #[cw_serde]
 pub struct InstantiateMsg<TCollectionExtension> {

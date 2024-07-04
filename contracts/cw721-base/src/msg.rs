@@ -1,7 +1,7 @@
 use cosmwasm_std::Empty;
-// expose so other libs dont need to import cw721
-pub use cw721::msg::*;
+
 use cw721::{
+    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
     EmptyOptionalCollectionExtension, EmptyOptionalCollectionExtensionMsg,
     EmptyOptionalNftExtension, EmptyOptionalNftExtensionMsg,
 };

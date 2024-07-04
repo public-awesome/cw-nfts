@@ -8,13 +8,19 @@ use cw_utils::Expiration;
 
 use crate::{
     error::Cw721ContractError,
+    extension::{Cw721BaseExtensions, Cw721Extensions, Cw721OnchainExtensions},
     helpers::value_or_empty,
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
     state::{CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
-    traits::{Cw721CustomMsg, Cw721State, FromAttributesState, StateFactory, ToAttributesState},
-    Approval,
+    traits::{
+        Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
+        ToAttributesState,
+    },
+    Approval, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, EmptyOptionalCollectionExtension,
+    EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtension, EmptyOptionalNftExtensionMsg,
 };
 
 // ------- instantiate -------
@@ -717,4 +723,65 @@ pub fn migrate_legacy_collection_info(
                 .add_attribute("migrated collection symbol", legacy_collection_info.symbol))
         }
     }
+}
+
+impl<'a>
+    Cw721Execute<
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
+        Empty,
+        Empty,
+    > for Cw721OnchainExtensions<'a>
+{
+}
+
+impl<'a>
+    Cw721Execute<
+        EmptyOptionalNftExtension,
+        EmptyOptionalNftExtensionMsg,
+        EmptyOptionalCollectionExtension,
+        EmptyOptionalCollectionExtensionMsg,
+        Empty,
+        Empty,
+    > for Cw721BaseExtensions<'a>
+{
+}
+
+impl<
+        'a,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    >
+    Cw721Execute<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TCustomResponseMsg,
+    >
+    for Cw721Extensions<
+        'a,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    >
+where
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
+    TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
+    TCustomResponseMsg: CustomMsg,
+{
 }

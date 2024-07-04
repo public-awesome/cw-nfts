@@ -1,8 +1,6 @@
 use cosmwasm_std::Timestamp;
 
-// expose so other libs dont need to import cw721-base
-pub use cw721_base::state::*;
-
+use cw721::extension::Cw721OnchainExtensions;
 use cw_storage_plus::{Item, Map};
 
 /// Opionated version of generic `Cw721ExpirationContract` with default onchain nft and collection extensions using:
@@ -16,7 +14,7 @@ use cw_storage_plus::{Item, Map};
 pub struct DefaultCw721ExpirationContract<'a> {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
-    pub base_contract: DefaultOptionalCw721Contract<'a>,
+    pub base_contract: Cw721OnchainExtensions<'a>,
 }
 
 impl Default for DefaultCw721ExpirationContract<'static> {
@@ -24,7 +22,7 @@ impl Default for DefaultCw721ExpirationContract<'static> {
         Self {
             expiration_days: Item::new("expiration_days"),
             mint_timestamps: Map::new("mint_timestamps"),
-            base_contract: DefaultOptionalCw721Contract::default(),
+            base_contract: Cw721OnchainExtensions::default(),
         }
     }
 }
@@ -32,7 +30,7 @@ impl Default for DefaultCw721ExpirationContract<'static> {
 pub struct Cw721ExpirationContract<'a> {
     pub expiration_days: Item<'a, u16>, // max 65535 days
     pub mint_timestamps: Map<'a, &'a str, Timestamp>,
-    pub base_contract: DefaultOptionalCw721Contract<'a>,
+    pub base_contract: Cw721OnchainExtensions<'a>,
 }
 
 impl Default for Cw721ExpirationContract<'static> {
@@ -40,7 +38,7 @@ impl Default for Cw721ExpirationContract<'static> {
         Self {
             expiration_days: Item::new("expiration_days"),
             mint_timestamps: Map::new("mint_timestamps"),
-            base_contract: DefaultOptionalCw721Contract::default(),
+            base_contract: Cw721OnchainExtensions::default(),
         }
     }
 }

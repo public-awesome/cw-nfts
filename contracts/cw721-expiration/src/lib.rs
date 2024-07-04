@@ -8,15 +8,15 @@ pub mod state;
 mod contract_tests;
 
 use cosmwasm_std::Empty;
-use cw721_base::DefaultOptionalNftExtension;
+use cw721::DefaultOptionalNftExtension;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw721-expiration";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type MinterResponse = cw721_base::msg::MinterResponse;
+pub type MinterResponse = cw721::msg::MinterResponse;
 
-pub type NftInfo = cw721_base::state::NftInfo<DefaultOptionalNftExtension>;
+pub type NftInfo = cw721::state::NftInfo<DefaultOptionalNftExtension>;
 
 pub mod entry {
     use crate::{
@@ -30,7 +30,7 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721_base::{
+    use cw721::{
         msg::Cw721ExecuteMsg, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg,
     };
 

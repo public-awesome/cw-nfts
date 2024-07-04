@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use cw20::Cw20ReceiveMsg;
-use cw721_base::DefaultOptionalNftExtension;
+use cw721::DefaultOptionalNftExtension;
 
 #[cw_serde]
 pub struct InstantiateMsg<TCollectionExtensionMsg> {

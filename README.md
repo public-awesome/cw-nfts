@@ -36,8 +36,9 @@ for more interactive discussion on these themes.
 
 ### `cw721` Package
 
-The `cw721` package contains contains [traits.rs](./packages/cw721/src/traits.rs). For ease-of-use the traits
-`Cw721Query` and `Cw721Execute` provides default implementations and may be customized by contracts. All default
+tl;dr: contracts may use `Cw721OnchainExtensions` for onchain, `Cw721BaseExtensions` for offchain, or `Cw721Extensions` for custom metadata. These extension implements `Cw721Query` and `Cw721Execute` traits. Both traits provide default implemtation. A contract may customize and adjust specific trait functions.
+
+[traits.rs](./packages/cw721/src/traits.rs) in `cw721` package provides `Cw721Query` and `Cw721Execute` provides. Both traits have default implementations and may be customized by contracts. Default
 queries and operations are provided in [query.rs](./packages/cw721/src/query.rs) and [execute.rs](./packages/cw721/src/execute.rs).
 3rd party contracts may call query and execute messages using `Cw721Helper` in [helpers.rs](./packages/cw721/src/helpers.rs).
 
@@ -47,7 +48,7 @@ their own data for nft and collection metadata. Based on ERC721 the following st
 * [msg.rs](./packages/cw721/src/msg.rs): `CollectionExtensionMsg<TRoyaltyInfoResponse>` and `NftExtensionMsg`
 * [state.rs](./packages/cw721/src/state.rs): `CollectionExtension<TRoyaltyInfo>` and `NftExtension`
 
-These structs are optional and these types in [libs.rs](./packages/cw721/src/lib.rs) may be used in contracts:
+These structs are optional and these default types in [libs.rs](./packages/cw721/src/lib.rs) may be used in contracts:
 
 ```rust
 /// Type for `Option<CollectionExtension<RoyaltyInfo>>`
@@ -72,7 +73,7 @@ pub type DefaultOptionalNftExtensionMsg = Option<NftExtensionMsg>;
 pub type EmptyOptionalNftExtensionMsg = Option<Empty>;
 ```
 
-For a developer experience there are these opionated the helpers `DefaultCw721Helper` and `EmptyCw721Helper`. Example:
+For better developer experience there are these opionated helpers: `DefaultCw721Helper` and `EmptyCw721Helper`. Example:
 
 ```rust
 // DefaultCw721Helper for handling optional onchain nft and collection extensions.
@@ -108,94 +109,178 @@ let msg = Cw721Helper::<
 .call(mint_msg)?;
 ```
 
-`Cw721Query`:
-
-```rust
-pub trait Cw721Query<
-    // NftInfo extension (onchain metadata).
-    TNftExtension,
-    // CollectionInfo extension (onchain attributes).
-    TCollectionExtension,
-    // Custom query msg for custom contract logic. Default implementation returns an empty binary.
-    TExtensionQueryMsg,
-> where
-    TNftExtension: Cw721State + Contains,
-    TCollectionExtension: Cw721State + FromAttributesState,
-    TExtensionQueryMsg: Cw721CustomMsg,
-{
-    fn query(
-        &self,
-        deps: Deps,
-        env: &Env,
-        msg: Cw721QueryMsg<TNftExtension, TCollectionExtension, TExtensionQueryMsg>,
-    ) -> Result<Binary, Cw721ContractError> {
-        match msg {
-            #[allow(deprecated)]
-            Cw721QueryMsg::Minter {} => Ok(to_json_binary(&self.query_minter(deps.storage)?)?),
-        // ...
-        }
-    }
-}
-```
-
-`Cw721Execute`:
-
-```rust
-pub trait Cw721Execute<
-    // NftInfo extension (onchain metadata).
-    TNftExtension,
-    // NftInfo extension msg for onchain metadata.
-    TNftExtensionMsg,
-    // CollectionInfo extension (onchain attributes).
-    TCollectionExtension,
-    // CollectionInfo extension msg for onchain collection attributes.
-    TCollectionExtensionMsg,
-    // Custom extension msg for custom contract logic. Default implementation is a no-op.
-    TExtensionMsg,
-    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
-    TCustomResponseMsg,
-> where
-    TNftExtension: Cw721State,
-    TNftExtensionMsg: Cw721CustomMsg + StateFactory<TNftExtension>,
-    TCollectionExtension: Cw721State + ToAttributesState + FromAttributesState,
-    TCollectionExtensionMsg: Cw721CustomMsg + StateFactory<TCollectionExtension>,
-    TCustomResponseMsg: CustomMsg,
-{
-    fn instantiate_with_version(
-        &self,
-        deps: DepsMut,
-        env: &Env,
-        info: &MessageInfo,
-        msg: Cw721InstantiateMsg<TCollectionExtensionMsg>,
-        contract_name: &str,
-        contract_version: &str,
-    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        // ...
-    }
-    // ...
-    fn execute(
-        &self,
-        deps: DepsMut,
-        env: &Env,
-        info: &MessageInfo,
-        msg: Cw721ExecuteMsg<TNftExtensionMsg, TCollectionExtensionMsg, TExtensionMsg>,
-    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-        match msg {
-            Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
-                self.update_collection_info(deps, info.into(), env.into(), collection_info)
-            }
-            Cw721ExecuteMsg::Mint {
-                token_id,
-                owner,
-                token_uri,
-                extension,
-            } => self.mint(deps, env, info, token_id, owner, token_uri, extension),
-            // ...
-        }
-    }
-    // ...
-}
-```
-
 ### `cw721-base`
 
+This contracts uses `Cw721BaseExtensions` for storing metadata offchain.
+
+[lib.rs](./contracts/cw721-base/src/lib.rs):
+
+```rust
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn instantiate(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        msg: Cw721InstantiateMsg<EmptyOptionalCollectionExtensionMsg>,
+    ) -> Result<Response, Cw721ContractError> {
+        let contract = Cw721BaseExtensions::default();
+        contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn execute(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        msg: Cw721ExecuteMsg<
+            EmptyOptionalNftExtensionMsg,
+            EmptyOptionalCollectionExtensionMsg,
+            Empty,
+        >,
+    ) -> Result<Response, Cw721ContractError> {
+        let contract = Cw721BaseExtensions::default();
+        contract.execute(deps, &env, &info, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn query(
+        deps: Deps,
+        env: Env,
+        msg: Cw721QueryMsg<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>,
+    ) -> Result<Binary, Cw721ContractError> {
+        let contract = Cw721BaseExtensions::default();
+        contract.query(deps, &env, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: Cw721MigrateMsg,
+    ) -> Result<Response, Cw721ContractError> {
+        let contract = Cw721BaseExtensions::default();
+        contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
+    }
+```
+
+`Cw721BaseExtensions` in [extension.rs](./packages/cw721/src/extension.rs):
+
+```rust
+/// Opionated version of generic `Cw721Extensions` with empty onchain nft and collection extensions using:
+/// - `Empty` for NftInfo extension (onchain metadata).
+/// - `Empty` for NftInfo extension msg for onchain metadata.
+/// - `Empty` for CollectionInfo extension (onchain attributes).
+/// - `Empty` for CollectionInfo extension msg for onchain collection attributes.
+/// - `Empty` for custom extension msg for custom contract logic.
+/// - `Empty` for custom query msg for custom contract logic.
+/// - `Empty` for custom response msg for custom contract logic.
+pub struct Cw721BaseExtensions<'a> {
+    pub config: Cw721Config<'a, EmptyOptionalNftExtension>,
+    pub(crate) _collection_extension: PhantomData<EmptyOptionalCollectionExtension>,
+    pub(crate) _nft_extension_msg: PhantomData<EmptyOptionalNftExtensionMsg>,
+    pub(crate) _collection_extension_msg: PhantomData<EmptyOptionalCollectionExtensionMsg>,
+    pub(crate) _extension_msg: PhantomData<Empty>,
+    pub(crate) _extension_query_msg: PhantomData<Empty>,
+    pub(crate) _custom_response_msg: PhantomData<Empty>,
+}
+
+impl Default for Cw721BaseExtensions<'static> {
+    fn default() -> Self {
+        Self {
+            config: Cw721Config::<EmptyOptionalNftExtension>::default(),
+            _collection_extension: PhantomData,
+            _nft_extension_msg: PhantomData,
+            _collection_extension_msg: PhantomData,
+            _extension_msg: PhantomData,
+            _extension_query_msg: PhantomData,
+            _custom_response_msg: PhantomData,
+        }
+    }
+}
+```
+
+### `cw721-metadata-onchain`
+
+This contract uses `Cw721OnchainExtensions` for storing metadata onchain.
+
+[lib.rs](./contracts/cw721-metadata-onchain/src/lib.rs):
+
+```rust
+    #[entry_point]
+    pub fn instantiate(
+        mut deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
+    ) -> Result<Response, Cw721ContractError> {
+        Cw721MetadataContract::default().instantiate_with_version(
+            deps.branch(),
+            &env,
+            &info,
+            msg,
+            CONTRACT_NAME,
+            CONTRACT_VERSION,
+        )
+    }
+
+    #[entry_point]
+    pub fn execute(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        msg: ExecuteMsg,
+    ) -> Result<Response, Cw721ContractError> {
+        Cw721MetadataContract::default().execute(deps, &env, &info, msg)
+    }
+
+    #[entry_point]
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
+        Cw721MetadataContract::default().query(deps, &env, msg)
+    }
+```
+
+### Custom Contracts
+
+Custom contracts may use `Cw721Extensions` and provide their custom structs for e.g. for `TNftExtension` and `TCollectionExtension`:
+
+[extension.rs](./packages/cw721/src/extension.rs):
+
+```rust
+impl<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    > Default
+    for Cw721Extensions<
+        'static,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    >
+where
+    TNftExtension: Cw721State,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
+{
+    fn default() -> Self {
+        Self {
+            config: Cw721Config::default(),
+            _collection_extension: PhantomData,
+            _nft_extension_msg: PhantomData,
+            _collection_extension_msg: PhantomData,
+            _extension_msg: PhantomData,
+            _extension_query_msg: PhantomData,
+            _custom_response_msg: PhantomData,
+        }
+    }
+}
+```

@@ -1,9 +1,6 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721_base::state::EmptyOptionalCw721Contract;
-pub use cw721_base::Cw721Contract;
-
-use cw721_base::entry::{execute as _execute, query as _query};
+use cw721::extension::Cw721BaseExtensions;
 
 pub mod msg;
 pub mod query;
@@ -13,7 +10,7 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> = EmptyOptionalCw721Contract<'a>;
+pub type Cw721NonTransferableContract<'a> = Cw721BaseExtensions<'a>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -23,10 +20,10 @@ pub mod entry {
     use cosmwasm_std::{
         entry_point, to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     };
-    use cw721_base::error::Cw721ContractError;
-    use cw721_base::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
-    use cw721_base::traits::Cw721Execute;
-    use cw721_base::{EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtensionMsg};
+    use cw721::error::Cw721ContractError;
+    use cw721::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg};
+    use cw721::traits::{Cw721Execute, Cw721Query};
+    use cw721::{EmptyOptionalCollectionExtensionMsg, EmptyOptionalNftExtensionMsg};
 
     #[entry_point]
     pub fn instantiate(
@@ -45,7 +42,7 @@ pub mod entry {
 
         CONFIG.save(deps.storage, &config)?;
 
-        let cw721_base_instantiate_msg = Cw721InstantiateMsg {
+        let cw721_instantiate_msg = Cw721InstantiateMsg {
             name: msg.name,
             symbol: msg.symbol,
             collection_info_extension: msg.collection_info_extension,
@@ -58,7 +55,7 @@ pub mod entry {
             deps.branch(),
             &env,
             &info,
-            cw721_base_instantiate_msg,
+            cw721_instantiate_msg,
             "contract_name",
             "contract_version",
         )?;
@@ -85,10 +82,10 @@ pub mod entry {
         match config.admin {
             Some(admin) => {
                 if admin == info.sender {
-                    _execute(deps, env, info, msg)
+                    Cw721BaseExtensions::default().execute(deps, &env, &info, msg)
                 } else {
                     Err(Cw721ContractError::Ownership(
-                        cw721_base::OwnershipError::NotOwner,
+                        cw721::OwnershipError::NotOwner,
                     ))
                 }
             }
@@ -101,7 +98,7 @@ pub mod entry {
                 } => Cw721NonTransferableContract::default()
                     .mint(deps, &env, &info, token_id, owner, token_uri, extension),
                 _ => Err(Cw721ContractError::Ownership(
-                    cw721_base::OwnershipError::NotOwner,
+                    cw721::OwnershipError::NotOwner,
                 )),
             },
         }
@@ -111,7 +108,7 @@ pub mod entry {
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
         match msg {
             QueryMsg::Admin {} => Ok(to_json_binary(&admin(deps)?)?),
-            _ => _query(deps, env, msg.into()),
+            _ => Cw721BaseExtensions::default().query(deps, &env, msg.into()),
         }
     }
 }

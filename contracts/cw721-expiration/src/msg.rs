@@ -1,7 +1,7 @@
 use crate::{DefaultOptionalNftExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Empty};
-use cw721_base::{
+use cw721::{
     msg::{CollectionInfoAndExtensionResponse, Cw721ExecuteMsg},
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtensionMsg,
@@ -40,7 +40,7 @@ pub struct InstantiateMsg {
 pub enum QueryMsg<TExtensionQueryMsg> {
     // -------- below adds `include_expired_nft` prop to cw721/src/msg.rs --------
     /// Return the owner of the given token, error if token does not exist
-    #[returns(cw721_base::msg::OwnerOfResponse)]
+    #[returns(cw721::msg::OwnerOfResponse)]
     OwnerOf {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -49,7 +49,7 @@ pub enum QueryMsg<TExtensionQueryMsg> {
         include_expired_nft: Option<bool>,
     },
     /// Return operator that can access all of the owner's tokens.
-    #[returns(cw721_base::msg::ApprovalResponse)]
+    #[returns(cw721::msg::ApprovalResponse)]
     Approval {
         token_id: String,
         spender: String,
@@ -58,7 +58,7 @@ pub enum QueryMsg<TExtensionQueryMsg> {
         include_expired_nft: Option<bool>,
     },
     /// Return approvals that a token has
-    #[returns(cw721_base::msg::ApprovalsResponse)]
+    #[returns(cw721::msg::ApprovalsResponse)]
     Approvals {
         token_id: String,
         include_expired: Option<bool>,
@@ -69,14 +69,14 @@ pub enum QueryMsg<TExtensionQueryMsg> {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(cw721_base::msg::NftInfoResponse<DefaultOptionalNftExtension>)]
+    #[returns(cw721::msg::NftInfoResponse<DefaultOptionalNftExtension>)]
     NftInfo {
         token_id: String,
         /// unset or false will filter out expired nfts, you must set to true to see them
         include_expired_nft: Option<bool>,
     },
 
-    #[returns(Option<cw721_base::msg::NftInfoResponse<DefaultOptionalNftExtension>>)]
+    #[returns(Option<cw721::msg::NftInfoResponse<DefaultOptionalNftExtension>>)]
     GetNftByExtension {
         token_id: String,
         extension: DefaultOptionalNftExtension,
@@ -87,7 +87,7 @@ pub enum QueryMsg<TExtensionQueryMsg> {
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(cw721_base::msg::AllNftInfoResponse<DefaultOptionalNftExtension>)]
+    #[returns(cw721::msg::AllNftInfoResponse<DefaultOptionalNftExtension>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -98,7 +98,7 @@ pub enum QueryMsg<TExtensionQueryMsg> {
 
     /// With Enumerable extension.
     /// Returns all tokens owned by the given address, [] if unset.
-    #[returns(cw721_base::msg::TokensResponse)]
+    #[returns(cw721::msg::TokensResponse)]
     Tokens {
         owner: String,
         start_after: Option<String>,
@@ -109,7 +109,7 @@ pub enum QueryMsg<TExtensionQueryMsg> {
 
     /// With Enumerable extension.
     /// Requires pagination. Lists all token_ids controlled by the contract.
-    #[returns(cw721_base::msg::TokensResponse)]
+    #[returns(cw721::msg::TokensResponse)]
     AllTokens {
         start_after: Option<String>,
         limit: Option<u32>,
@@ -119,14 +119,14 @@ pub enum QueryMsg<TExtensionQueryMsg> {
 
     // -------- below is from cw721/src/msg.rs --------
     /// Return approval of a given operator for all tokens of an owner, error if not set
-    #[returns(cw721_base::msg::OperatorResponse)]
+    #[returns(cw721::msg::OperatorResponse)]
     Operator {
         owner: String,
         operator: String,
         include_expired: Option<bool>,
     },
     /// List all operators that can access all of the owner's tokens
-    #[returns(cw721_base::msg::OperatorsResponse)]
+    #[returns(cw721::msg::OperatorsResponse)]
     AllOperators {
         owner: String,
         /// unset or false will filter out expired items, you must set to true to see them
@@ -135,14 +135,14 @@ pub enum QueryMsg<TExtensionQueryMsg> {
         limit: Option<u32>,
     },
     /// Total number of tokens issued, including all expired NFTs
-    #[returns(cw721_base::msg::NumTokensResponse)]
+    #[returns(cw721::msg::NumTokensResponse)]
     NumTokens {},
 
     #[deprecated(
         since = "0.19.0",
         note = "Please use GetCollectionInfoAndExtension instead"
     )]
-    #[returns(CollectionInfoAndExtensionResponse<cw721_base::DefaultOptionalCollectionExtension>)]
+    #[returns(CollectionInfoAndExtensionResponse<cw721::DefaultOptionalCollectionExtension>)]
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 

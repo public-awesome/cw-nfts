@@ -1,9 +1,7 @@
 use std::marker::PhantomData;
 
 use cosmwasm_std::Empty;
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721_base::state::*;
-use cw721_base::traits::Contains;
+use cw721::{state::Cw721Config, state::NftInfo, traits::Contains};
 
 use crate::{
     DefaultOptionMetadataExtensionWithRoyalty, DefaultOptionMetadataExtensionWithRoyaltyMsg,

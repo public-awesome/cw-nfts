@@ -1,10 +1,13 @@
-use cosmwasm_std::{Addr, BlockInfo, Deps, Empty, Env, Order, StdError, StdResult, Storage};
+use cosmwasm_std::{
+    Addr, BlockInfo, CustomMsg, Deps, Empty, Env, Order, StdError, StdResult, Storage,
+};
 use cw_ownable::Ownership;
 use cw_storage_plus::Bound;
 use cw_utils::{maybe_addr, Expiration};
 
 use crate::{
     error::Cw721ContractError,
+    extension::{Cw721BaseExtensions, Cw721Extensions, Cw721OnchainExtensions},
     msg::{
         AllInfoResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
         CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
@@ -14,7 +17,9 @@ use crate::{
         Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
         MINTER,
     },
-    traits::{Contains, Cw721State, FromAttributesState},
+    traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState},
+    DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
+    EmptyOptionalCollectionExtension, EmptyOptionalNftExtension,
 };
 
 pub const DEFAULT_LIMIT: u32 = 10;
@@ -385,4 +390,44 @@ pub fn query_withdraw_address(deps: Deps) -> StdResult<Option<String>> {
     Cw721Config::<Option<Empty>>::default()
         .withdraw_address
         .may_load(deps.storage)
+}
+
+impl<'a> Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
+    for Cw721OnchainExtensions<'a>
+{
+}
+
+impl<'a> Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
+    for Cw721BaseExtensions<'a>
+{
+}
+
+impl<
+        'a,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    > Cw721Query<TNftExtension, TCollectionExtension, TExtensionQueryMsg>
+    for Cw721Extensions<
+        'a,
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+        TCustomResponseMsg,
+    >
+where
+    TNftExtension: Cw721State + Contains,
+    TNftExtensionMsg: Cw721CustomMsg,
+    TCollectionExtension: Cw721State + FromAttributesState,
+    TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
+    TCustomResponseMsg: CustomMsg,
+{
 }

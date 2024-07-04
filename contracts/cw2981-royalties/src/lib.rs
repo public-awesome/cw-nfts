@@ -4,7 +4,7 @@ pub mod msg;
 pub mod query;
 pub mod state;
 
-use cw721_base::{
+use cw721::{
     state::Trait,
     traits::{Cw721CustomMsg, Cw721State},
 };
@@ -12,7 +12,6 @@ pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Empty};
-pub use cw721_base::entry::{execute as _execute, query as _query};
 
 use crate::error::ContractError;
 
@@ -26,7 +25,7 @@ pub type DefaultOptionMetadataExtensionWithRoyaltyMsg = DefaultOptionMetadataExt
 pub type MintExtension = Option<DefaultOptionMetadataExtensionWithRoyalty>;
 
 pub type ExecuteMsg =
-    cw721_base::msg::Cw721ExecuteMsg<DefaultOptionMetadataExtensionWithRoyaltyMsg, Empty, Empty>;
+    cw721::msg::Cw721ExecuteMsg<DefaultOptionMetadataExtensionWithRoyaltyMsg, Empty, Empty>;
 
 // see: https://docs.opensea.io/docs/metadata-standards
 #[cw_serde]
@@ -61,8 +60,8 @@ pub mod entry {
 
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721_base::msg::Cw721InstantiateMsg;
-    use cw721_base::traits::{Cw721Execute, Cw721Query};
+    use cw721::msg::Cw721InstantiateMsg;
+    use cw721::traits::{Cw721Execute, Cw721Query};
     use state::Cw2981Contract;
 
     #[entry_point]
@@ -133,8 +132,8 @@ mod tests {
     use cosmwasm_std::{from_json, Uint128};
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721_base::msg::Cw721InstantiateMsg;
-    use cw721_base::traits::Cw721Query;
+    use cw721::msg::Cw721InstantiateMsg;
+    use cw721::traits::Cw721Query;
     use state::Cw2981Contract;
 
     const CREATOR: &str = "creator";

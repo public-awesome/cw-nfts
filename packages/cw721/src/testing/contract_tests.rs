@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 
 use crate::error::Cw721ContractError;
+use crate::extension::Cw721OnchainExtensions;
 use crate::msg::{
     ApprovalResponse, CollectionExtensionMsg, NftExtensionMsg, NftInfoResponse, OperatorResponse,
     OperatorsResponse, OwnerOfResponse, RoyaltyInfoResponse,
@@ -15,41 +16,19 @@ use crate::receiver::Cw721ReceiveMsg;
 use crate::state::{NftExtension, Trait, CREATOR, MINTER};
 use crate::{
     traits::{Cw721Execute, Cw721Query},
-    Approval, DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, Expiration,
+    Approval, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension,
+    DefaultOptionalNftExtensionMsg, Expiration,
 };
 use crate::{CollectionExtension, CollectionInfoAndExtensionResponse, RoyaltyInfo};
 use cw_ownable::{Action, Ownership, OwnershipError};
-
-use super::contract::Cw721Contract;
 
 const MINTER_ADDR: &str = "minter";
 const CREATOR_ADDR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
 
-fn setup_contract(
-    deps: DepsMut<'_>,
-) -> Cw721Contract<
-    'static,
-    DefaultOptionalNftExtension,
-    DefaultOptionalNftExtensionMsg,
-    DefaultOptionalCollectionExtension,
-    DefaultOptionalCollectionExtensionMsg,
-    Empty,
-    Empty,
-    Empty,
-> {
-    let contract: Cw721Contract<
-        'static,
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    > = Cw721Contract::default();
+fn setup_contract(deps: DepsMut<'_>) -> Cw721OnchainExtensions<'static> {
+    let contract = Cw721OnchainExtensions::default();
     let msg = Cw721InstantiateMsg::<DefaultOptionalCollectionExtensionMsg> {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
@@ -76,15 +55,7 @@ fn setup_contract(
 #[test]
 fn test_instantiate() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
 
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
@@ -148,15 +119,7 @@ fn test_instantiate() {
 #[test]
 fn test_instantiate_with_collection_info_and_extension() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
 
     let collection_info_extension_msg = Some(CollectionExtensionMsg {
         description: Some("description".to_string()),
@@ -242,15 +205,7 @@ fn test_instantiate_with_collection_info_and_extension() {
 #[test]
 fn test_instantiate_with_minimal_collection_info_and_extension() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<
-        DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
-        DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg,
-        Empty,
-        Empty,
-        Empty,
-    >::default();
+    let contract = Cw721OnchainExtensions::default();
 
     let collection_info_extension_msg = Some(CollectionExtensionMsg {
         description: Some("description".to_string()),
