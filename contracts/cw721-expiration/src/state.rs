@@ -3,7 +3,6 @@ use cosmwasm_std::Timestamp;
 // expose so other libs dont need to import cw721-base
 pub use cw721_base::state::*;
 
-use cw721_base::traits::{Cw721CustomMsg, Cw721State};
 use cw_storage_plus::{Item, Map};
 
 /// Opionated version of generic `Cw721ExpirationContract` with default onchain nft and collection extensions using:

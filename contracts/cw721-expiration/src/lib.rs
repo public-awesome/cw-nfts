@@ -31,9 +31,7 @@ pub mod entry {
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721_base::{
-        msg::Cw721ExecuteMsg, DefaultOptionalCollectionExtension,
-        DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension,
-        DefaultOptionalNftExtensionMsg,
+        msg::Cw721ExecuteMsg, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg,
     };
 
     // This makes a conscious choice on the various generics used by the contract
@@ -80,10 +78,6 @@ pub mod entry {
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
-    use cw721_base::{
-        DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-        DefaultOptionalNftExtensionMsg,
-    };
 
     use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
 

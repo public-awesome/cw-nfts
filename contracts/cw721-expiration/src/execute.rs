@@ -4,13 +4,10 @@ use crate::{
     state::{Cw721ExpirationContract, DefaultCw721ExpirationContract},
     CONTRACT_NAME, CONTRACT_VERSION,
 };
-use cosmwasm_std::{Binary, CustomMsg, DepsMut, Empty, Env, MessageInfo, Response};
+use cosmwasm_std::{Binary, DepsMut, Empty, Env, MessageInfo, Response};
 use cw721_base::{
     msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
-    traits::{
-        Contains, Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
-        ToAttributesState,
-    },
+    traits::Cw721Execute,
     Expiration,
 };
 use cw721_base::{DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtensionMsg};

@@ -1,10 +1,10 @@
-use cosmwasm_std::{to_json_binary, Binary, CustomMsg, Deps, Empty, Env, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, Empty, Env, StdResult};
 use cw721_base::msg::{
     AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, OwnerOfResponse,
     TokensResponse,
 };
-use cw721_base::traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState};
-use cw721_base::{DefaultOptionalCollectionExtension, DefaultOptionalNftExtension};
+use cw721_base::traits::Cw721Query;
+use cw721_base::DefaultOptionalNftExtension;
 
 // expose so other libs dont need to import cw721-base
 #[allow(unused_imports)]
