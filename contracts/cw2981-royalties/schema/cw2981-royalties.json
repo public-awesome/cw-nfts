@@ -113,7 +113,7 @@
             ],
             "properties": {
               "collection_info": {
-                "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_Empty"
+                "$ref": "#/definitions/CollectionInfoMsg_for_Empty"
               }
             },
             "additionalProperties": false
@@ -552,18 +552,14 @@
           }
         }
       },
-      "CollectionInfoMsg_for_Nullable_Empty": {
+      "CollectionInfoMsg_for_Empty": {
         "type": "object",
+        "required": [
+          "extension"
+        ],
         "properties": {
           "extension": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Empty"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "#/definitions/Empty"
           },
           "name": {
             "type": [

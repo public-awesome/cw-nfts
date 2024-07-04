@@ -4,7 +4,7 @@ FILES=$(ls -d ./contracts/*)
 
 for FILE in $FILES; do
     $(
-        cd ./contracts/$FILE
+        cd $FILE
         cargo schema
     )
 done
@@ -12,8 +12,9 @@ done
 FILES=$(ls -d ./packages/*)
 
 for FILE in $FILES; do
+    echo "================= $FILE ================="
     $(
-        cd ./packages/$FILE
+        cd $FILE
         cargo schema
     )
 done
