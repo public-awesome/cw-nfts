@@ -1,6 +1,6 @@
 pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
-use cw721::extension::Cw721BaseExtensions;
+use cw721::extension::Cw721EmptyExtensions;
 
 pub mod msg;
 pub mod query;
@@ -10,7 +10,7 @@ pub mod state;
 const CONTRACT_NAME: &str = "crates.io:cw721-non-transferable";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw721NonTransferableContract<'a> = Cw721BaseExtensions<'a>;
+pub type Cw721NonTransferableContract<'a> = Cw721EmptyExtensions<'a>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -82,7 +82,7 @@ pub mod entry {
         match config.admin {
             Some(admin) => {
                 if admin == info.sender {
-                    Cw721BaseExtensions::default().execute(deps, &env, &info, msg)
+                    Cw721EmptyExtensions::default().execute(deps, &env, &info, msg)
                 } else {
                     Err(Cw721ContractError::Ownership(
                         cw721::OwnershipError::NotOwner,
@@ -108,7 +108,7 @@ pub mod entry {
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
         match msg {
             QueryMsg::Admin {} => Ok(to_json_binary(&admin(deps)?)?),
-            _ => Cw721BaseExtensions::default().query(deps, &env, msg.into()),
+            _ => Cw721EmptyExtensions::default().query(deps, &env, msg.into()),
         }
     }
 }

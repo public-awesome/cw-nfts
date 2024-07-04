@@ -7,7 +7,9 @@ use cw_utils::{maybe_addr, Expiration};
 
 use crate::{
     error::Cw721ContractError,
-    extension::{Cw721BaseExtensions, Cw721Extensions, Cw721OnchainExtensions},
+    extension::{
+        Cw721BaseExtensions, Cw721EmptyExtensions, Cw721Extensions, Cw721OnchainExtensions,
+    },
     msg::{
         AllInfoResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
         CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
@@ -397,8 +399,13 @@ impl<'a> Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtens
 {
 }
 
-impl<'a> Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
+impl<'a> Cw721Query<EmptyOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
     for Cw721BaseExtensions<'a>
+{
+}
+
+impl<'a> Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
+    for Cw721EmptyExtensions<'a>
 {
 }
 

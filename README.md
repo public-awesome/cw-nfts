@@ -36,7 +36,7 @@ for more interactive discussion on these themes.
 
 ### `cw721` Package
 
-tl;dr: contracts may use `Cw721OnchainExtensions` for onchain, `Cw721BaseExtensions` for offchain, or `Cw721Extensions` for custom metadata. These extension implements `Cw721Query` and `Cw721Execute` traits. Both traits provide default implemtation. A contract may customize and adjust specific trait functions.
+tl;dr: contracts may use `Cw721OnchainExtensions` for onchain, `Cw721BaseExtensions` for offchain nft extension and onchain collection extension, `Cw721EmptyExtensions` for no extensions, or `Cw721Extensions` for custom metadata. These extension implements `Cw721Query` and `Cw721Execute` traits. Both traits provide default implemtation. A contract may customize and adjust specific trait functions.
 
 [traits.rs](./packages/cw721/src/traits.rs) in `cw721` package provides `Cw721Query` and `Cw721Execute` provides. Both traits have default implementations and may be customized by contracts. Default
 queries and operations are provided in [query.rs](./packages/cw721/src/query.rs) and [execute.rs](./packages/cw721/src/execute.rs).
@@ -166,19 +166,19 @@ This contracts uses `Cw721BaseExtensions` for storing metadata offchain.
 `Cw721BaseExtensions` in [extension.rs](./packages/cw721/src/extension.rs):
 
 ```rust
-/// Opionated version of generic `Cw721Extensions` with empty onchain nft and collection extensions using:
+/// Opionated version of generic `Cw721Extensions` with `EmptyOptionalNftExtension` and `DefaultOptionalCollectionExtension` using:
 /// - `Empty` for NftInfo extension (onchain metadata).
 /// - `Empty` for NftInfo extension msg for onchain metadata.
-/// - `Empty` for CollectionInfo extension (onchain attributes).
-/// - `Empty` for CollectionInfo extension msg for onchain collection attributes.
+/// - `DefaultOptionalCollectionExtension` for CollectionInfo extension (onchain attributes).
+/// - `DefaultOptionalCollectionExtensionMsg` for CollectionInfo extension msg for onchain collection attributes.
 /// - `Empty` for custom extension msg for custom contract logic.
 /// - `Empty` for custom query msg for custom contract logic.
 /// - `Empty` for custom response msg for custom contract logic.
 pub struct Cw721BaseExtensions<'a> {
     pub config: Cw721Config<'a, EmptyOptionalNftExtension>,
-    pub(crate) _collection_extension: PhantomData<EmptyOptionalCollectionExtension>,
+    pub(crate) _collection_extension: PhantomData<DefaultOptionalCollectionExtension>,
     pub(crate) _nft_extension_msg: PhantomData<EmptyOptionalNftExtensionMsg>,
-    pub(crate) _collection_extension_msg: PhantomData<EmptyOptionalCollectionExtensionMsg>,
+    pub(crate) _collection_extension_msg: PhantomData<DefaultOptionalCollectionExtensionMsg>,
     pub(crate) _extension_msg: PhantomData<Empty>,
     pub(crate) _extension_query_msg: PhantomData<Empty>,
     pub(crate) _custom_response_msg: PhantomData<Empty>,

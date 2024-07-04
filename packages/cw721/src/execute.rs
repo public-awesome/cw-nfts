@@ -8,7 +8,9 @@ use cw_utils::Expiration;
 
 use crate::{
     error::Cw721ContractError,
-    extension::{Cw721BaseExtensions, Cw721Extensions, Cw721OnchainExtensions},
+    extension::{
+        Cw721BaseExtensions, Cw721EmptyExtensions, Cw721Extensions, Cw721OnchainExtensions,
+    },
     helpers::value_or_empty,
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
@@ -741,11 +743,23 @@ impl<'a>
     Cw721Execute<
         EmptyOptionalNftExtension,
         EmptyOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
+        Empty,
+        Empty,
+    > for Cw721BaseExtensions<'a>
+{
+}
+
+impl<'a>
+    Cw721Execute<
+        EmptyOptionalNftExtension,
+        EmptyOptionalNftExtensionMsg,
         EmptyOptionalCollectionExtension,
         EmptyOptionalCollectionExtensionMsg,
         Empty,
         Empty,
-    > for Cw721BaseExtensions<'a>
+    > for Cw721EmptyExtensions<'a>
 {
 }
 

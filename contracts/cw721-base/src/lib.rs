@@ -44,7 +44,7 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<EmptyOptionalCollectionExtensionMsg>,
+        msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721BaseExtensions::default();
         contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
@@ -57,7 +57,7 @@ pub mod entry {
         info: MessageInfo,
         msg: Cw721ExecuteMsg<
             EmptyOptionalNftExtensionMsg,
-            EmptyOptionalCollectionExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
             Empty,
         >,
     ) -> Result<Response, Cw721ContractError> {
@@ -69,7 +69,7 @@ pub mod entry {
     pub fn query(
         deps: Deps,
         env: Env,
-        msg: Cw721QueryMsg<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>,
+        msg: Cw721QueryMsg<EmptyOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
     ) -> Result<Binary, Cw721ContractError> {
         let contract = Cw721BaseExtensions::default();
         contract.query(deps, &env, msg)
