@@ -1,18 +1,24 @@
 #[cfg(test)]
 mod tests {
+    use crate::{Cw1155BaseContract, Cw1155BaseExecuteMsg, Cw1155BaseQueryMsg};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{
         from_json, to_json_binary, Addr, Binary, Empty, Event, OverflowError, Response, StdError,
         Uint128,
     };
-    use cw_ownable::OwnershipError;
-
-    use crate::{Cw1155BaseContract, Cw1155BaseExecuteMsg, Cw1155BaseQueryMsg};
-    use cw1155::{
-        ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155BatchReceiveMsg,
-        Cw1155ContractError, Cw1155InstantiateMsg, Cw1155MintMsg, Cw1155QueryMsg, Expiration,
-        NumTokensResponse, OwnerToken, TokenAmount, TokenInfoResponse, TokensResponse,
+    use cw1155::error::Cw1155ContractError;
+    use cw1155::execute::Cw1155Execute;
+    use cw1155::msg::{
+        ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155InstantiateMsg,
+        Cw1155MintMsg, Cw1155QueryMsg, NumTokensResponse, OwnerToken, TokenAmount,
+        TokenInfoResponse,
     };
+    use cw1155::query::Cw1155Query;
+    use cw1155::receiver::Cw1155BatchReceiveMsg;
+    use cw721::msg::TokensResponse;
+    use cw721::Approval;
+    use cw_ownable::OwnershipError;
+    use cw_utils::Expiration;
 
     #[test]
     fn check_transfers() {
@@ -48,7 +54,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), mock_env(), mock_info("operator", &[]), msg)
+            .instantiate(
+                deps.as_mut(),
+                mock_env(),
+                mock_info("operator", &[]),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -444,7 +457,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), mock_env(), operator_info.clone(), msg)
+            .instantiate(
+                deps.as_mut(),
+                mock_env(),
+                operator_info.clone(),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -522,7 +542,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), mock_env(), mock_info("operator", &[]), msg)
+            .instantiate(
+                deps.as_mut(),
+                mock_env(),
+                mock_info("operator", &[]),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -722,8 +749,8 @@ mod tests {
                 },
             ),
             to_json_binary(&ApprovedForAllResponse {
-                operators: vec![cw1155::Approval {
-                    spender: users[3].clone(),
+                operators: vec![Approval {
+                    spender: Addr::unchecked(&users[3]),
                     expires: Expiration::Never {},
                 }],
             })
@@ -751,7 +778,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), env.clone(), mock_info("operator", &[]), msg)
+            .instantiate(
+                deps.as_mut(),
+                env.clone(),
+                mock_info("operator", &[]),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -863,7 +897,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), env.clone(), mock_info("operator", &[]), msg)
+            .instantiate(
+                deps.as_mut(),
+                env.clone(),
+                mock_info("operator", &[]),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 
@@ -950,7 +991,14 @@ mod tests {
             minter: Some(minter.to_string()),
         };
         let res = contract
-            .instantiate(deps.as_mut(), mock_env(), mock_info("operator", &[]), msg)
+            .instantiate(
+                deps.as_mut(),
+                mock_env(),
+                mock_info("operator", &[]),
+                msg,
+                "contract_name",
+                "contract_version",
+            )
             .unwrap();
         assert_eq!(0, res.messages.len());
 

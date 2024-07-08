@@ -1,4 +1,4 @@
-use crate::Cw1155RoyaltiesContract;
+use crate::Cw1155RoyaltiesConfig;
 use cosmwasm_std::{Decimal, Deps, StdResult, Uint128};
 use cw2981_royalties::msg::RoyaltiesInfoResponse;
 
@@ -10,8 +10,8 @@ pub fn query_royalties_info(
     token_id: String,
     sale_price: Uint128,
 ) -> StdResult<RoyaltiesInfoResponse> {
-    let contract = Cw1155RoyaltiesContract::default();
-    let token_info = contract.tokens.load(deps.storage, &token_id)?;
+    let config = Cw1155RoyaltiesConfig::default();
+    let token_info = config.tokens.load(deps.storage, &token_id)?;
 
     let royalty_percentage = match token_info.extension {
         Some(ref ext) => match ext.royalty_percentage {

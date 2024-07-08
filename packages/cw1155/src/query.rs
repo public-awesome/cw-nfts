@@ -1,129 +1,272 @@
-use cosmwasm_schema::{cw_serde, QueryResponses};
-use schemars::JsonSchema;
+use cosmwasm_std::{to_json_binary, Addr, Binary, CustomMsg, Deps, Env, Order, StdResult, Uint128};
+use cw721::msg::TokensResponse;
+use cw721::query::Cw721Query;
+use cw721::Approval;
+use cw_storage_plus::Bound;
+use cw_utils::{maybe_addr, Expiration};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
-use crate::{Approval, Balance, OwnerToken};
-use cosmwasm_std::Uint128;
-use cw_ownable::cw_ownable_query;
+use crate::msg::{
+    ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155QueryMsg,
+    IsApprovedForAllResponse, OwnerToken,
+};
+use crate::msg::{NumTokensResponse, TokenInfoResponse};
+use crate::state::Cw1155Config;
 
-#[cw_ownable_query]
-#[cw_serde]
-#[derive(QueryResponses)]
-pub enum Cw1155QueryMsg<Q: JsonSchema> {
-    // cw1155
-    /// Returns the current balance of the given account, 0 if unset.
-    #[returns(BalanceResponse)]
-    BalanceOf(OwnerToken),
-    /// Returns the current balance of the given batch of accounts/tokens, 0 if unset.
-    #[returns(BalancesResponse)]
-    BalanceOfBatch(Vec<OwnerToken>),
-    /// Query approved status `owner` granted to `operator`.
-    #[returns(IsApprovedForAllResponse)]
-    IsApprovedForAll { owner: String, operator: String },
-    /// Return approvals that a token owner has
-    #[returns(Vec<crate::TokenApproval>)]
-    TokenApprovals {
-        owner: String,
+pub const DEFAULT_LIMIT: u32 = 10;
+pub const MAX_LIMIT: u32 = 1000;
+
+pub trait Cw1155Query<
+    // Metadata defined in NftInfo.
+    TMetadataExtension,
+    // Defines for `CosmosMsg::Custom<T>` in response. Barely used, so `Empty` can be used.
+    TCustomResponseMessage,
+    // Message passed for updating metadata.
+    TMetadataExtensionMsg,
+    // Extension query message.
+    TQueryExtensionMsg
+>: Cw721Query<TMetadataExtension,TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg> where
+    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+    TCustomResponseMessage: CustomMsg,
+    TMetadataExtensionMsg: CustomMsg,
+    TQueryExtensionMsg: Serialize + DeserializeOwned + Clone,
+{
+    fn query(
+        &self,
+        deps: Deps,
+        env: Env,
+        msg: Cw1155QueryMsg<TMetadataExtension, TQueryExtensionMsg>,
+    ) -> StdResult<Binary> {
+        match msg {
+            Cw1155QueryMsg::Minter {} => {
+                to_json_binary(&self.query_minter(deps.storage)?)
+            }
+            Cw1155QueryMsg::BalanceOf(OwnerToken { owner, token_id }) => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let owner_addr = deps.api.addr_validate(&owner)?;
+                let balance = config
+                    .balances
+                    .may_load(deps.storage, (owner_addr.clone(), token_id.clone()))?
+                    .unwrap_or(Balance {
+                        owner: owner_addr,
+                        token_id,
+                        amount: Uint128::new(0),
+                    });
+                to_json_binary(&BalanceResponse {
+                    balance: balance.amount,
+                })
+            }
+            Cw1155QueryMsg::AllBalances {
+                token_id,
+                start_after,
+                limit,
+            } => to_json_binary(&self.query_all_balances(deps, token_id, start_after, limit)?),
+            Cw1155QueryMsg::BalanceOfBatch(batch) => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let balances = batch
+                    .into_iter()
+                    .map(|OwnerToken { owner, token_id }| {
+                        let owner = Addr::unchecked(owner);
+                        config.balances
+                            .load(deps.storage, (owner.clone(), token_id.to_string()))
+                            .unwrap_or(Balance {
+                                owner,
+                                token_id,
+                                amount: Uint128::zero(),
+                            })
+                    })
+                    .collect::<Vec<_>>();
+                to_json_binary(&BalancesResponse { balances })
+            }
+            Cw1155QueryMsg::TokenApprovals {
+                owner,
+                token_id,
+                include_expired,
+            } => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let owner = deps.api.addr_validate(&owner)?;
+                let approvals = config
+                    .token_approves
+                    .prefix((&token_id, &owner))
+                    .range(deps.storage, None, None, Order::Ascending)
+                    .filter_map(|approval| {
+                        let (_, approval) = approval.unwrap();
+                        if include_expired.unwrap_or(false) || !approval.is_expired(&env) {
+                            Some(approval)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                to_json_binary(&approvals)
+            }
+            Cw1155QueryMsg::ApprovalsForAll {
+                owner,
+                include_expired,
+                start_after,
+                limit,
+            } => {
+                let owner_addr = deps.api.addr_validate(&owner)?;
+                let start_addr = maybe_addr(deps.api, start_after)?;
+                to_json_binary(&self.query_all_approvals(
+                    deps,
+                    env,
+                    owner_addr,
+                    include_expired.unwrap_or(false),
+                    start_addr,
+                    limit,
+                )?)
+            }
+            Cw1155QueryMsg::IsApprovedForAll { owner, operator } => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let owner_addr = deps.api.addr_validate(&owner)?;
+                let operator_addr = deps.api.addr_validate(&operator)?;
+                let approved =
+                    config.verify_all_approval(deps.storage, &env, &owner_addr, &operator_addr);
+                to_json_binary(&IsApprovedForAllResponse { approved })
+            }
+            Cw1155QueryMsg::TokenInfo { token_id } => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let token_info = config.tokens.load(deps.storage, &token_id)?;
+                to_json_binary(&TokenInfoResponse::<TMetadataExtension> {
+                    token_uri: token_info.token_uri,
+                    extension: token_info.extension,
+                })
+            }
+            Cw1155QueryMsg::Tokens {
+                owner,
+                start_after,
+                limit,
+            } => {
+                let owner_addr = deps.api.addr_validate(&owner)?;
+                to_json_binary(&self.query_owner_tokens(deps, owner_addr, start_after, limit)?)
+            }
+            Cw1155QueryMsg::ContractInfo {} => {
+                to_json_binary(&self.query_collection_info(deps, env)?)
+            }
+            Cw1155QueryMsg::NumTokens { token_id } => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let count = if let Some(token_id) = token_id {
+                    config.token_count(deps.storage, &token_id)?
+                } else {
+                    config.supply.load(deps.storage)?
+                };
+                to_json_binary(&NumTokensResponse { count })
+            }
+            Cw1155QueryMsg::AllTokens { start_after, limit } => {
+                to_json_binary(&self.query_all_tokens_cw1155(deps, start_after, limit)?)
+            }
+            Cw1155QueryMsg::Ownership {} => {
+                to_json_binary(&cw_ownable::get_ownership(deps.storage)?)
+            }
+
+            Cw1155QueryMsg::Extension { msg: ext_msg, .. } => {
+                self.query_extension(deps, env, ext_msg)
+            }
+        }
+    }
+
+    fn query_all_approvals(
+        &self,
+        deps: Deps,
+        env: Env,
+        owner: Addr,
+        include_expired: bool,
+        start_after: Option<Addr>,
+        limit: Option<u32>,
+    ) -> StdResult<ApprovedForAllResponse> {
+        let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+        let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let start = start_after.as_ref().map(Bound::exclusive);
+
+        let operators = config
+            .approves
+            .prefix(&owner)
+            .range(deps.storage, start, None, Order::Ascending)
+            .filter(|r| {
+                include_expired || r.is_err() || !r.as_ref().unwrap().1.is_expired(&env.block)
+            })
+            .take(limit)
+            .map(build_approval)
+            .collect::<StdResult<_>>()?;
+        Ok(ApprovedForAllResponse { operators })
+    }
+
+    fn query_owner_tokens(
+        &self,
+        deps: Deps,
+        owner: Addr,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<TokensResponse> {
+        let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+        let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let start = start_after.as_ref().map(|s| Bound::exclusive(s.as_str()));
+
+        let tokens = config
+            .balances
+            .prefix(owner)
+            .keys(deps.storage, start, None, Order::Ascending)
+            .take(limit)
+            .collect::<StdResult<_>>()?;
+        Ok(TokensResponse { tokens })
+    }
+
+    fn query_all_tokens_cw1155(
+        &self,
+        deps: Deps,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<TokensResponse> {
+        let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+        let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+        let start = start_after.as_ref().map(|s| Bound::exclusive(s.as_str()));
+        let tokens = config
+            .tokens
+            .keys(deps.storage, start, None, Order::Ascending)
+            .take(limit)
+            .collect::<StdResult<_>>()?;
+        Ok(TokensResponse { tokens })
+    }
+
+    fn query_all_balances(
+        &self,
+        deps: Deps,
         token_id: String,
-        include_expired: Option<bool>,
-    },
-    /// List all operators that can access all of the owner's tokens.
-    #[returns(ApprovedForAllResponse)]
-    ApprovalsForAll {
-        owner: String,
-        /// unset or false will filter out expired approvals, you must set to true to see them
-        include_expired: Option<bool>,
         start_after: Option<String>,
         limit: Option<u32>,
-    },
-    /// Returns all current balances of the given token id. Supports pagination
-    #[returns(BalancesResponse)]
-    AllBalances {
-        token_id: String,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
-    /// Total number of tokens issued
-    #[returns(cw721::NumTokensResponse)]
-    NumTokens {
-        token_id: Option<String>, // optional token id to get supply of, otherwise total supply
-    },
+    ) -> StdResult<BalancesResponse> {
+        let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+        let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
 
-    // cw721
-    /// With MetaData Extension.
-    /// Returns top-level metadata about the contract.
-    #[returns(cw721::ContractInfoResponse)]
-    ContractInfo {},
-    /// Query Minter.
-    #[returns(cw721::MinterResponse)]
-    Minter {},
-    /// With MetaData Extension.
-    /// Query metadata of token
-    #[returns(TokenInfoResponse<Q>)]
-    TokenInfo { token_id: String },
-    /// With Enumerable extension.
-    /// Returns all tokens owned by the given address, [] if unset.
-    #[returns(TokensResponse)]
-    Tokens {
-        owner: String,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
-    /// With Enumerable extension.
-    /// Requires pagination. Lists all token_ids controlled by the contract.
-    #[returns(TokensResponse)]
-    AllTokens {
-        start_after: Option<String>,
-        limit: Option<u32>,
-    },
+        let start = if let Some(start_after) = start_after {
+            let start_key = (Addr::unchecked(start_after), token_id.clone());
+            Some(Bound::exclusive::<(Addr, String)>(start_key))
+        } else {
+            None
+        };
 
-    /// Extension query
-    #[returns(())]
-    Extension { msg: Q },
+        let balances: Vec<Balance> = config
+            .balances
+            .idx
+            .token_id
+            .prefix(token_id)
+            .range(deps.storage, start, None, Order::Ascending)
+            .take(limit)
+            .map(|item| {
+                let (_, v) = item.unwrap();
+                v
+            })
+            .collect();
+
+        Ok(BalancesResponse { balances })
+    }
 }
 
-#[cw_serde]
-pub struct BalanceResponse {
-    pub balance: Uint128,
-}
-
-#[cw_serde]
-pub struct BalancesResponse {
-    pub balances: Vec<Balance>,
-}
-
-#[cw_serde]
-pub struct NumTokensResponse {
-    pub count: Uint128,
-}
-
-#[cw_serde]
-pub struct ApprovedForAllResponse {
-    pub operators: Vec<Approval>,
-}
-
-#[cw_serde]
-pub struct IsApprovedForAllResponse {
-    pub approved: bool,
-}
-
-#[cw_serde]
-pub struct AllTokenInfoResponse<T> {
-    pub token_id: String,
-    pub info: TokenInfoResponse<T>,
-}
-
-#[cw_serde]
-pub struct TokenInfoResponse<T> {
-    /// Should be a url point to a json file
-    pub token_uri: Option<String>,
-    /// You can add any custom metadata here when you extend cw1155-base
-    pub extension: T,
-}
-
-#[cw_serde]
-pub struct TokensResponse {
-    /// Contains all token_ids in lexicographical ordering
-    /// If there are more than `limit`, use `start_from` in future queries
-    /// to achieve pagination.
-    pub tokens: Vec<String>,
+fn build_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<Approval> {
+    item.map(|(addr, expires)| Approval {
+        spender: addr.into(),
+        expires,
+    })
 }

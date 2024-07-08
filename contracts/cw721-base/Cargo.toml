@@ -2,6 +2,7 @@
 name          = "cw721-base"
 description   = "Basic implementation cw721 NFTs"
 authors       = [
+  "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
@@ -26,14 +27,10 @@ library = []
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
 cw-ownable      = { workspace = true }
-cw-storage-plus = { workspace = true }
-cw-utils        = { workspace = true }
 cw2             = { workspace = true }
 cw721           = { workspace = true }
-cw721-base-016  = { workspace = true, features = ["library"] }
-schemars        = { workspace = true }
 serde           = { workspace = true }
-thiserror       = { workspace = true }
 
 [dev-dependencies]
-cw-multi-test   = { workspace = true }
+cw721-017       = { workspace = true }
+cw721-018       = { workspace = true }

@@ -1,6 +1,5 @@
 use cosmwasm_schema::write_api;
-
-use cw1155::Cw1155InstantiateMsg;
+use cw1155::msg::Cw1155InstantiateMsg;
 use cw1155_royalties::{Cw1155RoyaltiesExecuteMsg, Cw1155RoyaltiesQueryMsg};
 
 fn main() {

@@ -1,9 +1,8 @@
 use cosmwasm_std::Empty;
-use cw1155::{Cw1155ExecuteMsg, Cw1155QueryMsg};
-pub use cw1155::{Cw1155InstantiateMsg, Cw1155MintMsg};
+use cw1155::msg::{Cw1155ExecuteMsg, Cw1155QueryMsg};
+use cw1155::state::Cw1155Config;
 use cw1155_base::Cw1155Contract;
-use cw2::set_contract_version;
-use cw2981_royalties::msg::Cw2981QueryMsg;
+use cw2981_royalties::msg::QueryMsg as Cw2981QueryMsg;
 use cw2981_royalties::Extension;
 
 mod query;
@@ -18,7 +17,8 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub type Cw1155RoyaltiesContract<'a> = Cw1155Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
 pub type Cw1155RoyaltiesExecuteMsg = Cw1155ExecuteMsg<Extension, Empty>;
-pub type Cw1155RoyaltiesQueryMsg = Cw1155QueryMsg<Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesQueryMsg = Cw1155QueryMsg<Extension, Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesConfig<'a> = Cw1155Config<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -26,7 +26,9 @@ pub mod entry {
 
     use cosmwasm_std::{entry_point, to_json_binary};
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-    use cw2981_royalties::msg::Cw2981QueryMsg;
+    use cw1155::execute::Cw1155Execute;
+    use cw1155::query::Cw1155Query;
+    use cw2981_royalties::msg::QueryMsg as Cw2981QueryMsg;
     use cw2981_royalties::{check_royalties, Metadata};
 
     // This makes a conscious choice on the various generics used by the contract
@@ -35,13 +37,18 @@ pub mod entry {
         mut deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw1155InstantiateMsg,
+        msg: cw1155::msg::Cw1155InstantiateMsg,
     ) -> Result<Response, Cw1155RoyaltiesContractError> {
-        let res = Cw1155RoyaltiesContract::default().instantiate(deps.branch(), env, info, msg)?;
-        // Explicitly set contract name and version, otherwise set to cw1155-base info
-        set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)
-            .map_err(Cw1155RoyaltiesContractError::Std)?;
-        Ok(res)
+        Cw1155RoyaltiesContract::default()
+            .instantiate(
+                deps.branch(),
+                env,
+                info,
+                msg,
+                CONTRACT_NAME,
+                CONTRACT_VERSION,
+            )
+            .map_err(Into::into)
     }
 
     #[entry_point]
@@ -53,7 +60,7 @@ pub mod entry {
     ) -> Result<Response, Cw1155RoyaltiesContractError> {
         if let Cw1155RoyaltiesExecuteMsg::Mint {
             msg:
-                Cw1155MintMsg {
+                cw1155::msg::Cw1155MintMsg {
                     extension:
                         Some(Metadata {
                             royalty_percentage: Some(royalty_percentage),
@@ -84,12 +91,13 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: Cw1155RoyaltiesQueryMsg) -> StdResult<Binary> {
         match msg {
-            Cw1155RoyaltiesQueryMsg::Extension { msg: ext_msg } => match ext_msg {
+            Cw1155RoyaltiesQueryMsg::Extension { msg: ext_msg, .. } => match ext_msg {
                 Cw2981QueryMsg::RoyaltyInfo {
                     token_id,
                     sale_price,
                 } => to_json_binary(&query_royalties_info(deps, token_id, sale_price)?),
                 Cw2981QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
+                _ => unimplemented!(),
             },
             _ => Cw1155RoyaltiesContract::default().query(deps, env, msg),
         }
@@ -103,6 +111,7 @@ mod tests {
     use cosmwasm_std::{from_json, Uint128};
 
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cw1155::msg::{Cw1155InstantiateMsg, Cw1155MintMsg};
     use cw2981_royalties::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
     use cw2981_royalties::{check_royalties, Metadata};
 
@@ -111,7 +120,7 @@ mod tests {
     #[test]
     fn use_metadata_extension() {
         let mut deps = mock_dependencies();
-        let contract = Cw1155RoyaltiesContract::default();
+        let config = Cw1155RoyaltiesConfig::default();
 
         let info = mock_info(CREATOR, &[]);
         let init_msg = Cw1155InstantiateMsg {
@@ -139,7 +148,7 @@ mod tests {
         };
         entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
 
-        let res = contract.tokens.load(&deps.storage, token_id).unwrap();
+        let res = config.tokens.load(&deps.storage, token_id).unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
     }
@@ -215,6 +224,7 @@ mod tests {
         // also check the longhand way
         let query_msg = Cw1155RoyaltiesQueryMsg::Extension {
             msg: Cw2981QueryMsg::CheckRoyalties {},
+            phantom: None,
         };
         let query_res: CheckRoyaltiesResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
@@ -266,6 +276,7 @@ mod tests {
                 token_id: token_id.to_string(),
                 sale_price: Uint128::new(100),
             },
+            phantom: None,
         };
         let query_res: RoyaltiesInfoResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();

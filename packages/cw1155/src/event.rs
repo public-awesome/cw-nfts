@@ -1,4 +1,4 @@
-use crate::TokenAmount;
+use crate::msg::TokenAmount;
 use cosmwasm_std::{attr, Addr, Attribute, Event, Uint128};
 
 /// Tracks token transfer actions

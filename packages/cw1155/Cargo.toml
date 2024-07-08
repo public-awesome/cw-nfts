@@ -2,16 +2,17 @@
 name = "cw1155"
 authors = ["shab <dirtyshab@protonmail.com>"]
 description = "Definition and types for the CosmWasm-1155 interface"
-version       = { workspace = true }
-edition       = { workspace = true }
-license       = { workspace = true }
-repository    = { workspace = true }
-homepage      = { workspace = true }
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
 documentation = { workspace = true }
 
 [dependencies]
 cw2 = { workspace = true }
 cw721 = { workspace = true }
+cw-storage-plus = { workspace = true }
 cw-utils = { workspace = true }
 cw-ownable = { workspace = true }
 cosmwasm-std = { workspace = true }

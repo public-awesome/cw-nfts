@@ -1,4 +1,4 @@
-use crate::TokenAmount;
+use crate::msg::TokenAmount;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{to_json_binary, Binary, CosmosMsg, MessageInfo, StdResult, Uint128, WasmMsg};
 use schemars::JsonSchema;

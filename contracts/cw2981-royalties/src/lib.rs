@@ -6,15 +6,15 @@ pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Empty;
-use cw721_base::Cw721Contract;
-pub use cw721_base::InstantiateMsg;
+pub use cw721_base::{
+    execute::Cw721Execute, msg::InstantiateMsg, query::Cw721Query, Cw721Contract,
+};
 
-use crate::msg::Cw2981QueryMsg;
+use crate::error::ContractError;
+use crate::msg::QueryMsg;
 
 // Version info for migration
-#[cfg(not(feature = "library"))]
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
-#[cfg(not(feature = "library"))]
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cw_serde]
@@ -50,16 +50,16 @@ pub type Extension = Option<Metadata>;
 
 pub type MintExtension = Option<Extension>;
 
-pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
-pub type ExecuteMsg = cw721_base::ExecuteMsg<Extension, Empty>;
-pub type QueryMsg = cw721_base::QueryMsg<Cw2981QueryMsg>;
+pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, QueryMsg>;
+pub type ExecuteMsg = cw721_base::msg::ExecuteMsg<Extension, Empty>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
+    use self::msg::QueryMsg;
+
     use super::*;
 
-    use crate::error::ContractError;
-    use cosmwasm_std::{entry_point, to_json_binary};
+    use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 
     #[entry_point]
@@ -69,9 +69,14 @@ pub mod entry {
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
-        cw2::set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-
-        Ok(Cw2981Contract::default().instantiate(deps.branch(), env, info, msg)?)
+        Ok(Cw2981Contract::default().instantiate(
+            deps.branch(),
+            env,
+            info,
+            msg,
+            CONTRACT_NAME,
+            CONTRACT_VERSION,
+        )?)
     }
 
     #[entry_point]
@@ -105,29 +110,25 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
-            QueryMsg::Extension { msg } => match msg {
-                Cw2981QueryMsg::RoyaltyInfo {
-                    token_id,
-                    sale_price,
-                } => to_json_binary(&query_royalties_info(deps, token_id, sale_price)?),
-                Cw2981QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
-            },
-            _ => Cw2981Contract::default().query(deps, env, msg),
+            QueryMsg::RoyaltyInfo {
+                token_id,
+                sale_price,
+            } => to_json_binary(&query_royalties_info(deps, env, token_id, sale_price)?),
+            QueryMsg::CheckRoyalties {} => to_json_binary(&check_royalties(deps)?),
+            _ => Cw2981Contract::default().query(deps, env, msg.into()),
         }
     }
 }
 
-#[cfg(test)]
 #[cfg(not(feature = "library"))]
+#[cfg(test)]
 mod tests {
     use super::*;
-    use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
+    use crate::msg::{CheckRoyaltiesResponse, QueryMsg, RoyaltiesInfoResponse};
 
     use cosmwasm_std::{from_json, Uint128};
 
-    use crate::error::ContractError;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721::Cw721Query;
 
     const CREATOR: &str = "creator";
 
@@ -158,9 +159,12 @@ mod tests {
             token_uri: token_uri.clone(),
             extension: extension.clone(),
         };
-        entry::execute(deps.as_mut(), mock_env(), info, exec_msg).unwrap();
+        let env = mock_env();
+        entry::execute(deps.as_mut(), env.clone(), info, exec_msg).unwrap();
 
-        let res = contract.nft_info(deps.as_ref(), token_id.into()).unwrap();
+        let res = contract
+            .query_nft_info(deps.as_ref(), env, token_id.into())
+            .unwrap();
         assert_eq!(res.token_uri, token_uri);
         assert_eq!(res.extension, extension);
     }
@@ -230,9 +234,7 @@ mod tests {
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::CheckRoyalties {},
-        };
+        let query_msg = QueryMsg::CheckRoyalties {};
         let query_res: CheckRoyaltiesResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
         assert_eq!(query_res, expected);
@@ -249,7 +251,8 @@ mod tests {
             minter: None,
             withdraw_address: None,
         };
-        entry::instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
+        let env = mock_env();
+        entry::instantiate(deps.as_mut(), env.clone(), info.clone(), init_msg).unwrap();
 
         let token_id = "Enterprise";
         let owner = "jeanluc";
@@ -271,16 +274,19 @@ mod tests {
             address: owner.into(),
             royalty_amount: Uint128::new(10),
         };
-        let res =
-            query_royalties_info(deps.as_ref(), token_id.to_string(), Uint128::new(100)).unwrap();
+        let res = query_royalties_info(
+            deps.as_ref(),
+            env.clone(),
+            token_id.to_string(),
+            Uint128::new(100),
+        )
+        .unwrap();
         assert_eq!(res, expected);
 
         // also check the longhand way
-        let query_msg = QueryMsg::Extension {
-            msg: Cw2981QueryMsg::RoyaltyInfo {
-                token_id: token_id.to_string(),
-                sale_price: Uint128::new(100),
-            },
+        let query_msg = QueryMsg::RoyaltyInfo {
+            token_id: token_id.to_string(),
+            sale_price: Uint128::new(100),
         };
         let query_res: RoyaltiesInfoResponse =
             from_json(entry::query(deps.as_ref(), mock_env(), query_msg).unwrap()).unwrap();
@@ -313,6 +319,7 @@ mod tests {
 
         let res = query_royalties_info(
             deps.as_ref(),
+            env,
             voyager_token_id.to_string(),
             Uint128::new(43),
         )

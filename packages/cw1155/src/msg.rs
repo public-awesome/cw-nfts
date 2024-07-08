@@ -1,8 +1,9 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use std::fmt::{Display, Formatter};
 
 use cosmwasm_std::{Addr, Binary, Env, Uint128};
-use cw_ownable::cw_ownable_execute;
+use cw721::Approval;
+use cw_ownable::{cw_ownable_execute, cw_ownable_query};
 use cw_utils::Expiration;
 
 #[cw_serde]
@@ -24,7 +25,7 @@ pub struct Cw1155InstantiateMsg {
 /// use other control logic in any contract that inherits this.
 #[cw_ownable_execute]
 #[cw_serde]
-pub enum Cw1155ExecuteMsg<T, E> {
+pub enum Cw1155ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg> {
     // cw1155
     /// BatchSendFrom is a base message to move multiple types of tokens in batch,
     /// if `env.sender` is the owner or has sufficient pre-approval.
@@ -40,7 +41,7 @@ pub enum Cw1155ExecuteMsg<T, E> {
     /// Mint a batch of tokens, can only be called by the contract minter
     MintBatch {
         recipient: String,
-        msgs: Vec<Cw1155MintMsg<T>>,
+        msgs: Vec<Cw1155MintMsg<TMetadataExtension>>,
     },
     /// BatchBurn is a base message to burn multiple types of tokens in batch.
     BurnBatch {
@@ -73,7 +74,7 @@ pub enum Cw1155ExecuteMsg<T, E> {
     /// Mint a new NFT, can only be called by the contract minter
     Mint {
         recipient: String,
-        msg: Cw1155MintMsg<T>,
+        msg: Cw1155MintMsg<TMetadataExtension>,
     },
     /// Burn is a base message to burn tokens.
     Burn {
@@ -100,7 +101,125 @@ pub enum Cw1155ExecuteMsg<T, E> {
     },
 
     /// Extension msg
-    Extension { msg: E },
+    Extension { msg: TMetadataExtensionMsg },
+}
+
+#[cw_ownable_query]
+#[cw_serde]
+#[derive(QueryResponses)]
+pub enum Cw1155QueryMsg<TMetadataExtension, TQueryExtensionMsg> {
+    // cw1155
+    /// Returns the current balance of the given account, 0 if unset.
+    #[returns(BalanceResponse)]
+    BalanceOf(OwnerToken),
+    /// Returns the current balance of the given batch of accounts/tokens, 0 if unset.
+    #[returns(BalancesResponse)]
+    BalanceOfBatch(Vec<OwnerToken>),
+    /// Query approved status `owner` granted to `operator`.
+    #[returns(IsApprovedForAllResponse)]
+    IsApprovedForAll { owner: String, operator: String },
+    /// Return approvals that a token owner has
+    #[returns(Vec<crate::msg::TokenApproval>)]
+    TokenApprovals {
+        owner: String,
+        token_id: String,
+        include_expired: Option<bool>,
+    },
+    /// List all operators that can access all of the owner's tokens.
+    #[returns(ApprovedForAllResponse)]
+    ApprovalsForAll {
+        owner: String,
+        /// unset or false will filter out expired approvals, you must set to true to see them
+        include_expired: Option<bool>,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Returns all current balances of the given token id. Supports pagination
+    #[returns(BalancesResponse)]
+    AllBalances {
+        token_id: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// Total number of tokens issued
+    #[returns(NumTokensResponse)]
+    NumTokens {
+        token_id: Option<String>, // optional token id to get supply of, otherwise total supply
+    },
+
+    // cw721
+    /// With MetaData Extension.
+    /// Returns top-level metadata about the contract.
+    #[returns(cw721::state::CollectionInfo)]
+    ContractInfo {},
+    /// Query Minter.
+    #[returns(cw721::msg::MinterResponse)]
+    Minter {},
+    /// With MetaData Extension.
+    /// Query metadata of token
+    #[returns(TokenInfoResponse<TMetadataExtension>)]
+    TokenInfo { token_id: String },
+    /// With Enumerable extension.
+    /// Returns all tokens owned by the given address, [] if unset.
+    #[returns(cw721::msg::TokensResponse)]
+    Tokens {
+        owner: String,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+    /// With Enumerable extension.
+    /// Requires pagination. Lists all token_ids controlled by the contract.
+    #[returns(cw721::msg::TokensResponse)]
+    AllTokens {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
+
+    /// Extension query
+    #[returns(())]
+    Extension {
+        msg: TQueryExtensionMsg,
+        phantom: Option<TMetadataExtension>, // dummy field to infer type
+    },
+}
+
+#[cw_serde]
+pub struct BalanceResponse {
+    pub balance: Uint128,
+}
+
+#[cw_serde]
+pub struct BalancesResponse {
+    pub balances: Vec<Balance>,
+}
+
+#[cw_serde]
+pub struct NumTokensResponse {
+    pub count: Uint128,
+}
+
+#[cw_serde]
+pub struct ApprovedForAllResponse {
+    pub operators: Vec<Approval>,
+}
+
+#[cw_serde]
+pub struct IsApprovedForAllResponse {
+    pub approved: bool,
+}
+
+#[cw_serde]
+pub struct AllTokenInfoResponse<T> {
+    pub token_id: String,
+    pub info: TokenInfoResponse<T>,
+}
+
+#[cw_serde]
+pub struct TokenInfoResponse<T> {
+    /// Should be a url point to a json file
+    pub token_uri: Option<String>,
+    /// You can add any custom metadata here when you extend cw1155-base
+    pub extension: T,
 }
 
 #[cw_serde]
@@ -152,12 +271,4 @@ pub struct Balance {
     pub token_id: String,
     pub owner: Addr,
     pub amount: Uint128,
-}
-
-#[cw_serde]
-pub struct Approval {
-    /// Account that can transfer/send the token
-    pub spender: String,
-    /// When the Approval expires (maybe Expiration::never)
-    pub expires: Expiration,
 }

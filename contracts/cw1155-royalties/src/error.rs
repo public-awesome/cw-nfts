@@ -1,5 +1,5 @@
 use cosmwasm_std::StdError;
-use cw1155::Cw1155ContractError;
+use cw1155::error::Cw1155ContractError;
 use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq)]
