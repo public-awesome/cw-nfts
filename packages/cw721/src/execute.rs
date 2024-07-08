@@ -339,7 +339,7 @@ pub trait Cw721Execute<
             .add_attribute("minter", info.sender)
             .add_attribute("owner", owner)
             .add_attribute("token_id", token_id)
-            .add_attribute("token_uri", token_uri))
+            .add_attribute("token_uri", token_uri.unwrap_or("".to_string())))
     }
 
     fn update_minter_ownership(
