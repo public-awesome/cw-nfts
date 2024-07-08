@@ -14,6 +14,7 @@ the demands of the various NFT projects springing forth.
 This repo is not maintained directly by Confio (although we can provide some code reviews and support),
 but rather by 4 highly active community members working on NFT projects of their own:
 
+* [mr t](https://github.com/taitruong)
 * [alwin-peng](https://github.com/alwin-peng)
 * [ben2x4](https://github.com/ben2x4)
 * [Callum-A](https://github.com/Callum-A)
