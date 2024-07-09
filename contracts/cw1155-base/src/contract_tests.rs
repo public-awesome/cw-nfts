@@ -10,8 +10,8 @@ mod tests {
     use cw1155::execute::Cw1155Execute;
     use cw1155::msg::{
         ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155InstantiateMsg,
-        Cw1155MintMsg, Cw1155QueryMsg, NumTokensResponse, OwnerToken, TokenAmount,
-        TokenInfoResponse,
+        Cw1155MintMsg, Cw1155QueryMsg, IsApprovedForAllResponse, NumTokensResponse, OwnerToken,
+        TokenAmount, TokenInfoResponse,
     };
     use cw1155::query::Cw1155Query;
     use cw1155::receiver::Cw1155BatchReceiveMsg;
@@ -100,6 +100,40 @@ mod tests {
                 ("token_id", token1.as_str()),
                 ("amount", "1"),
             ]))
+        );
+
+        // verify supply
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token1.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::one()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens { token_id: None },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::one()
+            }
         );
 
         // query balance
@@ -230,6 +264,57 @@ mod tests {
             )
             .unwrap();
 
+        // verify supply
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token2.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::one()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token3.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::one()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens { token_id: None },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::new(3)
+            }
+        );
+
         // invalid batch transfer, (user2 not approved yet)
         let batch_transfer_msg = Cw1155BaseExecuteMsg::SendBatch {
             from: Some(user2.clone()),
@@ -272,6 +357,19 @@ mod tests {
                 },
             )
             .unwrap();
+
+        // verify approval status
+        assert_eq!(
+            contract.query(
+                deps.as_ref(),
+                mock_env(),
+                Cw1155QueryMsg::IsApprovedForAll {
+                    owner: user1.to_string(),
+                    operator: minter.to_string(),
+                },
+            ),
+            to_json_binary(&IsApprovedForAllResponse { approved: true })
+        );
 
         // valid batch transfer
         assert_eq!(
@@ -372,6 +470,18 @@ mod tests {
                     .all(|approval| approval.spender == minter)
         );
 
+        assert_eq!(
+            contract.query(
+                deps.as_ref(),
+                mock_env(),
+                Cw1155QueryMsg::IsApprovedForAll {
+                    owner: user1.to_string(),
+                    operator: minter.to_string(),
+                },
+            ),
+            to_json_binary(&IsApprovedForAllResponse { approved: false })
+        );
+
         // transfer without approval
         assert!(matches!(
             contract.execute(
@@ -410,6 +520,60 @@ mod tests {
             ]))
         );
 
+        // verify supply
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token1.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::zero()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens { token_id: None },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::new(2)
+            }
+        );
+
+        // verify balance
+        assert_eq!(
+            from_json::<BalanceResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::BalanceOf(OwnerToken {
+                            owner: user1.clone(),
+                            token_id: token1.clone(),
+                        }),
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            BalanceResponse {
+                balance: Uint128::zero()
+            }
+        );
+
         // burn them all
         assert_eq!(
             contract
@@ -438,6 +602,94 @@ mod tests {
                 ("amounts", "1,1"),
             ]))
         );
+
+        // verify supply
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token2.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::zero()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens {
+                            token_id: Some(token3.clone()),
+                        },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::zero()
+            }
+        );
+        assert_eq!(
+            from_json::<NumTokensResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::NumTokens { token_id: None },
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            NumTokensResponse {
+                count: Uint128::zero()
+            }
+        );
+
+        // verify balances
+        assert_eq!(
+            from_json::<BalancesResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::BalanceOfBatch(vec![
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token2.clone(),
+                            },
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token3.clone(),
+                            },
+                        ]),
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            BalancesResponse {
+                balances: vec![
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(&user1),
+                        amount: Uint128::zero(),
+                    },
+                    Balance {
+                        token_id: token3.to_string(),
+                        owner: Addr::unchecked(&user1),
+                        amount: Uint128::zero(),
+                    }
+                ]
+            },
+        );
     }
 
     #[test]
@@ -446,6 +698,7 @@ mod tests {
         let receiver = String::from("receive_contract");
         let minter = String::from("minter");
         let user1 = String::from("user1");
+        let token1 = "token1".to_owned();
         let token2 = "token2".to_owned();
         let operator_info = mock_info("operator", &[]);
         let dummy_msg = Binary::default();
@@ -473,14 +726,38 @@ mod tests {
                 deps.as_mut(),
                 mock_env(),
                 mock_info(minter.as_ref(), &[]),
-                Cw1155BaseExecuteMsg::Mint {
+                Cw1155BaseExecuteMsg::MintBatch {
                     recipient: user1.clone(),
-                    msg: Cw1155MintMsg {
-                        token_id: token2.clone(),
+                    msgs: vec![
+                        Cw1155MintMsg {
+                            token_id: token1.clone(),
+                            amount: 5u64.into(),
+                            token_uri: None,
+                            extension: None,
+                        },
+                        Cw1155MintMsg {
+                            token_id: token2.clone(),
+                            amount: 5u64.into(),
+                            token_uri: None,
+                            extension: None,
+                        },
+                    ],
+                },
+            )
+            .unwrap();
+        contract
+            .execute(
+                deps.as_mut(),
+                mock_env(),
+                mock_info(minter.as_ref(), &[]),
+                Cw1155BaseExecuteMsg::MintBatch {
+                    recipient: receiver.clone(),
+                    msgs: vec![Cw1155MintMsg {
+                        token_id: token1.clone(),
                         amount: 1u64.into(),
                         token_uri: None,
                         extension: None,
-                    },
+                    }],
                 },
             )
             .unwrap();
@@ -512,7 +789,7 @@ mod tests {
                             token_id: token2.to_string(),
                             amount: 1u64.into(),
                         }],
-                        msg: dummy_msg,
+                        msg: dummy_msg.clone(),
                     }
                     .into_cosmos_msg(&operator_info, receiver.clone())
                     .unwrap()
@@ -523,6 +800,153 @@ mod tests {
                     ("token_id", token2.as_str()),
                     ("amount", "1"),
                 ]))
+        );
+
+        // verify balances
+        assert_eq!(
+            from_json::<BalancesResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::BalanceOfBatch(vec![
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token2.clone(),
+                            },
+                            OwnerToken {
+                                owner: receiver.clone(),
+                                token_id: token2.clone(),
+                            }
+                        ]),
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            BalancesResponse {
+                balances: vec![
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(&user1),
+                        amount: Uint128::new(4),
+                    },
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(&receiver),
+                        amount: Uint128::one(),
+                    }
+                ]
+            },
+        );
+
+        // BatchSend
+        assert_eq!(
+            contract
+                .execute(
+                    deps.as_mut(),
+                    mock_env(),
+                    mock_info(user1.as_ref(), &[]),
+                    Cw1155BaseExecuteMsg::SendBatch {
+                        from: None,
+                        to: receiver.clone(),
+                        batch: vec![
+                            TokenAmount {
+                                token_id: token1.to_string(),
+                                amount: 1u64.into(),
+                            },
+                            TokenAmount {
+                                token_id: token2.to_string(),
+                                amount: 1u64.into(),
+                            },
+                        ],
+                        msg: Some(dummy_msg.clone()),
+                    },
+                )
+                .unwrap(),
+            Response::new()
+                .add_message(
+                    Cw1155BatchReceiveMsg {
+                        operator: user1.clone(),
+                        from: Some(user1.clone()),
+                        batch: vec![
+                            TokenAmount {
+                                token_id: token1.to_string(),
+                                amount: 1u64.into(),
+                            },
+                            TokenAmount {
+                                token_id: token2.to_string(),
+                                amount: 1u64.into(),
+                            }
+                        ],
+                        msg: dummy_msg,
+                    }
+                    .into_cosmos_msg(&operator_info, receiver.clone())
+                    .unwrap()
+                )
+                .add_event(Event::new("transfer_batch").add_attributes(vec![
+                    ("sender", user1.as_str()),
+                    ("recipient", receiver.as_str()),
+                    (
+                        "token_ids",
+                        &format!("{},{}", token1.as_str(), token2.as_str())
+                    ),
+                    ("amounts", &format!("{},{}", 1, 1)),
+                ]))
+        );
+
+        // verify balances
+        assert_eq!(
+            from_json::<BalancesResponse>(
+                contract
+                    .query(
+                        deps.as_ref(),
+                        mock_env(),
+                        Cw1155BaseQueryMsg::BalanceOfBatch(vec![
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token1.clone(),
+                            },
+                            OwnerToken {
+                                owner: user1.clone(),
+                                token_id: token2.clone(),
+                            },
+                            OwnerToken {
+                                owner: receiver.clone(),
+                                token_id: token1.clone(),
+                            },
+                            OwnerToken {
+                                owner: receiver.clone(),
+                                token_id: token2.clone(),
+                            }
+                        ]),
+                    )
+                    .unwrap()
+            )
+            .unwrap(),
+            BalancesResponse {
+                balances: vec![
+                    Balance {
+                        token_id: token1.to_string(),
+                        owner: Addr::unchecked(&user1),
+                        amount: Uint128::new(4),
+                    },
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(&user1),
+                        amount: Uint128::new(3),
+                    },
+                    Balance {
+                        token_id: token1.to_string(),
+                        owner: Addr::unchecked(&receiver),
+                        amount: Uint128::new(2),
+                    },
+                    Balance {
+                        token_id: token2.to_string(),
+                        owner: Addr::unchecked(&receiver),
+                        amount: Uint128::new(2),
+                    }
+                ]
+            },
         );
     }
 
@@ -754,6 +1178,18 @@ mod tests {
                     expires: Expiration::Never {},
                 }],
             })
+        );
+
+        assert_eq!(
+            contract.query(
+                deps.as_ref(),
+                mock_env(),
+                Cw1155QueryMsg::IsApprovedForAll {
+                    owner: users[0].to_string(),
+                    operator: users[3].to_string(),
+                },
+            ),
+            to_json_binary(&IsApprovedForAllResponse { approved: true })
         );
     }
 
