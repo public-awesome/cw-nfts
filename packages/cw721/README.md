@@ -18,8 +18,8 @@ The CW721 package provides 2 traits with default implementations (aka `utilities
     collection info, withdraw address, creator and minter ownership.
 - `Cw721Query` with `Cw721QueryMsg` e.g. for NFTs, tokens, approvals, various kinds of ownerships (creator and minter).
 
-Default implementations are opionated and uses a `Cw721Config` store. Custom cw721
-contracts may re-implement each utlitiy to their own need.
+Default implementations are opinionated and uses a `Cw721Config` store. Custom cw721
+contracts may re-implement each utility to their own need.
 
 ### `cw721-base`
 
