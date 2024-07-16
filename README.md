@@ -49,7 +49,7 @@ their own data for nft and collection metadata. Based on ERC721 the following st
 * [msg.rs](./packages/cw721/src/msg.rs): `CollectionExtensionMsg<TRoyaltyInfoResponse>` and `NftExtensionMsg`
 * [state.rs](./packages/cw721/src/state.rs): `CollectionExtension<TRoyaltyInfo>` and `NftExtension`
 
-These structs are optional and these default types in [libs.rs](./packages/cw721/src/lib.rs) may be used in contracts:
+These structs and default types in [libs.rs](./packages/cw721/src/lib.rs) may be used in contracts:
 
 ```rust
 /// Type for `Option<CollectionExtension<RoyaltyInfo>>`
