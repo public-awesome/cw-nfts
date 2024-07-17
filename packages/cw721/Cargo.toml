@@ -15,6 +15,17 @@ documentation = { workspace = true }
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
+cw-ownable      = { workspace = true }
+cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
+cw2             = { workspace = true }
+cw721-016       = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
+thiserror       = { workspace = true }
+
+[dev-dependencies]
+cw-multi-test   = { workspace = true }
+cw721-base-016  = { workspace = true, features = ["library"] }
+cw721-base-017  = { workspace = true, features = ["library"] }
+cw721-base-018  = { workspace = true, features = ["library"] }

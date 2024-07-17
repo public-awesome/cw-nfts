@@ -8,7 +8,7 @@ license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
 homepage      = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
-rust-version  = "1.73"
+rust-version  = "1.78"
 
 [workspace.dependencies]
 cosmwasm-schema = "^2.0"
@@ -16,11 +16,16 @@ cosmwasm-std    = "^2.0"
 cw2             = "^2.0"
 cw20            = "^2.0"
 cw721           = { version = "*", path = "./packages/cw721" }
+cw721-016       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721" } # needed for backwards compatibility and legacy migration
+cw721-017       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721" } # needed for testing legacy migration
+cw721-018       = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721" } # needed for testing legacy migration
 cw721-base      = { version = "*", path = "./contracts/cw721-base" }
-cw721-base-016  = { version = "0.16.0", package = "cw721-base" }
-cw-multi-test   = "^2.0"
-cw-ownable = { version = "2.0", git = "https://github.com/PFC-Validator/cw-plus-plus", branch = "v2.0.0-wip" }
+cw721-base-016  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721-base" } # needed for testing legacy migration
+cw721-base-017  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721-base" } # needed for testing legacy migration
+cw721-base-018  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721-base" } # needed for testing legacy migration
 
+cw-multi-test   = "^2.0"
+cw-ownable      = { git = "https://github.com/larry0x/cw-plus-plus.git", rev = "718351d4e9d66edbf3b6dbea2d13b56ef732f51c"} # TODO: switch to official https://github.com/larry0x/cw-plus-plus once merged
 cw-storage-plus = "^2.0"
 cw-utils        = "^2.0"
 schemars        = "^0.8"

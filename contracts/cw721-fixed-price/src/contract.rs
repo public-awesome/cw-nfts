@@ -166,7 +166,7 @@ pub fn execute_receive(
         return Err(ContractError::WrongPaymentAmount {});
     }
 
-    let mint_msg = Cw721ExecuteMsg::<_, Empty>::Mint {
+    let mint_msg = Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty>::Mint {
         token_id: config.unused_token_id.to_string(),
         owner: sender,
         token_uri: config.token_uri.clone().into(),
@@ -175,8 +175,12 @@ pub fn execute_receive(
 
     match config.cw721_address.clone() {
         Some(cw721) => {
-            let callback =
-                Cw721Contract::<Empty, Empty>(cw721, PhantomData, PhantomData).call(mint_msg)?;
+            let callback = Cw721Contract::<DefaultOptionMetadataExtension, Empty>(
+                cw721,
+                PhantomData,
+                PhantomData,
+            )
+            .call(mint_msg)?;
             config.unused_token_id += 1;
             CONFIG.save(deps.storage, &config)?;
 
@@ -194,6 +198,7 @@ mod tests {
         from_json, to_json_binary, CosmosMsg, ReplyOn, SubMsgResponse, SubMsgResult,
     };
     use cw721_base::Extension;
+    use cw721::state::DefaultOptionMetadataExtension;
     use prost::Message;
 
     const NFT_CONTRACT_ADDR: &str = "nftcontract";
@@ -391,7 +396,7 @@ mod tests {
         let info = mock_info(MOCK_CONTRACT_ADDR, &[]);
         let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let mint_msg = Cw721ExecuteMsg::<Extension, Empty>::Mint {
+        let mint_msg = Cw721ExecuteMsg::<DefaultOptionMetadataExtension, Empty>::Mint {
             token_id: String::from("0"),
             owner: String::from("minter"),
             token_uri: Some(String::from("https://ipfs.io/ipfs/Q")),
