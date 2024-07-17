@@ -1,15 +1,13 @@
 #![cfg(test)]
 
-use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
 
 use cosmwasm_std::{
     from_json, to_json_binary, Addr, Coin, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
 };
 
 use crate::error::Cw721ContractError;
-use crate::msg::{
-    ApprovalResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
-};
+use crate::msg::{ApprovalResponse, MinterResponse, NftInfoResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse};
 use crate::msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
 use crate::state::{CollectionInfo, DefaultOptionMetadataExtension, MINTER};
@@ -18,7 +16,7 @@ use cw_ownable::{Action, Ownership, OwnershipError};
 
 use super::contract::Cw721Contract;
 
-const MINTER: &str = "minter";
+const MINTER_ADDR: &str = "minter";
 const CREATOR: &str = "creator";
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
@@ -27,7 +25,7 @@ fn setup_contract(
     deps: DepsMut<'_>,
     creator: Addr,
     minter: Addr,
-) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty, Empty> {
+) -> Cw721Contract<'static, DefaultOptionMetadataExtension, Empty, Empty> {
     let contract = Cw721Contract::default();
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
@@ -35,7 +33,7 @@ fn setup_contract(
         minter: Some(minter.to_string()),
         withdraw_address: None,
     };
-    let info = mock_info(creator.as_ref(), &[]);
+    let info = message_info(&creator, &[]);
     let res = contract
         .instantiate(
             deps,
@@ -53,8 +51,8 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty, Empty>::default();
-    let minter = deps.api.addr_make(MINTER);
+    let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let creator = deps.api.addr_make(CREATOR);
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
@@ -62,7 +60,7 @@ fn proper_instantiation() {
         minter: Some(minter.to_string()),
         withdraw_address: Some(creator.to_string()),
     };
-    let info = mock_info(creator.as_ref(), &[]);
+    let info = message_info(&creator, &[]);
     let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
@@ -116,14 +114,14 @@ fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
     let contract = Cw721Contract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let msg = Cw721InstantiateMsg {
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
         minter: Some(minter.to_string()),
         withdraw_address: Some(creator.to_string()),
     };
-    let collection_info = mock_info(creator.as_ref(), &[]);
+    let collection_info = message_info(&creator, &[]);
     let env = mock_env();
 
     // we can just call .unwrap() to assert this was a success
@@ -140,7 +138,7 @@ fn proper_instantiation_with_collection_info() {
     assert_eq!(0, res.messages.len());
 
     // it worked, let's query the state
-    let minter_ownership = minter.get_ownership(deps.as_ref().storage).unwrap();
+    let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
     let info = contract
         .query_collection_info(deps.as_ref(), env.clone())
@@ -176,7 +174,7 @@ fn proper_instantiation_with_collection_info() {
 fn minting() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let token_id = "petrify".to_string();
@@ -190,7 +188,7 @@ fn minting() {
     };
 
     // random cannot mint
-    let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let env = mock_env();
     let err = contract
         .execute(deps.as_mut(), env.clone(), random, mint_msg.clone())
@@ -198,7 +196,7 @@ fn minting() {
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // minter can mint
-    let allowed = mock_info(minter.as_ref(), &[]);
+    let allowed = message_info(&minter, &[]);
     let _ = contract
         .execute(deps.as_mut(), env.clone(), allowed, mint_msg)
         .unwrap();
@@ -246,7 +244,7 @@ fn minting() {
         extension: None,
     };
 
-    let allowed = mock_info(minter.as_ref(), &[]);
+    let allowed = message_info(&minter, &[]);
     let err = contract
         .execute(deps.as_mut(), mock_env(), allowed, mint_msg2)
         .unwrap_err();
@@ -264,7 +262,7 @@ fn minting() {
 fn test_update_minter() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let random = deps.api.addr_make("random");
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
@@ -279,7 +277,7 @@ fn test_update_minter() {
     };
 
     // Minter can mint
-    let minter_info = mock_info(minter.as_ref(), &[]);
+    let minter_info = message_info(&minter, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), minter_info.clone(), mint_msg)
         .unwrap();
@@ -301,7 +299,7 @@ fn test_update_minter() {
     // Minter does not change until ownership transfer completes.
     let minter_response: MinterResponse = from_json(
         contract
-            .query(deps.as_ref(), mock_env(), QueryMsg::Minter {})
+            .query(deps.as_ref(), mock_env(), Cw721QueryMsg::Minter {})
             .unwrap(),
     )
     .unwrap();
@@ -325,7 +323,7 @@ fn test_update_minter() {
     );
 
     // Accept the ownership transfer.
-    let random_info = mock_info(random.as_ref(), &[]);
+    let random_info = message_info(&random, &[]);
     contract
         .execute(
             deps.as_mut(),
@@ -342,7 +340,7 @@ fn test_update_minter() {
             .unwrap(),
     )
     .unwrap();
-    assert_eq!(minter.minter, Some(random.to_string()));
+    assert_eq!(MINTER.minter, Some(random.to_string()));
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
@@ -367,7 +365,7 @@ fn test_update_minter() {
 fn burning() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     let token_id = "petrify".to_string();
@@ -383,13 +381,13 @@ fn burning() {
     let burn_msg = Cw721ExecuteMsg::Burn { token_id };
 
     // mint some NFT
-    let allowed = mock_info(minter.as_ref(), &[]);
+    let allowed = message_info(&minter, &[]);
     let _ = contract
         .execute(deps.as_mut(), mock_env(), allowed.clone(), mint_msg)
         .unwrap();
 
     // random not allowed to burn
-    let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let env = mock_env();
 
     let err = contract
@@ -424,7 +422,7 @@ fn burning() {
 fn transferring_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
@@ -438,13 +436,13 @@ fn transferring_nft() {
         extension: None,
     };
 
-    let minter = mock_info(minter.as_ref(), &[]);
+    let minter = message_info(&minter, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
 
     // random cannot transfer
-    let random = mock_info("random", &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: deps.api.addr_make("random").to_string(),
         token_id: token_id.clone(),
@@ -456,7 +454,7 @@ fn transferring_nft() {
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // owner can
-    let random = mock_info(deps.api.addr_make("venus").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("venus"), &[]);
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: deps.api.addr_make("random").to_string(),
         token_id: token_id.clone(),
@@ -480,7 +478,7 @@ fn transferring_nft() {
 fn sending_nft() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
@@ -494,7 +492,7 @@ fn sending_nft() {
         extension: None,
     };
 
-    let minter = mock_info(minter.as_ref(), &[]);
+    let minter = message_info(&minter, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
@@ -502,19 +500,19 @@ fn sending_nft() {
     let msg = to_json_binary("You now have the melting power").unwrap();
     let target = deps.api.addr_make("another_contract");
     let send_msg = Cw721ExecuteMsg::SendNft {
-        contract: target.clone(),
+        contract: target.to_string(),
         token_id: token_id.clone(),
         msg: msg.clone(),
     };
 
-    let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let err = contract
         .execute(deps.as_mut(), mock_env(), random, send_msg.clone())
         .unwrap_err();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // but owner can
-    let random = mock_info(deps.api.addr_make("venus").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("venus"), &[]);
     let res = contract
         .execute(deps.as_mut(), mock_env(), random, send_msg)
         .unwrap();
@@ -548,7 +546,7 @@ fn sending_nft() {
 fn approving_revoking() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
     // Mint a token
@@ -562,7 +560,7 @@ fn approving_revoking() {
         extension: None,
     };
 
-    let minter = mock_info(minter.as_ref(), &[]);
+    let minter = message_info(&minter, &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter, mint_msg)
         .unwrap();
@@ -581,7 +579,7 @@ fn approving_revoking() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: deps.api.addr_make("demeter").to_string(),
+                spender: deps.api.addr_make("demeter"),
                 expires: Expiration::Never {}
             }
         }
@@ -593,7 +591,7 @@ fn approving_revoking() {
         token_id: token_id.clone(),
         expires: None,
     };
-    let owner = mock_info(deps.api.addr_make("demeter").as_ref(), &[]);
+    let owner = message_info(&deps.api.addr_make("demeter"), &[]);
     let res = contract
         .execute(deps.as_mut(), mock_env(), owner, approve_msg)
         .unwrap();
@@ -620,14 +618,14 @@ fn approving_revoking() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: deps.api.addr_make("random").to_string(),
+                spender: deps.api.addr_make("random"),
                 expires: Expiration::Never {}
             }
         }
     );
 
     // random can now transfer
-    let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: deps.api.addr_make("person").to_string(),
         token_id: token_id.clone(),
@@ -661,7 +659,7 @@ fn approving_revoking() {
         token_id: token_id.clone(),
         expires: None,
     };
-    let owner = mock_info(deps.api.addr_make("person").as_ref(), &[]);
+    let owner = message_info(&deps.api.addr_make("person"), &[]);
     contract
         .execute(deps.as_mut(), mock_env(), owner.clone(), approve_msg)
         .unwrap();
@@ -694,7 +692,7 @@ fn approving_revoking() {
 fn approving_all_revoking_all() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter);
 
     // Mint a couple tokens (from the same owner)
@@ -711,7 +709,7 @@ fn approving_all_revoking_all() {
         extension: None,
     };
 
-    let minter = mock_info(deps.api.addr_make(MINTER).as_ref(), &[]);
+    let minter = message_info(&deps.api.addr_make(MINTER_ADDR), &[]);
     contract
         .execute(deps.as_mut(), mock_env(), minter.clone(), mint_msg1)
         .unwrap();
@@ -745,7 +743,7 @@ fn approving_all_revoking_all() {
         operator: deps.api.addr_make("random").to_string(),
         expires: None,
     };
-    let owner = mock_info(deps.api.addr_make("demeter").as_ref(), &[]);
+    let owner = message_info(&deps.api.addr_make("demeter"), &[]);
     let res = contract
         .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
         .unwrap();
@@ -758,7 +756,7 @@ fn approving_all_revoking_all() {
     );
 
     // random can now transfer
-    let random = mock_info(deps.api.addr_make("random").as_ref(), &[]);
+    let random = message_info(&deps.api.addr_make("random"), &[]);
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: deps.api.addr_make("person").to_string(),
         token_id: token_id1,
@@ -790,7 +788,7 @@ fn approving_all_revoking_all() {
         expires: None,
     };
     // person is now the owner of the tokens
-    let owner = mock_info(deps.api.addr_make("person").as_ref(), &[]);
+    let owner = message_info(&deps.api.addr_make("person"), &[]);
     contract
         .execute(deps.as_mut(), mock_env(), owner, approve_all_msg)
         .unwrap();
@@ -809,7 +807,7 @@ fn approving_all_revoking_all() {
         res,
         OperatorResponse {
             approval: Approval {
-                spender: deps.api.addr_make("operator").to_string(),
+                spender: deps.api.addr_make("operator"),
                 expires: Expiration::Never {}
             }
         }
@@ -842,7 +840,7 @@ fn approving_all_revoking_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: deps.api.addr_make("operator").to_string(),
+                spender: deps.api.addr_make("operator"),
                 expires: Expiration::Never {}
             }]
         }
@@ -854,7 +852,7 @@ fn approving_all_revoking_all() {
         operator: deps.api.addr_make("buddy").to_string(),
         expires: Some(buddy_expires),
     };
-    let owner = mock_info(deps.api.addr_make("person").as_ref(), &[]);
+    let owner = message_info(&deps.api.addr_make("person"), &[]);
     contract
         .execute(deps.as_mut(), mock_env(), owner.clone(), approve_all_msg)
         .unwrap();
@@ -876,7 +874,7 @@ fn approving_all_revoking_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: deps.api.addr_make("buddy").to_string(),
+                spender: deps.api.addr_make("buddy"),
                 expires: buddy_expires,
             }]
         }
@@ -896,7 +894,7 @@ fn approving_all_revoking_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: deps.api.addr_make("operator").to_string(),
+                spender: deps.api.addr_make("operator"),
                 expires: Expiration::Never {}
             }]
         }
@@ -937,7 +935,7 @@ fn approving_all_revoking_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: deps.api.addr_make("buddy").to_string(),
+                spender: deps.api.addr_make("buddy"),
                 expires: buddy_expires,
             }]
         }
@@ -978,7 +976,7 @@ fn test_set_withdraw_address() {
     let mut deps = mock_dependencies();
     // other than minter cant set
     let creator = deps.api.addr_make("creator");
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
     let other = deps.api.addr_make("other");
     // other cant set
@@ -1009,8 +1007,8 @@ fn test_set_withdraw_address() {
 fn test_remove_withdraw_address() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
-    let contract = setup_contract(deps.as_mut(), creator, minter);
+    let minter = deps.api.addr_make(MINTER_ADDR);
+    let contract = setup_contract(deps.as_mut(), creator, minter.clone());
     let other = deps.api.addr_make("other");
     let foo = deps.api.addr_make("foo");
 
@@ -1028,11 +1026,10 @@ fn test_remove_withdraw_address() {
 
     // set and remove
     contract
-        .set_withdraw_address(deps.as_mut(), &minter, foo.to_string())
         .set_withdraw_address(
             deps.as_mut(),
             &minter,
-            "foo".to_string(),
+            foo.to_string(),
         )
         .unwrap();
     contract
@@ -1059,7 +1056,7 @@ fn test_remove_withdraw_address() {
 fn test_withdraw_funds() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make("creator");
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let foo = deps.api.addr_make("foo");
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
@@ -1082,10 +1079,10 @@ fn test_withdraw_funds() {
 fn query_tokens_by_owner() {
     let mut deps = mock_dependencies();
     let creator = deps.api.addr_make(CREATOR);
-    let minter = deps.api.addr_make(MINTER);
+    let minter = deps.api.addr_make(MINTER_ADDR);
     let contract = setup_contract(deps.as_mut(), creator, minter.clone());
 
-    let minter = mock_info(minter.as_ref(), &[]);
+    let minter = message_info(&minter, &[]);
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
@@ -1146,7 +1143,7 @@ fn query_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .query_tokens(deps.as_ref(), demeter.to_string(), None, None)
+        .query_tokens(deps.as_ref(), env.clone(), demeter.to_string(), None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
