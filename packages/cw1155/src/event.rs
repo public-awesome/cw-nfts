@@ -1,17 +1,24 @@
 use crate::msg::TokenAmount;
-use cosmwasm_std::{attr, Addr, Attribute, Event, Uint128};
+use cosmwasm_std::{attr, Addr, Attribute, Event, MessageInfo, Uint128};
 
 /// Tracks token transfer actions
 pub struct TransferEvent {
+    pub owner: Addr,
     pub sender: Addr,
     pub recipient: Addr,
     pub tokens: Vec<TokenAmount>,
 }
 
 impl TransferEvent {
-    pub fn new(sender: &Addr, recipient: &Addr, tokens: Vec<TokenAmount>) -> Self {
+    pub fn new(
+        info: &MessageInfo,
+        from: Option<Addr>,
+        recipient: &Addr,
+        tokens: Vec<TokenAmount>,
+    ) -> Self {
         Self {
-            sender: sender.clone(),
+            owner: from.unwrap_or_else(|| info.sender.clone()),
+            sender: info.sender.clone(),
             recipient: recipient.clone(),
             tokens,
         }
@@ -29,6 +36,7 @@ impl From<TransferEvent> for Event {
             }
         ))
         .add_attributes(vec![
+            attr("owner", event.owner.as_str()),
             attr("sender", event.sender.as_str()),
             attr("recipient", event.recipient.as_str()),
         ])
@@ -38,13 +46,15 @@ impl From<TransferEvent> for Event {
 
 /// Tracks token mint actions
 pub struct MintEvent {
+    pub sender: Addr,
     pub recipient: Addr,
     pub tokens: Vec<TokenAmount>,
 }
 
 impl MintEvent {
-    pub fn new(recipient: &Addr, tokens: Vec<TokenAmount>) -> Self {
+    pub fn new(info: &MessageInfo, recipient: &Addr, tokens: Vec<TokenAmount>) -> Self {
         Self {
+            sender: info.sender.clone(),
             recipient: recipient.clone(),
             tokens,
         }
@@ -61,6 +71,7 @@ impl From<MintEvent> for Event {
                 "batch"
             }
         ))
+        .add_attribute("sender", event.sender.as_str())
         .add_attribute("recipient", event.recipient.as_str())
         .add_attributes(token_attributes(event.tokens))
     }
@@ -68,14 +79,16 @@ impl From<MintEvent> for Event {
 
 /// Tracks token burn actions
 pub struct BurnEvent {
+    pub owner: Addr,
     pub sender: Addr,
     pub tokens: Vec<TokenAmount>,
 }
 
 impl BurnEvent {
-    pub fn new(sender: &Addr, tokens: Vec<TokenAmount>) -> Self {
+    pub fn new(info: &MessageInfo, from: Option<Addr>, tokens: Vec<TokenAmount>) -> Self {
         Self {
-            sender: sender.clone(),
+            owner: from.unwrap_or_else(|| info.sender.clone()),
+            sender: info.sender.clone(),
             tokens,
         }
     }
@@ -91,6 +104,7 @@ impl From<BurnEvent> for Event {
                 "batch"
             }
         ))
+        .add_attribute("owner", event.owner.as_str())
         .add_attribute("sender", event.sender.as_str())
         .add_attributes(token_attributes(event.tokens))
     }

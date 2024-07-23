@@ -96,6 +96,7 @@ mod tests {
                 )
                 .unwrap(),
             Response::new().add_event(Event::new("mint_single").add_attributes(vec![
+                ("sender", minter.as_str()),
                 ("recipient", user1.as_str()),
                 ("token_id", token1.as_str()),
                 ("amount", "1"),
@@ -194,7 +195,8 @@ mod tests {
                 )
                 .unwrap(),
             Response::new().add_event(Event::new("transfer_single").add_attributes(vec![
-                ("sender", user1.as_str()),
+                ("owner", user1.as_str()),
+                ("sender", minter.as_str()),
                 ("recipient", user2.as_str()),
                 ("token_id", token1.as_str()),
                 ("amount", "1"),
@@ -382,7 +384,8 @@ mod tests {
                 )
                 .unwrap(),
             Response::new().add_event(Event::new("transfer_batch").add_attributes(vec![
-                ("sender", user2.as_str()),
+                ("owner", user2.as_str()),
+                ("sender", minter.as_str()),
                 ("recipient", user1.as_str()),
                 ("token_ids", &format!("{},{},{}", token1, token2, token3)),
                 ("amounts", "1,1,1"),
@@ -514,6 +517,7 @@ mod tests {
                 )
                 .unwrap(),
             Response::new().add_event(Event::new("burn_single").add_attributes(vec![
+                ("owner", user1.as_str()),
                 ("sender", user1.as_str()),
                 ("token_id", &token1),
                 ("amount", "1"),
@@ -597,6 +601,7 @@ mod tests {
                 )
                 .unwrap(),
             Response::new().add_event(Event::new("burn_batch").add_attributes(vec![
+                ("owner", user1.as_str()),
                 ("sender", user1.as_str()),
                 ("token_ids", &format!("{},{}", token2, token3)),
                 ("amounts", "1,1"),
@@ -795,6 +800,7 @@ mod tests {
                     .unwrap()
                 )
                 .add_event(Event::new("transfer_single").add_attributes(vec![
+                    ("owner", user1.as_str()),
                     ("sender", user1.as_str()),
                     ("recipient", receiver.as_str()),
                     ("token_id", token2.as_str()),
@@ -884,6 +890,7 @@ mod tests {
                     .unwrap()
                 )
                 .add_event(Event::new("transfer_batch").add_attributes(vec![
+                    ("owner", user1.as_str()),
                     ("sender", user1.as_str()),
                     ("recipient", receiver.as_str()),
                     (

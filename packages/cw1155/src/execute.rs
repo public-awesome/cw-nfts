@@ -164,6 +164,7 @@ pub trait Cw1155Execute<
         let event = self.update_balances(
             &mut deps,
             &env,
+            &info,
             None,
             Some(to),
             vec![TokenAmount {
@@ -225,7 +226,7 @@ pub trait Cw1155Execute<
             .collect::<StdResult<Vec<_>>>()?;
 
         let mut rsp = Response::default();
-        let event = self.update_balances(&mut deps, &env, None, Some(to), batch)?;
+        let event = self.update_balances(&mut deps, &env, &info, None, Some(to), batch)?;
         rsp = rsp.add_event(event);
 
         Ok(rsp)
@@ -261,6 +262,7 @@ pub trait Cw1155Execute<
         let event = self.update_balances(
             &mut deps,
             &env,
+            &info,
             Some(from.clone()),
             Some(to.clone()),
             vec![TokenAmount {
@@ -322,6 +324,7 @@ pub trait Cw1155Execute<
         let event = self.update_balances(
             &mut deps,
             &env,
+            &info,
             Some(from.clone()),
             Some(to.clone()),
             batch.to_vec(),
@@ -380,6 +383,7 @@ pub trait Cw1155Execute<
         let event = self.update_balances(
             &mut deps,
             &env,
+            &info,
             Some(from),
             None,
             vec![TokenAmount {
@@ -413,7 +417,7 @@ pub trait Cw1155Execute<
         let batch = self.verify_approvals(deps.storage, &env, &info, &from, batch)?;
 
         let mut rsp = Response::default();
-        let event = self.update_balances(&mut deps, &env, Some(from), None, batch)?;
+        let event = self.update_balances(&mut deps, &env, &info, Some(from), None, batch)?;
         rsp = rsp.add_event(event);
 
         Ok(rsp)
@@ -562,6 +566,7 @@ pub trait Cw1155Execute<
         &self,
         deps: &mut DepsMut,
         env: &Env,
+        info: &MessageInfo,
         from: Option<Addr>,
         to: Option<Addr>,
         tokens: Vec<TokenAmount>,
@@ -638,17 +643,17 @@ pub trait Cw1155Execute<
 
             if let Some(to) = &to {
                 // transfer
-                TransferEvent::new(from, to, tokens).into()
+                TransferEvent::new(info, Some(from.clone()), to, tokens).into()
             } else {
                 // burn
-                BurnEvent::new(from, tokens).into()
+                BurnEvent::new(info, Some(from.clone()), tokens).into()
             }
         } else if let Some(to) = &to {
             // mint
             for TokenAmount { token_id, amount } in &tokens {
                 config.increment_tokens(deps.storage, token_id, amount)?;
             }
-            MintEvent::new(to, tokens).into()
+            MintEvent::new(info, to, tokens).into()
         } else {
             panic!("Invalid transfer: from and to cannot both be None")
         };
