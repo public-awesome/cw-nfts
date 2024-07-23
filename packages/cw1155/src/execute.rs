@@ -3,6 +3,7 @@ use cosmwasm_std::{
     StdResult, Storage, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
+use cw721::error::Cw721ContractError;
 use cw721::execute::{migrate_version, Cw721Execute};
 use cw721::state::CollectionInfo;
 use cw_utils::Expiration;
@@ -10,7 +11,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use crate::event::{
-    ApproveAllEvent, ApproveEvent, BurnEvent, MintEvent, RevokeAllEvent, RevokeEvent, TransferEvent,
+    ApproveAllEvent, ApproveEvent, BurnEvent, MintEvent, RevokeAllEvent, RevokeEvent,
+    TransferEvent, UpdateMetadataEvent,
 };
 use crate::msg::{Balance, Cw1155MintMsg, TokenAmount, TokenApproval};
 use crate::receiver::Cw1155BatchReceiveMsg;
@@ -747,6 +749,43 @@ pub trait Cw1155Execute<
         let ownership =
             cw_ownable::update_ownership(deps.api, deps.storage, &env.block, &info.sender, action)?;
         Ok(Response::new().add_attributes(ownership.into_attributes()))
+    }
+
+    /// Allows creator to update onchain metadata and token uri. This is not available on the base, but the implementation
+    /// is available here for contracts that want to use it.
+    /// From `update_uri` on ERC-1155.
+    fn update_metadata(
+        &self,
+        deps: DepsMut,
+        info: MessageInfo,
+        token_id: String,
+        extension: Option<TMetadataExtension>,
+        token_uri: Option<String>,
+    ) -> Result<Response<TCustomResponseMessage>, Cw721ContractError> {
+        cw_ownable::assert_owner(deps.storage, &info.sender)?;
+
+        if extension.is_none() && token_uri.is_none() {
+            return Err(Cw721ContractError::NoUpdatesRequested {});
+        }
+
+        let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+        let mut token_info = config.tokens.load(deps.storage, &token_id)?;
+
+        // update extension
+        let extension_update = if let Some(extension) = extension {
+            token_info.extension = extension;
+            true
+        } else {
+            false
+        };
+
+        // update token uri
+        token_info.token_uri = token_uri;
+
+        // store token
+        config.tokens.save(deps.storage, &token_id, &token_info)?;
+
+        Ok(Response::new().add_event(UpdateMetadataEvent::new(&token_id, &token_info.token_uri.unwrap_or_default(), extension_update).into()))
     }
 }
 

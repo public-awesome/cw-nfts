@@ -24,4 +24,7 @@ pub enum Cw721ContractError {
 
     #[error("No withdraw address set")]
     NoWithdrawAddress {},
+
+    #[error("Must provide either 'token_uri' or 'extension' to update.")]
+    NoUpdatesRequested {},
 }

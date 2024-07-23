@@ -238,3 +238,29 @@ pub fn token_attributes(tokens: Vec<TokenAmount>) -> Vec<Attribute> {
         ),
     ]
 }
+
+pub struct UpdateMetadataEvent {
+    pub token_id: String,
+    pub token_uri: String,
+    pub extension_update: bool,
+}
+
+impl UpdateMetadataEvent {
+    pub fn new(token_id: &str, token_uri: &str, extension_update: bool) -> Self {
+        Self {
+            token_id: token_id.to_string(),
+            token_uri: token_uri.to_string(),
+            extension_update,
+        }
+    }
+}
+
+impl From<UpdateMetadataEvent> for Event {
+    fn from(event: UpdateMetadataEvent) -> Self {
+        Event::new("update_metadata").add_attributes(vec![
+            attr("token_id", event.token_id),
+            attr("token_uri", event.token_uri),
+            attr("extension_update", event.extension_update.to_string()),
+        ])
+    }
+}
