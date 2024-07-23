@@ -287,7 +287,7 @@ pub trait Cw1155Execute<
             ));
         } else {
             // transfer funds along to recipient
-            if info.funds.len() > 0 {
+            if !info.funds.is_empty() {
                 let transfer_msg = BankMsg::Send {
                     to_address: to.to_string(),
                     amount: info.funds.to_vec(),
@@ -345,7 +345,7 @@ pub trait Cw1155Execute<
             ));
         } else {
             // transfer funds along to recipient
-            if info.funds.len() > 0 {
+            if !info.funds.is_empty() {
                 let transfer_msg = BankMsg::Send {
                     to_address: to.to_string(),
                     amount: info.funds.to_vec(),

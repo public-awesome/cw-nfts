@@ -23,10 +23,7 @@ pub fn query_royalties_info(
     let royalty_from_sale_price = sale_price * royalty_percentage;
 
     let royalty_address = match token_info.extension {
-        Some(ext) => match ext.royalty_payment_address {
-            Some(addr) => addr,
-            None => String::from(""),
-        },
+        Some(ext) => ext.royalty_payment_address.unwrap_or_default(),
         None => String::from(""),
     };
 

@@ -10,7 +10,6 @@ pub use cw721_base::{
     execute::Cw721Execute, msg::InstantiateMsg, query::Cw721Query, Cw721Contract,
 };
 
-use crate::error::ContractError;
 use crate::msg::QueryMsg;
 
 // Version info for migration

@@ -266,7 +266,7 @@ pub trait Cw1155Query<
 
 fn build_approval(item: StdResult<(Addr, Expiration)>) -> StdResult<Approval> {
     item.map(|(addr, expires)| Approval {
-        spender: addr.into(),
+        spender: addr,
         expires,
     })
 }
