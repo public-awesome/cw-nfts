@@ -56,7 +56,7 @@ where
 {
     fn default() -> Self {
         Self::new(
-            "cw1155_contract_info",
+            "collection_info",
             "tokens",
             "token_count",
             "supply",

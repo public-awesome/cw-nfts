@@ -3,8 +3,7 @@ mod tests {
     use crate::{Cw1155BaseContract, Cw1155BaseExecuteMsg, Cw1155BaseQueryMsg};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{
-        from_json, to_json_binary, Addr, Binary, Empty, Event, OverflowError, Response, StdError,
-        Uint128,
+        from_json, to_json_binary, Addr, Binary, Empty, OverflowError, Response, StdError, Uint128,
     };
     use cw1155::error::Cw1155ContractError;
     use cw1155::execute::Cw1155Execute;
