@@ -306,10 +306,10 @@
       "description": "Custom msg execution. This is a no-op in default implementation.",
       "type": "object",
       "required": [
-        "get_extension"
+        "update_extension"
       ],
       "properties": {
-        "get_extension": {
+        "update_extension": {
           "type": "object",
           "required": [
             "msg"
