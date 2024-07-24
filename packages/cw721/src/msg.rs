@@ -96,7 +96,7 @@ pub enum Cw721ExecuteMsg<
     },
 
     /// Custom msg execution. This is a no-op in default implementation.
-    GetExtension {
+    UpdateExtension {
         msg: TExtensionMsg,
     },
 

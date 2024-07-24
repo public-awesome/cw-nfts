@@ -229,7 +229,9 @@ pub trait Cw721Execute<
                 self.update_creator_ownership(deps.api, deps.storage, env, info, action)
             }
             #[allow(deprecated)]
-            Cw721ExecuteMsg::GetExtension { msg } => self.execute_extension(deps, env, info, msg),
+            Cw721ExecuteMsg::UpdateExtension { msg } => {
+                self.execute_extension(deps, env, info, msg)
+            }
             Cw721ExecuteMsg::UpdateNftInfo {
                 token_id,
                 token_uri,
