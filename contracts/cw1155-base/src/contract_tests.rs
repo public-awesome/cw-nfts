@@ -95,12 +95,13 @@ mod tests {
                     mint_msg,
                 )
                 .unwrap(),
-            Response::new().add_event(Event::new("mint_single").add_attributes(vec![
+            Response::new().add_attributes(vec![
+                ("action", "mint_single"),
                 ("sender", minter.as_str()),
                 ("recipient", user1.as_str()),
                 ("token_id", token1.as_str()),
                 ("amount", "1"),
-            ]))
+            ])
         );
 
         // verify supply
@@ -194,13 +195,14 @@ mod tests {
                     transfer_msg,
                 )
                 .unwrap(),
-            Response::new().add_event(Event::new("transfer_single").add_attributes(vec![
+            Response::new().add_attributes(vec![
+                ("action", "transfer_single"),
                 ("owner", user1.as_str()),
                 ("sender", minter.as_str()),
                 ("recipient", user2.as_str()),
                 ("token_id", token1.as_str()),
                 ("amount", "1"),
-            ]))
+            ])
         );
 
         // query balance
@@ -383,13 +385,14 @@ mod tests {
                     batch_transfer_msg,
                 )
                 .unwrap(),
-            Response::new().add_event(Event::new("transfer_batch").add_attributes(vec![
+            Response::new().add_attributes(vec![
+                ("action", "transfer_batch"),
                 ("owner", user2.as_str()),
                 ("sender", minter.as_str()),
                 ("recipient", user1.as_str()),
                 ("token_ids", &format!("{},{},{}", token1, token2, token3)),
                 ("amounts", "1,1,1"),
-            ]))
+            ])
         );
 
         // batch query
@@ -516,12 +519,13 @@ mod tests {
                     },
                 )
                 .unwrap(),
-            Response::new().add_event(Event::new("burn_single").add_attributes(vec![
+            Response::new().add_attributes(vec![
+                ("action", "burn_single"),
                 ("owner", user1.as_str()),
                 ("sender", user1.as_str()),
                 ("token_id", &token1),
                 ("amount", "1"),
-            ]))
+            ])
         );
 
         // verify supply
@@ -600,12 +604,13 @@ mod tests {
                     },
                 )
                 .unwrap(),
-            Response::new().add_event(Event::new("burn_batch").add_attributes(vec![
+            Response::new().add_attributes(vec![
+                ("action", "burn_batch"),
                 ("owner", user1.as_str()),
                 ("sender", user1.as_str()),
                 ("token_ids", &format!("{},{}", token2, token3)),
                 ("amounts", "1,1"),
-            ]))
+            ])
         );
 
         // verify supply
@@ -799,13 +804,14 @@ mod tests {
                     .into_cosmos_msg(&operator_info, receiver.clone())
                     .unwrap()
                 )
-                .add_event(Event::new("transfer_single").add_attributes(vec![
+                .add_attributes(vec![
+                    ("action", "transfer_single"),
                     ("owner", user1.as_str()),
                     ("sender", user1.as_str()),
                     ("recipient", receiver.as_str()),
                     ("token_id", token2.as_str()),
                     ("amount", "1"),
-                ]))
+                ])
         );
 
         // verify balances
@@ -889,7 +895,8 @@ mod tests {
                     .into_cosmos_msg(&operator_info, receiver.clone())
                     .unwrap()
                 )
-                .add_event(Event::new("transfer_batch").add_attributes(vec![
+                .add_attributes(vec![
+                    ("action", "transfer_batch"),
                     ("owner", user1.as_str()),
                     ("sender", user1.as_str()),
                     ("recipient", receiver.as_str()),
@@ -898,7 +905,7 @@ mod tests {
                         &format!("{},{}", token1.as_str(), token2.as_str())
                     ),
                     ("amounts", &format!("{},{}", 1, 1)),
-                ]))
+                ])
         );
 
         // verify balances

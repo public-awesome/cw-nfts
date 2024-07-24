@@ -1,5 +1,5 @@
 use crate::msg::TokenAmount;
-use cosmwasm_std::{attr, Addr, Attribute, Event, MessageInfo, Uint128};
+use cosmwasm_std::{attr, Addr, Attribute, MessageInfo, Uint128};
 
 /// Tracks token transfer actions
 pub struct TransferEvent {
@@ -25,22 +25,19 @@ impl TransferEvent {
     }
 }
 
-impl From<TransferEvent> for Event {
-    fn from(event: TransferEvent) -> Self {
-        Event::new(format!(
-            "transfer_{}",
-            if event.tokens.len() == 1 {
-                "single"
-            } else {
-                "batch"
-            }
-        ))
-        .add_attributes(vec![
-            attr("owner", event.owner.as_str()),
-            attr("sender", event.sender.as_str()),
-            attr("recipient", event.recipient.as_str()),
-        ])
-        .add_attributes(token_attributes(event.tokens))
+impl IntoIterator for TransferEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut attrs = vec![
+            event_action("transfer", &self.tokens),
+            attr("owner", self.owner.as_str()),
+            attr("sender", self.sender.as_str()),
+            attr("recipient", self.recipient.as_str()),
+        ];
+        attrs.extend(token_attributes(self.tokens));
+        attrs.into_iter()
     }
 }
 
@@ -61,19 +58,18 @@ impl MintEvent {
     }
 }
 
-impl From<MintEvent> for Event {
-    fn from(event: MintEvent) -> Self {
-        Event::new(format!(
-            "mint_{}",
-            if event.tokens.len() == 1 {
-                "single"
-            } else {
-                "batch"
-            }
-        ))
-        .add_attribute("sender", event.sender.as_str())
-        .add_attribute("recipient", event.recipient.as_str())
-        .add_attributes(token_attributes(event.tokens))
+impl IntoIterator for MintEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut attrs = vec![
+            event_action("mint", &self.tokens),
+            attr("sender", self.sender.as_str()),
+            attr("recipient", self.recipient.as_str()),
+        ];
+        attrs.extend(token_attributes(self.tokens));
+        attrs.into_iter()
     }
 }
 
@@ -94,19 +90,18 @@ impl BurnEvent {
     }
 }
 
-impl From<BurnEvent> for Event {
-    fn from(event: BurnEvent) -> Self {
-        Event::new(format!(
-            "burn_{}",
-            if event.tokens.len() == 1 {
-                "single"
-            } else {
-                "batch"
-            }
-        ))
-        .add_attribute("owner", event.owner.as_str())
-        .add_attribute("sender", event.sender.as_str())
-        .add_attributes(token_attributes(event.tokens))
+impl IntoIterator for BurnEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut attrs = vec![
+            event_action("burn", &self.tokens),
+            attr("owner", self.owner.as_str()),
+            attr("sender", self.sender.as_str()),
+        ];
+        attrs.extend(token_attributes(self.tokens));
+        attrs.into_iter()
     }
 }
 
@@ -129,14 +124,19 @@ impl ApproveEvent {
     }
 }
 
-impl From<ApproveEvent> for Event {
-    fn from(event: ApproveEvent) -> Self {
-        Event::new("approve_single").add_attributes(vec![
-            attr("sender", event.sender.as_str()),
-            attr("operator", event.operator.as_str()),
-            attr("token_id", event.token_id),
-            attr("amount", event.amount.to_string()),
-        ])
+impl IntoIterator for ApproveEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![
+            attr("action", "approve_single"),
+            attr("sender", self.sender.as_str()),
+            attr("operator", self.operator.as_str()),
+            attr("token_id", self.token_id),
+            attr("amount", self.amount.to_string()),
+        ]
+        .into_iter()
     }
 }
 
@@ -159,14 +159,19 @@ impl RevokeEvent {
     }
 }
 
-impl From<RevokeEvent> for Event {
-    fn from(event: RevokeEvent) -> Self {
-        Event::new("revoke_single").add_attributes(vec![
-            attr("sender", event.sender.as_str()),
-            attr("operator", event.operator.as_str()),
-            attr("token_id", event.token_id),
-            attr("amount", event.amount.to_string()),
-        ])
+impl IntoIterator for RevokeEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![
+            attr("action", "revoke_single"),
+            attr("sender", self.sender.as_str()),
+            attr("operator", self.operator.as_str()),
+            attr("token_id", self.token_id),
+            attr("amount", self.amount.to_string()),
+        ]
+        .into_iter()
     }
 }
 
@@ -185,12 +190,17 @@ impl ApproveAllEvent {
     }
 }
 
-impl From<ApproveAllEvent> for Event {
-    fn from(event: ApproveAllEvent) -> Self {
-        Event::new("approve_all").add_attributes(vec![
-            attr("sender", event.sender.as_str()),
-            attr("operator", event.operator.as_str()),
-        ])
+impl IntoIterator for ApproveAllEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![
+            attr("action", "approve_all"),
+            attr("sender", self.sender.as_str()),
+            attr("operator", self.operator.as_str()),
+        ]
+        .into_iter()
     }
 }
 
@@ -209,13 +219,58 @@ impl RevokeAllEvent {
     }
 }
 
-impl From<RevokeAllEvent> for Event {
-    fn from(event: RevokeAllEvent) -> Self {
-        Event::new("revoke_all").add_attributes(vec![
-            attr("sender", event.sender.as_str()),
-            attr("operator", event.operator.as_str()),
-        ])
+impl IntoIterator for RevokeAllEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![
+            attr("action", "revoke_all"),
+            attr("sender", self.sender.as_str()),
+            attr("operator", self.operator.as_str()),
+        ]
+        .into_iter()
     }
+}
+
+pub struct UpdateMetadataEvent {
+    pub token_id: String,
+    pub token_uri: String,
+    pub extension_update: bool,
+}
+
+impl UpdateMetadataEvent {
+    pub fn new(token_id: &str, token_uri: &str, extension_update: bool) -> Self {
+        Self {
+            token_id: token_id.to_string(),
+            token_uri: token_uri.to_string(),
+            extension_update,
+        }
+    }
+}
+
+impl IntoIterator for UpdateMetadataEvent {
+    type Item = Attribute;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        vec![
+            attr("action", "update_metadata"),
+            attr("token_id", self.token_id),
+            attr("token_uri", self.token_uri),
+            attr("extension_update", self.extension_update.to_string()),
+        ]
+        .into_iter()
+    }
+}
+
+pub fn event_action(action: &str, tokens: &Vec<TokenAmount>) -> Attribute {
+    let action = format!(
+        "{}_{}",
+        action,
+        if tokens.len() == 1 { "single" } else { "batch" }
+    );
+    attr("action", action)
 }
 
 pub fn token_attributes(tokens: Vec<TokenAmount>) -> Vec<Attribute> {
@@ -237,30 +292,4 @@ pub fn token_attributes(tokens: Vec<TokenAmount>) -> Vec<Attribute> {
                 .join(","),
         ),
     ]
-}
-
-pub struct UpdateMetadataEvent {
-    pub token_id: String,
-    pub token_uri: String,
-    pub extension_update: bool,
-}
-
-impl UpdateMetadataEvent {
-    pub fn new(token_id: &str, token_uri: &str, extension_update: bool) -> Self {
-        Self {
-            token_id: token_id.to_string(),
-            token_uri: token_uri.to_string(),
-            extension_update,
-        }
-    }
-}
-
-impl From<UpdateMetadataEvent> for Event {
-    fn from(event: UpdateMetadataEvent) -> Self {
-        Event::new("update_metadata").add_attributes(vec![
-            attr("token_id", event.token_id),
-            attr("token_uri", event.token_uri),
-            attr("extension_update", event.extension_update.to_string()),
-        ])
-    }
 }

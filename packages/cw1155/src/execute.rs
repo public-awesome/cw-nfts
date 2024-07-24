@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    Addr, BankMsg, Binary, CustomMsg, DepsMut, Empty, Env, Event, MessageInfo, Order, Response,
+    Addr, Attribute, BankMsg, Binary, CustomMsg, DepsMut, Empty, Env, MessageInfo, Order, Response,
     StdResult, Storage, SubMsg, Uint128,
 };
 use cw2::set_contract_version;
@@ -9,6 +9,7 @@ use cw721::state::CollectionInfo;
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::vec::IntoIter;
 
 use crate::event::{
     ApproveAllEvent, ApproveEvent, BurnEvent, MintEvent, RevokeAllEvent, RevokeEvent,
@@ -174,7 +175,7 @@ pub trait Cw1155Execute<
                 amount: msg.amount,
             }],
         )?;
-        rsp = rsp.add_event(event);
+        rsp = rsp.add_attributes(event);
 
         // store token info if not exist (if it is the first mint)
         if !config.tokens.has(deps.storage, &msg.token_id) {
@@ -229,7 +230,7 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
         let event = self.update_balances(&mut deps, &env, &info, None, Some(to), batch)?;
-        rsp = rsp.add_event(event);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -272,7 +273,7 @@ pub trait Cw1155Execute<
                 amount: balance_update.amount,
             }],
         )?;
-        rsp.events.push(event);
+        rsp.attributes.extend(event);
 
         if let Some(msg) = msg {
             rsp.messages.push(SubMsg::new(
@@ -331,7 +332,7 @@ pub trait Cw1155Execute<
             Some(to.clone()),
             batch.to_vec(),
         )?;
-        rsp.events.push(event);
+        rsp.attributes.extend(event);
 
         if let Some(msg) = msg {
             rsp.messages.push(SubMsg::new(
@@ -393,7 +394,7 @@ pub trait Cw1155Execute<
                 amount: balance_update.amount,
             }],
         )?;
-        rsp = rsp.add_event(event);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -420,7 +421,7 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
         let event = self.update_balances(&mut deps, &env, &info, Some(from), None, batch)?;
-        rsp = rsp.add_event(event);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -461,8 +462,8 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
 
-        let event = ApproveEvent::new(&info.sender, &operator, &token_id, approval_amount).into();
-        rsp = rsp.add_event(event);
+        let event = ApproveEvent::new(&info.sender, &operator, &token_id, approval_amount);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -490,8 +491,8 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
 
-        let event = ApproveAllEvent::new(&info.sender, &operator).into();
-        rsp = rsp.add_event(event);
+        let event = ApproveAllEvent::new(&info.sender, &operator);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -532,8 +533,8 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
 
-        let event = RevokeEvent::new(&info.sender, &operator, &token_id, revoke_amount).into();
-        rsp = rsp.add_event(event);
+        let event = RevokeEvent::new(&info.sender, &operator, &token_id, revoke_amount);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -553,8 +554,8 @@ pub trait Cw1155Execute<
 
         let mut rsp = Response::default();
 
-        let event = RevokeAllEvent::new(&info.sender, &operator).into();
-        rsp = rsp.add_event(event);
+        let event = RevokeAllEvent::new(&info.sender, &operator);
+        rsp = rsp.add_attributes(event);
 
         Ok(rsp)
     }
@@ -572,7 +573,7 @@ pub trait Cw1155Execute<
         from: Option<Addr>,
         to: Option<Addr>,
         tokens: Vec<TokenAmount>,
-    ) -> Result<Event, Cw1155ContractError> {
+    ) -> Result<impl IntoIterator<Item = Attribute>, Cw1155ContractError> {
         let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
         if let Some(from) = &from {
             for TokenAmount { token_id, amount } in tokens.iter() {
@@ -611,7 +612,7 @@ pub trait Cw1155Execute<
             }
         }
 
-        let event = if let Some(from) = &from {
+        let event: IntoIter<Attribute> = if let Some(from) = &from {
             for TokenAmount { token_id, amount } in &tokens {
                 // remove token approvals
                 for (operator, approval) in config
@@ -645,17 +646,17 @@ pub trait Cw1155Execute<
 
             if let Some(to) = &to {
                 // transfer
-                TransferEvent::new(info, Some(from.clone()), to, tokens).into()
+                TransferEvent::new(info, Some(from.clone()), to, tokens).into_iter()
             } else {
                 // burn
-                BurnEvent::new(info, Some(from.clone()), tokens).into()
+                BurnEvent::new(info, Some(from.clone()), tokens).into_iter()
             }
         } else if let Some(to) = &to {
             // mint
             for TokenAmount { token_id, amount } in &tokens {
                 config.increment_tokens(deps.storage, token_id, amount)?;
             }
-            MintEvent::new(info, to, tokens).into()
+            MintEvent::new(info, to, tokens).into_iter()
         } else {
             panic!("Invalid transfer: from and to cannot both be None")
         };
@@ -785,7 +786,7 @@ pub trait Cw1155Execute<
         // store token
         config.tokens.save(deps.storage, &token_id, &token_info)?;
 
-        Ok(Response::new().add_event(UpdateMetadataEvent::new(&token_id, &token_info.token_uri.unwrap_or_default(), extension_update).into()))
+        Ok(Response::new().add_attributes(UpdateMetadataEvent::new(&token_id, &token_info.token_uri.unwrap_or_default(), extension_update)))
     }
 }
 
