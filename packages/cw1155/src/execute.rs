@@ -577,6 +577,9 @@ pub trait Cw1155Execute<
         let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
         if let Some(from) = &from {
             for TokenAmount { token_id, amount } in tokens.iter() {
+                if amount.is_zero() {
+                    return Err(Cw1155ContractError::InvalidZeroAmount {});
+                }
                 config.balances.update(
                     deps.storage,
                     (from.clone(), token_id.to_string()),
@@ -591,6 +594,9 @@ pub trait Cw1155Execute<
 
         if let Some(to) = &to {
             for TokenAmount { token_id, amount } in tokens.iter() {
+                if amount.is_zero() {
+                    return Err(Cw1155ContractError::InvalidZeroAmount {});
+                }
                 config.balances.update(
                     deps.storage,
                     (to.clone(), token_id.to_string()),
@@ -614,6 +620,9 @@ pub trait Cw1155Execute<
 
         let event: IntoIter<Attribute> = if let Some(from) = &from {
             for TokenAmount { token_id, amount } in &tokens {
+                if amount.is_zero() {
+                    return Err(Cw1155ContractError::InvalidZeroAmount {});
+                }
                 // remove token approvals
                 for (operator, approval) in config
                     .token_approves
@@ -654,6 +663,9 @@ pub trait Cw1155Execute<
         } else if let Some(to) = &to {
             // mint
             for TokenAmount { token_id, amount } in &tokens {
+                if amount.is_zero() {
+                    return Err(Cw1155ContractError::InvalidZeroAmount {});
+                }
                 config.increment_tokens(deps.storage, token_id, amount)?;
             }
             MintEvent::new(info, to, tokens).into_iter()

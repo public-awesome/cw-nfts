@@ -22,4 +22,7 @@ pub enum Cw1155ContractError {
 
     #[error("Expired")]
     Expired {},
+
+    #[error("Zero amount provided")]
+    InvalidZeroAmount {},
 }
