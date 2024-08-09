@@ -52,19 +52,19 @@ pub type MintExtension = Option<Extension>;
 pub type Cw2981Contract<'a> = Cw721Contract<'a, Extension, Empty, Empty, QueryMsg>;
 pub type ExecuteMsg = cw721_base::msg::ExecuteMsg<Extension, Empty>;
 
-#[cfg(not(feature = "library"))]
 pub mod entry {
     use self::msg::QueryMsg;
 
     use super::*;
 
     use crate::error::ContractError;
+    #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{
         to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
     };
 
-    #[entry_point]
+    #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn instantiate(
         mut deps: DepsMut,
         env: Env,
@@ -81,7 +81,7 @@ pub mod entry {
         )?)
     }
 
-    #[entry_point]
+    #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn execute(
         deps: DepsMut,
         env: Env,
@@ -109,7 +109,7 @@ pub mod entry {
             .map_err(Into::into)
     }
 
-    #[entry_point]
+    #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
             QueryMsg::RoyaltyInfo {
