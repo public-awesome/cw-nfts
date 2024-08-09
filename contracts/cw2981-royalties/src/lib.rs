@@ -58,8 +58,11 @@ pub mod entry {
 
     use super::*;
 
+    use crate::error::ContractError;
     use cosmwasm_std::entry_point;
-    use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+    use cosmwasm_std::{
+        to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    };
 
     #[entry_point]
     pub fn instantiate(

@@ -129,7 +129,7 @@ pub enum QueryMsg {
     // -- TMetadataExtension and TCollectionInfoExtension, Error:
     // -- "type annotations needed: cannot infer type for type parameter `TMetadataExtension` declared on the enum `Cw721QueryMsg`"
     #[returns(())]
-    Extension { msg: Extension },
+    Extension { msg: Cw2981QueryExtensionMsg },
 }
 
 impl From<QueryMsg> for Cw721QueryMsg<Extension, QueryMsg> {
