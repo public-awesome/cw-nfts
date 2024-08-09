@@ -19,7 +19,7 @@
       "description": "Data on the token itself,",
       "allOf": [
         {
-          "$ref": "#/definitions/NftInfoResponse_for_Nullable_Metadata"
+          "$ref": "#/definitions/NftInfoResponse_for_Nullable_NftExtension"
         }
       ]
     }
@@ -103,7 +103,7 @@
         }
       ]
     },
-    "Metadata": {
+    "NftExtension": {
       "type": "object",
       "properties": {
         "animation_url": {
@@ -166,14 +166,14 @@
       },
       "additionalProperties": false
     },
-    "NftInfoResponse_for_Nullable_Metadata": {
+    "NftInfoResponse_for_Nullable_NftExtension": {
       "type": "object",
       "properties": {
         "extension": {
           "description": "You can add any custom metadata here when you extend cw721-base",
           "anyOf": [
             {
-              "$ref": "#/definitions/Metadata"
+              "$ref": "#/definitions/NftExtension"
             },
             {
               "type": "null"

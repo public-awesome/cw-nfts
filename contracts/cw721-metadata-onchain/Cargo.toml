@@ -1,0 +1,33 @@
+[package]
+name          = "cw721-metadata-onchain"
+description   = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
+authors       = [
+  "mr-t <mr-t@arkprotocol.io>",
+  "Ethan Frey <ethanfrey@users.noreply.github.com>",
+  "Orkun Külçe <orkun@deuslabs.fi>",
+]
+version       = { workspace = true }
+edition       = { workspace = true }
+license       = { workspace = true }
+repository    = { workspace = true }
+homepage      = { workspace = true }
+documentation = { workspace = true }
+rust-version  = { workspace = true }
+
+[lib]
+doctest      = false # disable doc tests
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[dependencies]
+cosmwasm-schema = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw2             = { workspace = true }
+cw721           = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }

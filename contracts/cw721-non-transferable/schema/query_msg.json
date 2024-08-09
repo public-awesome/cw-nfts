@@ -155,12 +155,68 @@
       "additionalProperties": false
     },
     {
+      "description": "Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!",
+      "deprecated": true,
       "type": "object",
       "required": [
         "contract_info"
       ],
       "properties": {
         "contract_info": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_collection_info_and_extension"
+      ],
+      "properties": {
+        "get_collection_info_and_extension": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Deprecated: use GetMinterOwnership instead! Will be removed in next release!",
+      "deprecated": true,
+      "type": "object",
+      "required": [
+        "minter"
+      ],
+      "properties": {
+        "minter": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_minter_ownership"
+      ],
+      "properties": {
+        "get_minter_ownership": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_creator_ownership"
+      ],
+      "properties": {
+        "get_creator_ownership": {
           "type": "object",
           "additionalProperties": false
         }
@@ -274,19 +330,6 @@
               ]
             }
           },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
-        "minter"
-      ],
-      "properties": {
-        "minter": {
-          "type": "object",
           "additionalProperties": false
         }
       },

@@ -1,11 +1,15 @@
-use crate::DefaultOptionMetadataExtension;
+use crate::{DefaultOptionalNftExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
-use cw721::state::CollectionInfo;
+use cosmwasm_std::{Addr, Empty};
+use cw721::{
+    msg::{CollectionInfoAndExtensionResponse, Cw721ExecuteMsg},
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtensionMsg,
+};
 use cw_ownable::Ownership;
 
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721::msg::{Cw721ExecuteMsg as ExecuteMsg, Cw721MigrateMsg as MigrateMsg, *};
+pub type ExecuteMsg =
+    Cw721ExecuteMsg<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg, Empty>;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -17,18 +21,23 @@ pub struct InstantiateMsg {
     pub name: String,
     /// Symbol of the NFT contract
     pub symbol: String,
+    /// Optional extension of the collection metadata
+    pub collection_info_extension: DefaultOptionalCollectionExtensionMsg,
 
     /// The minter is the only one who can create new NFTs.
     /// This is designed for a base NFT that is controlled by an external program
     /// or contract. You will likely replace this with custom logic in custom NFTs
     pub minter: Option<String>,
 
+    /// The creator is the only who can update collection info.
+    pub creator: Option<String>,
+
     pub withdraw_address: Option<String>,
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg<TMetadataExtension> {
+pub enum QueryMsg<TExtensionQueryMsg> {
     // -------- below adds `include_expired_nft` prop to cw721/src/msg.rs --------
     /// Return the owner of the given token, error if token does not exist
     #[returns(cw721::msg::OwnerOfResponse)]
@@ -60,9 +69,17 @@ pub enum QueryMsg<TMetadataExtension> {
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
     /// but directly from the contract
-    #[returns(cw721::msg::NftInfoResponse<DefaultOptionMetadataExtension>)]
+    #[returns(cw721::msg::NftInfoResponse<DefaultOptionalNftExtension>)]
     NftInfo {
         token_id: String,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_expired_nft: Option<bool>,
+    },
+
+    #[returns(Option<cw721::msg::NftInfoResponse<DefaultOptionalNftExtension>>)]
+    GetNftByExtension {
+        token_id: String,
+        extension: DefaultOptionalNftExtension,
         /// unset or false will filter out expired nfts, you must set to true to see them
         include_expired_nft: Option<bool>,
     },
@@ -70,7 +87,7 @@ pub enum QueryMsg<TMetadataExtension> {
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients
-    #[returns(cw721::msg::AllNftInfoResponse<DefaultOptionMetadataExtension>)]
+    #[returns(cw721::msg::AllNftInfoResponse<DefaultOptionalNftExtension>)]
     AllNftInfo {
         token_id: String,
         /// unset or false will filter out expired approvals, you must set to true to see them
@@ -121,27 +138,50 @@ pub enum QueryMsg<TMetadataExtension> {
     #[returns(cw721::msg::NumTokensResponse)]
     NumTokens {},
 
-    #[returns(cw721::state::CollectionInfo)]
+    #[deprecated(
+        since = "0.19.0",
+        note = "Please use GetCollectionInfoAndExtension instead"
+    )]
+    #[returns(CollectionInfoAndExtensionResponse<cw721::DefaultOptionalCollectionExtension>)]
+    /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
     /// With MetaData Extension.
     /// Returns top-level metadata about the contract
-    #[returns(CollectionInfo)]
+    #[returns(CollectionInfoAndExtensionResponse<DefaultOptionalCollectionExtension>)]
     GetCollectionInfo {},
 
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
     #[returns(Ownership<Addr>)]
+    /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
     Ownership {},
+
+    /// Return the minter
+    #[deprecated(since = "0.19.0", note = "Please use GetMinterOwnership instead")]
+    #[returns(MinterResponse)]
+    /// Deprecated: use GetMinterOwnership instead! Will be removed in next release!
+    Minter {},
 
     #[returns(Ownership<Addr>)]
     GetMinterOwnership {},
 
-    /// Return the minter
-    #[returns(MinterResponse)]
-    Minter {},
+    #[returns(Ownership<Addr>)]
+    GetCreatorOwnership {},
 
     /// Extension query
     #[returns(())]
-    Extension { msg: TMetadataExtension },
+    Extension {
+        msg: TExtensionQueryMsg,
+        /// unset or false will filter out expired nfts, you must set to true to see them
+        include_expired_nft: Option<bool>,
+    },
+
+    /// This is a workaround and dummy query like (same as for Extension) for avoiding this compiler error:
+    /// `cannot infer type for type parameter `TCollectionExtension` declared on the enum `QueryMsg`
+    #[returns(())]
+    GetCollectionExtension {
+        msg: DefaultOptionalCollectionExtension,
+    },
 
     #[returns(Option<String>)]
     GetWithdrawAddress {},
