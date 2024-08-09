@@ -213,3 +213,25 @@ pub struct RoyaltiesInfoResponse {
 pub struct CheckRoyaltiesResponse {
     pub royalty_payments: bool,
 }
+
+#[cw_serde]
+pub enum Cw2981QueryExtensionMsg {
+    /// Should be called on sale to see if royalties are owed
+    /// by the marketplace selling the NFT, if CheckRoyalties
+    /// returns true
+    /// See https://eips.ethereum.org/EIPS/eip-2981
+    RoyaltyInfo {
+        token_id: String,
+        // the denom of this sale must also be the denom returned by RoyaltiesInfoResponse
+        // this was originally implemented as a Coin
+        // however that would mean you couldn't buy using CW20s
+        // as CW20 is just mapping of addr -> balance
+        sale_price: Uint128,
+    },
+    /// Called against contract to determine if this NFT
+    /// implements royalties. Should return a boolean as part of
+    /// CheckRoyaltiesResponse - default can simply be true
+    /// if royalties are implemented at token level
+    /// (i.e. always check on sale)
+    CheckRoyalties {},
+}
