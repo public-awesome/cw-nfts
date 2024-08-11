@@ -26,7 +26,6 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub type Extension = EmptyOptionalNftExtension;
 
 pub mod entry {
-
     use super::*;
 
     #[cfg(not(feature = "library"))]

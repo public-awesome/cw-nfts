@@ -31,5 +31,3 @@ cw-ownable      = { workspace = true }
 cw2             = { workspace = true }
 cw721           = { workspace = true }
 serde           = { workspace = true }
-
-[dev-dependencies]
