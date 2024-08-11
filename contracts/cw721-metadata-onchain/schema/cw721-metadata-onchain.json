@@ -1578,7 +1578,39 @@
       }
     }
   },
-  "migrate": null,
+  "migrate": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "MigrateMsg",
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "with_update"
+        ],
+        "properties": {
+          "with_update": {
+            "type": "object",
+            "properties": {
+              "creator": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  },
   "sudo": null,
   "responses": {
     "all_nft_info": {

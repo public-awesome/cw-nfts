@@ -7,5 +7,6 @@ fn main() {
         instantiate: InstantiateMsg,
         execute: ExecuteMsg,
         query: QueryMsg,
+        migrate: cw721::msg::Cw721MigrateMsg,
     }
 }
