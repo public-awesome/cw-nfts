@@ -1,18 +1,27 @@
 use crate::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
-use crate::Cw2981Contract;
-use cosmwasm_std::{Decimal, Deps, Env, StdResult, Uint128};
-use cw721_base::query::Cw721Query;
+use crate::state::Cw2981Contract;
+use crate::DefaultOptionMetadataExtensionWithRoyalty;
+use cosmwasm_std::{Decimal, Deps, Empty, StdResult, Uint128};
+use cw721::traits::Cw721Query;
+
+impl
+    Cw721Query<
+        DefaultOptionMetadataExtensionWithRoyalty,
+        Empty, // no collection extension
+        Empty, // no extension query
+    > for Cw2981Contract<'_>
+{
+}
 
 /// NOTE: default behaviour here is to round down
 /// EIP2981 specifies that the rounding behaviour is at the discretion of the implementer
 pub fn query_royalties_info(
     deps: Deps,
-    env: Env,
     token_id: String,
     sale_price: Uint128,
 ) -> StdResult<RoyaltiesInfoResponse> {
     let contract = Cw2981Contract::default();
-    let token_info = contract.query_nft_info(deps, env, token_id)?;
+    let token_info = contract.query_nft_info(deps.storage, token_id)?;
 
     let royalty_percentage = match token_info.extension {
         Some(ref ext) => match ext.royalty_percentage {
@@ -24,10 +33,7 @@ pub fn query_royalties_info(
     let royalty_from_sale_price = sale_price * royalty_percentage;
 
     let royalty_address = match token_info.extension {
-        Some(ext) => match ext.royalty_payment_address {
-            Some(addr) => addr,
-            None => String::from(""),
-        },
+        Some(ext) => ext.royalty_payment_address.unwrap_or_default(),
         None => String::from(""),
     };
 

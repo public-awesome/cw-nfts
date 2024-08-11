@@ -1,24 +1,23 @@
-#![cfg(test)]
-
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
 use cosmwasm_std::{
-    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Empty, Response, StdError, WasmMsg,
+    from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Response, StdError, WasmMsg,
 };
 
 use cw721::error::Cw721ContractError;
+use cw721::msg::CollectionInfoAndExtensionResponse;
 use cw721::msg::{
     ApprovalResponse, Cw721ExecuteMsg, NftInfoResponse, OperatorResponse, OperatorsResponse,
     OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{CollectionInfo, MINTER};
-use cw721::{query::Cw721Query, Approval, Expiration};
+use cw721::state::{CREATOR, MINTER};
+use cw721::{traits::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
 
-use crate::state::Cw721ExpirationContract;
+use crate::state::DefaultCw721ExpirationContract;
 use crate::{
-    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionMetadataExtension,
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionalNftExtension,
 };
 
 const MINTER_ADDR: &str = "minter";
@@ -29,14 +28,15 @@ const SYMBOL: &str = "MGK";
 fn setup_contract(
     deps: DepsMut<'_>,
     expiration_days: u16,
-) -> Cw721ExpirationContract<'static, DefaultOptionMetadataExtension, Empty, Empty> {
-    let contract =
-        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+) -> DefaultCw721ExpirationContract<'static> {
+    let contract = DefaultCw721ExpirationContract::default();
     let msg = InstantiateMsg {
         expiration_days,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: None,
     };
     let info = mock_info("creator", &[]);
@@ -48,14 +48,15 @@ fn setup_contract(
 #[test]
 fn proper_instantiation() {
     let mut deps = mock_dependencies();
-    let contract =
-        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = DefaultCw721ExpirationContract::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
@@ -70,15 +71,19 @@ fn proper_instantiation() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_info = contract
         .base_contract
-        .query_collection_info(deps.as_ref(), env.clone())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         collection_info,
-        CollectionInfo {
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
+            extension: None,
+            updated_at: env.block.time,
         }
     );
 
@@ -92,7 +97,7 @@ fn proper_instantiation() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -106,14 +111,15 @@ fn proper_instantiation() {
 #[test]
 fn proper_instantiation_with_collection_info() {
     let mut deps = mock_dependencies();
-    let contract =
-        Cw721ExpirationContract::<DefaultOptionMetadataExtension, Empty, Empty>::default();
+    let contract = DefaultCw721ExpirationContract::default();
 
     let msg = InstantiateMsg {
         expiration_days: 1,
         name: CONTRACT_NAME.to_string(),
         symbol: SYMBOL.to_string(),
+        collection_info_extension: None,
         minter: Some(String::from(MINTER_ADDR)),
+        creator: Some(String::from(CREATOR_ADDR)),
         withdraw_address: Some(String::from(CREATOR_ADDR)),
     };
     let info = mock_info("creator", &[]);
@@ -128,15 +134,19 @@ fn proper_instantiation_with_collection_info() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(Addr::unchecked(MINTER_ADDR)), minter_ownership.owner);
+    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    assert_eq!(Some(Addr::unchecked(CREATOR_ADDR)), creator_ownership.owner);
     let collection_info = contract
         .base_contract
-        .query_collection_info(deps.as_ref(), env.clone())
+        .query_collection_info_and_extension(deps.as_ref())
         .unwrap();
     assert_eq!(
         collection_info,
-        CollectionInfo {
+        CollectionInfoAndExtensionResponse {
             name: CONTRACT_NAME.to_string(),
             symbol: SYMBOL.to_string(),
+            extension: None,
+            updated_at: env.block.time,
         }
     );
 
@@ -150,7 +160,7 @@ fn proper_instantiation_with_collection_info() {
 
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -182,10 +192,7 @@ fn test_mint() {
     let err = contract
         .execute(deps.as_mut(), env.clone(), random, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(
-        err,
-        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
-    );
+    assert_eq!(err, ContractError::Cw721(Cw721ContractError::NotMinter {}));
 
     // minter can mint
     let allowed = mock_info(MINTER_ADDR, &[]);
@@ -196,7 +203,7 @@ fn test_mint() {
     // ensure num tokens increases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env)
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(1, count.count);
 
@@ -211,7 +218,7 @@ fn test_mint() {
         .unwrap();
     assert_eq!(
         info,
-        NftInfoResponse::<DefaultOptionMetadataExtension> {
+        NftInfoResponse::<DefaultOptionalNftExtension> {
             token_uri: Some(token_uri),
             extension: None,
         }
@@ -292,7 +299,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             minter_info.clone(),
-            Cw721ExecuteMsg::UpdateOwnership(Action::TransferOwnership {
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
                 new_owner: "random".to_string(),
                 expiry: None,
             }),
@@ -324,7 +331,7 @@ fn test_update_minter() {
             deps.as_mut(),
             mock_env(),
             random_info.clone(),
-            Cw721ExecuteMsg::UpdateOwnership(Action::AcceptOwnership),
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
         )
         .unwrap();
 
@@ -348,10 +355,7 @@ fn test_update_minter() {
     let err: ContractError = contract
         .execute(deps.as_mut(), mock_env(), minter_info, mint_msg.clone())
         .unwrap_err();
-    assert_eq!(
-        err,
-        ContractError::Cw721(Cw721ContractError::Ownership(OwnershipError::NotOwner))
-    );
+    assert_eq!(err, ContractError::Cw721(Cw721ContractError::NotMinter {}));
 
     // New owner can mint.
     let _ = contract
@@ -403,7 +407,7 @@ fn test_burn() {
     // ensure num tokens decreases
     let count = contract
         .base_contract
-        .query_num_tokens(deps.as_ref(), env.clone())
+        .query_num_tokens(deps.as_ref().storage)
         .unwrap();
     assert_eq!(0, count.count);
 
@@ -912,7 +916,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operator(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             String::from("operator"),
             true,
@@ -931,7 +935,7 @@ fn test_approve_all_revoke_all() {
     // query for other should throw error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("other"),
         true,
@@ -945,7 +949,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -978,7 +982,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             None,
@@ -998,7 +1002,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             true,
             Some(String::from("buddy")),
@@ -1025,7 +1029,7 @@ fn test_approve_all_revoke_all() {
     // query for operator should return error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        mock_env(),
+        &mock_env(),
         String::from("person"),
         String::from("operator"),
         true,
@@ -1040,7 +1044,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            mock_env(),
+            &mock_env(),
             String::from("person"),
             false,
             None,
@@ -1064,7 +1068,7 @@ fn test_approve_all_revoke_all() {
         .base_contract
         .query_operators(
             deps.as_ref(),
-            late_env.clone(),
+            &late_env,
             String::from("person"),
             false,
             None,
@@ -1076,7 +1080,7 @@ fn test_approve_all_revoke_all() {
     // query operator should also return error
     let res = contract.base_contract.query_operator(
         deps.as_ref(),
-        late_env,
+        &late_env,
         String::from("person"),
         String::from("buddy"),
         false,

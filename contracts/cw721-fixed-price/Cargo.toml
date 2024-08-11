@@ -7,6 +7,7 @@ license       = { workspace = true }
 repository    = { workspace = true }
 homepage      = { workspace = true }
 documentation = { workspace = true }
+rust-version  = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -22,8 +23,7 @@ cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
 cw2             = { workspace = true }
 cw20            = { workspace = true }
-cw721            = { workspace = true }
-cw721-base      = { workspace = true, features = ["library"] }
+cw721           = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 schemars        = { workspace = true }

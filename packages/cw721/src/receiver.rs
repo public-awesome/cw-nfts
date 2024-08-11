@@ -19,12 +19,12 @@ impl Cw721ReceiveMsg {
     }
 
     /// creates a cosmos_msg sending this struct to the named contract
-    pub fn into_cosmos_msg<TAddress: Into<String>, TCustomResponseMessage>(
+    pub fn into_cosmos_msg<TAddress: Into<String>, TCustomResponseMsg>(
         self,
         contract_addr: TAddress,
-    ) -> StdResult<CosmosMsg<TCustomResponseMessage>>
+    ) -> StdResult<CosmosMsg<TCustomResponseMsg>>
     where
-        TCustomResponseMessage: Clone + std::fmt::Debug + PartialEq + JsonSchema,
+        TCustomResponseMsg: Clone + std::fmt::Debug + PartialEq + JsonSchema,
     {
         let msg = self.into_json_binary()?;
         let execute = WasmMsg::Execute {
@@ -39,6 +39,6 @@ impl Cw721ReceiveMsg {
 /// This is just a helper to properly serialize the above message.
 /// The actual receiver should include this variant in the larger ExecuteMsg enum
 #[cw_serde]
-enum ReceiverExecuteMsg {
+pub enum ReceiverExecuteMsg {
     ReceiveNft(Cw721ReceiveMsg),
 }

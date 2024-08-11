@@ -1,192 +1,154 @@
 use std::marker::PhantomData;
 
-use crate::msg::{
-    AllNftInfoResponse, ApprovalResponse, ApprovalsResponse, NftInfoResponse, NumTokensResponse,
-    OperatorsResponse, OwnerOfResponse, TokensResponse,
+use crate::traits::{Cw721Calls, Cw721CustomMsg, Cw721State};
+use crate::{
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg,
 };
-use crate::msg::{Cw721ExecuteMsg, Cw721QueryMsg};
-use crate::state::CollectionInfo;
-use crate::Approval;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{
-    to_json_binary, Addr, CosmosMsg, CustomMsg, QuerierWrapper, StdResult, WasmMsg, WasmQuery,
-};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use cosmwasm_std::{Addr, Empty};
 
+/// Returns "empty" if the string is empty, otherwise the string itself
+pub fn value_or_empty(value: &str) -> String {
+    if value.is_empty() {
+        "empty".to_string()
+    } else {
+        value.to_string()
+    }
+}
+
+#[deprecated(
+    since = "0.19.0",
+    note = "Please use `DefaultCw721Helper`, `EmptyCw721Helper`, or `Cw721Helper` instead"
+)]
+pub type Cw721Contract = DefaultCw721Helper;
+
+/// Opionated version of generic `Cw721Helper` with default extensions.
 #[cw_serde]
-pub struct Cw721Contract<TMetadataExtension, TMetadataExtensionMsg: CustomMsg>(
+pub struct DefaultCw721Helper(
     pub Addr,
-    pub PhantomData<TMetadataExtension>,
-    pub PhantomData<TMetadataExtensionMsg>,
+    pub PhantomData<DefaultOptionalNftExtension>,
+    pub PhantomData<DefaultOptionalNftExtensionMsg>,
+    pub PhantomData<DefaultOptionalCollectionExtension>,
+    pub PhantomData<DefaultOptionalCollectionExtensionMsg>,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
 );
 
-#[allow(dead_code)]
-impl<TMetadataExtension, TMetadataExtensionMsg: CustomMsg>
-    Cw721Contract<TMetadataExtension, TMetadataExtensionMsg>
-where
-    TMetadataExtension: Serialize + DeserializeOwned + Clone,
+impl DefaultCw721Helper {
+    pub fn new(addr: Addr) -> Self {
+        DefaultCw721Helper(
+            addr,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+        )
+    }
+}
+
+impl
+    Cw721Calls<
+        DefaultOptionalNftExtension,
+        DefaultOptionalNftExtensionMsg,
+        DefaultOptionalCollectionExtension,
+        DefaultOptionalCollectionExtensionMsg,
+        Empty,
+        Empty,
+    > for DefaultCw721Helper
 {
-    pub fn addr(&self) -> Addr {
+    fn addr(&self) -> Addr {
         self.0.clone()
     }
+}
 
-    pub fn call(
-        &self,
-        msg: Cw721ExecuteMsg<TMetadataExtension, TMetadataExtensionMsg>,
-    ) -> StdResult<CosmosMsg> {
-        let msg = to_json_binary(&msg)?;
-        Ok(WasmMsg::Execute {
-            contract_addr: self.addr().into(),
-            msg,
-            funds: vec![],
-        }
-        .into())
+/// Opionated version of generic `Cw721Helper` with empty extensions.
+#[cw_serde]
+pub struct EmptyCw721Helper(
+    pub Addr,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
+    pub PhantomData<Empty>,
+);
+
+impl EmptyCw721Helper {
+    pub fn new(addr: Addr) -> Self {
+        EmptyCw721Helper(
+            addr,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+            PhantomData,
+        )
     }
+}
 
-    pub fn query<T: DeserializeOwned>(
-        &self,
-        querier: &QuerierWrapper,
-        req: Cw721QueryMsg<TMetadataExtension>,
-    ) -> StdResult<T> {
-        let query = WasmQuery::Smart {
-            contract_addr: self.addr().into(),
-            msg: to_json_binary(&req)?,
-        }
-        .into();
-        querier.query(&query)
+impl Cw721Calls<Empty, Empty, Empty, Empty, Empty, Empty> for EmptyCw721Helper {
+    fn addr(&self) -> Addr {
+        self.0.clone()
     }
+}
 
-    /*** queries ***/
+/// `Cw721Helper` with generic extionsions. See `DefaultCw721Helper` and `EmptyCw721Helper` for
+/// specific use cases.
+#[cw_serde]
+pub struct Cw721Helper<
+    TNftExtension,
+    TNftExtensionMsg,
+    TCollectionExtension,
+    TCollectionExtensionMsg,
+    TExtensionMsg,
+    TExtensionQueryMsg,
+>(
+    pub Addr,
+    pub PhantomData<TNftExtension>,
+    pub PhantomData<TNftExtensionMsg>,
+    pub PhantomData<TCollectionExtension>,
+    pub PhantomData<TCollectionExtensionMsg>,
+    pub PhantomData<TExtensionMsg>,
+    pub PhantomData<TExtensionQueryMsg>,
+);
 
-    pub fn owner_of<T: Into<String>>(
-        &self,
-        querier: &QuerierWrapper,
-        token_id: T,
-        include_expired: bool,
-    ) -> StdResult<OwnerOfResponse> {
-        let req = Cw721QueryMsg::OwnerOf {
-            token_id: token_id.into(),
-            include_expired: Some(include_expired),
-        };
-        self.query(querier, req)
-    }
-
-    pub fn approval<T: Into<String>>(
-        &self,
-        querier: &QuerierWrapper,
-        token_id: T,
-        spender: T,
-        include_expired: Option<bool>,
-    ) -> StdResult<ApprovalResponse> {
-        let req = Cw721QueryMsg::Approval {
-            token_id: token_id.into(),
-            spender: spender.into(),
-            include_expired,
-        };
-        let res: ApprovalResponse = self.query(querier, req)?;
-        Ok(res)
-    }
-
-    pub fn approvals<T: Into<String>>(
-        &self,
-        querier: &QuerierWrapper,
-        token_id: T,
-        include_expired: Option<bool>,
-    ) -> StdResult<ApprovalsResponse> {
-        let req = Cw721QueryMsg::Approvals {
-            token_id: token_id.into(),
-            include_expired,
-        };
-        let res: ApprovalsResponse = self.query(querier, req)?;
-        Ok(res)
-    }
-
-    pub fn all_operators<T: Into<String>>(
-        &self,
-        querier: &QuerierWrapper,
-        owner: T,
-        include_expired: bool,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    ) -> StdResult<Vec<Approval>> {
-        let req = Cw721QueryMsg::AllOperators {
-            owner: owner.into(),
-            include_expired: Some(include_expired),
-            start_after,
-            limit,
-        };
-        let res: OperatorsResponse = self.query(querier, req)?;
-        Ok(res.operators)
-    }
-
-    pub fn num_tokens(&self, querier: &QuerierWrapper) -> StdResult<u64> {
-        let req = Cw721QueryMsg::NumTokens {};
-        let res: NumTokensResponse = self.query(querier, req)?;
-        Ok(res.count)
-    }
-
-    /// With metadata extension
-    pub fn collection_info(&self, querier: &QuerierWrapper) -> StdResult<CollectionInfo> {
-        let req = Cw721QueryMsg::ContractInfo {};
-        self.query(querier, req)
-    }
-
-    /// With metadata extension
-    pub fn nft_info<T: Into<String>, U: DeserializeOwned>(
-        &self,
-        querier: &QuerierWrapper,
-        token_id: T,
-    ) -> StdResult<NftInfoResponse<U>> {
-        let req = Cw721QueryMsg::NftInfo {
-            token_id: token_id.into(),
-        };
-        self.query(querier, req)
-    }
-
-    /// With metadata extension
-    pub fn all_nft_info<T: Into<String>, U: DeserializeOwned>(
-        &self,
-        querier: &QuerierWrapper,
-        token_id: T,
-        include_expired: bool,
-    ) -> StdResult<AllNftInfoResponse<U>> {
-        let req = Cw721QueryMsg::AllNftInfo {
-            token_id: token_id.into(),
-            include_expired: Some(include_expired),
-        };
-        self.query(querier, req)
-    }
-
-    /// With enumerable extension
-    pub fn tokens<T: Into<String>>(
-        &self,
-        querier: &QuerierWrapper,
-        owner: T,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    ) -> StdResult<TokensResponse> {
-        let req = Cw721QueryMsg::Tokens {
-            owner: owner.into(),
-            start_after,
-            limit,
-        };
-        self.query(querier, req)
-    }
-
-    /// With enumerable extension
-    pub fn all_tokens(
-        &self,
-        querier: &QuerierWrapper,
-        start_after: Option<String>,
-        limit: Option<u32>,
-    ) -> StdResult<TokensResponse> {
-        let req = Cw721QueryMsg::AllTokens { start_after, limit };
-        self.query(querier, req)
-    }
-
-    /// returns true if the contract supports the enumerable extension
-    pub fn has_enumerable(&self, querier: &QuerierWrapper) -> bool {
-        self.tokens(querier, self.addr(), None, Some(1)).is_ok()
+impl<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+    >
+    Cw721Calls<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+    >
+    for Cw721Helper<
+        TNftExtension,
+        TNftExtensionMsg,
+        TCollectionExtension,
+        TCollectionExtensionMsg,
+        TExtensionMsg,
+        TExtensionQueryMsg,
+    >
+where
+    TNftExtensionMsg: Cw721CustomMsg,
+    TNftExtension: Cw721State,
+    TCollectionExtension: Cw721State,
+    TCollectionExtensionMsg: Cw721CustomMsg,
+    TExtensionMsg: Cw721CustomMsg,
+    TExtensionQueryMsg: Cw721CustomMsg,
+{
+    fn addr(&self) -> Addr {
+        self.0.clone()
     }
 }

@@ -1,9 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
-
-// expose to all others using contract, so others dont need to import cw721
-pub use cw721::state::*;
-
+use cw721::DefaultOptionalNftExtension;
 use cw_storage_plus::Item;
 
 #[cw_serde]
@@ -16,7 +13,7 @@ pub struct Config {
     pub name: String,
     pub symbol: String,
     pub token_uri: String,
-    pub extension: DefaultOptionMetadataExtension,
+    pub extension: DefaultOptionalNftExtension,
     pub unused_token_id: u32,
 }
 
