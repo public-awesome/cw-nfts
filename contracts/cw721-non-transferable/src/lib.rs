@@ -2,6 +2,7 @@ pub use crate::msg::{InstantiateMsg, QueryMsg};
 use cosmwasm_std::Empty;
 use cw721::extension::Cw721EmptyExtensions;
 
+#[allow(deprecated)]
 pub mod msg;
 pub mod query;
 pub mod state;

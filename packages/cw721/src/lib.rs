@@ -2,6 +2,7 @@ pub mod error;
 pub mod execute;
 pub mod extension;
 pub mod helpers;
+#[allow(deprecated)]
 pub mod msg;
 pub mod query;
 pub mod receiver;

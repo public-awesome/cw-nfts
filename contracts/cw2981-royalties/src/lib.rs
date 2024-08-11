@@ -1,5 +1,6 @@
 pub mod error;
 pub mod execute;
+#[allow(deprecated)]
 pub mod msg;
 pub mod query;
 pub mod state;
