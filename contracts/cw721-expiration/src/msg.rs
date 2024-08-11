@@ -2,7 +2,7 @@ use crate::{DefaultOptionalNftExtension, MinterResponse};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Empty};
 use cw721::{
-    msg::{CollectionInfoAndExtensionResponse, Cw721ExecuteMsg},
+    msg::{CollectionInfoAndExtensionResponse, Cw721ExecuteMsg, Cw721MigrateMsg},
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtensionMsg,
 };
@@ -10,6 +10,7 @@ use cw_ownable::Ownership;
 
 pub type ExecuteMsg =
     Cw721ExecuteMsg<DefaultOptionalNftExtensionMsg, DefaultOptionalCollectionExtensionMsg, Empty>;
+pub type MigrateMsg = Cw721MigrateMsg;
 
 #[cw_serde]
 pub struct InstantiateMsg {

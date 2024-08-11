@@ -23,7 +23,7 @@ pub mod entry {
     use crate::{
         error::ContractError,
         msg::{InstantiateMsg, QueryMsg},
-        state::Cw721ExpirationContract,
+        state::DefaultCw721ExpirationContract,
     };
 
     use super::*;
@@ -43,7 +43,7 @@ pub mod entry {
         info: MessageInfo,
         msg: InstantiateMsg,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::default();
+        let contract = DefaultCw721ExpirationContract::default();
         contract.instantiate(deps, env, info, msg)
     }
 
@@ -58,13 +58,13 @@ pub mod entry {
             Empty,
         >,
     ) -> Result<Response, ContractError> {
-        let contract = Cw721ExpirationContract::default();
+        let contract = DefaultCw721ExpirationContract::default();
         contract.execute(deps, env, info, msg)
     }
 
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg<Empty>) -> Result<Binary, ContractError> {
-        let contract = Cw721ExpirationContract::default();
+        let contract = DefaultCw721ExpirationContract::default();
         contract.query(deps, env, msg)
     }
 
@@ -80,7 +80,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw2::ContractVersion;
 
-    use crate::{error::ContractError, msg::InstantiateMsg, state::Cw721ExpirationContract};
+    use crate::{error::ContractError, msg::InstantiateMsg, state::DefaultCw721ExpirationContract};
 
     use super::*;
 
@@ -133,7 +133,7 @@ mod tests {
 
         assert_eq!(
             1,
-            Cw721ExpirationContract::default()
+            DefaultCw721ExpirationContract::default()
                 .expiration_days
                 .load(deps.as_ref().storage)
                 .unwrap()
