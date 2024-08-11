@@ -4,7 +4,7 @@ use crate::{
 };
 use cosmwasm_std::{Binary, DepsMut, Empty, Env, MessageInfo, Response};
 use cw721::{
-    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg},
+    msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg},
     traits::Cw721Execute,
     Expiration,
 };
@@ -180,5 +180,19 @@ impl DefaultCw721ExpirationContract<'static> {
     ) -> Result<Response<Empty>, ContractError> {
         self.assert_nft_expired(deps.as_ref(), &env, token_id.as_str())?;
         Ok(self.base_contract.burn_nft(deps, &env, &info, token_id)?)
+    }
+
+    // -- migrate --
+    pub fn migrate(
+        &self,
+        deps: DepsMut,
+        env: Env,
+        msg: Cw721MigrateMsg,
+        contract_name: &str,
+        contract_version: &str,
+    ) -> Result<Response<Empty>, ContractError> {
+        Ok(self
+            .base_contract
+            .migrate(deps, env, msg, contract_name, contract_version)?)
     }
 }

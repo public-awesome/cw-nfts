@@ -116,7 +116,7 @@ pub mod entry {
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::error::Cw721ContractError;
-    use cw721::msg::Cw721InstantiateMsg;
+    use cw721::msg::{Cw721InstantiateMsg, Cw721MigrateMsg};
 
     #[entry_point]
     pub fn instantiate(
@@ -148,6 +148,16 @@ pub mod entry {
     #[entry_point]
     pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
         Cw721MetadataContract::default().query(deps, &env, msg)
+    }
+
+    #[cfg_attr(not(feature = "library"), entry_point)]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: Cw721MigrateMsg,
+    ) -> Result<Response, Cw721ContractError> {
+        let contract = Cw721MetadataContract::default();
+        contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 }
 
