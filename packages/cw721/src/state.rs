@@ -359,8 +359,8 @@ pub struct Trait {
 impl StateFactory<Trait> for Trait {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Trait>,
     ) -> Result<Trait, Cw721ContractError> {
@@ -370,8 +370,8 @@ impl StateFactory<Trait> for Trait {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         _current: Option<&Trait>,
     ) -> Result<(), Cw721ContractError> {
@@ -393,8 +393,8 @@ impl StateFactory<Trait> for Trait {
 impl StateFactory<Vec<Trait>> for Vec<Trait> {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Vec<Trait>>,
     ) -> Result<Vec<Trait>, Cw721ContractError> {
@@ -404,8 +404,8 @@ impl StateFactory<Vec<Trait>> for Vec<Trait> {
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         _current: Option<&Vec<Trait>>,
     ) -> Result<(), Cw721ContractError> {
