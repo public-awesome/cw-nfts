@@ -2,8 +2,8 @@ use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
     msg::{
-        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse,
-        NumTokensResponse, OwnerOfResponse,
+        CollectionExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
+        Cw721QueryMsg, MinterResponse, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
     },
     state::{NftExtension, Trait},
     traits::{Cw721Execute, Cw721Query},
@@ -13,9 +13,9 @@ use crate::{
 use anyhow::Result;
 use bech32::{decode, encode, Hrp};
 use cosmwasm_std::{
-    instantiate2_address, to_json_binary, Addr, Api, Binary, CanonicalAddr, Deps, DepsMut, Empty,
-    Env, GovMsg, MemoryStorage, MessageInfo, QuerierWrapper, RecoverPubkeyError, Response,
-    StdError, StdResult, Storage, VerificationError, WasmMsg,
+    instantiate2_address, to_json_binary, Addr, Api, Binary, CanonicalAddr, Decimal, Deps, DepsMut,
+    Empty, Env, GovMsg, MemoryStorage, MessageInfo, QuerierWrapper, RecoverPubkeyError, Response,
+    StdError, StdResult, Storage, Timestamp, VerificationError, WasmMsg,
 };
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{
@@ -31,7 +31,8 @@ const BECH32_PREFIX_HRP: &str = "stars";
 pub const ADMIN_ADDR: &str = "admin";
 pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
-pub const OTHER_ADDR: &str = "other";
+pub const OTHER1_ADDR: &str = "other";
+pub const OTHER2_ADDR: &str = "other";
 pub const NFT_OWNER_ADDR: &str = "nft_owner";
 
 type MockRouter = Router<
@@ -382,7 +383,7 @@ fn test_operator() {
     let creator = app.api().addr_make(CREATOR_ADDR);
     let minter = app.api().addr_make(MINTER_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
-    let other = app.api().addr_make(OTHER_ADDR);
+    let other = app.api().addr_make(OTHER1_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -622,7 +623,7 @@ fn test_migration_legacy_to_latest() {
         .unwrap();
 
         // non-minter user cant mint
-        let other = Addr::unchecked(OTHER_ADDR);
+        let other = Addr::unchecked(OTHER1_ADDR);
         let err: Cw721ContractError = app
             .execute_contract(
                 other.clone(),
@@ -892,7 +893,7 @@ fn test_migration_legacy_to_latest() {
         .unwrap();
 
         // non-minter user cant mint
-        let other = Addr::unchecked(OTHER_ADDR);
+        let other = Addr::unchecked(OTHER1_ADDR);
         let err: Cw721ContractError = app
             .execute_contract(
                 other.clone(),
@@ -1162,7 +1163,7 @@ fn test_migration_legacy_to_latest() {
         .unwrap();
 
         // non-minter user cant mint
-        let other = Addr::unchecked(OTHER_ADDR);
+        let other = Addr::unchecked(OTHER1_ADDR);
         let err: Cw721ContractError = app
             .execute_contract(
                 other.clone(),
@@ -1432,7 +1433,7 @@ fn test_migration_legacy_to_latest() {
         .unwrap();
 
         // non-minter user cant mint
-        let other = Addr::unchecked(OTHER_ADDR);
+        let other = Addr::unchecked(OTHER1_ADDR);
         let err: Cw721ContractError = app
             .execute_contract(
                 other.clone(),
@@ -1654,44 +1655,99 @@ fn test_migration_legacy_to_latest() {
     }
 }
 
-/// Test backward compatibility using instantiate msg from a 0.16 version on latest contract.
-/// This ensures existing 3rd party contracts doesnt need to update as well.
 #[test]
-fn test_instantiate_016_msg() {
-    use cw721_base_016 as v16;
-    let mut app = new();
-    let admin = app.api().addr_make(ADMIN_ADDR);
+fn test_instantiate() {
+    // test case: happy path
+    {
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
+        let minter = app.api().addr_make(MINTER_ADDR);
+        let creator = app.api().addr_make(CREATOR_ADDR);
+        let payment_address = app.api().addr_make(OTHER1_ADDR);
+        let withdraw_addr = app.api().addr_make(OTHER2_ADDR);
 
-    let code_id_latest = app.store_code(cw721_base_latest_contract());
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-    let cw721 = app
-        .instantiate_contract(
-            code_id_latest,
-            admin.clone(),
-            &v16::InstantiateMsg {
-                name: "collection".to_string(),
-                symbol: "symbol".to_string(),
-                minter: admin.to_string(),
-            },
-            &[],
-            "cw721-base",
-            Some(admin.to_string()),
-        )
-        .unwrap();
+        let cw721 = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &Cw721InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: Some(minter.to_string()),
+                    creator: Some(creator.to_string()),
+                    withdraw_address: Some(withdraw_addr.to_string()),
+                    collection_info_extension: Some(CollectionExtensionMsg {
+                        description: Some("description".to_string()),
+                        image: Some("ipfs://ark.pass".to_string()),
+                        explicit_content: Some(false),
+                        external_link: Some("https://interchain.arkprotocol.io".to_string()),
+                        start_trading_time: Some(Timestamp::from_seconds(42)),
+                        royalty_info: Some(RoyaltyInfoResponse {
+                            payment_address: payment_address.to_string(),
+                            share: Decimal::bps(1000),
+                        }),
+                    }),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
 
-    // assert withdraw address is None
-    let withdraw_addr: Option<String> = app
-        .wrap()
-        .query_wasm_smart(
-            cw721,
-            &Cw721QueryMsg::<
-                DefaultOptionalNftExtension,
-                DefaultOptionalCollectionExtension,
-                Empty,
-            >::GetWithdrawAddress {},
-        )
-        .unwrap();
-    assert!(withdraw_addr.is_none());
+        // assert withdraw address
+        let withdraw_addr_result: Option<String> = app
+            .wrap()
+            .query_wasm_smart(
+                cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetWithdrawAddress {},
+            )
+            .unwrap();
+        assert_eq!(withdraw_addr_result, Some(withdraw_addr.to_string()));
+    }
+    // test case: backward compatibility using instantiate msg from a 0.16 version on latest contract.
+    // This ensures existing 3rd party contracts doesnt need to update as well.
+    {
+        use cw721_base_016 as v16;
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
+
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+
+        let cw721 = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &v16::InstantiateMsg {
+                    name: "collection".to_string(),
+                    symbol: "symbol".to_string(),
+                    minter: admin.to_string(),
+                },
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap();
+
+        // assert withdraw address is None
+        let withdraw_addr: Option<String> = app
+            .wrap()
+            .query_wasm_smart(
+                cw721,
+                &Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetWithdrawAddress {},
+            )
+            .unwrap();
+        assert!(withdraw_addr.is_none());
+    }
 }
 
 #[test]

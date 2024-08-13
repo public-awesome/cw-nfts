@@ -532,14 +532,14 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
             // Some: update existing royalty info
             Some(current) => {
                 let mut updated = current.clone();
-                updated.payment_address = deps.api.addr_validate(self.payment_address.as_str())?;
+                updated.payment_address = Addr::unchecked(self.payment_address.as_str()); // no check needed, since it is already done in validate
                 updated.share = self.share;
                 Ok(updated)
             }
             // None: create new royalty info
             None => {
                 let new = RoyaltyInfo {
-                    payment_address: deps.api.addr_validate(self.payment_address.as_str())?,
+                    payment_address: Addr::unchecked(self.payment_address.as_str()), // no check needed, since it is already done in validate
                     share: self.share,
                 };
                 Ok(new)
@@ -549,11 +549,12 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
 
     fn validate(
         &self,
-        _deps: Deps,
+        deps: Deps,
         _env: &Env,
         _info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
+        println!(">>>> RoyaltyInfoResponse.validate: {:?}", self);
         if let Some(current_royalty_info) = current {
             // check max share delta
             if current_royalty_info.share < self.share {
@@ -572,6 +573,8 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
                 "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
             )));
         }
+        // validate payment address
+        deps.api.addr_validate(self.payment_address.as_str())?;
         Ok(())
     }
 }
@@ -896,7 +899,7 @@ where
                 let extension = self.extension.create(deps, env, info, None)?;
                 let token_uri = empty_as_none(self.token_uri.clone());
                 Ok(NftInfo {
-                    owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
+                    owner: Addr::unchecked(&self.owner), // only for creation we use owner, but not for update!
                     approvals: vec![],
                     token_uri,
                     extension,
@@ -925,6 +928,8 @@ where
         if let Some(token_uri) = token_uri {
             Url::parse(token_uri.as_str())?;
         }
+        // validate owner
+        deps.api.addr_validate(&self.owner)?;
         Ok(())
     }
 }
