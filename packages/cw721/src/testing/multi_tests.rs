@@ -1,3 +1,5 @@
+use std::f32::MIN;
+
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
@@ -17,9 +19,13 @@ use cosmwasm_std::{
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_ownable::OwnershipError;
+use anyhow::Result;
 use cw_utils::Expiration;
+use sha2::{Digest};
 use url::ParseError;
 
+const BECH32_PREFIX_HRP: &str = "stars";
+pub const ADMIN_ADDR: &str = "admin";
 pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
 pub const OTHER_ADDR: &str = "other";
@@ -44,7 +50,6 @@ impl<'a> MockAddrFactory<'a> {
             .clone()
     }
 }
-
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -86,6 +91,8 @@ pub fn migrate(
     let contract = Cw721OnchainExtensions::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }
+
+fn no_init(_router: &mut MockRouter, _api: &dyn Api, _storage: &mut dyn Storage) {}
 
 fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query).with_migrate(migrate);
@@ -321,15 +328,15 @@ fn test_instantiate_016_msg() {
     let cw721 = app
         .instantiate_contract(
             code_id_latest,
-            admin(),
+            admin.clone(),
             &v16::InstantiateMsg {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: admin().into_string(),
+                minter: admin.to_string(),
             },
             &[],
             "cw721-base",
-            Some(admin().into_string()),
+            Some(admin.to_string()),
         )
         .unwrap();
 
@@ -393,7 +400,7 @@ fn test_update_nft_metadata() {
         youtube_url: Some("file://youtube_url".to_string()),
     };
     app.execute_contract(
-        minter,
+        minter_addr,
         cw721.clone(),
         &Cw721ExecuteMsg::<
             DefaultOptionalNftExtensionMsg,
