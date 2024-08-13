@@ -8,10 +8,11 @@ pub use cw721::*;
 // These types are re-exported so that contracts interacting with this
 // one don't need a direct dependency on cw_ownable to use the API.
 //
-// `Action` is used in `Cw721ExecuteMsg::UpdateMinterOwnership` and `Cw721ExecuteMsg::UpdateCreatorOwnership`, `Ownership` is
-// used in `Cw721QueryMsg::GetMinterOwnership`, `Cw721QueryMsg::GetCreatorOwnership`, and `OwnershipError` is used in
-// `Cw721ContractError::Ownership`.
+// `Action` is used in `ExecuteMsg::UpdateMinterOwnership` and `ExecuteMsg::UpdateCreatorOwnership`, `Ownership` is
+// used in `QueryMsg::GetMinterOwnership`, `QueryMsg::GetCreatorOwnership`, and `OwnershipError` is used in
+// `ContractError::Ownership`.
 pub use cw_ownable::{Action, Ownership, OwnershipError};
+use extension::Cw721BaseExtensions;
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
@@ -23,6 +24,8 @@ pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 )]
 pub type Extension = EmptyOptionalNftExtension;
 
+pub type Cw721BaseContract<'a> = Cw721BaseExtensions<'a>;
+
 pub mod entry {
 
     use super::*;
@@ -30,22 +33,18 @@ pub mod entry {
     #[cfg(not(feature = "library"))]
     use cosmwasm_std::entry_point;
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
-    use cw721::{
-        error::Cw721ContractError,
-        msg::Cw721InstantiateMsg,
-        traits::{Cw721Execute, Cw721Query},
-    };
-    use extension::Cw721BaseExtensions;
-    use msg::{ExecuteMsg, MigrateMsg, QueryMsg};
+    use cw721::traits::{Cw721Execute, Cw721Query};
+    use error::ContractError;
+    use msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn instantiate(
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721InstantiateMsg<DefaultOptionalCollectionExtensionMsg>,
-    ) -> Result<Response, Cw721ContractError> {
-        let contract = Cw721BaseExtensions::default();
+        msg: InstantiateMsg,
+    ) -> Result<Response, ContractError> {
+        let contract = Cw721BaseContract::default();
         contract.instantiate_with_version(deps, &env, &info, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 
@@ -55,24 +54,20 @@ pub mod entry {
         env: Env,
         info: MessageInfo,
         msg: ExecuteMsg,
-    ) -> Result<Response, Cw721ContractError> {
-        let contract = Cw721BaseExtensions::default();
+    ) -> Result<Response, ContractError> {
+        let contract = Cw721BaseContract::default();
         contract.execute(deps, &env, &info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
-        let contract = Cw721BaseExtensions::default();
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
+        let contract = Cw721BaseContract::default();
         contract.query(deps, &env, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn migrate(
-        deps: DepsMut,
-        env: Env,
-        msg: MigrateMsg,
-    ) -> Result<Response, Cw721ContractError> {
-        let contract = Cw721BaseExtensions::default();
+    pub fn migrate(deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+        let contract = Cw721BaseContract::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
     }
 }
@@ -87,7 +82,6 @@ mod tests {
     };
 
     use cw721::traits::{Cw721Execute, Cw721Query};
-    use extension::Cw721BaseExtensions;
     use msg::{ExecuteMsg, InstantiateMsg};
 
     const CREATOR: &str = "creator";
@@ -96,9 +90,14 @@ mod tests {
     #[test]
     fn use_empty_metadata_extension() {
         let mut deps = mock_dependencies();
+<<<<<<< HEAD
         let contract = Cw721BaseExtensions::default();
         let creator = deps.api.addr_make(CREATOR);
         let info = message_info(&creator, &[]);
+=======
+        let contract = Cw721BaseContract::default();
+        let info = mock_info(CREATOR, &[]);
+>>>>>>> 71d692b (new GetConfig)
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
