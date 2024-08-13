@@ -1,3 +1,5 @@
+use std::f32::MIN;
+
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
@@ -10,20 +12,203 @@ use crate::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
 };
+use anyhow::Result;
+use bech32::{decode, encode, Hrp};
 use cosmwasm_std::{
-    to_json_binary, Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
-    WasmMsg,
+    instantiate2_address, to_json_binary, Addr, Api, Binary, CanonicalAddr, Deps, DepsMut, Empty,
+    Env, GovMsg, MemoryStorage, MessageInfo, QuerierWrapper, RecoverPubkeyError, Response,
+    StdError, StdResult, Storage, VerificationError, WasmMsg,
 };
 use cw721_016::NftInfoResponse;
-use cw_multi_test::{App, Contract, ContractWrapper, Executor};
+use cw_multi_test::{
+    AddressGenerator, App, AppBuilder, BankKeeper, Contract, ContractWrapper, DistributionKeeper,
+    Executor, FailingModule, IbcAcceptingModule, Router, StakeKeeper, StargateFailing, WasmKeeper,
+};
 use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
+use sha2::{digest::Update, Digest, Sha256};
 use url::ParseError;
 
+const BECH32_PREFIX_HRP: &str = "stars";
+pub const ADMIN_ADDR: &str = "admin";
 pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
 pub const OTHER_ADDR: &str = "other";
 pub const NFT_OWNER_ADDR: &str = "nft_owner";
+
+type MockRouter = Router<
+    BankKeeper,
+    FailingModule<Empty, Empty, Empty>,
+    WasmKeeper<Empty, Empty>,
+    StakeKeeper,
+    DistributionKeeper,
+    IbcAcceptingModule,
+    FailingModule<GovMsg, Empty, Empty>,
+    StargateFailing,
+>;
+
+type MockApp = App<
+    BankKeeper,
+    MockApiBech32,
+    MemoryStorage,
+    FailingModule<Empty, Empty, Empty>,
+    WasmKeeper<Empty, Empty>,
+    StakeKeeper,
+    DistributionKeeper,
+    IbcAcceptingModule,
+>;
+
+#[derive(Default)]
+pub struct MockAddressGenerator;
+
+impl AddressGenerator for MockAddressGenerator {
+    fn contract_address(
+        &self,
+        api: &dyn Api,
+        _storage: &mut dyn Storage,
+        code_id: u64,
+        instance_id: u64,
+    ) -> Result<Addr> {
+        let canonical_addr = Self::instantiate_address(code_id, instance_id);
+        Ok(Addr::unchecked(api.addr_humanize(&canonical_addr)?))
+    }
+
+    fn predictable_contract_address(
+        &self,
+        api: &dyn Api,
+        _storage: &mut dyn Storage,
+        _code_id: u64,
+        _instance_id: u64,
+        checksum: &[u8],
+        creator: &CanonicalAddr,
+        salt: &[u8],
+    ) -> Result<Addr> {
+        let canonical_addr = instantiate2_address(checksum, creator, salt)?;
+        Ok(Addr::unchecked(api.addr_humanize(&canonical_addr)?))
+    }
+}
+
+impl MockAddressGenerator {
+    // non-predictable contract address generator, see `BuildContractAddressClassic`
+    // implementation in wasmd: https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/addresses.go#L35-L42
+    fn instantiate_address(code_id: u64, instance_id: u64) -> CanonicalAddr {
+        let mut key = Vec::<u8>::new();
+        key.extend_from_slice(b"wasm\0");
+        key.extend_from_slice(&code_id.to_be_bytes());
+        key.extend_from_slice(&instance_id.to_be_bytes());
+        let module = Sha256::digest("module".as_bytes());
+        Sha256::new()
+            .chain(module)
+            .chain(key)
+            .finalize()
+            .to_vec()
+            .into()
+    }
+}
+pub struct MockApiBech32 {
+    prefix: Hrp,
+}
+
+impl MockApiBech32 {
+    pub fn new(prefix: &'static str) -> Self {
+        Self {
+            prefix: Hrp::parse(prefix).unwrap(),
+        }
+    }
+}
+
+impl Api for MockApiBech32 {
+    fn addr_validate(&self, input: &str) -> StdResult<Addr> {
+        let canonical = self.addr_canonicalize(input)?;
+        let normalized = self.addr_humanize(&canonical)?;
+        if input != normalized {
+            Err(StdError::generic_err(
+                "Invalid input: address not normalized",
+            ))
+        } else {
+            Ok(Addr::unchecked(input))
+        }
+    }
+
+    fn addr_canonicalize(&self, input: &str) -> StdResult<CanonicalAddr> {
+        if let Ok((prefix, decoded)) = decode(input) {
+            if prefix == self.prefix {
+                return Ok(decoded.into());
+            }
+        }
+        Err(StdError::generic_err(format!("Invalid input: {input}")))
+    }
+
+    fn addr_humanize(&self, canonical: &CanonicalAddr) -> StdResult<Addr> {
+        let hrp = self.prefix;
+        let data = canonical.as_slice();
+        if let Ok(encoded) = encode::<bech32::Bech32>(hrp, data) {
+            Ok(Addr::unchecked(encoded))
+        } else {
+            Err(StdError::generic_err("Invalid canonical address"))
+        }
+    }
+
+    fn secp256k1_verify(
+        &self,
+        _message_hash: &[u8],
+        _signature: &[u8],
+        _public_key: &[u8],
+    ) -> Result<bool, VerificationError> {
+        unimplemented!()
+    }
+
+    fn secp256k1_recover_pubkey(
+        &self,
+        _message_hash: &[u8],
+        _signature: &[u8],
+        _recovery_param: u8,
+    ) -> Result<Vec<u8>, RecoverPubkeyError> {
+        unimplemented!()
+    }
+
+    fn ed25519_verify(
+        &self,
+        _message: &[u8],
+        _signature: &[u8],
+        _public_key: &[u8],
+    ) -> Result<bool, VerificationError> {
+        unimplemented!()
+    }
+
+    fn ed25519_batch_verify(
+        &self,
+        _messages: &[&[u8]],
+        _signatures: &[&[u8]],
+        _public_keys: &[&[u8]],
+    ) -> Result<bool, VerificationError> {
+        unimplemented!()
+    }
+
+    fn debug(&self, _message: &str) {
+        unimplemented!()
+    }
+}
+
+impl MockApiBech32 {
+    pub fn addr_make(&self, input: &str) -> Addr {
+        let digest = Sha256::digest(input).to_vec();
+        match encode::<bech32::Bech32>(self.prefix, &digest) {
+            Ok(address) => Addr::unchecked(address),
+            Err(reason) => panic!("Generating address failed with reason: {reason}"),
+        }
+    }
+}
+
+fn new() -> MockApp {
+    AppBuilder::new()
+        .with_wasm::<WasmKeeper<Empty, Empty>>(
+            WasmKeeper::new().with_address_generator(MockAddressGenerator),
+        )
+        .with_ibc(IbcAcceptingModule::default())
+        .with_api(MockApiBech32::new(BECH32_PREFIX_HRP))
+        .build(no_init)
+}
 
 pub fn instantiate(
     deps: DepsMut,
@@ -66,6 +251,8 @@ pub fn migrate(
     let contract = Cw721OnchainExtensions::default();
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }
+
+fn no_init(_router: &mut MockRouter, _api: &dyn Api, _storage: &mut dyn Storage) {}
 
 fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query).with_migrate(migrate);
@@ -148,7 +335,7 @@ fn query_nft_info(
         .unwrap()
 }
 
-fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: String) {
+fn mint_transfer_and_burn(app: &mut MockApp, cw721: Addr, sender: Addr, token_id: String) {
     app.execute_contract(
         sender.clone(),
         cw721.clone(),
@@ -165,11 +352,12 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     let owner = query_owner(app.wrap(), &cw721, token_id.clone());
     assert_eq!(owner, sender.to_string());
 
+    let burner = app.api().addr_make("burner");
     app.execute_contract(
         sender,
         cw721.clone(),
         &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
-            recipient: "burner".to_string(),
+            recipient: burner.to_string(),
             token_id: token_id.clone(),
         },
         &[],
@@ -177,10 +365,10 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
     .unwrap();
 
     let owner = query_owner(app.wrap(), &cw721, token_id.clone());
-    assert_eq!(owner, "burner".to_string());
+    assert_eq!(owner, burner.to_string());
 
     app.execute_contract(
-        Addr::unchecked("burner"),
+        burner,
         cw721,
         &Cw721ExecuteMsg::<Empty, Empty, Empty>::Burn { token_id },
         &[],
@@ -191,10 +379,12 @@ fn mint_transfer_and_burn(app: &mut App, cw721: Addr, sender: Addr, token_id: St
 #[test]
 fn test_operator() {
     // --- setup ---
-    let mut app = App::default();
-    let admin = Addr::unchecked("admin");
+    let mut app = new();
+    let admin = app.api().addr_make(ADMIN_ADDR);
+    let creator = app.api().addr_make(CREATOR_ADDR);
+    let minter = app.api().addr_make(MINTER_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
-    let other = Addr::unchecked(OTHER_ADDR);
+    let other = app.api().addr_make(OTHER_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -202,8 +392,8 @@ fn test_operator() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(MINTER_ADDR.to_string()),
-                creator: Some(CREATOR_ADDR.to_string()),
+                minter: Some(minter.to_string()),
+                creator: Some(creator.to_string()),
                 collection_info_extension: None,
                 withdraw_address: None,
             },
@@ -213,8 +403,7 @@ fn test_operator() {
         )
         .unwrap();
     // mint
-    let minter = Addr::unchecked(MINTER_ADDR);
-    let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
+    let nft_owner = app.api().addr_make(NFT_OWNER_ADDR);
     app.execute_contract(
         minter,
         cw721.clone(),
@@ -388,13 +577,13 @@ fn test_migration_legacy_to_latest() {
     // v0.15 migration by using existing minter addr
     {
         use cw721_base_015 as v15;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_016 = app.store_code(cw721_base_015_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -526,13 +715,13 @@ fn test_migration_legacy_to_latest() {
     // v0.15 migration by providing new creator and minter addr
     {
         use cw721_base_015 as v15;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_015 = app.store_code(cw721_base_015_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -557,20 +746,23 @@ fn test_migration_legacy_to_latest() {
         );
 
         // migrate
-        app.execute(
-            admin,
-            WasmMsg::Migrate {
-                contract_addr: cw721.to_string(),
-                new_code_id: code_id_latest,
-                msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
-                    minter: Some(MINTER_ADDR.to_string()),
-                    creator: Some(CREATOR_ADDR.to_string()),
-                })
-                .unwrap(),
-            }
-            .into(),
-        )
-        .unwrap();
+        let creator = app.api().addr_make(CREATOR_ADDR);
+        let minter = app.api().addr_make(MINTER_ADDR);
+        let res = app
+            .execute(
+                admin,
+                WasmMsg::Migrate {
+                    contract_addr: cw721.to_string(),
+                    new_code_id: code_id_latest,
+                    msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
+                        minter: Some(minter.to_string()),
+                        creator: Some(creator.to_string()),
+                    })
+                    .unwrap(),
+                }
+                .into(),
+            )
+            .unwrap();
 
         // legacy minter user cant mint
         let err: Cw721ContractError = app
@@ -591,7 +783,6 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
-        let minter = Addr::unchecked(MINTER_ADDR);
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
@@ -640,7 +831,7 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
-        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator = app.api().addr_make(CREATOR_ADDR);
         let creator_ownership: Ownership<Addr> = app
             .wrap()
             .query_wasm_smart(
@@ -657,13 +848,13 @@ fn test_migration_legacy_to_latest() {
     // v0.16 migration by using existing minter addr
     {
         use cw721_base_016 as v16;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_016 = app.store_code(cw721_base_016_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -795,13 +986,13 @@ fn test_migration_legacy_to_latest() {
     // v0.16 migration by providing new creator and minter addr
     {
         use cw721_base_016 as v16;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_016 = app.store_code(cw721_base_016_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -826,14 +1017,16 @@ fn test_migration_legacy_to_latest() {
         );
 
         // migrate
+        let creator = app.api().addr_make(CREATOR_ADDR);
+        let minter = app.api().addr_make(MINTER_ADDR);
         app.execute(
             admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
                 msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
-                    minter: Some(MINTER_ADDR.to_string()),
-                    creator: Some(CREATOR_ADDR.to_string()),
+                    minter: Some(minter.to_string()),
+                    creator: Some(creator.to_string()),
                 })
                 .unwrap(),
             }
@@ -860,7 +1053,6 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
-        let minter = Addr::unchecked(MINTER_ADDR);
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
@@ -909,7 +1101,7 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
-        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator = app.api().addr_make(CREATOR_ADDR);
         let creator_ownership: Ownership<Addr> = app
             .wrap()
             .query_wasm_smart(
@@ -926,13 +1118,13 @@ fn test_migration_legacy_to_latest() {
     // v0.17 migration by using existing minter addr
     {
         use cw721_base_017 as v17;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_017 = app.store_code(cw721_base_017_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -1064,13 +1256,13 @@ fn test_migration_legacy_to_latest() {
     // v0.17 migration by providing new creator and minter addr
     {
         use cw721_base_017 as v17;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_017 = app.store_code(cw721_base_017_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -1095,14 +1287,16 @@ fn test_migration_legacy_to_latest() {
         );
 
         // migrate
+        let creator = app.api().addr_make(CREATOR_ADDR);
+        let minter = app.api().addr_make(MINTER_ADDR);
         app.execute(
             admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
                 msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
-                    minter: Some(MINTER_ADDR.to_string()),
-                    creator: Some(CREATOR_ADDR.to_string()),
+                    minter: Some(minter.to_string()),
+                    creator: Some(creator.to_string()),
                 })
                 .unwrap(),
             }
@@ -1129,7 +1323,6 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
-        let minter = Addr::unchecked(MINTER_ADDR);
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
@@ -1178,7 +1371,7 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
-        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator = app.api().addr_make(CREATOR_ADDR);
         let creator_ownership: Ownership<Addr> = app
             .wrap()
             .query_wasm_smart(
@@ -1195,13 +1388,13 @@ fn test_migration_legacy_to_latest() {
     // v0.18 migration by using existing minter addr
     {
         use cw721_base_018 as v18;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_018 = app.store_code(cw721_base_018_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -1333,13 +1526,13 @@ fn test_migration_legacy_to_latest() {
     // v0.18 migration by providing new creator and minter addr
     {
         use cw721_base_018 as v18;
-        let mut app = App::default();
-        let admin = Addr::unchecked("admin");
+        let mut app = new();
+        let admin = app.api().addr_make(ADMIN_ADDR);
 
         let code_id_018 = app.store_code(cw721_base_018_contract());
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
-        let legacy_creator_and_minter = Addr::unchecked("legacy_creator_and_minter");
+        let legacy_creator_and_minter = app.api().addr_make("legacy_creator_and_minter");
 
         let cw721 = app
             .instantiate_contract(
@@ -1364,14 +1557,16 @@ fn test_migration_legacy_to_latest() {
         );
 
         // migrate
+        let creator = app.api().addr_make(CREATOR_ADDR);
+        let minter = app.api().addr_make(MINTER_ADDR);
         app.execute(
             admin,
             WasmMsg::Migrate {
                 contract_addr: cw721.to_string(),
                 new_code_id: code_id_latest,
                 msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
-                    minter: Some(MINTER_ADDR.to_string()),
-                    creator: Some(CREATOR_ADDR.to_string()),
+                    minter: Some(minter.to_string()),
+                    creator: Some(creator.to_string()),
                 })
                 .unwrap(),
             }
@@ -1398,7 +1593,6 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(err, Cw721ContractError::NotMinter {});
 
         // new minter can mint
-        let minter = Addr::unchecked(MINTER_ADDR);
         mint_transfer_and_burn(&mut app, cw721.clone(), minter.clone(), "1".to_string());
 
         // check new mint query response works.
@@ -1447,7 +1641,7 @@ fn test_migration_legacy_to_latest() {
         assert_eq!(minter_ownership.owner, Some(minter));
 
         // check creator ownership query works
-        let creator = Addr::unchecked(CREATOR_ADDR);
+        let creator = app.api().addr_make(CREATOR_ADDR);
         let creator_ownership: Ownership<Addr> = app
             .wrap()
             .query_wasm_smart(
@@ -1468,23 +1662,23 @@ fn test_migration_legacy_to_latest() {
 #[test]
 fn test_instantiate_016_msg() {
     use cw721_base_016 as v16;
-    let mut app = App::default();
-    let admin = || Addr::unchecked("admin");
+    let mut app = new();
+    let admin = app.api().addr_make(ADMIN_ADDR);
 
     let code_id_latest = app.store_code(cw721_base_latest_contract());
 
     let cw721 = app
         .instantiate_contract(
             code_id_latest,
-            admin(),
+            admin.clone(),
             &v16::InstantiateMsg {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: admin().into_string(),
+                minter: admin.to_string(),
             },
             &[],
             "cw721-base",
-            Some(admin().into_string()),
+            Some(admin.to_string()),
         )
         .unwrap();
 
@@ -1506,10 +1700,11 @@ fn test_instantiate_016_msg() {
 #[test]
 fn test_update_nft_metadata() {
     // --- setup ---
-    let mut app = App::default();
-    let admin = Addr::unchecked("admin");
+    let mut app = new();
+    let admin = app.api().addr_make(ADMIN_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
-    let creator = Addr::unchecked(CREATOR_ADDR);
+    let creator = app.api().addr_make(CREATOR_ADDR);
+    let minter_addr = app.api().addr_make(MINTER_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -1517,7 +1712,7 @@ fn test_update_nft_metadata() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(MINTER_ADDR.to_string()),
+                minter: Some(minter_addr.to_string()),
                 creator: None, // in case of none, sender is creator
                 collection_info_extension: None,
                 withdraw_address: None,
@@ -1528,8 +1723,7 @@ fn test_update_nft_metadata() {
         )
         .unwrap();
     // mint
-    let minter = Addr::unchecked(MINTER_ADDR);
-    let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
+    let nft_owner = app.api().addr_make(NFT_OWNER_ADDR);
     let nft_metadata_msg = NftExtensionMsg {
         image: Some("ipfs://foo.bar/image.png".to_string()),
         image_data: Some("image data".to_string()),
@@ -1546,7 +1740,7 @@ fn test_update_nft_metadata() {
         youtube_url: Some("file://youtube_url".to_string()),
     };
     app.execute_contract(
-        minter,
+        minter_addr,
         cw721.clone(),
         &Cw721ExecuteMsg::<
             DefaultOptionalNftExtensionMsg,

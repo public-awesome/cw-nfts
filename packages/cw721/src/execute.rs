@@ -648,7 +648,7 @@ pub fn migrate_minter(
         Cw721MigrateMsg::WithUpdate { minter, .. } => {
             if let Some(minter) = minter {
                 MINTER.initialize_owner(storage, api, Some(minter.as_str()))?;
-                return Ok(response.add_attribute("creator", minter));
+                return Ok(response.add_attribute("minter", minter));
             }
         }
     }
