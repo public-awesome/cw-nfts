@@ -12,8 +12,8 @@ use crate::{
     },
     msg::{
         AllInfoResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
-        CollectionInfoAndExtensionResponse, MinterResponse, NftInfoResponse, NumTokensResponse,
-        OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+        CollectionInfoAndExtensionResponse, ConfigResponse, MinterResponse, NftInfoResponse,
+        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     state::{
         Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
@@ -92,6 +92,31 @@ pub fn query_collection_extension_attributes(
     )
 }
 
+pub fn query_config<TCollectionExtension>(
+    deps: Deps,
+    contract_addr: impl Into<String>,
+) -> Result<ConfigResponse<TCollectionExtension>, Cw721ContractError>
+where
+    TCollectionExtension: Cw721State + FromAttributesState,
+{
+    let collection_info = query_collection_info(deps.storage)?;
+    let attributes = query_collection_extension_attributes(deps)?;
+    let collection_extension = FromAttributesState::from_attributes_state(&attributes)?;
+    let num_tokens = query_num_tokens(deps.storage)?.count;
+    let minter_ownership = query_minter_ownership(deps.storage)?;
+    let creator_ownership = query_creator_ownership(deps.storage)?;
+    let withdraw_address = query_withdraw_address(deps)?;
+    let contract_info = deps.querier.query_wasm_contract_info(contract_addr)?;
+    Ok(ConfigResponse {
+        num_tokens,
+        minter_ownership,
+        creator_ownership,
+        collection_info,
+        collection_extension,
+        withdraw_address,
+        contract_info,
+    })
+}
 pub fn query_collection_info_and_extension<TCollectionExtension>(
     deps: Deps,
 ) -> Result<CollectionInfoAndExtensionResponse<TCollectionExtension>, Cw721ContractError>

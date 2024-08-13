@@ -51,7 +51,7 @@ pub struct Cw721Config<
     /// Note: replaces deprecated/legacy key "nft_info"!
     pub collection_info: Item<'a, CollectionInfo>,
     pub collection_extension: Map<'a, String, Attribute>,
-    pub token_count: Item<'a, u64>,
+    pub num_tokens: Item<'a, u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
@@ -84,7 +84,7 @@ where
     fn new(
         collection_info_key: &'a str,
         collection_info_extension_key: &'a str,
-        token_count_key: &'a str,
+        num_tokens_key: &'a str,
         operator_key: &'a str,
         nft_info_key: &'a str,
         nft_info_owner_key: &'a str,
@@ -95,7 +95,7 @@ where
         };
         Self {
             collection_info: Item::new(collection_info_key),
-            token_count: Item::new(token_count_key),
+            num_tokens: Item::new(num_tokens_key),
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
@@ -104,18 +104,18 @@ where
     }
 
     pub fn token_count(&self, storage: &dyn Storage) -> StdResult<u64> {
-        Ok(self.token_count.may_load(storage)?.unwrap_or_default())
+        Ok(self.num_tokens.may_load(storage)?.unwrap_or_default())
     }
 
     pub fn increment_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
         let val = self.token_count(storage)? + 1;
-        self.token_count.save(storage, &val)?;
+        self.num_tokens.save(storage, &val)?;
         Ok(val)
     }
 
     pub fn decrement_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
         let val = self.token_count(storage)? - 1;
-        self.token_count.save(storage, &val)?;
+        self.num_tokens.save(storage, &val)?;
         Ok(val)
     }
 }

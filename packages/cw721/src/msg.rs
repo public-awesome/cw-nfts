@@ -200,6 +200,10 @@ pub enum Cw721QueryMsg<
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
+    /// Returns `AllCollectionInfoResponse`
+    #[returns(ConfigResponse<TCollectionExtension>)]
+    GetConfig {},
+
     /// Returns `CollectionInfoAndExtensionResponse`
     #[returns(CollectionInfoAndExtensionResponse<TCollectionExtension>)]
     GetCollectionInfoAndExtension {},
@@ -585,6 +589,18 @@ impl From<RoyaltyInfo> for RoyaltyInfoResponse {
             share: royalty_info.share,
         }
     }
+}
+
+/// This is a wrapper around CollectionInfo that includes the extension.
+#[cw_serde]
+pub struct ConfigResponse<TCollectionExtension> {
+    pub num_tokens: u64,
+    pub minter_ownership: Ownership<Addr>,
+    pub creator_ownership: Ownership<Addr>,
+    pub withdraw_address: Option<String>,
+    pub collection_info: CollectionInfo,
+    pub collection_extension: TCollectionExtension,
+    pub contract_info: ContractInfoResponse,
 }
 
 /// This is a wrapper around CollectionInfo that includes the extension.

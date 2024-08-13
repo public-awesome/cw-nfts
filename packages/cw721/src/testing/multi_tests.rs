@@ -2,10 +2,11 @@ use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
     msg::{
-        CollectionExtensionMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
-        Cw721QueryMsg, MinterResponse, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
+        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
+        Cw721MigrateMsg, Cw721QueryMsg, MinterResponse, NumTokensResponse, OwnerOfResponse,
+        RoyaltyInfoResponse,
     },
-    state::{NftExtension, Trait},
+    state::{CollectionInfo, NftExtension, Trait},
     traits::{Cw721Execute, Cw721Query},
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
@@ -330,6 +331,22 @@ fn query_nft_info(
             >::NftInfo {
                 token_id,
             },
+        )
+        .unwrap()
+}
+
+fn query_all_collection_info(
+    querier: QuerierWrapper,
+    cw721: &Addr,
+) -> ConfigResponse<DefaultOptionalCollectionExtension> {
+    querier
+        .query_wasm_smart(
+            cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::GetConfig {},
         )
         .unwrap()
 }
@@ -2498,4 +2515,143 @@ fn test_update_nft_metadata() {
         )
         .unwrap();
     assert_eq!(num_tokens.count, 1);
+}
+
+#[test]
+fn test_queries() {
+    // --- setup ---
+    let mut app = new();
+    let admin = app.api().addr_make(ADMIN_ADDR);
+    let code_id = app.store_code(cw721_base_latest_contract());
+    let creator = app.api().addr_make(CREATOR_ADDR);
+    let minter_addr = app.api().addr_make(MINTER_ADDR);
+    let withdraw_addr = app.api().addr_make(OTHER2_ADDR);
+    let cw721 = app
+        .instantiate_contract(
+            code_id,
+            creator.clone(),
+            &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
+                name: "collection".to_string(),
+                symbol: "symbol".to_string(),
+                minter: Some(minter_addr.to_string()),
+                creator: None, // in case of none, sender is creator
+                collection_info_extension: None,
+                withdraw_address: Some(withdraw_addr.to_string()),
+            },
+            &[],
+            "cw721-base",
+            Some(admin.to_string()),
+        )
+        .unwrap();
+    // mint
+    let nft_owner = app.api().addr_make(NFT_OWNER_ADDR);
+    let nft_metadata_msg = NftExtensionMsg {
+        image: Some("ipfs://foo.bar/image.png".to_string()),
+        image_data: Some("image data".to_string()),
+        external_url: Some("https://github.com".to_string()),
+        description: Some("description".to_string()),
+        name: Some("name".to_string()),
+        attributes: Some(vec![Trait {
+            trait_type: "trait_type".to_string(),
+            value: "value".to_string(),
+            display_type: Some("display_type".to_string()),
+        }]),
+        background_color: Some("background_color".to_string()),
+        animation_url: Some("ssl://animation_url".to_string()),
+        youtube_url: Some("file://youtube_url".to_string()),
+    };
+    app.execute_contract(
+        minter_addr.clone(),
+        cw721.clone(),
+        &Cw721ExecuteMsg::<
+            DefaultOptionalNftExtensionMsg,
+            DefaultOptionalCollectionExtensionMsg,
+            Empty,
+        >::Mint {
+            token_id: "1".to_string(),
+            owner: nft_owner.to_string(),
+            token_uri: Some("ipfs://foo.bar/metadata.json".to_string()),
+            extension: Some(nft_metadata_msg.clone()),
+        },
+        &[],
+    )
+    .unwrap();
+
+    // check nft info
+    let nft_info = query_nft_info(app.wrap(), &cw721, "1".to_string());
+    assert_eq!(
+        nft_info.token_uri,
+        Some("ipfs://foo.bar/metadata.json".to_string())
+    );
+    assert_eq!(
+        nft_info.extension,
+        Some(NftExtension {
+            image: Some("ipfs://foo.bar/image.png".to_string()),
+            image_data: Some("image data".to_string()),
+            external_url: Some("https://github.com".to_string()),
+            description: Some("description".to_string()),
+            name: Some("name".to_string()),
+            attributes: Some(vec![Trait {
+                trait_type: "trait_type".to_string(),
+                value: "value".to_string(),
+                display_type: Some("display_type".to_string()),
+            }]),
+            background_color: Some("background_color".to_string()),
+            animation_url: Some("ssl://animation_url".to_string()),
+            youtube_url: Some("file://youtube_url".to_string()),
+        })
+    );
+    // check num tokens
+    let num_tokens: NumTokensResponse = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::NumTokens {},
+        )
+        .unwrap();
+    assert_eq!(num_tokens.count, 1);
+    // check withdraw address
+    let withdraw_addr_result: Option<String> = app
+        .wrap()
+        .query_wasm_smart(
+            &cw721,
+            &Cw721QueryMsg::<
+                DefaultOptionalNftExtension,
+                DefaultOptionalCollectionExtension,
+                Empty,
+            >::GetWithdrawAddress {},
+        )
+        .unwrap();
+    assert_eq!(withdraw_addr_result, Some(withdraw_addr.to_string()));
+    // check all collection info
+    let all_collection_info = query_all_collection_info(app.wrap(), &cw721);
+    let contract_info = app.wrap().query_wasm_contract_info(&cw721).unwrap();
+    assert_eq!(
+        all_collection_info,
+        ConfigResponse {
+            minter_ownership: Ownership {
+                owner: Some(minter_addr),
+                pending_expiry: None,
+                pending_owner: None,
+            },
+            creator_ownership: Ownership {
+                owner: Some(creator),
+                pending_expiry: None,
+                pending_owner: None,
+            },
+            collection_info: CollectionInfo {
+                name: "collection".to_string(),
+                symbol: "symbol".to_string(),
+                updated_at: all_collection_info.collection_info.updated_at,
+            },
+            collection_extension: None,
+            num_tokens: 1,
+            withdraw_address: Some(withdraw_addr.into_string()),
+            contract_info
+        }
+    );
 }

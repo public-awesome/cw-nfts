@@ -35,8 +35,8 @@ use crate::{
     Attribute,
 };
 use crate::{
-    msg::AllInfoResponse,
-    query::{query_all_info, query_nft_by_extension},
+    msg::{AllInfoResponse, ConfigResponse},
+    query::{query_all_info, query_config, query_nft_by_extension},
     Approval,
 };
 
@@ -495,6 +495,9 @@ pub trait Cw721Query<
             Cw721QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
             )?),
+            Cw721QueryMsg::GetConfig {} => Ok(to_json_binary(
+                &self.query_all_collection_info(deps, env.contract.address.to_string())?,
+            )?),
             Cw721QueryMsg::GetCollectionInfoAndExtension {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
             )?),
@@ -635,6 +638,17 @@ pub trait Cw721Query<
 
     fn query_collection_extension_attributes(&self, deps: Deps) -> StdResult<Vec<Attribute>> {
         query_collection_extension_attributes(deps)
+    }
+
+    fn query_all_collection_info(
+        &self,
+        deps: Deps,
+        contract_addr: impl Into<String>,
+    ) -> Result<ConfigResponse<TCollectionExtension>, Cw721ContractError>
+    where
+        TCollectionExtension: FromAttributesState,
+    {
+        query_config(deps, contract_addr)
     }
 
     fn query_collection_info_and_extension(
