@@ -200,7 +200,7 @@ pub enum Cw721QueryMsg<
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
-    /// Returns `AllCollectionInfoResponse`
+    /// Returns `ConfigResponse`
     #[returns(ConfigResponse<TCollectionExtension>)]
     GetConfig {},
 
