@@ -379,14 +379,14 @@ pub fn query_all_tokens(
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start = start_after.map(|s| Bound::ExclusiveRaw(s.into()));
 
-    let tokens: StdResult<Vec<String>> = Cw721Config::<Option<Empty>>::default()
+    let tokens = Cw721Config::<Option<Empty>>::default()
         .nft_info
         .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|item| item.map(|(k, _)| k))
-        .collect();
+        .collect::<StdResult<Vec<_>>>()?;
 
-    Ok(TokensResponse { tokens: tokens? })
+    Ok(TokensResponse { tokens })
 }
 
 pub fn query_all_nft_info<TNftExtension>(

@@ -256,8 +256,8 @@ pub enum Cw721QueryMsg<
         include_expired: Option<bool>,
     },
 
-    /// With Enumerable extension.
-    /// Returns all tokens owned by the given address, [] if unset.
+    /// Returns all tokens owned by the given address.
+    /// Same as `AllTokens` but with owner filter.
     #[returns(TokensResponse)]
     Tokens {
         owner: String,
