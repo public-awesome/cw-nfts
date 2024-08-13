@@ -926,6 +926,15 @@ pub trait Cw721Calls<
     }
 
     /// This is a helper to get the metadata and extension data in one call
+    fn config<U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+    ) -> StdResult<ConfigResponse<U>> {
+        let req = Cw721QueryMsg::GetConfig {};
+        self.query(querier, req)
+    }
+
+    /// This is a helper to get the metadata and extension data in one call
     fn collection_info<U: DeserializeOwned>(
         &self,
         querier: &QuerierWrapper,

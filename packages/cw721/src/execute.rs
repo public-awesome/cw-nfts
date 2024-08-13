@@ -127,7 +127,7 @@ where
     let config = Cw721Config::<TNftExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
-    check_can_send(deps.as_ref(), env, info, &token)?;
+    check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
     // set owner and remove existing approvals
     token.owner = deps.api.addr_validate(recipient)?;
     token.approvals = vec![];
@@ -203,7 +203,7 @@ where
     let config = Cw721Config::<TNftExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
-    check_can_approve(deps.as_ref(), env, info, &token)?;
+    check_can_approve(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
     // update the approval list (remove any for the same spender before adding)
     let spender_addr = deps.api.addr_validate(spender)?;
@@ -301,7 +301,7 @@ pub fn burn_nft<TCustomResponseMsg>(
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
     let config = Cw721Config::<Option<Empty>>::default();
     let token = config.nft_info.load(deps.storage, &token_id)?;
-    check_can_send(deps.as_ref(), env, info, &token)?;
+    check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
     config.nft_info.remove(deps.storage, &token_id)?;
     config.decrement_tokens(deps.storage)?;
@@ -503,21 +503,22 @@ pub fn withdraw_funds<TCustomResponseMsg>(
 pub fn check_can_approve<TNftExtension>(
     deps: Deps,
     env: &Env,
-    info: &MessageInfo,
+    sender: &str,
     token: &NftInfo<TNftExtension>,
 ) -> Result<(), Cw721ContractError>
 where
     TNftExtension: Cw721State,
 {
+    let sender = deps.api.addr_validate(sender)?;
     // owner can approve
-    if token.owner == info.sender {
+    if token.owner == sender {
         return Ok(());
     }
     // operator can approve
     let config = Cw721Config::<TNftExtension>::default();
     let op = config
         .operators
-        .may_load(deps.storage, (&token.owner, &info.sender))?;
+        .may_load(deps.storage, (&token.owner, &sender))?;
     match op {
         Some(ex) => {
             if ex.is_expired(&env.block) {
@@ -534,11 +535,12 @@ where
 pub fn check_can_send<TNftExtension>(
     deps: Deps,
     env: &Env,
-    info: &MessageInfo,
+    sender: &str,
     token: &NftInfo<TNftExtension>,
 ) -> Result<(), Cw721ContractError> {
+    let sender = deps.api.addr_validate(sender)?;
     // owner can send
-    if token.owner == info.sender {
+    if token.owner == sender {
         return Ok(());
     }
 
@@ -546,7 +548,7 @@ pub fn check_can_send<TNftExtension>(
     if token
         .approvals
         .iter()
-        .any(|apr| apr.spender == info.sender && !apr.is_expired(&env.block))
+        .any(|apr| apr.spender == sender && !apr.is_expired(&env.block))
     {
         return Ok(());
     }
@@ -556,7 +558,7 @@ pub fn check_can_send<TNftExtension>(
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
-        .may_load(deps.storage, (&token.owner, &info.sender))?;
+        .may_load(deps.storage, (&token.owner, &sender))?;
 
     match op {
         Some(ex) => {
