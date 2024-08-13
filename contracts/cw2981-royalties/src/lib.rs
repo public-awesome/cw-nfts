@@ -123,6 +123,16 @@ pub mod entry {
             _ => Ok(Cw2981Contract::default().query(deps, &env, msg.into())?),
         }
     }
+
+    #[entry_point]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: cw721::msg::Cw721MigrateMsg,
+    ) -> Result<Response, ContractError> {
+        let contract = Cw2981Contract::default();
+        Ok(contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)?)
+    }
 }
 
 #[cfg(test)]

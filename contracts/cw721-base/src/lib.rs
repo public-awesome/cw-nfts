@@ -13,20 +13,17 @@ pub use cw721::*;
 // `Cw721ContractError::Ownership`.
 pub use cw_ownable::{Action, Ownership, OwnershipError};
 
-use cosmwasm_std::Empty;
-
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";
 pub const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[deprecated(
     since = "0.19.0",
-    note = "Please use `DefaultOptionNftExtension` instead"
+    note = "Please use `EmptyOptionalNftExtension` instead"
 )]
 pub type Extension = EmptyOptionalNftExtension;
 
 pub mod entry {
-
     use super::*;
 
     #[cfg(not(feature = "library"))]
@@ -34,10 +31,11 @@ pub mod entry {
     use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
     use cw721::{
         error::Cw721ContractError,
-        msg::{Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg},
+        msg::Cw721InstantiateMsg,
         traits::{Cw721Execute, Cw721Query},
     };
     use extension::Cw721BaseExtensions;
+    use msg::{ExecuteMsg, MigrateMsg, QueryMsg};
 
     #[cfg_attr(not(feature = "library"), entry_point)]
     pub fn instantiate(
@@ -55,22 +53,14 @@ pub mod entry {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        msg: Cw721ExecuteMsg<
-            EmptyOptionalNftExtensionMsg,
-            DefaultOptionalCollectionExtensionMsg,
-            Empty,
-        >,
+        msg: ExecuteMsg,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721BaseExtensions::default();
         contract.execute(deps, &env, &info, msg)
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn query(
-        deps: Deps,
-        env: Env,
-        msg: Cw721QueryMsg<EmptyOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>,
-    ) -> Result<Binary, Cw721ContractError> {
+    pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, Cw721ContractError> {
         let contract = Cw721BaseExtensions::default();
         contract.query(deps, &env, msg)
     }
@@ -79,7 +69,7 @@ pub mod entry {
     pub fn migrate(
         deps: DepsMut,
         env: Env,
-        msg: Cw721MigrateMsg,
+        msg: MigrateMsg,
     ) -> Result<Response, Cw721ContractError> {
         let contract = Cw721BaseExtensions::default();
         contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
@@ -90,7 +80,10 @@ pub mod entry {
 mod tests {
     use super::*;
 
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{
+        testing::{mock_dependencies, mock_env, mock_info},
+        Empty,
+    };
     use cw721::traits::{Cw721Execute, Cw721Query};
     use extension::Cw721BaseExtensions;
     use msg::{ExecuteMsg, InstantiateMsg};

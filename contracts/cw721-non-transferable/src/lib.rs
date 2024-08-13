@@ -112,4 +112,14 @@ pub mod entry {
             _ => Cw721EmptyExtensions::default().query(deps, &env, msg.into()),
         }
     }
+
+    #[entry_point]
+    pub fn migrate(
+        deps: DepsMut,
+        env: Env,
+        msg: cw721::msg::Cw721MigrateMsg,
+    ) -> Result<Response, Cw721ContractError> {
+        let contract = Cw721EmptyExtensions::default();
+        contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
+    }
 }
