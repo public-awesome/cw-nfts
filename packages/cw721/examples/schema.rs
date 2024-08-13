@@ -6,10 +6,10 @@ use cosmwasm_schema::{export_schema, export_schema_with_title, remove_schemas, s
 use cosmwasm_std::Empty;
 use cw721::{
     msg::{
-        ConfigResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
-        CollectionInfoAndExtensionResponse, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
-        Cw721QueryMsg, MinterResponse, NftInfoResponse, NumTokensResponse, OperatorResponse,
-        OperatorsResponse, OwnerOfResponse, TokensResponse,
+        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
+        CollectionInfoAndExtensionResponse, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
+        Cw721MigrateMsg, Cw721QueryMsg, MinterResponse, NftInfoResponse, NumTokensResponse,
+        OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
     DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
@@ -71,7 +71,7 @@ fn main() {
     export_schema_with_title(
         &schema_for!(ConfigResponse<DefaultOptionalCollectionExtension>),
         &out_dir,
-        "AllCollectionInfo",
+        "Config",
     );
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);

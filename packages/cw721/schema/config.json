@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "AllCollectionInfo",
+  "title": "Config",
   "description": "This is a wrapper around CollectionInfo that includes the extension.",
   "type": "object",
   "required": [
