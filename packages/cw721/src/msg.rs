@@ -554,7 +554,6 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
         _info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
-        println!(">>>> RoyaltyInfoResponse.validate: {:?}", self);
         if let Some(current_royalty_info) = current {
             // check max share delta
             if current_royalty_info.share < self.share {

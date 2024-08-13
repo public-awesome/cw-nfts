@@ -1657,39 +1657,38 @@ fn test_migration_legacy_to_latest() {
 
 #[test]
 fn test_instantiate() {
+    let mut app = new();
+    let admin = app.api().addr_make(ADMIN_ADDR);
+    let minter = app.api().addr_make(MINTER_ADDR);
+    let creator = app.api().addr_make(CREATOR_ADDR);
+    let payment_address = app.api().addr_make(OTHER1_ADDR);
+    let withdraw_addr = app.api().addr_make(OTHER2_ADDR);
+    let init_msg = Cw721InstantiateMsg {
+        name: "collection".to_string(),
+        symbol: "symbol".to_string(),
+        minter: Some(minter.to_string()),
+        creator: Some(creator.to_string()),
+        withdraw_address: Some(withdraw_addr.to_string()),
+        collection_info_extension: Some(CollectionExtensionMsg {
+            description: Some("description".to_string()),
+            image: Some("ipfs://ark.pass".to_string()),
+            explicit_content: Some(false),
+            external_link: Some("https://interchain.arkprotocol.io".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(42)),
+            royalty_info: Some(RoyaltyInfoResponse {
+                payment_address: payment_address.to_string(),
+                share: Decimal::bps(1000),
+            }),
+        }),
+    };
     // test case: happy path
     {
-        let mut app = new();
-        let admin = app.api().addr_make(ADMIN_ADDR);
-        let minter = app.api().addr_make(MINTER_ADDR);
-        let creator = app.api().addr_make(CREATOR_ADDR);
-        let payment_address = app.api().addr_make(OTHER1_ADDR);
-        let withdraw_addr = app.api().addr_make(OTHER2_ADDR);
-
         let code_id_latest = app.store_code(cw721_base_latest_contract());
-
         let cw721 = app
             .instantiate_contract(
                 code_id_latest,
                 admin.clone(),
-                &Cw721InstantiateMsg {
-                    name: "collection".to_string(),
-                    symbol: "symbol".to_string(),
-                    minter: Some(minter.to_string()),
-                    creator: Some(creator.to_string()),
-                    withdraw_address: Some(withdraw_addr.to_string()),
-                    collection_info_extension: Some(CollectionExtensionMsg {
-                        description: Some("description".to_string()),
-                        image: Some("ipfs://ark.pass".to_string()),
-                        explicit_content: Some(false),
-                        external_link: Some("https://interchain.arkprotocol.io".to_string()),
-                        start_trading_time: Some(Timestamp::from_seconds(42)),
-                        royalty_info: Some(RoyaltyInfoResponse {
-                            payment_address: payment_address.to_string(),
-                            share: Decimal::bps(1000),
-                        }),
-                    }),
-                },
+                &init_msg.clone(),
                 &[],
                 "cw721-base",
                 Some(admin.to_string()),
@@ -1710,13 +1709,100 @@ fn test_instantiate() {
             .unwrap();
         assert_eq!(withdraw_addr_result, Some(withdraw_addr.to_string()));
     }
+    // test case: invalid addresses
+    {
+        // invalid creator
+        let code_id_latest = app.store_code(cw721_base_latest_contract());
+        let mut invalid_init_msg = init_msg.clone();
+        invalid_init_msg.creator = Some("invalid".to_string());
+        let error: Cw721ContractError = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &invalid_init_msg.clone(),
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(
+            error,
+            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+        );
+        // invalid minter
+        let mut invalid_init_msg = init_msg.clone();
+        invalid_init_msg.minter = Some("invalid".to_string());
+        let error: Cw721ContractError = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &invalid_init_msg.clone(),
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(
+            error,
+            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+        );
+        // invalid withdraw addr
+        let mut invalid_init_msg = init_msg.clone();
+        invalid_init_msg.withdraw_address = Some("invalid".to_string());
+        let error: Cw721ContractError = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &invalid_init_msg.clone(),
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(
+            error,
+            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+        );
+        // invalid payment addr
+        let mut invalid_init_msg = init_msg.clone();
+        invalid_init_msg.collection_info_extension = Some(CollectionExtensionMsg {
+            description: Some("description".to_string()),
+            image: Some("ipfs://ark.pass".to_string()),
+            explicit_content: Some(false),
+            external_link: Some("https://interchain.arkprotocol.io".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(42)),
+            royalty_info: Some(RoyaltyInfoResponse {
+                payment_address: "invalid".to_string(),
+                share: Decimal::bps(1000),
+            }),
+        });
+        let error: Cw721ContractError = app
+            .instantiate_contract(
+                code_id_latest,
+                admin.clone(),
+                &invalid_init_msg.clone(),
+                &[],
+                "cw721-base",
+                Some(admin.to_string()),
+            )
+            .unwrap_err()
+            .downcast()
+            .unwrap();
+        assert_eq!(
+            error,
+            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+        );
+    }
     // test case: backward compatibility using instantiate msg from a 0.16 version on latest contract.
     // This ensures existing 3rd party contracts doesnt need to update as well.
     {
         use cw721_base_016 as v16;
-        let mut app = new();
-        let admin = app.api().addr_make(ADMIN_ADDR);
-
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
         let cw721 = app
