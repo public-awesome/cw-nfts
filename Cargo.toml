@@ -27,7 +27,7 @@ cw721-base-018  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0"
 cw-multi-test   = { version = "^2.1", features = ["cosmwasm_2_0"] }
 # TODO: switch to official https://github.com/larry0x/cw-plus-plus
 # requires merge of https://github.com/larry0x/cw-plus-plus/pull/25
-cw-ownable      = { git = "https://github.com/mintthemoon/cw-plus-plus", revision = "eb4445e07cd0da2859c7313de569b83a773cc407", package = "cw-ownable" }
+cw-ownable      = { git = "https://github.com/mintthemoon/cw-plus-plus", branch = "dev", package = "cw-ownable" }
 cw-storage-plus = "^2.0"
 cw-utils        = "^2.0"
 schemars        = "^0.8"

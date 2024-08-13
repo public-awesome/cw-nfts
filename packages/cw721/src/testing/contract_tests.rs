@@ -13,14 +13,14 @@ use crate::msg::{
 };
 use crate::msg::{CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721QueryMsg};
 use crate::receiver::Cw721ReceiveMsg;
-use crate::state::{NftExtension, Trait, CREATOR, MINTER};
+use crate::state::{NftExtension, Trait, MINTER};
 use crate::{
     traits::{Cw721Execute, Cw721Query},
     Approval, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension,
     DefaultOptionalNftExtensionMsg, Expiration,
 };
 use crate::{CollectionExtension, CollectionInfoAndExtensionResponse, RoyaltyInfo};
-use cw_ownable::{Action, Ownership, OwnershipError};
+use cw_ownable::{get_ownership, Action, Ownership, OwnershipError};
 
 const CONTRACT_NAME: &str = "Magic Power";
 const SYMBOL: &str = "MGK";
@@ -113,7 +113,7 @@ fn test_instantiate() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    let creator_ownership = get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(creator.clone()), creator_ownership.owner);
     let collection_info = contract
         .query_collection_info_and_extension(deps.as_ref())
@@ -191,7 +191,7 @@ fn test_instantiate_with_collection_info_and_extension() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    let creator_ownership = get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(creator.clone()), creator_ownership.owner);
     let info = contract
         .query_collection_info_and_extension(deps.as_ref())
@@ -276,7 +276,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    let creator_ownership = get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(creator), creator_ownership.owner);
     let info = contract
         .query_collection_info_and_extension(deps.as_ref())
