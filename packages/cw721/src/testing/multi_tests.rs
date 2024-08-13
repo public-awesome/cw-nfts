@@ -1,5 +1,3 @@
-use std::f32::MIN;
-
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
@@ -312,7 +310,6 @@ fn test_operator() {
         .unwrap();
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 }
-
 /// Test backward compatibility using instantiate msg from a 0.16 version on latest contract.
 /// This ensures existing 3rd party contracts doesnt need to update as well.
 #[test]
