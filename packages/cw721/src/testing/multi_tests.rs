@@ -1,5 +1,3 @@
-use std::f32::MIN;
-
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
@@ -748,21 +746,20 @@ fn test_migration_legacy_to_latest() {
         // migrate
         let creator = app.api().addr_make(CREATOR_ADDR);
         let minter = app.api().addr_make(MINTER_ADDR);
-        let res = app
-            .execute(
-                admin,
-                WasmMsg::Migrate {
-                    contract_addr: cw721.to_string(),
-                    new_code_id: code_id_latest,
-                    msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
-                        minter: Some(minter.to_string()),
-                        creator: Some(creator.to_string()),
-                    })
-                    .unwrap(),
-                }
-                .into(),
-            )
-            .unwrap();
+        app.execute(
+            admin,
+            WasmMsg::Migrate {
+                contract_addr: cw721.to_string(),
+                new_code_id: code_id_latest,
+                msg: to_json_binary(&Cw721MigrateMsg::WithUpdate {
+                    minter: Some(minter.to_string()),
+                    creator: Some(creator.to_string()),
+                })
+                .unwrap(),
+            }
+            .into(),
+        )
+        .unwrap();
 
         // legacy minter user cant mint
         let err: Cw721ContractError = app
