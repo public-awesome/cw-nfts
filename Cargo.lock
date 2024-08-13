@@ -411,9 +411,9 @@ dependencies = [
 
 [[package]]
 name = "cpufeatures"
-version = "0.2.12"
+version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53fe5e26ff1b7aef8bca9c6080520cfb8d9333c7568e1829cef191a9723e5504"
+checksum = "51e852e6dc9a5bed1fae92dd2375037bf2b768725bf3be87811edee3249d09ad"
 dependencies = [
  "libc",
 ]
@@ -517,7 +517,7 @@ dependencies = [
 [[package]]
 name = "cw-address-like"
 version = "2.0.4"
-source = "git+https://github.com/mintthemoon/cw-plus-plus#eb4445e07cd0da2859c7313de569b83a773cc407"
+source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
 dependencies = [
  "cosmwasm-std 2.1.3",
 ]
@@ -560,7 +560,7 @@ dependencies = [
 [[package]]
 name = "cw-ownable"
 version = "0.6.0"
-source = "git+https://github.com/mintthemoon/cw-plus-plus#eb4445e07cd0da2859c7313de569b83a773cc407"
+source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
 dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
@@ -585,7 +585,7 @@ dependencies = [
 [[package]]
 name = "cw-ownable-derive"
 version = "0.6.0"
-source = "git+https://github.com/mintthemoon/cw-plus-plus#eb4445e07cd0da2859c7313de569b83a773cc407"
+source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1649,9 +1649,9 @@ checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
 
 [[package]]
 name = "serde"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b3e4cd94123dd520a128bcd11e34d9e9e423e7e3e50425cb1b4b1e3549d0284"
+checksum = "5665e14a49a4ea1b91029ba7d3bca9f299e1f7cfa194388ccc20f14743e784f2"
 dependencies = [
  "serde_derive",
 ]
@@ -1676,9 +1676,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.206"
+version = "1.0.207"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabfb6138d2383ea8208cf98ccf69cdfb1aff4088460681d84189aa259762f97"
+checksum = "6aea2634c86b0e8ef2cfdc0c340baede54ec27b1e46febd7f80dffb2aa44a00e"
 dependencies = [
  "proc-macro2",
  "quote",

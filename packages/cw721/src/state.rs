@@ -3,7 +3,7 @@ use cosmwasm_std::{
     from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Empty, Env, MessageInfo,
     StdResult, Storage, Timestamp,
 };
-use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
+use cw_ownable::OwnershipStore;
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
@@ -16,7 +16,6 @@ use crate::{traits::StateFactory, NftExtensionMsg};
 /// !!! Important note here: !!!
 /// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
 /// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
-pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
