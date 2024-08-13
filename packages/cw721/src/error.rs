@@ -76,12 +76,6 @@ pub enum Cw721ContractError {
     #[error("Trait display type in metadata must not be empty")]
     TraitDisplayTypeEmpty {},
 
-    #[error("Internal error. Missing argument: Deps")]
-    NoDeps,
-
     #[error("Internal error. Missing argument: Info")]
     NoInfo,
-
-    #[error("Internal error. Missing argument: Env")]
-    NoEnv,
 }

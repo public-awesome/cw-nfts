@@ -67,15 +67,15 @@ pub trait Contains {
 pub trait StateFactory<TState> {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&TState>,
     ) -> Result<TState, Cw721ContractError>;
     fn validate(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&TState>,
     ) -> Result<(), Cw721ContractError>;
@@ -84,8 +84,8 @@ pub trait StateFactory<TState> {
 impl StateFactory<Empty> for Empty {
     fn create(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<Empty, Cw721ContractError> {
@@ -94,8 +94,8 @@ impl StateFactory<Empty> for Empty {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<(), Cw721ContractError> {
@@ -188,7 +188,7 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
-                self.update_collection_info(deps, info.into(), env.into(), collection_info)
+                self.update_collection_info(deps, info.into(), env, collection_info)
             }
             Cw721ExecuteMsg::Mint {
                 token_id,
@@ -365,7 +365,7 @@ pub trait Cw721Execute<
         &self,
         deps: DepsMut,
         info: Option<&MessageInfo>,
-        env: Option<&Env>,
+        env: &Env,
         msg: CollectionInfoMsg<TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_collection_info::<TCollectionExtension, TCollectionExtensionMsg, TCustomResponseMsg>(
@@ -435,7 +435,7 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_nft_info::<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
             deps,
-            env.into(),
+            env,
             info.into(),
             token_id,
             token_uri,

@@ -386,8 +386,8 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<CollectionExtension<RoyaltyInfo>, Cw721ContractError> {
@@ -455,12 +455,11 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         _current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let sender = info.map(|i| i.sender.clone());
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
@@ -523,13 +522,12 @@ impl Cw721CustomMsg for RoyaltyInfoResponse {}
 impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<RoyaltyInfo, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         match current {
             // Some: update existing royalty info
             Some(current) => {
@@ -551,8 +549,8 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
@@ -627,8 +625,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&CollectionInfoAndExtensionResponse<TCollectionExtension>>,
     ) -> Result<CollectionInfoAndExtensionResponse<TCollectionExtension>, Cw721ContractError> {
@@ -653,7 +651,6 @@ where
             // None: create new metadata
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let env = env.ok_or(Cw721ContractError::NoEnv)?;
                 let new = CollectionInfoAndExtensionResponse {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
@@ -667,8 +664,8 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         _current: Option<&CollectionInfoAndExtensionResponse<TCollectionExtension>>,
     ) -> Result<(), Cw721ContractError> {
@@ -679,7 +676,6 @@ where
         if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
         }
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
         // - CREATOR store is empty/not initioized (like in instantiation)
         // - info is none (like in migration)
@@ -876,8 +872,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         optional_current: Option<&NftInfo<TNftExtension>>,
     ) -> Result<NftInfo<TNftExtension>, Cw721ContractError> {
@@ -898,7 +894,6 @@ where
             // None: create new NFT, note: msg is of same type, so we can clone it
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
                 let token_uri = empty_as_none(self.token_uri.clone());
                 Ok(NftInfo {
                     owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
@@ -912,12 +907,11 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftInfo<TNftExtension>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let info = info.ok_or(Cw721ContractError::NoInfo)?;
         if current.is_none() {
             // current is none: only minter can create new NFT
@@ -974,8 +968,8 @@ impl From<NftExtension> for NftExtensionMsg {
 impl StateFactory<NftExtension> for NftExtensionMsg {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftExtension>,
     ) -> Result<NftExtension, Cw721ContractError> {
@@ -1032,8 +1026,8 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftExtension>,
     ) -> Result<(), Cw721ContractError> {
@@ -1041,7 +1035,6 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
         // - creator and minter can create NFT metadata
         // - only creator can update NFT metadata
         if current.is_none() {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: minter and creator can create new NFT metadata
             let minter_check = assert_minter(deps.storage, &info.sender);
@@ -1050,7 +1043,6 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
                 return Err(Cw721ContractError::NotMinterOrCreator {});
             }
         } else {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT metadata
             assert_creator(deps.storage, &info.sender)?;
@@ -1088,8 +1080,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<Option<TState>, Cw721ContractError> {
@@ -1106,8 +1098,8 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<(), Cw721ContractError> {
