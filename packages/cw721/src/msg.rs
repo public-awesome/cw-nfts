@@ -200,6 +200,10 @@ pub enum Cw721QueryMsg<
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
+    /// Returns `ConfigResponse`
+    #[returns(ConfigResponse<TCollectionExtension>)]
+    GetConfig {},
+
     /// Returns `CollectionInfoAndExtensionResponse`
     #[returns(CollectionInfoAndExtensionResponse<TCollectionExtension>)]
     GetCollectionInfoAndExtension {},
@@ -252,8 +256,8 @@ pub enum Cw721QueryMsg<
         include_expired: Option<bool>,
     },
 
-    /// With Enumerable extension.
-    /// Returns all tokens owned by the given address, [] if unset.
+    /// Returns all tokens owned by the given address.
+    /// Same as `AllTokens` but with owner filter.
     #[returns(TokensResponse)]
     Tokens {
         owner: String,
@@ -386,8 +390,8 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<CollectionExtension<RoyaltyInfo>, Cw721ContractError> {
@@ -455,12 +459,11 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
     /// NOTE: In case `info` is not provided (like for migration), creator/minter assertion is skipped.
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         _current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let sender = info.map(|i| i.sender.clone());
         // start trading time can only be updated by minter
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
@@ -523,25 +526,24 @@ impl Cw721CustomMsg for RoyaltyInfoResponse {}
 impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<RoyaltyInfo, Cw721ContractError> {
         self.validate(deps, env, info, current)?;
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         match current {
             // Some: update existing royalty info
             Some(current) => {
                 let mut updated = current.clone();
-                updated.payment_address = deps.api.addr_validate(self.payment_address.as_str())?;
+                updated.payment_address = Addr::unchecked(self.payment_address.as_str()); // no check needed, since it is already done in validate
                 updated.share = self.share;
                 Ok(updated)
             }
             // None: create new royalty info
             None => {
                 let new = RoyaltyInfo {
-                    payment_address: deps.api.addr_validate(self.payment_address.as_str())?,
+                    payment_address: Addr::unchecked(self.payment_address.as_str()), // no check needed, since it is already done in validate
                     share: self.share,
                 };
                 Ok(new)
@@ -551,8 +553,8 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         current: Option<&RoyaltyInfo>,
     ) -> Result<(), Cw721ContractError> {
@@ -574,6 +576,8 @@ impl StateFactory<RoyaltyInfo> for RoyaltyInfoResponse {
                 "Share cannot be greater than {MAX_ROYALTY_SHARE_PCT}%"
             )));
         }
+        // validate payment address
+        deps.api.addr_validate(self.payment_address.as_str())?;
         Ok(())
     }
 }
@@ -585,6 +589,18 @@ impl From<RoyaltyInfo> for RoyaltyInfoResponse {
             share: royalty_info.share,
         }
     }
+}
+
+/// This is a wrapper around CollectionInfo that includes the extension.
+#[cw_serde]
+pub struct ConfigResponse<TCollectionExtension> {
+    pub num_tokens: u64,
+    pub minter_ownership: Ownership<Addr>,
+    pub creator_ownership: Ownership<Addr>,
+    pub withdraw_address: Option<String>,
+    pub collection_info: CollectionInfo,
+    pub collection_extension: TCollectionExtension,
+    pub contract_info: ContractInfoResponse,
 }
 
 /// This is a wrapper around CollectionInfo that includes the extension.
@@ -627,8 +643,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&CollectionInfoAndExtensionResponse<TCollectionExtension>>,
     ) -> Result<CollectionInfoAndExtensionResponse<TCollectionExtension>, Cw721ContractError> {
@@ -653,7 +669,6 @@ where
             // None: create new metadata
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let env = env.ok_or(Cw721ContractError::NoEnv)?;
                 let new = CollectionInfoAndExtensionResponse {
                     name: self.name.clone().unwrap(),
                     symbol: self.symbol.clone().unwrap(),
@@ -667,8 +682,8 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         _current: Option<&CollectionInfoAndExtensionResponse<TCollectionExtension>>,
     ) -> Result<(), Cw721ContractError> {
@@ -679,7 +694,6 @@ where
         if self.symbol.is_some() && self.symbol.clone().unwrap().is_empty() {
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
         }
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
         // - CREATOR store is empty/not initioized (like in instantiation)
         // - info is none (like in migration)
@@ -876,8 +890,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         optional_current: Option<&NftInfo<TNftExtension>>,
     ) -> Result<NftInfo<TNftExtension>, Cw721ContractError> {
@@ -898,10 +912,9 @@ where
             // None: create new NFT, note: msg is of same type, so we can clone it
             None => {
                 let extension = self.extension.create(deps, env, info, None)?;
-                let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
                 let token_uri = empty_as_none(self.token_uri.clone());
                 Ok(NftInfo {
-                    owner: deps.api.addr_validate(&self.owner)?, // only for creation we use owner, but not for update!
+                    owner: Addr::unchecked(&self.owner), // only for creation we use owner, but not for update!
                     approvals: vec![],
                     token_uri,
                     extension,
@@ -912,12 +925,11 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftInfo<TNftExtension>>,
     ) -> Result<(), Cw721ContractError> {
-        let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
         let info = info.ok_or(Cw721ContractError::NoInfo)?;
         if current.is_none() {
             // current is none: only minter can create new NFT
@@ -931,6 +943,8 @@ where
         if let Some(token_uri) = token_uri {
             Url::parse(token_uri.as_str())?;
         }
+        // validate owner
+        deps.api.addr_validate(&self.owner)?;
         Ok(())
     }
 }
@@ -974,8 +988,8 @@ impl From<NftExtension> for NftExtensionMsg {
 impl StateFactory<NftExtension> for NftExtensionMsg {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftExtension>,
     ) -> Result<NftExtension, Cw721ContractError> {
@@ -1032,8 +1046,8 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&NftExtension>,
     ) -> Result<(), Cw721ContractError> {
@@ -1041,7 +1055,6 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
         // - creator and minter can create NFT metadata
         // - only creator can update NFT metadata
         if current.is_none() {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: minter and creator can create new NFT metadata
             let minter_check = assert_minter(deps.storage, &info.sender);
@@ -1050,7 +1063,6 @@ impl StateFactory<NftExtension> for NftExtensionMsg {
                 return Err(Cw721ContractError::NotMinterOrCreator {});
             }
         } else {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT metadata
             assert_creator(deps.storage, &info.sender)?;
@@ -1088,8 +1100,8 @@ where
 {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<Option<TState>, Cw721ContractError> {
@@ -1106,8 +1118,8 @@ where
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&Option<TState>>,
     ) -> Result<(), Cw721ContractError> {

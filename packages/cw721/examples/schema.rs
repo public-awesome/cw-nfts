@@ -7,9 +7,9 @@ use cosmwasm_std::Empty;
 use cw721::{
     msg::{
         AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
-        CollectionInfoAndExtensionResponse, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg,
-        Cw721QueryMsg, MinterResponse, NftInfoResponse, NumTokensResponse, OperatorResponse,
-        OperatorsResponse, OwnerOfResponse, TokensResponse,
+        CollectionInfoAndExtensionResponse, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
+        Cw721MigrateMsg, Cw721QueryMsg, MinterResponse, NftInfoResponse, NumTokensResponse,
+        OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     receiver::Cw721ReceiveMsg,
     DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
@@ -67,6 +67,11 @@ fn main() {
         &schema_for!(CollectionInfoAndExtensionResponse<DefaultOptionalCollectionExtension>),
         &out_dir,
         "CollectionInfo",
+    );
+    export_schema_with_title(
+        &schema_for!(ConfigResponse<DefaultOptionalCollectionExtension>),
+        &out_dir,
+        "Config",
     );
     export_schema(&schema_for!(OwnerOfResponse), &out_dir);
     export_schema(&schema_for!(MinterResponse), &out_dir);

@@ -20,7 +20,7 @@ use cosmwasm_std::{
 use cw2::ContractVersion;
 use cw_ownable::Action;
 use cw_storage_plus::Item;
-use unit_tests::multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER_ADDR};
+use unit_tests::multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER1_ADDR};
 
 use super::*;
 
@@ -146,7 +146,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
     {
         let mut deps = mock_dependencies();
 
-        let info = mock_info(OTHER_ADDR, &[]);
+        let info = mock_info(OTHER1_ADDR, &[]);
         Cw721OnchainExtensions::default()
             .instantiate_with_version(
                 deps.as_mut(),
@@ -982,7 +982,7 @@ fn test_collection_info_update() {
             symbol: Some("new_collection_symbol".into()),
             extension: Some(updated_extension_msg),
         };
-        let info_other = mock_info(OTHER_ADDR, &[]);
+        let info_other = mock_info(OTHER1_ADDR, &[]);
         let err = contract
             .execute(
                 deps.as_mut(),

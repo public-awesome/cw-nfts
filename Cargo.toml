@@ -11,6 +11,8 @@ documentation = "https://docs.cosmwasm.com"
 rust-version  = "1.78"
 
 [workspace.dependencies]
+anyhow = "^1.0"
+bech32 = "^0.11"
 cosmwasm-schema = "^1.5"
 cosmwasm-std    = "^1.5"
 cw2             = "^1.1"
@@ -30,6 +32,7 @@ cw-storage-plus = "^1.1"
 cw-utils        = "^1.0"
 schemars        = "^0.8"
 serde           = { version = "^1.0", default-features = false, features = ["derive"] }
+sha2 = "^0.10"
 thiserror       = "^1.0"
 url             = "^2.5"
 

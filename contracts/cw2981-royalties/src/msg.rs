@@ -245,8 +245,8 @@ pub type MetadataWithRoyaltyMsg = MetadataWithRoyalty;
 impl StateFactory<MetadataWithRoyalty> for MetadataWithRoyaltyMsg {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&MetadataWithRoyalty>,
     ) -> Result<MetadataWithRoyalty, Cw721ContractError> {
@@ -303,8 +303,8 @@ impl StateFactory<MetadataWithRoyalty> for MetadataWithRoyaltyMsg {
 
     fn validate(
         &self,
-        deps: Option<Deps>,
-        _env: Option<&Env>,
+        deps: Deps,
+        _env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&MetadataWithRoyalty>,
     ) -> Result<(), Cw721ContractError> {
@@ -312,7 +312,6 @@ impl StateFactory<MetadataWithRoyalty> for MetadataWithRoyaltyMsg {
         // - creator and minter can create NFT metadata
         // - only creator can update NFT metadata
         if current.is_none() {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is none: minter and creator can create new NFT metadata
             let minter_check = assert_minter(deps.storage, &info.sender);
@@ -321,7 +320,6 @@ impl StateFactory<MetadataWithRoyalty> for MetadataWithRoyaltyMsg {
                 return Err(Cw721ContractError::NotMinterOrCreator {});
             }
         } else {
-            let deps = deps.ok_or(Cw721ContractError::NoDeps)?;
             let info = info.ok_or(Cw721ContractError::NoInfo)?;
             // current is some: only creator can update NFT metadata
             assert_creator(deps.storage, &info.sender)?;

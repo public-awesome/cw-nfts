@@ -1,5 +1,5 @@
 {
-  "contract_name": "cw721-metadata-onchain",
+  "contract_name": "cw721-base",
   "contract_version": "0.19.0",
   "idl_version": "1.0.0",
   "instantiate": {
@@ -392,7 +392,7 @@
                 "description": "Any custom extension used by this contract",
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/NftExtensionMsg"
+                    "$ref": "#/definitions/Empty"
                   },
                   {
                     "type": "null"
@@ -480,7 +480,7 @@
               "extension": {
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/NftExtensionMsg"
+                    "$ref": "#/definitions/Empty"
                   },
                   {
                     "type": "null"
@@ -767,73 +767,6 @@
           }
         ]
       },
-      "NftExtensionMsg": {
-        "type": "object",
-        "properties": {
-          "animation_url": {
-            "description": "NOTE: Empty string is handled as None",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "attributes": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "$ref": "#/definitions/Trait"
-            }
-          },
-          "background_color": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "external_url": {
-            "description": "NOTE: Empty string is handled as None",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image": {
-            "description": "NOTE: Empty string is handled as None",
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image_data": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "youtube_url": {
-            "description": "NOTE: Empty string is handled as None",
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
       "RoyaltyInfoResponse": {
         "type": "object",
         "required": [
@@ -857,28 +790,6 @@
             "$ref": "#/definitions/Uint64"
           }
         ]
-      },
-      "Trait": {
-        "type": "object",
-        "required": [
-          "trait_type",
-          "value"
-        ],
-        "properties": {
-          "display_type": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "trait_type": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
       },
       "Uint128": {
         "description": "A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u128` to get the value out:\n\n``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);\n\nlet b = Uint128::from(42u64); assert_eq!(b.u128(), 42);\n\nlet c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```",
@@ -1233,7 +1144,7 @@
               "extension": {
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/NftExtension"
+                    "$ref": "#/definitions/Empty"
                   },
                   {
                     "type": "null"
@@ -1477,69 +1388,6 @@
         "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
         "type": "object"
       },
-      "NftExtension": {
-        "type": "object",
-        "properties": {
-          "animation_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "attributes": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "$ref": "#/definitions/Trait"
-            }
-          },
-          "background_color": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "external_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "image_data": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "youtube_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
       "RoyaltyInfo": {
         "type": "object",
         "required": [
@@ -1563,28 +1411,6 @@
             "$ref": "#/definitions/Uint64"
           }
         ]
-      },
-      "Trait": {
-        "type": "object",
-        "required": [
-          "trait_type",
-          "value"
-        ],
-        "properties": {
-          "display_type": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "trait_type": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
       },
       "Uint64": {
         "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
@@ -1629,7 +1455,7 @@
   "responses": {
     "all_nft_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AllNftInfoResponse_for_Nullable_NftExtension",
+      "title": "AllNftInfoResponse_for_Nullable_Empty",
       "type": "object",
       "required": [
         "access",
@@ -1648,7 +1474,7 @@
           "description": "Data on the token itself,",
           "allOf": [
             {
-              "$ref": "#/definitions/NftInfoResponse_for_Nullable_NftExtension"
+              "$ref": "#/definitions/NftInfoResponse_for_Nullable_Empty"
             }
           ]
         }
@@ -1684,6 +1510,10 @@
             }
           },
           "additionalProperties": false
+        },
+        "Empty": {
+          "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+          "type": "object"
         },
         "Expiration": {
           "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
@@ -1732,77 +1562,14 @@
             }
           ]
         },
-        "NftExtension": {
-          "type": "object",
-          "properties": {
-            "animation_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "attributes": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "$ref": "#/definitions/Trait"
-              }
-            },
-            "background_color": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "description": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "external_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image_data": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "name": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "youtube_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "NftInfoResponse_for_Nullable_NftExtension": {
+        "NftInfoResponse_for_Nullable_Empty": {
           "type": "object",
           "properties": {
             "extension": {
               "description": "You can add any custom metadata here when you extend cw721-base",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftExtension"
+                  "$ref": "#/definitions/Empty"
                 },
                 {
                   "type": "null"
@@ -1847,28 +1614,6 @@
               "$ref": "#/definitions/Uint64"
             }
           ]
-        },
-        "Trait": {
-          "type": "object",
-          "required": [
-            "trait_type",
-            "value"
-          ],
-          "properties": {
-            "display_type": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "trait_type": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
         },
         "Uint64": {
           "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
@@ -3111,87 +2856,28 @@
     },
     "get_nft_by_extension": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Nullable_NftInfoResponse_for_Nullable_NftExtension",
+      "title": "Nullable_NftInfoResponse_for_Nullable_Empty",
       "anyOf": [
         {
-          "$ref": "#/definitions/NftInfoResponse_for_Nullable_NftExtension"
+          "$ref": "#/definitions/NftInfoResponse_for_Nullable_Empty"
         },
         {
           "type": "null"
         }
       ],
       "definitions": {
-        "NftExtension": {
-          "type": "object",
-          "properties": {
-            "animation_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "attributes": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "$ref": "#/definitions/Trait"
-              }
-            },
-            "background_color": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "description": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "external_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image_data": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "name": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "youtube_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "additionalProperties": false
+        "Empty": {
+          "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+          "type": "object"
         },
-        "NftInfoResponse_for_Nullable_NftExtension": {
+        "NftInfoResponse_for_Nullable_Empty": {
           "type": "object",
           "properties": {
             "extension": {
               "description": "You can add any custom metadata here when you extend cw721-base",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftExtension"
+                  "$ref": "#/definitions/Empty"
                 },
                 {
                   "type": "null"
@@ -3204,28 +2890,6 @@
                 "string",
                 "null"
               ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "Trait": {
-          "type": "object",
-          "required": [
-            "trait_type",
-            "value"
-          ],
-          "properties": {
-            "display_type": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "trait_type": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
             }
           },
           "additionalProperties": false
@@ -3257,14 +2921,14 @@
     },
     "nft_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "NftInfoResponse_for_Nullable_NftExtension",
+      "title": "NftInfoResponse_for_Nullable_Empty",
       "type": "object",
       "properties": {
         "extension": {
           "description": "You can add any custom metadata here when you extend cw721-base",
           "anyOf": [
             {
-              "$ref": "#/definitions/NftExtension"
+              "$ref": "#/definitions/Empty"
             },
             {
               "type": "null"
@@ -3281,90 +2945,9 @@
       },
       "additionalProperties": false,
       "definitions": {
-        "NftExtension": {
-          "type": "object",
-          "properties": {
-            "animation_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "attributes": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "$ref": "#/definitions/Trait"
-              }
-            },
-            "background_color": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "description": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "external_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "image_data": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "name": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "youtube_url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "Trait": {
-          "type": "object",
-          "required": [
-            "trait_type",
-            "value"
-          ],
-          "properties": {
-            "display_type": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "trait_type": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
+        "Empty": {
+          "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+          "type": "object"
         }
       }
     },

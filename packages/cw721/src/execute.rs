@@ -60,8 +60,7 @@ where
         symbol: Some(msg.symbol),
         extension: msg.collection_info_extension,
     };
-    let collection_info =
-        collection_metadata_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
+    let collection_info = collection_metadata_msg.create(deps.as_ref(), env, info.into(), None)?;
     let extension_attributes = collection_info.extension.to_attributes_state()?;
     let collection_info = collection_info.into();
     config
@@ -128,7 +127,7 @@ where
     let config = Cw721Config::<TNftExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
-    check_can_send(deps.as_ref(), env, info, &token)?;
+    check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
     // set owner and remove existing approvals
     token.owner = deps.api.addr_validate(recipient)?;
     token.approvals = vec![];
@@ -204,7 +203,7 @@ where
     let config = Cw721Config::<TNftExtension>::default();
     let mut token = config.nft_info.load(deps.storage, token_id)?;
     // ensure we have permissions
-    check_can_approve(deps.as_ref(), env, info, &token)?;
+    check_can_approve(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
     // update the approval list (remove any for the same spender before adding)
     let spender_addr = deps.api.addr_validate(spender)?;
@@ -302,7 +301,7 @@ pub fn burn_nft<TCustomResponseMsg>(
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
     let config = Cw721Config::<Option<Empty>>::default();
     let token = config.nft_info.load(deps.storage, &token_id)?;
-    check_can_send(deps.as_ref(), env, info, &token)?;
+    check_can_send(deps.as_ref(), env, info.sender.as_str(), &token)?;
 
     config.nft_info.remove(deps.storage, &token_id)?;
     config.decrement_tokens(deps.storage)?;
@@ -316,7 +315,7 @@ pub fn burn_nft<TCustomResponseMsg>(
 pub fn update_collection_info<TCollectionExtension, TCollectionExtensionMsg, TCustomResponseMsg>(
     deps: DepsMut,
     info: Option<&MessageInfo>,
-    env: Option<&Env>,
+    env: &Env,
     msg: CollectionInfoMsg<TCollectionExtensionMsg>,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError>
 where
@@ -326,7 +325,7 @@ where
 {
     let config = Cw721Config::<Option<Empty>>::default();
     let current = query_collection_info_and_extension::<TCollectionExtension>(deps.as_ref())?;
-    let collection_info = msg.create(deps.as_ref().into(), env, info, Some(&current))?;
+    let collection_info = msg.create(deps.as_ref(), env, info, Some(&current))?;
     let extension_attributes = collection_info.extension.to_attributes_state()?;
     config
         .collection_info
@@ -367,7 +366,7 @@ where
         token_uri: token_uri.clone(),
         extension,
     };
-    let token = token_msg.create(deps.as_ref().into(), env.into(), info.into(), None)?;
+    let token = token_msg.create(deps.as_ref(), env, info.into(), None)?;
     let config = Cw721Config::<TNftExtension>::default();
     config
         .nft_info
@@ -419,7 +418,7 @@ pub fn update_creator_ownership<TCustomResponseMsg>(
 /// NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.
 pub fn update_nft_info<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
     deps: DepsMut,
-    env: Option<&Env>,
+    env: &Env,
     info: Option<&MessageInfo>,
     token_id: String,
     token_uri: Option<String>,
@@ -438,7 +437,7 @@ where
         token_uri,
         extension: msg,
     };
-    let updated = nft_info_msg.create(deps.as_ref().into(), env, info, Some(&current_nft_info))?;
+    let updated = nft_info_msg.create(deps.as_ref(), env, info, Some(&current_nft_info))?;
     contract.nft_info.save(deps.storage, &token_id, &updated)?;
     Ok(Response::new()
         .add_attribute("action", "update_nft_info")
@@ -504,21 +503,22 @@ pub fn withdraw_funds<TCustomResponseMsg>(
 pub fn check_can_approve<TNftExtension>(
     deps: Deps,
     env: &Env,
-    info: &MessageInfo,
+    sender: &str,
     token: &NftInfo<TNftExtension>,
 ) -> Result<(), Cw721ContractError>
 where
     TNftExtension: Cw721State,
 {
+    let sender = deps.api.addr_validate(sender)?;
     // owner can approve
-    if token.owner == info.sender {
+    if token.owner == sender {
         return Ok(());
     }
     // operator can approve
     let config = Cw721Config::<TNftExtension>::default();
     let op = config
         .operators
-        .may_load(deps.storage, (&token.owner, &info.sender))?;
+        .may_load(deps.storage, (&token.owner, &sender))?;
     match op {
         Some(ex) => {
             if ex.is_expired(&env.block) {
@@ -535,11 +535,12 @@ where
 pub fn check_can_send<TNftExtension>(
     deps: Deps,
     env: &Env,
-    info: &MessageInfo,
+    sender: &str,
     token: &NftInfo<TNftExtension>,
 ) -> Result<(), Cw721ContractError> {
+    let sender = deps.api.addr_validate(sender)?;
     // owner can send
-    if token.owner == info.sender {
+    if token.owner == sender {
         return Ok(());
     }
 
@@ -547,7 +548,7 @@ pub fn check_can_send<TNftExtension>(
     if token
         .approvals
         .iter()
-        .any(|apr| apr.spender == info.sender && !apr.is_expired(&env.block))
+        .any(|apr| apr.spender == sender && !apr.is_expired(&env.block))
     {
         return Ok(());
     }
@@ -557,7 +558,7 @@ pub fn check_can_send<TNftExtension>(
     let op = config
         .operators
         // has token owner approved/gave grant to sender for full control over owner's NFTs?
-        .may_load(deps.storage, (&token.owner, &info.sender))?;
+        .may_load(deps.storage, (&token.owner, &sender))?;
 
     match op {
         Some(ex) => {
@@ -649,7 +650,7 @@ pub fn migrate_minter(
         Cw721MigrateMsg::WithUpdate { minter, .. } => {
             if let Some(minter) = minter {
                 MINTER.initialize_owner(storage, api, Some(minter.as_str()))?;
-                return Ok(response.add_attribute("creator", minter));
+                return Ok(response.add_attribute("minter", minter));
             }
         }
     }

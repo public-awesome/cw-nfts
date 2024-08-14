@@ -35,8 +35,8 @@ use crate::{
     Attribute,
 };
 use crate::{
-    msg::AllInfoResponse,
-    query::{query_all_info, query_nft_by_extension},
+    msg::{AllInfoResponse, ConfigResponse},
+    query::{query_all_info, query_config, query_nft_by_extension},
     Approval,
 };
 
@@ -67,15 +67,15 @@ pub trait Contains {
 pub trait StateFactory<TState> {
     fn create(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&TState>,
     ) -> Result<TState, Cw721ContractError>;
     fn validate(
         &self,
-        deps: Option<Deps>,
-        env: Option<&Env>,
+        deps: Deps,
+        env: &Env,
         info: Option<&MessageInfo>,
         current: Option<&TState>,
     ) -> Result<(), Cw721ContractError>;
@@ -84,8 +84,8 @@ pub trait StateFactory<TState> {
 impl StateFactory<Empty> for Empty {
     fn create(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<Empty, Cw721ContractError> {
@@ -94,8 +94,8 @@ impl StateFactory<Empty> for Empty {
 
     fn validate(
         &self,
-        _deps: Option<Deps>,
-        _env: Option<&Env>,
+        _deps: Deps,
+        _env: &Env,
         _info: Option<&MessageInfo>,
         _current: Option<&Empty>,
     ) -> Result<(), Cw721ContractError> {
@@ -188,7 +188,7 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         match msg {
             Cw721ExecuteMsg::UpdateCollectionInfo { collection_info } => {
-                self.update_collection_info(deps, info.into(), env.into(), collection_info)
+                self.update_collection_info(deps, info.into(), env, collection_info)
             }
             Cw721ExecuteMsg::Mint {
                 token_id,
@@ -365,7 +365,7 @@ pub trait Cw721Execute<
         &self,
         deps: DepsMut,
         info: Option<&MessageInfo>,
-        env: Option<&Env>,
+        env: &Env,
         msg: CollectionInfoMsg<TCollectionExtensionMsg>,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_collection_info::<TCollectionExtension, TCollectionExtensionMsg, TCustomResponseMsg>(
@@ -435,7 +435,7 @@ pub trait Cw721Execute<
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         update_nft_info::<TNftExtension, TNftExtensionMsg, TCustomResponseMsg>(
             deps,
-            env.into(),
+            env,
             info.into(),
             token_id,
             token_uri,
@@ -494,6 +494,9 @@ pub trait Cw721Query<
             #[allow(deprecated)]
             Cw721QueryMsg::ContractInfo {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
+            )?),
+            Cw721QueryMsg::GetConfig {} => Ok(to_json_binary(
+                &self.query_all_collection_info(deps, env.contract.address.to_string())?,
             )?),
             Cw721QueryMsg::GetCollectionInfoAndExtension {} => Ok(to_json_binary(
                 &self.query_collection_info_and_extension(deps)?,
@@ -635,6 +638,17 @@ pub trait Cw721Query<
 
     fn query_collection_extension_attributes(&self, deps: Deps) -> StdResult<Vec<Attribute>> {
         query_collection_extension_attributes(deps)
+    }
+
+    fn query_all_collection_info(
+        &self,
+        deps: Deps,
+        contract_addr: impl Into<String>,
+    ) -> Result<ConfigResponse<TCollectionExtension>, Cw721ContractError>
+    where
+        TCollectionExtension: FromAttributesState,
+    {
+        query_config(deps, contract_addr)
     }
 
     fn query_collection_info_and_extension(
@@ -909,6 +923,15 @@ pub trait Cw721Calls<
         let req = Cw721QueryMsg::NumTokens {};
         let res: NumTokensResponse = self.query(querier, req)?;
         Ok(res.count)
+    }
+
+    /// This is a helper to get the metadata and extension data in one call
+    fn config<U: DeserializeOwned>(
+        &self,
+        querier: &QuerierWrapper,
+    ) -> StdResult<ConfigResponse<U>> {
+        let req = Cw721QueryMsg::GetConfig {};
+        self.query(querier, req)
     }
 
     /// This is a helper to get the metadata and extension data in one call

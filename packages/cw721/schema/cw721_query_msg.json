@@ -196,6 +196,20 @@
       "additionalProperties": false
     },
     {
+      "description": "Returns `ConfigResponse`",
+      "type": "object",
+      "required": [
+        "get_config"
+      ],
+      "properties": {
+        "get_config": {
+          "type": "object",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Returns `CollectionInfoAndExtensionResponse`",
       "type": "object",
       "required": [
@@ -384,7 +398,7 @@
       "additionalProperties": false
     },
     {
-      "description": "With Enumerable extension. Returns all tokens owned by the given address, [] if unset.",
+      "description": "Returns all tokens owned by the given address. Same as `AllTokens` but with owner filter.",
       "type": "object",
       "required": [
         "tokens"
