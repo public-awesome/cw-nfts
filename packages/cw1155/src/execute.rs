@@ -689,16 +689,22 @@ pub trait Cw1155Execute<
         let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
         let operator = &info.sender;
 
-        let owner_balance = config
-            .balances
-            .load(storage, (owner.clone(), token_id.to_string()))?;
-        let mut balance_update = TokenAmount {
+        let balance_update = TokenAmount {
             token_id: token_id.to_string(),
-            amount: owner_balance.amount.min(amount),
+            amount,
         };
 
         // owner or all operator can execute
         if owner == operator || config.verify_all_approval(storage, env, owner, operator) {
+            let owner_balance = config
+                .balances
+                .load(storage, (owner.clone(), token_id.to_string()))?;
+            if owner_balance.amount < amount {
+                return Err(Cw1155ContractError::NotEnoughTokens {
+                    available: owner_balance.amount,
+                    requested: amount,
+                });
+            }
             return Ok(balance_update);
         }
 
@@ -706,7 +712,12 @@ pub trait Cw1155Execute<
         if let Some(token_approval) =
             self.get_active_token_approval(storage, env, owner, operator, token_id)
         {
-            balance_update.amount = balance_update.amount.min(token_approval.amount);
+            if token_approval.amount < amount {
+                return Err(Cw1155ContractError::NotEnoughTokens {
+                    available: token_approval.amount,
+                    requested: amount,
+                });
+            }
             return Ok(balance_update);
         }
 
