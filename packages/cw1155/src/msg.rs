@@ -112,6 +112,12 @@ pub enum Cw1155QueryMsg<TMetadataExtension, TQueryExtensionMsg> {
     /// Returns the current balance of the given account, 0 if unset.
     #[returns(BalanceResponse)]
     BalanceOf(OwnerToken),
+    #[returns(OwnersOfResponse)]
+    OwnersOf {
+        token_id: String,
+        limit: Option<u32>,
+        start_after: Option<String>,
+    },
     /// Returns the current balance of the given batch of accounts/tokens, 0 if unset.
     #[returns(BalancesResponse)]
     BalanceOfBatch(Vec<OwnerToken>),
@@ -271,4 +277,10 @@ pub struct Balance {
     pub token_id: String,
     pub owner: Addr,
     pub amount: Uint128,
+}
+
+#[cw_serde]
+pub struct OwnersOfResponse {
+    pub balances: Vec<Balance>,
+    pub count: u64,
 }

@@ -9,7 +9,7 @@ use serde::Serialize;
 
 use crate::msg::{
     ApprovedForAllResponse, Balance, BalanceResponse, BalancesResponse, Cw1155QueryMsg,
-    IsApprovedForAllResponse, OwnerToken,
+    IsApprovedForAllResponse, OwnerToken, OwnersOfResponse,
 };
 use crate::msg::{NumTokensResponse, TokenInfoResponse};
 use crate::state::Cw1155Config;
@@ -56,6 +56,24 @@ pub trait Cw1155Query<
                 to_json_binary(&BalanceResponse {
                     balance: balance.amount,
                 })
+            }
+            Cw1155QueryMsg::OwnersOf{ token_id, limit, start_after } => {
+                let config = Cw1155Config::<TMetadataExtension, TCustomResponseMessage, TMetadataExtensionMsg, TQueryExtensionMsg>::default();
+                let start_after = start_after.map(|address| Bound::exclusive((Addr::unchecked(address), token_id.to_string())));
+                let balances = config
+                    .balances
+                    .idx
+                    .token_id
+                    .prefix(token_id.to_string())
+                    .range_raw(deps.storage, start_after, None, Order::Ascending)
+                    .take(limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize)
+                    .map(|item| {
+                        let (_, v) = item.unwrap();
+                        v
+                    }).collect::<Vec<_>>();
+                let count = config.balances.idx.token_id.prefix(token_id)
+                    .keys(deps.storage, None, None, Order::Ascending).count() as u64;
+                to_json_binary(&OwnersOfResponse{ balances, count })
             }
             Cw1155QueryMsg::AllBalances {
                 token_id,
