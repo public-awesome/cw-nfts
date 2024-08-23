@@ -264,7 +264,7 @@ impl IntoIterator for UpdateMetadataEvent {
     }
 }
 
-pub fn event_action(action: &str, tokens: &Vec<TokenAmount>) -> Attribute {
+pub fn event_action(action: &str, tokens: &[TokenAmount]) -> Attribute {
     let action = format!(
         "{}_{}",
         action,

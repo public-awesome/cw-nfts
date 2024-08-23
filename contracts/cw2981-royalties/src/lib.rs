@@ -12,9 +12,7 @@ use cw721::{
 pub use query::{check_royalties, query_royalties_info};
 
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{to_json_binary, Empty};
-
-use crate::error::ContractError;
+use cosmwasm_std::Empty;
 
 // Version info for migration
 const CONTRACT_NAME: &str = "crates.io:cw2981-royalties";
@@ -142,6 +140,7 @@ mod tests {
 
     use cosmwasm_std::{from_json, Uint128};
 
+    use crate::error::ContractError;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw721::msg::Cw721InstantiateMsg;
     use cw721::traits::Cw721Query;
