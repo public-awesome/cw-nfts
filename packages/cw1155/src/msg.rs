@@ -284,3 +284,9 @@ pub struct OwnersOfResponse {
     pub balances: Vec<Balance>,
     pub count: u64,
 }
+
+#[cw_serde]
+pub struct CollectionInfo {
+    pub name: String,
+    pub symbol: String,
+}

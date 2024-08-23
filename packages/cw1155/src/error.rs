@@ -31,4 +31,7 @@ pub enum Cw1155ContractError {
         available: Uint128,
         requested: Uint128,
     },
+
+    #[error("Must provide either 'token_uri' or 'extension' to update.")]
+    NoUpdatesRequested {},
 }

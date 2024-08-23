@@ -12,10 +12,14 @@ repository    = { workspace = true }
 homepage      = { workspace = true }
 documentation = { workspace = true }
 
+[lib]
+doctest      = false # disable doc tests
+
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
 cw-ownable      = { workspace = true }
+cw-paginate-storage  = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 cw2             = { workspace = true }
@@ -23,9 +27,15 @@ cw721-016       = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }
+url             = { workspace = true }
 
 [dev-dependencies]
+anyhow = { workspace = true }
+bech32 = { workspace = true }
 cw-multi-test   = { workspace = true }
+cw721-base-015  = { workspace = true, features = ["library"] }
 cw721-base-016  = { workspace = true, features = ["library"] }
+cw721-metadata-onchain-016 = { workspace = true}
 cw721-base-017  = { workspace = true, features = ["library"] }
 cw721-base-018  = { workspace = true, features = ["library"] }
+sha2 = { workspace = true }

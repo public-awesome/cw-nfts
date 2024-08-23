@@ -1,6 +1,6 @@
 [package]
 name          = "cw721-base"
-description   = "Basic implementation cw721 NFTs"
+description   = "`cw721-base` with generic `TNftExtension` and `TCollectionExtension` for empty, on-chain metadata, or custom extensions"
 authors       = [
   "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
@@ -15,6 +15,7 @@ documentation = { workspace = true }
 rust-version  = { workspace = true }
 
 [lib]
+doctest      = false # disable doc tests
 crate-type = ["cdylib", "rlib"]
 
 [features]
@@ -30,7 +31,3 @@ cw-ownable      = { workspace = true }
 cw2             = { workspace = true }
 cw721           = { workspace = true }
 serde           = { workspace = true }
-
-[dev-dependencies]
-cw721-017       = { workspace = true }
-cw721-018       = { workspace = true }

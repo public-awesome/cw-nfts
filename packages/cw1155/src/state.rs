@@ -1,7 +1,6 @@
-use crate::msg::{Balance, TokenApproval};
+use crate::msg::{Balance, CollectionInfo, TokenApproval};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, CustomMsg, Env, StdError, StdResult, Storage, Uint128};
-use cw721::state::CollectionInfo;
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
@@ -188,3 +187,5 @@ impl<'a> IndexList<Balance> for BalanceIndexes<'a> {
         Box::new(v.into_iter())
     }
 }
+
+pub type DefaultOptionMetadataExtension = Option<String>;

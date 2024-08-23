@@ -3,7 +3,7 @@ use cw1155::msg::{Cw1155ExecuteMsg, Cw1155QueryMsg};
 use cw1155::state::Cw1155Config;
 use cw1155_base::Cw1155Contract;
 use cw2981_royalties::msg::QueryMsg as Cw2981QueryMsg;
-use cw2981_royalties::Extension;
+use cw2981_royalties::DefaultOptionMetadataExtensionWithRoyalty;
 
 mod query;
 pub use query::query_royalties_info;
@@ -15,10 +15,14 @@ pub use error::Cw1155RoyaltiesContractError;
 const CONTRACT_NAME: &str = "crates.io:cw1155-royalties";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub type Cw1155RoyaltiesContract<'a> = Cw1155Contract<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
-pub type Cw1155RoyaltiesExecuteMsg = Cw1155ExecuteMsg<Extension, Empty>;
-pub type Cw1155RoyaltiesQueryMsg = Cw1155QueryMsg<Extension, Cw2981QueryMsg>;
-pub type Cw1155RoyaltiesConfig<'a> = Cw1155Config<'a, Extension, Empty, Empty, Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesContract<'a> =
+    Cw1155Contract<'a, DefaultOptionMetadataExtensionWithRoyalty, Empty, Empty, Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesExecuteMsg =
+    Cw1155ExecuteMsg<DefaultOptionMetadataExtensionWithRoyalty, Empty>;
+pub type Cw1155RoyaltiesQueryMsg =
+    Cw1155QueryMsg<DefaultOptionMetadataExtensionWithRoyalty, Cw2981QueryMsg>;
+pub type Cw1155RoyaltiesConfig<'a> =
+    Cw1155Config<'a, DefaultOptionMetadataExtensionWithRoyalty, Empty, Empty, Cw2981QueryMsg>;
 
 #[cfg(not(feature = "library"))]
 pub mod entry {
@@ -29,7 +33,7 @@ pub mod entry {
     use cw1155::execute::Cw1155Execute;
     use cw1155::query::Cw1155Query;
     use cw2981_royalties::msg::QueryMsg as Cw2981QueryMsg;
-    use cw2981_royalties::{check_royalties, Metadata};
+    use cw2981_royalties::{check_royalties, MetadataWithRoyalty};
 
     // This makes a conscious choice on the various generics used by the contract
     #[entry_point]
@@ -62,7 +66,7 @@ pub mod entry {
             msg:
                 cw1155::msg::Cw1155MintMsg {
                     extension:
-                        Some(Metadata {
+                        Some(MetadataWithRoyalty {
                             royalty_percentage: Some(royalty_percentage),
                             royalty_payment_address,
                             ..
@@ -113,7 +117,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cw1155::msg::{Cw1155InstantiateMsg, Cw1155MintMsg};
     use cw2981_royalties::msg::{CheckRoyaltiesResponse, RoyaltiesInfoResponse};
-    use cw2981_royalties::{check_royalties, Metadata};
+    use cw2981_royalties::{check_royalties, MetadataWithRoyalty};
 
     const CREATOR: &str = "creator";
 
@@ -132,10 +136,10 @@ mod tests {
 
         let token_id = "Enterprise";
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
-        let extension = Some(Metadata {
+        let extension = Some(MetadataWithRoyalty {
             description: Some("Spaceship with Warp Drive".into()),
             name: Some("Starship USS Enterprise".to_string()),
-            ..Metadata::default()
+            ..MetadataWithRoyalty::default()
         });
         let exec_msg = Cw1155RoyaltiesExecuteMsg::Mint {
             recipient: "john".to_string(),
@@ -173,11 +177,11 @@ mod tests {
                 token_id: token_id.to_string(),
                 amount: Uint128::one(),
                 token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-                extension: Some(Metadata {
+                extension: Some(MetadataWithRoyalty {
                     description: Some("Spaceship with Warp Drive".into()),
                     name: Some("Starship USS Enterprise".to_string()),
                     royalty_percentage: Some(101),
-                    ..Metadata::default()
+                    ..MetadataWithRoyalty::default()
                 }),
             },
         };
@@ -206,10 +210,10 @@ mod tests {
                 token_id: token_id.to_string(),
                 amount: Uint128::one(),
                 token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-                extension: Some(Metadata {
+                extension: Some(MetadataWithRoyalty {
                     description: Some("Spaceship with Warp Drive".into()),
                     name: Some("Starship USS Enterprise".to_string()),
-                    ..Metadata::default()
+                    ..MetadataWithRoyalty::default()
                 }),
             },
         };
@@ -251,12 +255,12 @@ mod tests {
                 token_id: token_id.to_string(),
                 amount: Uint128::one(),
                 token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
-                extension: Some(Metadata {
+                extension: Some(MetadataWithRoyalty {
                     description: Some("Spaceship with Warp Drive".into()),
                     name: Some("Starship USS Enterprise".to_string()),
                     royalty_payment_address: Some("jeanluc".to_string()),
                     royalty_percentage: Some(10),
-                    ..Metadata::default()
+                    ..MetadataWithRoyalty::default()
                 }),
             },
         };
@@ -292,12 +296,12 @@ mod tests {
                 token_id: voyager_token_id.to_string(),
                 amount: Uint128::one(),
                 token_uri: Some("https://starships.example.com/Starship/Voyager.json".into()),
-                extension: Some(Metadata {
+                extension: Some(MetadataWithRoyalty {
                     description: Some("Spaceship with Warp Drive".into()),
                     name: Some("Starship USS Voyager".to_string()),
                     royalty_payment_address: Some("janeway".to_string()),
                     royalty_percentage: Some(4),
-                    ..Metadata::default()
+                    ..MetadataWithRoyalty::default()
                 }),
             },
         };

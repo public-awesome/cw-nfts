@@ -7,7 +7,7 @@
       "description": "You can add any custom metadata here when you extend cw721-base",
       "anyOf": [
         {
-          "$ref": "#/definitions/Metadata"
+          "$ref": "#/definitions/NftExtension"
         },
         {
           "type": "null"
@@ -24,7 +24,7 @@
   },
   "additionalProperties": false,
   "definitions": {
-    "Metadata": {
+    "NftExtension": {
       "type": "object",
       "properties": {
         "animation_url": {

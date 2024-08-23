@@ -6,8 +6,7 @@ pub mod state;
 pub use crate::state::Cw1155Contract;
 use cosmwasm_std::Empty;
 use cw1155::msg::{Cw1155ExecuteMsg, Cw1155QueryMsg};
-use cw1155::state::Cw1155Config;
-use cw721::state::DefaultOptionMetadataExtension;
+use cw1155::state::{Cw1155Config, DefaultOptionMetadataExtension};
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw1155-base";
@@ -30,7 +29,7 @@ pub mod entry {
     use cw1155::execute::Cw1155Execute;
     use cw1155::msg::{Cw1155ExecuteMsg, Cw1155InstantiateMsg, Cw1155QueryMsg};
     use cw1155::query::Cw1155Query;
-    use cw721::state::DefaultOptionMetadataExtension;
+    use cw1155::state::DefaultOptionMetadataExtension;
 
     // This makes a conscious choice on the various generics used by the contract
     #[cfg_attr(not(feature = "library"), entry_point)]

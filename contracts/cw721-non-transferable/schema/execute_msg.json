@@ -3,6 +3,8 @@
   "title": "ExecuteMsg",
   "oneOf": [
     {
+      "description": "Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!",
+      "deprecated": true,
       "type": "object",
       "required": [
         "update_ownership"
@@ -10,6 +12,52 @@
       "properties": {
         "update_ownership": {
           "$ref": "#/definitions/Action"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_minter_ownership"
+      ],
+      "properties": {
+        "update_minter_ownership": {
+          "$ref": "#/definitions/Action"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_creator_ownership"
+      ],
+      "properties": {
+        "update_creator_ownership": {
+          "$ref": "#/definitions/Action"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "The creator is the only one eligible to update `CollectionInfo`.",
+      "type": "object",
+      "required": [
+        "update_collection_info"
+      ],
+      "properties": {
+        "update_collection_info": {
+          "type": "object",
+          "required": [
+            "collection_info"
+          ],
+          "properties": {
+            "collection_info": {
+              "$ref": "#/definitions/CollectionInfoMsg_for_Nullable_CollectionExtensionMsg_for_RoyaltyInfoResponse"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -204,7 +252,7 @@
               "description": "Any custom extension used by this contract",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Metadata"
+                  "$ref": "#/definitions/NftExtensionMsg"
                 },
                 {
                   "type": "null"
@@ -255,13 +303,13 @@
       "additionalProperties": false
     },
     {
-      "description": "Extension msg",
+      "description": "Custom msg execution. This is a no-op in default implementation.",
       "type": "object",
       "required": [
-        "extension"
+        "update_extension"
       ],
       "properties": {
-        "extension": {
+        "update_extension": {
           "type": "object",
           "required": [
             "msg"
@@ -269,6 +317,45 @@
           "properties": {
             "msg": {
               "$ref": "#/definitions/Empty"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`). NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.",
+      "type": "object",
+      "required": [
+        "update_nft_info"
+      ],
+      "properties": {
+        "update_nft_info": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "extension": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/NftExtensionMsg"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "token_id": {
+              "type": "string"
+            },
+            "token_uri": {
+              "description": "NOTE: Empty string is handled as None",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "additionalProperties": false
@@ -406,6 +493,89 @@
         }
       }
     },
+    "CollectionExtensionMsg_for_RoyaltyInfoResponse": {
+      "description": "NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "explicit_content": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "external_link": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "royalty_info": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RoyaltyInfoResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "start_trading_time": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "CollectionInfoMsg_for_Nullable_CollectionExtensionMsg_for_RoyaltyInfoResponse": {
+      "type": "object",
+      "properties": {
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CollectionExtensionMsg_for_RoyaltyInfoResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Decimal": {
+      "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
+      "type": "string"
+    },
     "Empty": {
       "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
       "type": "object"
@@ -457,10 +627,11 @@
         }
       ]
     },
-    "Metadata": {
+    "NftExtensionMsg": {
       "type": "object",
       "properties": {
         "animation_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
@@ -488,12 +659,14 @@
           ]
         },
         "external_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
           ]
         },
         "image": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
@@ -512,10 +685,27 @@
           ]
         },
         "youtube_url": {
+          "description": "NOTE: Empty string is handled as None",
           "type": [
             "string",
             "null"
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RoyaltyInfoResponse": {
+      "type": "object",
+      "required": [
+        "payment_address",
+        "share"
+      ],
+      "properties": {
+        "payment_address": {
+          "type": "string"
+        },
+        "share": {
+          "$ref": "#/definitions/Decimal"
         }
       },
       "additionalProperties": false

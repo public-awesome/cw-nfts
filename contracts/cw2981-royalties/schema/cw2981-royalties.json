@@ -7,10 +7,26 @@
     "title": "InstantiateMsg",
     "type": "object",
     "required": [
+      "collection_info_extension",
       "name",
       "symbol"
     ],
     "properties": {
+      "collection_info_extension": {
+        "description": "Optional extension of the collection metadata",
+        "allOf": [
+          {
+            "$ref": "#/definitions/Empty"
+          }
+        ]
+      },
+      "creator": {
+        "description": "Sets the creator of collection. The creator is the only one eligible to update `CollectionInfo`.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
       "minter": {
         "description": "The minter is the only one who can create new NFTs. This is designed for a base NFT that is controlled by an external program or contract. You will likely replace this with custom logic in custom NFTs",
         "type": [
@@ -33,13 +49,21 @@
         ]
       }
     },
-    "additionalProperties": false
+    "additionalProperties": false,
+    "definitions": {
+      "Empty": {
+        "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+        "type": "object"
+      }
+    }
   },
   "execute": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ExecuteMsg",
     "oneOf": [
       {
+        "description": "Deprecated: use UpdateMinterOwnership instead! Will be removed in next release!",
+        "deprecated": true,
         "type": "object",
         "required": [
           "update_ownership"
@@ -47,6 +71,52 @@
         "properties": {
           "update_ownership": {
             "$ref": "#/definitions/Action"
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_minter_ownership"
+        ],
+        "properties": {
+          "update_minter_ownership": {
+            "$ref": "#/definitions/Action"
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "update_creator_ownership"
+        ],
+        "properties": {
+          "update_creator_ownership": {
+            "$ref": "#/definitions/Action"
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "The creator is the only one eligible to update `CollectionInfo`.",
+        "type": "object",
+        "required": [
+          "update_collection_info"
+        ],
+        "properties": {
+          "update_collection_info": {
+            "type": "object",
+            "required": [
+              "collection_info"
+            ],
+            "properties": {
+              "collection_info": {
+                "$ref": "#/definitions/CollectionInfoMsg_for_Empty"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
@@ -241,7 +311,7 @@
                 "description": "Any custom extension used by this contract",
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/Metadata"
+                    "$ref": "#/definitions/MetadataWithRoyalty"
                   },
                   {
                     "type": "null"
@@ -292,13 +362,13 @@
         "additionalProperties": false
       },
       {
-        "description": "Extension msg",
+        "description": "Custom msg execution. This is a no-op in default implementation.",
         "type": "object",
         "required": [
-          "extension"
+          "update_extension"
         ],
         "properties": {
-          "extension": {
+          "update_extension": {
             "type": "object",
             "required": [
               "msg"
@@ -306,6 +376,45 @@
             "properties": {
               "msg": {
                 "$ref": "#/definitions/Empty"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "The creator is the only one eligible to update NFT's token uri and onchain metadata (`NftInfo.extension`). NOTE: approvals and owner are not affected by this call, since they belong to the NFT owner.",
+        "type": "object",
+        "required": [
+          "update_nft_info"
+        ],
+        "properties": {
+          "update_nft_info": {
+            "type": "object",
+            "required": [
+              "token_id"
+            ],
+            "properties": {
+              "extension": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/MetadataWithRoyalty"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "token_id": {
+                "type": "string"
+              },
+              "token_uri": {
+                "description": "NOTE: Empty string is handled as None",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false
@@ -443,6 +552,30 @@
           }
         }
       },
+      "CollectionInfoMsg_for_Empty": {
+        "type": "object",
+        "required": [
+          "extension"
+        ],
+        "properties": {
+          "extension": {
+            "$ref": "#/definitions/Empty"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symbol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "Empty": {
         "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
         "type": "object"
@@ -494,7 +627,7 @@
           }
         ]
       },
-      "Metadata": {
+      "MetadataWithRoyalty": {
         "type": "object",
         "properties": {
           "animation_url": {
@@ -836,6 +969,7 @@
         "additionalProperties": false
       },
       {
+        "deprecated": true,
         "type": "object",
         "required": [
           "contract_info"
@@ -852,10 +986,24 @@
         "description": "With MetaData Extension. Returns top-level metadata about the contract",
         "type": "object",
         "required": [
-          "get_collection_info"
+          "get_collection_info_and_extension"
         ],
         "properties": {
-          "get_collection_info": {
+          "get_collection_info_and_extension": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "deprecated": true,
+        "type": "object",
+        "required": [
+          "ownership"
+        ],
+        "properties": {
+          "ownership": {
             "type": "object",
             "additionalProperties": false
           }
@@ -865,10 +1013,23 @@
       {
         "type": "object",
         "required": [
-          "ownership"
+          "get_minter_ownership"
         ],
         "properties": {
-          "ownership": {
+          "get_minter_ownership": {
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "get_creator_ownership"
+        ],
+        "properties": {
+          "get_creator_ownership": {
             "type": "object",
             "additionalProperties": false
           }
@@ -994,6 +1155,7 @@
       },
       {
         "description": "Return the minter",
+        "deprecated": true,
         "type": "object",
         "required": [
           "minter"
@@ -1031,7 +1193,7 @@
               "msg": {
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/Metadata"
+                    "$ref": "#/definitions/MetadataWithRoyalty"
                   },
                   {
                     "type": "null"
@@ -1043,10 +1205,35 @@
           }
         },
         "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "get_collection_info_extension"
+        ],
+        "properties": {
+          "get_collection_info_extension": {
+            "type": "object",
+            "required": [
+              "msg"
+            ],
+            "properties": {
+              "msg": {
+                "$ref": "#/definitions/Empty"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
       }
     ],
     "definitions": {
-      "Metadata": {
+      "Empty": {
+        "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+        "type": "object"
+      },
+      "MetadataWithRoyalty": {
         "type": "object",
         "properties": {
           "animation_url": {
@@ -1158,7 +1345,7 @@
   "responses": {
     "all_nft_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AllNftInfoResponse_for_Nullable_Metadata",
+      "title": "AllNftInfoResponse_for_Nullable_MetadataWithRoyalty",
       "type": "object",
       "required": [
         "access",
@@ -1177,7 +1364,7 @@
           "description": "Data on the token itself,",
           "allOf": [
             {
-              "$ref": "#/definitions/NftInfoResponse_for_Nullable_Metadata"
+              "$ref": "#/definitions/NftInfoResponse_for_Nullable_MetadataWithRoyalty"
             }
           ]
         }
@@ -1261,7 +1448,7 @@
             }
           ]
         },
-        "Metadata": {
+        "MetadataWithRoyalty": {
           "type": "object",
           "properties": {
             "animation_url": {
@@ -1340,14 +1527,14 @@
           },
           "additionalProperties": false
         },
-        "NftInfoResponse_for_Nullable_Metadata": {
+        "NftInfoResponse_for_Nullable_MetadataWithRoyalty": {
           "type": "object",
           "properties": {
             "extension": {
               "description": "You can add any custom metadata here when you extend cw721-base",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Metadata"
+                  "$ref": "#/definitions/MetadataWithRoyalty"
                 },
                 {
                   "type": "null"
@@ -1777,44 +1964,329 @@
     },
     "contract_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollectionInfo",
+      "title": "CollectionInfoAndExtensionResponse_for_Nullable_Empty",
+      "description": "This is a wrapper around CollectionInfo that includes the extension.",
       "type": "object",
       "required": [
         "name",
-        "symbol"
+        "symbol",
+        "updated_at"
       ],
       "properties": {
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Empty"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "name": {
           "type": "string"
         },
         "symbol": {
           "type": "string"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/Timestamp"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "definitions": {
+        "Empty": {
+          "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+          "type": "object"
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
     },
     "extension": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Null",
       "type": "null"
     },
-    "get_collection_info": {
+    "get_collection_info_and_extension": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CollectionInfo",
+      "title": "CollectionInfoAndExtensionResponse_for_Nullable_Empty",
+      "description": "This is a wrapper around CollectionInfo that includes the extension.",
       "type": "object",
       "required": [
         "name",
-        "symbol"
+        "symbol",
+        "updated_at"
       ],
       "properties": {
+        "extension": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Empty"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "name": {
           "type": "string"
         },
         "symbol": {
           "type": "string"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/Timestamp"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "definitions": {
+        "Empty": {
+          "description": "An empty struct that serves as a placeholder in different places, such as contracts that don't set a custom message.\n\nIt is designed to be expressable in correct JSON and JSON Schema but contains no meaningful data. Previously we used enums without cases, but those cannot represented as valid JSON Schema (https://github.com/CosmWasm/cosmwasm/issues/451)",
+          "type": "object"
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "get_collection_info_extension": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Null",
+      "type": "null"
+    },
+    "get_creator_ownership": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ownership_for_Addr",
+      "description": "The contract's ownership info",
+      "type": "object",
+      "properties": {
+        "owner": {
+          "description": "The contract's current owner. `None` if the ownership has been renounced.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_expiry": {
+          "description": "The deadline for the pending owner to accept the ownership. `None` if there isn't a pending ownership transfer, or if a transfer exists and it doesn't have a deadline.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Expiration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_owner": {
+          "description": "The account who has been proposed to take over the ownership. `None` if there isn't a pending ownership transfer.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "Expiration": {
+          "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
+          "oneOf": [
+            {
+              "description": "AtHeight will expire when `env.block.height` >= height",
+              "type": "object",
+              "required": [
+                "at_height"
+              ],
+              "properties": {
+                "at_height": {
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0.0
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "description": "AtTime will expire when `env.block.time` >= time",
+              "type": "object",
+              "required": [
+                "at_time"
+              ],
+              "properties": {
+                "at_time": {
+                  "$ref": "#/definitions/Timestamp"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "description": "Never will never expire. Used to express the empty variant",
+              "type": "object",
+              "required": [
+                "never"
+              ],
+              "properties": {
+                "never": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
+    },
+    "get_minter_ownership": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Ownership_for_Addr",
+      "description": "The contract's ownership info",
+      "type": "object",
+      "properties": {
+        "owner": {
+          "description": "The contract's current owner. `None` if the ownership has been renounced.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_expiry": {
+          "description": "The deadline for the pending owner to accept the ownership. `None` if there isn't a pending ownership transfer, or if a transfer exists and it doesn't have a deadline.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Expiration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_owner": {
+          "description": "The account who has been proposed to take over the ownership. `None` if there isn't a pending ownership transfer.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Addr"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "Addr": {
+          "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+          "type": "string"
+        },
+        "Expiration": {
+          "description": "Expiration represents a point in time when some event happens. It can compare with a BlockInfo and will return is_expired() == true once the condition is hit (and for every block in the future)",
+          "oneOf": [
+            {
+              "description": "AtHeight will expire when `env.block.height` >= height",
+              "type": "object",
+              "required": [
+                "at_height"
+              ],
+              "properties": {
+                "at_height": {
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0.0
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "description": "AtTime will expire when `env.block.time` >= time",
+              "type": "object",
+              "required": [
+                "at_time"
+              ],
+              "properties": {
+                "at_time": {
+                  "$ref": "#/definitions/Timestamp"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "description": "Never will never expire. Used to express the empty variant",
+              "type": "object",
+              "required": [
+                "never"
+              ],
+              "properties": {
+                "never": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "Timestamp": {
+          "description": "A point in time in nanosecond precision.\n\nThis type can represent times from 1970-01-01T00:00:00Z to 2554-07-21T23:34:33Z.\n\n## Examples\n\n``` # use cosmwasm_std::Timestamp; let ts = Timestamp::from_nanos(1_000_000_202); assert_eq!(ts.nanos(), 1_000_000_202); assert_eq!(ts.seconds(), 1); assert_eq!(ts.subsec_nanos(), 202);\n\nlet ts = ts.plus_seconds(2); assert_eq!(ts.nanos(), 3_000_000_202); assert_eq!(ts.seconds(), 3); assert_eq!(ts.subsec_nanos(), 202); ```",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Uint64"
+            }
+          ]
+        },
+        "Uint64": {
+          "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
+          "type": "string"
+        }
+      }
     },
     "get_withdraw_address": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1841,14 +2313,14 @@
     },
     "nft_info": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "NftInfoResponse_for_Nullable_Metadata",
+      "title": "NftInfoResponse_for_Nullable_MetadataWithRoyalty",
       "type": "object",
       "properties": {
         "extension": {
           "description": "You can add any custom metadata here when you extend cw721-base",
           "anyOf": [
             {
-              "$ref": "#/definitions/Metadata"
+              "$ref": "#/definitions/MetadataWithRoyalty"
             },
             {
               "type": "null"
@@ -1865,7 +2337,7 @@
       },
       "additionalProperties": false,
       "definitions": {
-        "Metadata": {
+        "MetadataWithRoyalty": {
           "type": "object",
           "properties": {
             "animation_url": {
