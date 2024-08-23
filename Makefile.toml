@@ -6,19 +6,19 @@ skip_core_tasks = true
 
 [tasks.fmt]
 command = "cargo"
-args    = ["fmt", "--all", "--check"]
+args = ["fmt", "--all", "--check"]
 
 [tasks.test]
 command = "cargo"
-args    = ["test", "--locked"]
+args = ["test", "--locked"]
 
 [tasks.lint]
 command = "cargo"
-args    = ["clippy", "--tests", "--", "-D", "warnings"]
+args = ["clippy", "--tests", "--", "-D", "warnings"]
 
 [tasks.build]
 command = "cargo"
-args    = ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"]
+args = ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"]
 
 [tasks.optimize]
 # https://hub.docker.com/r/cosmwasm/workspace-optimizer/tags https://hub.docker.com/r/cosmwasm/workspace-optimizer-arm64/tags
@@ -32,7 +32,7 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  ${image}:0.16.0
+  ${image}:0.15.1
 """
 
 [tasks.schema]

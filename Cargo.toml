@@ -25,6 +25,8 @@ cw721-base-016  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0"
 cw721-metadata-onchain-016  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721-metadata-onchain" } # needed for testing legacy migration
 cw721-base-017  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721-base" } # needed for testing legacy migration
 cw721-base-018  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721-base" } # needed for testing legacy migration
+cw1155 = { path = "./packages/cw1155", version = "*" }
+cw1155-base = { path = "./contracts/cw1155-base", version = "*" }
 cw-multi-test   = { version = "^0.20", features = ["cosmwasm_1_2"] }
 cw-ownable      = { git = "https://github.com/public-awesome/cw-plus-plus.git", rev = "28c1a09bfc6b4f1942fefe3eb0b50faf9d3b1523"} # TODO: switch to official https://github.com/larry0x/cw-plus-plus once merged
 cw-paginate-storage = { version = "^2.4", git = "https://github.com/DA0-DA0/dao-contracts.git" }
