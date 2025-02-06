@@ -516,8 +516,9 @@ dependencies = [
 
 [[package]]
 name = "cw-address-like"
-version = "2.0.4"
-source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73553ee4dad5b1678977ff603e72c3fdd41518ca2b0bd9b245b21e4c72eafa9e"
 dependencies = [
  "cosmwasm-std 2.1.3",
 ]
@@ -559,12 +560,13 @@ dependencies = [
 
 [[package]]
 name = "cw-ownable"
-version = "0.6.0"
-source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed2f8ee96ac5342c795a0610410998fc075a95af8c796b6d16479cdffd2471f1"
 dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
- "cw-address-like 2.0.4",
+ "cw-address-like 2.0.0",
  "cw-ownable-derive 0.6.0",
  "cw-storage-plus 2.0.0",
  "cw-utils 2.0.0",
@@ -585,7 +587,8 @@ dependencies = [
 [[package]]
 name = "cw-ownable-derive"
 version = "0.6.0"
-source = "git+https://github.com/mintthemoon/cw-plus-plus?branch=dev#c30245f779a87732b29150d43e51ddd2d8997725"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e69178d27793063dd13812777709cf7d7860ba35a598094d4bd89e1b30c9341"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -769,7 +772,7 @@ version = "0.19.0"
 dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
- "cw-ownable 0.6.0",
+ "cw-ownable 2.1.0",
  "cw2 2.0.0",
  "cw721 0.19.0",
  "schemars",
@@ -846,7 +849,7 @@ dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
  "cw-multi-test",
- "cw-ownable 0.6.0",
+ "cw-ownable 2.1.0",
  "cw-storage-plus 2.0.0",
  "cw-utils 2.0.0",
  "cw2 2.0.0",
@@ -953,7 +956,7 @@ version = "0.19.0"
 dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
- "cw-ownable 0.6.0",
+ "cw-ownable 2.1.0",
  "cw2 2.0.0",
  "cw721 0.19.0",
  "serde",
@@ -966,7 +969,7 @@ dependencies = [
  "cosmwasm-schema 2.1.3",
  "cosmwasm-std 2.1.3",
  "cw-multi-test",
- "cw-ownable 0.6.0",
+ "cw-ownable 2.1.0",
  "cw-storage-plus 2.0.0",
  "cw2 2.0.0",
  "cw721 0.19.0",

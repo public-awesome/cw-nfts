@@ -10,6 +10,7 @@ use crate::{
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
 };
+use cosmwasm_std::testing::{mock_dependencies, MockApi};
 use cosmwasm_std::{
     Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
 };
@@ -23,6 +24,26 @@ pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
 pub const OTHER_ADDR: &str = "other";
 pub const NFT_OWNER_ADDR: &str = "nft_owner";
+
+pub struct MockAddrFactory<'a> {
+    api: MockApi,
+    addrs: std::collections::BTreeMap<&'a str, Addr>,
+}
+impl<'a> MockAddrFactory<'a> {
+    pub fn new(api: MockApi) -> Self {
+        Self {
+            api,
+            addrs: std::collections::BTreeMap::new(),
+        }
+    }
+
+    pub fn addr(&mut self, name: &'a str) -> Addr {
+        self.addrs
+            .entry(name)
+            .or_insert(self.api.addr_make(name))
+            .clone()
+    }
+}
 
 pub fn instantiate(
     deps: DepsMut,
@@ -94,9 +115,11 @@ fn query_nft_info(
 fn test_operator() {
     // --- setup ---
     let mut app = App::default();
-    let admin = Addr::unchecked("admin");
+    let deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let admin = addrs.addr("admin");
     let code_id = app.store_code(cw721_base_latest_contract());
-    let other = Addr::unchecked(OTHER_ADDR);
+    let other = addrs.addr(OTHER_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -104,8 +127,8 @@ fn test_operator() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(MINTER_ADDR.to_string()),
-                creator: Some(CREATOR_ADDR.to_string()),
+                minter: Some(addrs.addr(MINTER_ADDR).to_string()),
+                creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
                 collection_info_extension: None,
                 withdraw_address: None,
             },
@@ -115,8 +138,8 @@ fn test_operator() {
         )
         .unwrap();
     // mint
-    let minter = Addr::unchecked(MINTER_ADDR);
-    let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
+    let minter = addrs.addr(MINTER_ADDR);
+    let nft_owner = addrs.addr(NFT_OWNER_ADDR);
     app.execute_contract(
         minter,
         cw721.clone(),
@@ -289,7 +312,9 @@ fn test_operator() {
 fn test_instantiate_016_msg() {
     use cw721_base_016 as v16;
     let mut app = App::default();
-    let admin = || Addr::unchecked("admin");
+    let deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let mut admin = || addrs.addr("admin");
 
     let code_id_latest = app.store_code(cw721_base_latest_contract());
 
@@ -327,9 +352,11 @@ fn test_instantiate_016_msg() {
 fn test_update_nft_metadata() {
     // --- setup ---
     let mut app = App::default();
-    let admin = Addr::unchecked("admin");
+    let deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let admin = addrs.addr("admin");
     let code_id = app.store_code(cw721_base_latest_contract());
-    let creator = Addr::unchecked(CREATOR_ADDR);
+    let creator = addrs.addr(CREATOR_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -337,7 +364,7 @@ fn test_update_nft_metadata() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(MINTER_ADDR.to_string()),
+                minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                 creator: None, // in case of none, sender is creator
                 collection_info_extension: None,
                 withdraw_address: None,
@@ -348,8 +375,8 @@ fn test_update_nft_metadata() {
         )
         .unwrap();
     // mint
-    let minter = Addr::unchecked(MINTER_ADDR);
-    let nft_owner = Addr::unchecked(NFT_OWNER_ADDR);
+    let minter = addrs.addr(MINTER_ADDR);
+    let nft_owner = addrs.addr(NFT_OWNER_ADDR);
     let nft_metadata_msg = NftExtensionMsg {
         image: Some("ipfs://foo.bar/image.png".to_string()),
         image_data: Some("image data".to_string()),
