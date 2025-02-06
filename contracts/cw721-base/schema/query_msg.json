@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Cw721QueryMsg",
+  "title": "QueryMsg",
   "oneOf": [
     {
       "description": "Return the owner of the given token, error if token does not exist",
@@ -196,20 +196,6 @@
       "additionalProperties": false
     },
     {
-      "description": "Returns `ConfigResponse`",
-      "type": "object",
-      "required": [
-        "get_config"
-      ],
-      "properties": {
-        "get_config": {
-          "type": "object",
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
       "description": "Returns `CollectionInfoAndExtensionResponse`",
       "type": "object",
       "required": [
@@ -341,7 +327,7 @@
             "extension": {
               "anyOf": [
                 {
-                  "$ref": "#/definitions/NftExtension"
+                  "$ref": "#/definitions/Empty"
                 },
                 {
                   "type": "null"
@@ -398,7 +384,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Returns all tokens owned by the given address. Same as `AllTokens` but with owner filter.",
+      "description": "With Enumerable extension. Returns all tokens owned by the given address, [] if unset.",
       "type": "object",
       "required": [
         "tokens"
@@ -586,69 +572,6 @@
       "type": "object",
       "additionalProperties": false
     },
-    "NftExtension": {
-      "type": "object",
-      "properties": {
-        "animation_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "attributes": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/Trait"
-          }
-        },
-        "background_color": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "description": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "external_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "image": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "image_data": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "name": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "youtube_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
     "RoyaltyInfo": {
       "type": "object",
       "required": [
@@ -672,28 +595,6 @@
           "$ref": "#/definitions/Uint64"
         }
       ]
-    },
-    "Trait": {
-      "type": "object",
-      "required": [
-        "trait_type",
-        "value"
-      ],
-      "properties": {
-        "display_type": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "trait_type": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
     },
     "Uint64": {
       "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",

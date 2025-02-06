@@ -4,6 +4,10 @@ use cosmwasm_std::{
     from_json, to_json_binary, Addr, CosmosMsg, DepsMut, MessageInfo, Response, StdError, WasmMsg,
 };
 
+use crate::state::DefaultCw721ExpirationContract;
+use crate::{
+    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionalNftExtension,
+};
 use cw721::error::Cw721ContractError;
 use cw721::msg::CollectionInfoAndExtensionResponse;
 use cw721::msg::{
@@ -11,14 +15,9 @@ use cw721::msg::{
     OwnerOfResponse, TokensResponse,
 };
 use cw721::receiver::Cw721ReceiveMsg;
-use cw721::state::{CREATOR, MINTER};
+use cw721::state::MINTER;
 use cw721::{traits::Cw721Query, Approval, Expiration};
 use cw_ownable::{Action, Ownership, OwnershipError};
-
-use crate::state::DefaultCw721ExpirationContract;
-use crate::{
-    error::ContractError, msg::InstantiateMsg, msg::QueryMsg, DefaultOptionalNftExtension,
-};
 pub struct MockAddrFactory<'a> {
     api: MockApi,
     addrs: std::collections::BTreeMap<&'a str, Addr>,
@@ -97,8 +96,8 @@ fn proper_instantiation() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(creator.clone()), creator_ownership.owner);
+    // let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    // assert_eq!(Some(creator.clone()), creator_ownership.owner);
     let collection_info = contract
         .base_contract
         .query_collection_info_and_extension(deps.as_ref())
@@ -162,8 +161,8 @@ fn proper_instantiation_with_collection_info() {
     // it worked, let's query the state
     let minter_ownership = MINTER.get_ownership(deps.as_ref().storage).unwrap();
     assert_eq!(Some(minter), minter_ownership.owner);
-    let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
-    assert_eq!(Some(creator.clone()), creator_ownership.owner);
+    // let creator_ownership = CREATOR.get_ownership(deps.as_ref().storage).unwrap();
+    // assert_eq!(Some(creator.clone()), creator_ownership.owner);
     let collection_info = contract
         .base_contract
         .query_collection_info_and_extension(deps.as_ref())

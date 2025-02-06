@@ -6,15 +6,15 @@ use crate::{
         NftExtensionMsg, RoyaltyInfoResponse,
     },
     state::{
-        NftExtension, Trait, MAX_COLLECTION_DESCRIPTION_LENGTH,
-        MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
+        NftExtension, Trait, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
+        MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
     CollectionExtension, RoyaltyInfo,
 };
 use cosmwasm_std::{
     testing::{mock_dependencies, mock_env},
-    Addr, Api, Decimal, Timestamp,
+    Decimal, Timestamp,
 };
 use cw2::ContractVersion;
 use cw_ownable::{get_ownership, Action};
@@ -76,8 +76,8 @@ fn test_instantiation() {
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_info_extension: None,
-                minter: Some("minter".into()),
-                creator: Some("creator".into()),
+                minter: Some(addrs.addr("minter").into()),
+                creator: Some(addrs.addr("creator").into()),
                 withdraw_address: None,
             },
             "contract_name",
@@ -91,13 +91,13 @@ fn test_instantiation() {
         .unwrap()
         .owner
         .map(|a| a.into_string());
-    assert_eq!(minter, Some("minter".to_string()));
+    assert_eq!(minter, Some(addrs.addr("minter").to_string()));
 
     let creator = get_ownership(deps.as_ref().storage)
         .unwrap()
         .owner
         .map(|a| a.into_string());
-    assert_eq!(creator, Some("creator".to_string()));
+    assert_eq!(creator, Some(addrs.addr("creator").to_string()));
 
     //
     let version = cw2::get_contract_version(deps.as_ref().storage).unwrap();
@@ -154,8 +154,8 @@ fn test_instantiation_with_proper_minter_and_creator() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: None,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                    minter: Some(addrs.addr(MINTER_ADDR).into()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -164,9 +164,9 @@ fn test_instantiation_with_proper_minter_and_creator() {
             .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
-        assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
+        assert_eq!(minter, Some(addrs.addr(MINTER_ADDR)));
         let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
-        assert_eq!(creator, Some(Addr::unchecked(CREATOR_ADDR.to_string())));
+        assert_eq!(creator, Some(addrs.addr(CREATOR_ADDR)));
     }
     // case 3: sender is minter and creator is set
     {
@@ -182,7 +182,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: None,
-                    creator: Some(CREATOR_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).into()),
                     minter: None,
                     withdraw_address: None,
                 },
@@ -194,7 +194,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(info.sender));
         let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
-        assert_eq!(creator, Some(Addr::unchecked(CREATOR_ADDR.to_string())));
+        assert_eq!(creator, Some(addrs.addr(CREATOR_ADDR)));
     }
     // case 4: sender is creator and minter is set
     {
@@ -211,7 +211,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
                     symbol: "collection_symbol".into(),
                     collection_info_extension: None,
                     creator: None,
-                    minter: Some(MINTER_ADDR.into()),
+                    minter: Some(addrs.addr(MINTER_ADDR).into()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -220,7 +220,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
             .unwrap();
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
-        assert_eq!(minter, Some(Addr::unchecked(MINTER_ADDR.to_string())));
+        assert_eq!(minter, Some(addrs.addr(MINTER_ADDR)));
         let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(info.sender));
     }
@@ -241,7 +241,7 @@ fn test_instantiation_with_collection_info() {
             // no minter owner assertion on start trading time, so even creator can change this here
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
-                payment_address: Addr::unchecked("payment_address"),
+                payment_address: addrs.addr("payment_address"),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -255,7 +255,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -271,8 +271,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -301,7 +301,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -317,8 +317,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -338,7 +338,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("invalid_url".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -354,8 +354,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -375,7 +375,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -391,8 +391,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -409,7 +409,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -425,8 +425,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -448,7 +448,7 @@ fn test_instantiation_with_collection_info() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: (MAX_ROYALTY_SHARE_PCT * 2).to_string().parse().unwrap(),
             }),
         });
@@ -461,8 +461,8 @@ fn test_instantiation_with_collection_info() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                    minter: Some(addrs.addr(MINTER_ADDR).to_string()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -494,7 +494,7 @@ fn test_collection_info_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
-                payment_address: deps.api.addr_validate("payment_address").unwrap(),
+                payment_address: addrs.addr("payment_address"),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -508,7 +508,7 @@ fn test_collection_info_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -525,8 +525,8 @@ fn test_collection_info_update() {
                     name: "collection_name".into(),
                     symbol: "collection_symbol".into(),
                     collection_info_extension: instantiated_extension_msg,
-                    creator: Some(CREATOR_ADDR.into()),
-                    minter: Some(MINTER_ADDR.into()),
+                    creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                    minter: Some(addrs.addr(MINTER_ADDR).into()),
                     withdraw_address: None,
                 },
                 "contract_name",
@@ -574,7 +574,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: None, // start trading time belongs to minter - not creator!
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -612,7 +612,7 @@ fn test_collection_info_update() {
                 external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
                 start_trading_time: Some(Timestamp::from_seconds(0)),
                 royalty_info: Some(RoyaltyInfo {
-                    payment_address: Addr::unchecked("payment_address"),
+                    payment_address: addrs.addr("payment_address"),
                     share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                         .to_string()
                         .parse()
@@ -661,7 +661,7 @@ fn test_collection_info_update() {
                 external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
                 start_trading_time: Some(Timestamp::from_seconds(1)),
                 royalty_info: Some(RoyaltyInfo {
-                    payment_address: Addr::unchecked("payment_address"),
+                    payment_address: addrs.addr("payment_address"),
                     share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                         .to_string()
                         .parse()
@@ -684,7 +684,7 @@ fn test_collection_info_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -718,7 +718,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -750,7 +750,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -787,7 +787,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -822,7 +822,7 @@ fn test_collection_info_update() {
             external_link: Some("invalid_url".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -857,7 +857,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT + MAX_ROYALTY_SHARE_DELTA_PCT - 1)
                     .to_string()
                     .parse()
@@ -894,7 +894,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT + MAX_ROYALTY_SHARE_DELTA_PCT + 1)
                     .to_string()
                     .parse()
@@ -937,7 +937,7 @@ fn test_collection_info_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -971,7 +971,7 @@ fn test_collection_info_update() {
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
             start_trading_time: None,
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -1055,7 +1055,7 @@ fn test_collection_info_update() {
             external_link: Some("https://moonphases.org".to_string()),
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
-                payment_address: "payment_address".into(),
+                payment_address: addrs.addr("payment_address").to_string(),
                 share: Decimal::percent(MAX_ROYALTY_SHARE_PCT)
                     .to_string()
                     .parse()
@@ -1160,7 +1160,7 @@ fn test_nft_mint() {
         let token_uri = Some("https://starships.example.com/Starship/Enterprise.json".into());
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.to_string(),
-            owner: "john".to_string(),
+            owner: addrs.addr("john").to_string(),
             token_uri: token_uri.clone(),
             extension: None,
         };
@@ -1176,7 +1176,7 @@ fn test_nft_mint() {
         // mint with empty token_uri
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.to_string(), // already minted/claimed
-            owner: "john".to_string(),
+            owner: addrs.addr("john").to_string(),
             token_uri: "".to_string().into(), // empty token_uri
             extension: None,
         };
@@ -1188,7 +1188,7 @@ fn test_nft_mint() {
         let info = addrs.info("john");
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: "Enterprise".to_string(),
-            owner: "john".to_string(),
+            owner: addrs.addr("john").to_string(),
             token_uri: Some("https://starships.example.com/Starship/Enterprise.json".into()),
             extension: None,
         };
@@ -1237,7 +1237,7 @@ fn test_nft_mint() {
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: nft_1.to_string(),
-            owner: "john".to_string(),
+            owner: addrs.addr("john").to_string(),
             token_uri: uri_1.clone(),
             extension: extension_1_msg.clone(),
         };
@@ -1278,7 +1278,7 @@ fn test_nft_mint() {
         });
         let exec_msg = Cw721ExecuteMsg::Mint {
             token_id: nft_2.to_string(),
-            owner: "allen".to_string(),
+            owner: addrs.addr("allen").to_string(),
             token_uri: uri_2.clone(),
             extension: extension_2_msg.clone(),
         };

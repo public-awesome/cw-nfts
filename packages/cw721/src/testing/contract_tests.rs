@@ -311,7 +311,7 @@ fn test_mint() {
     let token_id1 = "petrify".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: Some("invalid_uri".to_string()),
         extension: None,
     };
@@ -332,7 +332,7 @@ fn test_mint() {
     let token_uri = "https://www.merriam-webster.com/dictionary/petrify".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: Some(token_uri.clone()),
         extension: None,
     };
@@ -375,7 +375,7 @@ fn test_mint() {
     assert_eq!(
         owner,
         OwnerOfResponse {
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             approvals: vec![],
         }
     );
@@ -383,7 +383,7 @@ fn test_mint() {
     // Cannot mint same token_id again
     let mint_msg2 = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: String::from("hercules"),
+        owner: addrs.addr("hercules").to_string(),
         token_uri: None,
         extension: None,
     };
@@ -404,7 +404,7 @@ fn test_mint() {
     let token_id2 = "id2".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id2.clone(),
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: Some("".to_string()), // empty token uri
         extension: None,
     };
@@ -440,7 +440,7 @@ fn test_mint() {
     assert_eq!(
         owner,
         OwnerOfResponse {
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             approvals: vec![],
         }
     );
@@ -456,7 +456,7 @@ fn test_mint() {
     let token_id3 = "id3".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id3.clone(),
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: None, // empty token uri
         extension: None,
     };
@@ -492,7 +492,7 @@ fn test_mint() {
     assert_eq!(
         owner,
         OwnerOfResponse {
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             approvals: vec![],
         }
     );
@@ -516,7 +516,7 @@ fn test_update_nft_info() {
     let token_id = "1".to_string();
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: String::from("owner"),
+        owner: addrs.addr("owner").to_string(),
         token_uri: Some("ipfs://foo.bar".to_string()),
         extension: None,
     };
@@ -673,7 +673,7 @@ fn test_mint_with_metadata() {
         };
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri),
             extension: Some(valid_extension_msg.clone()),
         };
@@ -700,7 +700,7 @@ fn test_mint_with_metadata() {
             Empty,
         >::Mint {
             token_id: "2".to_string(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: None,
             extension: Some(NftExtensionMsg {
                 image: None,
@@ -742,7 +742,7 @@ fn test_mint_with_metadata() {
         metadata.description = Some("".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: None,
             extension: Some(metadata),
         };
@@ -755,7 +755,7 @@ fn test_mint_with_metadata() {
         metadata.name = Some("".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: None,
             extension: Some(metadata),
         };
@@ -768,7 +768,7 @@ fn test_mint_with_metadata() {
         metadata.background_color = Some("".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: None,
             extension: Some(metadata),
         };
@@ -810,7 +810,7 @@ fn test_mint_with_metadata() {
         metadata.image = Some("invalid".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -826,7 +826,7 @@ fn test_mint_with_metadata() {
         metadata.external_url = Some("invalid".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -842,7 +842,7 @@ fn test_mint_with_metadata() {
         metadata.animation_url = Some("invalid".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -858,7 +858,7 @@ fn test_mint_with_metadata() {
         metadata.youtube_url = Some("invalid".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -875,7 +875,7 @@ fn test_mint_with_metadata() {
         metadata.image_data = Some("".to_string());
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -891,7 +891,7 @@ fn test_mint_with_metadata() {
         }]);
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -908,7 +908,7 @@ fn test_mint_with_metadata() {
         }]);
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id: token_id.clone(),
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri.clone()),
             extension: Some(metadata),
         };
@@ -925,7 +925,7 @@ fn test_mint_with_metadata() {
         }]);
         let mint_msg = Cw721ExecuteMsg::Mint {
             token_id,
-            owner: String::from("medusa"),
+            owner: addrs.addr("medusa").to_string(),
             token_uri: Some(token_uri),
             extension: Some(metadata),
         };
@@ -1067,7 +1067,7 @@ fn test_update_minter() {
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id,
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: Some(token_uri.clone()),
         extension: None,
     };
@@ -1141,7 +1141,7 @@ fn test_update_minter() {
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: "randoms_token".to_string(),
-        owner: String::from("medusa"),
+        owner: addrs.addr("medusa").to_string(),
         token_uri: Some(token_uri),
         extension: None,
     };
@@ -1190,7 +1190,7 @@ fn test_burn() {
         .unwrap();
 
     // random not allowed to burn
-    let random = message_info(&deps.api.addr_make("random"), &[]);
+    let random = message_info(&addrs.addr("random"), &[]);
     let env = mock_env();
     let err = contract
         .execute(deps.as_mut(), &env, &random, burn_msg.clone())
@@ -1256,13 +1256,14 @@ fn test_transfer_nft() {
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 
     // owner can
+    let owner_info = addrs.info("venus");
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
         recipient: random.to_string(),
         token_id: token_id.clone(),
     };
 
     let res = contract
-        .execute(deps.as_mut(), &mock_env(), &random_info, transfer_msg)
+        .execute(deps.as_mut(), &mock_env(), &owner_info, transfer_msg)
         .unwrap();
 
     assert_eq!(
@@ -1270,7 +1271,7 @@ fn test_transfer_nft() {
         Response::new()
             .add_attribute("action", "transfer_nft")
             .add_attribute("sender", venus.to_string())
-            .add_attribute("recipient", "random")
+            .add_attribute("recipient", addrs.addr("random"))
             .add_attribute("token_id", token_id)
     );
 }
@@ -1299,9 +1300,9 @@ fn test_send_nft() {
         .unwrap();
 
     let msg = to_json_binary("You now have the melting power").unwrap();
-    let target = String::from("another_contract");
+    let target = addrs.addr("another_contract");
     let send_msg = Cw721ExecuteMsg::SendNft {
-        contract: target.clone(),
+        contract: target.to_string(),
         token_id: token_id.clone(),
         msg: msg.clone(),
     };
@@ -1330,7 +1331,7 @@ fn test_send_nft() {
     // ensure expected serializes as we think it should
     match &expected {
         CosmosMsg::Wasm(WasmMsg::Execute { contract_addr, .. }) => {
-            assert_eq!(contract_addr, &target)
+            assert_eq!(contract_addr, &target.to_string())
         }
         m => panic!("Unexpected message type: {m:?}"),
     }
@@ -1341,7 +1342,7 @@ fn test_send_nft() {
             .add_message(expected)
             .add_attribute("action", "send_nft")
             .add_attribute("sender", venus.to_string())
-            .add_attribute("recipient", "another_contract")
+            .add_attribute("recipient", addrs.addr("another_contract"))
             .add_attribute("token_id", token_id)
     );
 }
@@ -1360,7 +1361,7 @@ fn test_approve_revoke() {
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id.clone(),
-        owner: String::from("demeter"),
+        owner: addrs.addr("demeter").to_string(),
         token_uri: Some(token_uri),
         extension: None,
     };
@@ -1376,7 +1377,7 @@ fn test_approve_revoke() {
             deps.as_ref(),
             &mock_env(),
             token_id.clone(),
-            String::from("demeter"),
+            addrs.addr("demeter").to_string(),
             false,
         )
         .unwrap();
@@ -1384,7 +1385,7 @@ fn test_approve_revoke() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: Addr::unchecked("demeter"),
+                spender: addrs.addr("demeter"),
                 expires: Expiration::Never {}
             }
         }
@@ -1392,7 +1393,7 @@ fn test_approve_revoke() {
 
     // Give random transferring power
     let approve_msg = Cw721ExecuteMsg::Approve {
-        spender: String::from("random"),
+        spender: addrs.addr("random").to_string(),
         token_id: token_id.clone(),
         expires: None,
     };
@@ -1405,7 +1406,7 @@ fn test_approve_revoke() {
         Response::new()
             .add_attribute("action", "approve")
             .add_attribute("sender", addrs.addr("demeter").to_string())
-            .add_attribute("spender", "random")
+            .add_attribute("spender", addrs.addr("random").to_string())
             .add_attribute("token_id", token_id.clone())
     );
 
@@ -1415,7 +1416,7 @@ fn test_approve_revoke() {
             deps.as_ref(),
             &mock_env(),
             token_id.clone(),
-            String::from("random"),
+            addrs.addr("random").to_string(),
             true,
         )
         .unwrap();
@@ -1423,7 +1424,7 @@ fn test_approve_revoke() {
         res,
         ApprovalResponse {
             approval: Approval {
-                spender: Addr::unchecked("random"),
+                spender: addrs.addr("random"),
                 expires: Expiration::Never {}
             }
         }
@@ -1472,7 +1473,7 @@ fn test_approve_revoke() {
         .unwrap();
 
     let revoke_msg = Cw721ExecuteMsg::Revoke {
-        spender: String::from("random"),
+        spender: addrs.addr("random").to_string(),
         token_id,
     };
     contract
@@ -1512,7 +1513,7 @@ fn test_approve_all_revoke_all() {
 
     let mint_msg1 = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: String::from("demeter"),
+        owner: addrs.addr("demeter").to_string(),
         token_uri: Some(token_uri1),
         extension: None,
     };
@@ -1524,7 +1525,7 @@ fn test_approve_all_revoke_all() {
 
     let mint_msg2 = Cw721ExecuteMsg::Mint {
         token_id: token_id2.clone(),
-        owner: String::from("demeter"),
+        owner: addrs.addr("demeter").to_string(),
         token_uri: Some(token_uri2),
         extension: None,
     };
@@ -1548,7 +1549,7 @@ fn test_approve_all_revoke_all() {
 
     // demeter gives random full (operator) power over her tokens
     let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
-        operator: String::from("random"),
+        operator: addrs.addr("random").to_string(),
         expires: None,
     };
     let owner_info = addrs.info("demeter");
@@ -1560,13 +1561,13 @@ fn test_approve_all_revoke_all() {
         Response::new()
             .add_attribute("action", "approve_all")
             .add_attribute("sender", addrs.addr("demeter").to_string())
-            .add_attribute("operator", "random")
+            .add_attribute("operator", addrs.addr("random"))
     );
 
     // random can now transfer
     let random_info = addrs.info("random");
     let transfer_msg = Cw721ExecuteMsg::TransferNft {
-        recipient: String::from("person"),
+        recipient: addrs.addr("person").to_string(),
         token_id: token_id1,
     };
     contract
@@ -1575,14 +1576,14 @@ fn test_approve_all_revoke_all() {
 
     // random can now send
     let inner_msg = WasmMsg::Execute {
-        contract_addr: "another_contract".into(),
+        contract_addr: addrs.addr("another_contract").to_string(),
         msg: to_json_binary("You now also have the growing power").unwrap(),
         funds: vec![],
     };
     let msg: CosmosMsg = CosmosMsg::Wasm(inner_msg);
 
     let send_msg = Cw721ExecuteMsg::SendNft {
-        contract: String::from("another_contract"),
+        contract: addrs.addr("another_contract").to_string(),
         token_id: token_id2,
         msg: to_json_binary(&msg).unwrap(),
     };
@@ -1592,7 +1593,7 @@ fn test_approve_all_revoke_all() {
 
     // Approve_all, revoke_all, and check for empty, to test revoke_all
     let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
-        operator: String::from("operator"),
+        operator: addrs.addr("operator").to_string(),
         expires: None,
     };
     // person is now the owner of the tokens
@@ -1625,8 +1626,8 @@ fn test_approve_all_revoke_all() {
     let res = contract.query_operator(
         deps.as_ref(),
         &mock_env(),
-        String::from("person"),
-        String::from("other"),
+        addrs.addr("person").to_string(),
+        addrs.addr("other").to_string(),
         true,
     );
     match res {
@@ -1638,7 +1639,7 @@ fn test_approve_all_revoke_all() {
         .query_operators(
             deps.as_ref(),
             &mock_env(),
-            String::from("person"),
+            addrs.addr("person").to_string(),
             true,
             None,
             None,
@@ -1648,7 +1649,7 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: Addr::unchecked("operator"),
+                spender: addrs.addr("operator"),
                 expires: Expiration::Never {}
             }]
         }
@@ -1657,7 +1658,7 @@ fn test_approve_all_revoke_all() {
     // second approval
     let buddy_expires = Expiration::AtHeight(1234567);
     let approve_all_msg = Cw721ExecuteMsg::ApproveAll {
-        operator: String::from("buddy"),
+        operator: addrs.addr("buddy").to_string(),
         expires: Some(buddy_expires),
     };
     let owner_info = addrs.info("person");
@@ -1670,7 +1671,7 @@ fn test_approve_all_revoke_all() {
         .query_operators(
             deps.as_ref(),
             &mock_env(),
-            String::from("person"),
+            addrs.addr("person").to_string(),
             true,
             None,
             Some(1),
@@ -1680,8 +1681,8 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: Addr::unchecked("buddy"),
-                expires: buddy_expires,
+                spender: addrs.addr("operator"),
+                expires: Expiration::Never {},
             }]
         }
     );
@@ -1689,9 +1690,9 @@ fn test_approve_all_revoke_all() {
         .query_operators(
             deps.as_ref(),
             &mock_env(),
-            String::from("person"),
+            addrs.addr("person").to_string(),
             true,
-            Some(String::from("buddy")),
+            Some(addrs.addr("operator").to_string()),
             Some(2),
         )
         .unwrap();
@@ -1699,14 +1700,14 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: Addr::unchecked("operator"),
-                expires: Expiration::Never {}
+                spender: addrs.addr("buddy"),
+                expires: buddy_expires
             }]
         }
     );
 
     let revoke_all_msg = Cw721ExecuteMsg::RevokeAll {
-        operator: String::from("operator"),
+        operator: addrs.addr("operator").to_string(),
     };
     contract
         .execute(deps.as_mut(), &mock_env(), &owner_info, revoke_all_msg)
@@ -1716,8 +1717,8 @@ fn test_approve_all_revoke_all() {
     let res = contract.query_operator(
         deps.as_ref(),
         &mock_env(),
-        String::from("person"),
-        String::from("operator"),
+        addrs.addr("person").to_string(),
+        addrs.addr("operator").to_string(),
         true,
     );
     match res {
@@ -1730,7 +1731,7 @@ fn test_approve_all_revoke_all() {
         .query_operators(
             deps.as_ref(),
             &mock_env(),
-            String::from("person"),
+            addrs.addr("person").to_string(),
             false,
             None,
             None,
@@ -1740,7 +1741,7 @@ fn test_approve_all_revoke_all() {
         res,
         OperatorsResponse {
             operators: vec![Approval {
-                spender: Addr::unchecked("buddy"),
+                spender: addrs.addr("buddy"),
                 expires: buddy_expires,
             }]
         }
@@ -1753,7 +1754,7 @@ fn test_approve_all_revoke_all() {
         .query_operators(
             deps.as_ref(),
             &late_env,
-            String::from("person"),
+            addrs.addr("person").to_string(),
             false,
             None,
             None,
@@ -1765,8 +1766,8 @@ fn test_approve_all_revoke_all() {
     let res = contract.query_operator(
         deps.as_ref(),
         &late_env,
-        String::from("person"),
-        String::from("buddy"),
+        addrs.addr("person").to_string(),
+        addrs.addr("buddy").to_string(),
         false,
     );
 
@@ -1792,7 +1793,7 @@ fn test_set_withdraw_address() {
 
     // creator can set
     contract
-        .set_withdraw_address(deps.as_mut(), &creator, "foo".to_string())
+        .set_withdraw_address(deps.as_mut(), &creator, addrs.addr("foo").to_string())
         .unwrap();
 
     let withdraw_address = contract
@@ -1800,7 +1801,7 @@ fn test_set_withdraw_address() {
         .withdraw_address
         .load(deps.as_ref().storage)
         .unwrap();
-    assert_eq!(withdraw_address, "foo".to_string())
+    assert_eq!(withdraw_address, addrs.addr("foo").to_string())
 }
 
 #[test]
@@ -1825,7 +1826,7 @@ fn test_remove_withdraw_address() {
 
     // set and remove
     contract
-        .set_withdraw_address(deps.as_mut(), &creator, "foo".to_string())
+        .set_withdraw_address(deps.as_mut(), &creator, addrs.addr("foo").to_string())
         .unwrap();
     contract
         .remove_withdraw_address(deps.as_mut().storage, &creator)
@@ -1837,14 +1838,14 @@ fn test_remove_withdraw_address() {
 
     // test that we can set again
     contract
-        .set_withdraw_address(deps.as_mut(), &creator, "foo".to_string())
+        .set_withdraw_address(deps.as_mut(), &creator, addrs.addr("foo").to_string())
         .unwrap();
     let withdraw_address = contract
         .config
         .withdraw_address
         .load(deps.as_ref().storage)
         .unwrap();
-    assert_eq!(withdraw_address, "foo".to_string())
+    assert_eq!(withdraw_address, addrs.addr("foo").to_string())
 }
 
 #[test]
@@ -1863,7 +1864,7 @@ fn test_withdraw_funds() {
 
     // set and withdraw by non-creator
     contract
-        .set_withdraw_address(deps.as_mut(), &creator, "foo".to_string())
+        .set_withdraw_address(deps.as_mut(), &creator, addrs.addr("foo").to_string())
         .unwrap();
     contract
         .withdraw_funds(deps.as_mut().storage, &Coin::new(100u32, "uark"))
@@ -1881,14 +1882,14 @@ fn query_tokens_by_owner() {
 
     // Mint a couple tokens (from the same owner)
     let token_id1 = "grow1".to_string();
-    let demeter = String::from("demeter");
+    let demeter = addrs.addr("demeter");
     let token_id2 = "grow2".to_string();
-    let ceres = String::from("ceres");
+    let ceres = addrs.addr("ceres");
     let token_id3 = "sing".to_string();
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id1.clone(),
-        owner: demeter.clone(),
+        owner: demeter.clone().to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1898,7 +1899,7 @@ fn query_tokens_by_owner() {
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id2.clone(),
-        owner: ceres.clone(),
+        owner: ceres.clone().to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1908,7 +1909,7 @@ fn query_tokens_by_owner() {
 
     let mint_msg = Cw721ExecuteMsg::Mint {
         token_id: token_id3.clone(),
-        owner: demeter.clone(),
+        owner: demeter.clone().to_string(),
         token_uri: None,
         extension: None,
     };
@@ -1938,24 +1939,30 @@ fn query_tokens_by_owner() {
     let by_demeter = vec![token_id1, token_id3];
     // all tokens by owner
     let tokens = contract
-        .query_tokens(deps.as_ref(), &env, demeter.clone(), None, None)
+        .query_tokens(deps.as_ref(), &env, demeter.clone().to_string(), None, None)
         .unwrap();
     assert_eq!(&by_demeter, &tokens.tokens);
     let tokens = contract
-        .query_tokens(deps.as_ref(), &env, ceres, None, None)
+        .query_tokens(deps.as_ref(), &env, ceres.clone().to_string(), None, None)
         .unwrap();
     assert_eq!(&by_ceres, &tokens.tokens);
 
     // paginate for demeter
     let tokens = contract
-        .query_tokens(deps.as_ref(), &env, demeter.clone(), None, Some(1))
+        .query_tokens(
+            deps.as_ref(),
+            &env,
+            demeter.clone().to_string(),
+            None,
+            Some(1),
+        )
         .unwrap();
     assert_eq!(&by_demeter[..1], &tokens.tokens[..]);
     let tokens = contract
         .query_tokens(
             deps.as_ref(),
             &env,
-            demeter,
+            demeter.to_string(),
             Some(by_demeter[0].clone()),
             Some(3),
         )
