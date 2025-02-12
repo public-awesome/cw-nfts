@@ -90,14 +90,9 @@ mod tests {
     #[test]
     fn use_empty_metadata_extension() {
         let mut deps = mock_dependencies();
-<<<<<<< HEAD
         let contract = Cw721BaseExtensions::default();
         let creator = deps.api.addr_make(CREATOR);
         let info = message_info(&creator, &[]);
-=======
-        let contract = Cw721BaseContract::default();
-        let info = mock_info(CREATOR, &[]);
->>>>>>> 71d692b (new GetConfig)
         let init_msg = InstantiateMsg {
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),

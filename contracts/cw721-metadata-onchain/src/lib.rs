@@ -106,18 +106,13 @@ pub mod entry {
 mod tests {
     use super::*;
 
-<<<<<<< HEAD
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
     use cw721::{
         msg::{Cw721InstantiateMsg, NftExtensionMsg},
         state::Trait,
         NftExtension,
     };
-=======
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cw721::{msg::NftExtensionMsg, state::Trait, NftExtension};
-    use msg::{ExecuteMsg, InstantiateMsg};
->>>>>>> 71d692b (new GetConfig)
+    use msg::ExecuteMsg;
 
     const CREATOR: &str = "creator";
 
@@ -131,13 +126,8 @@ mod tests {
         entry::instantiate(
             deps.as_mut(),
             mock_env(),
-<<<<<<< HEAD
             info,
             Cw721InstantiateMsg {
-=======
-            mock_info("sender", &[]),
-            InstantiateMsg {
->>>>>>> 71d692b (new GetConfig)
                 name: "collection_name".into(),
                 symbol: "collection_symbol".into(),
                 collection_info_extension: None,
@@ -156,15 +146,9 @@ mod tests {
     fn use_metadata_extension() {
         let mut deps = mock_dependencies();
         let contract = Cw721MetadataContract::default();
-<<<<<<< HEAD
         let creator = deps.api.addr_make(CREATOR);
         let info = message_info(&creator, &[]);
         let init_msg = Cw721InstantiateMsg {
-=======
-
-        let info = mock_info(CREATOR, &[]);
-        let init_msg = InstantiateMsg {
->>>>>>> 71d692b (new GetConfig)
             name: "SpaceShips".to_string(),
             symbol: "SPACE".to_string(),
             collection_info_extension: None,

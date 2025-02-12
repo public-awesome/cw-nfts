@@ -2,32 +2,30 @@ use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
     msg::{
-        Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, NumTokensResponse,
-        OwnerOfResponse,
+        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
+        Cw721MigrateMsg, Cw721QueryMsg, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
     },
     state::{CollectionInfo, NftExtension, Trait},
     traits::{Cw721Execute, Cw721Query},
     DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
     DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
 };
+use anyhow::Result;
 use cosmwasm_std::testing::{mock_dependencies, MockApi};
 use cosmwasm_std::{
-    Addr, Binary, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
+    Addr, Binary, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
+    StdError, Timestamp,
 };
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
-use cw_ownable::OwnershipError;
-use anyhow::Result;
+use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
-use sha2::{Digest};
 use url::ParseError;
-
-const BECH32_PREFIX_HRP: &str = "stars";
 pub const ADMIN_ADDR: &str = "admin";
 pub const CREATOR_ADDR: &str = "creator";
 pub const MINTER_ADDR: &str = "minter";
-pub const OTHER1_ADDR: &str = "other";
-pub const OTHER2_ADDR: &str = "other";
+pub const OTHER_ADDR: &str = "other";
+pub const WITHDRAW_ADDR: &str = "other";
 pub const NFT_OWNER_ADDR: &str = "nft_owner";
 
 pub struct MockAddrFactory<'a> {
@@ -49,6 +47,7 @@ impl<'a> MockAddrFactory<'a> {
             .clone()
     }
 }
+
 pub fn instantiate(
     deps: DepsMut,
     env: Env,
@@ -91,8 +90,6 @@ pub fn migrate(
     contract.migrate(deps, env, msg, "contract_name", "contract_version")
 }
 
-fn no_init(_router: &mut MockRouter, _api: &dyn Api, _storage: &mut dyn Storage) {}
-
 fn cw721_base_latest_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(execute, instantiate, query).with_migrate(migrate);
     Box::new(contract)
@@ -133,54 +130,15 @@ fn query_all_collection_info(
         .unwrap()
 }
 
-fn mint_transfer_and_burn(app: &mut MockApp, cw721: Addr, sender: Addr, token_id: String) {
-    app.execute_contract(
-        sender.clone(),
-        cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Mint {
-            token_id: token_id.clone(),
-            owner: sender.to_string(),
-            token_uri: None,
-            extension: Empty::default(),
-        },
-        &[],
-    )
-    .unwrap();
-
-    let owner = query_owner(app.wrap(), &cw721, token_id.clone());
-    assert_eq!(owner, sender.to_string());
-
-    let burner = app.api().addr_make("burner");
-    app.execute_contract(
-        sender,
-        cw721.clone(),
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::TransferNft {
-            recipient: burner.to_string(),
-            token_id: token_id.clone(),
-        },
-        &[],
-    )
-    .unwrap();
-
-    let owner = query_owner(app.wrap(), &cw721, token_id.clone());
-    assert_eq!(owner, burner.to_string());
-
-    app.execute_contract(
-        burner,
-        cw721,
-        &Cw721ExecuteMsg::<Empty, Empty, Empty>::Burn { token_id },
-        &[],
-    )
-    .unwrap();
-}
-
 #[test]
 fn test_operator() {
     // --- setup ---
     let mut app = App::default();
     let deps = mock_dependencies();
     let mut addrs = MockAddrFactory::new(deps.api);
-    let admin = addrs.addr("admin");
+    let admin = addrs.addr(ADMIN_ADDR);
+    let creator = addrs.addr(CREATOR_ADDR);
+    let minter = addrs.addr(MINTER_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
     let other = addrs.addr(OTHER_ADDR);
     let cw721 = app
@@ -190,8 +148,8 @@ fn test_operator() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(addrs.addr(MINTER_ADDR).to_string()),
-                creator: Some(addrs.addr(CREATOR_ADDR).to_string()),
+                minter: Some(minter.to_string()),
+                creator: Some(creator.to_string()),
                 collection_info_extension: None,
                 withdraw_address: None,
             },
@@ -201,7 +159,6 @@ fn test_operator() {
         )
         .unwrap();
     // mint
-    let minter = addrs.addr(MINTER_ADDR);
     let nft_owner = addrs.addr(NFT_OWNER_ADDR);
     app.execute_contract(
         minter,
@@ -369,16 +326,38 @@ fn test_operator() {
     assert_eq!(err, Cw721ContractError::Ownership(OwnershipError::NotOwner));
 }
 
-/// Test backward compatibility using instantiate msg from a 0.16 version on latest contract.
-/// This ensures existing 3rd party contracts doesnt need to update as well.
 #[test]
-fn test_instantiate_016_msg() {
-    use cw721_base_016 as v16;
+fn test_instantiate() {
+    let mut app = App::default();
+    let deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+
+    let admin = addrs.addr(ADMIN_ADDR);
+    let minter = addrs.addr(MINTER_ADDR);
+    let creator = addrs.addr(CREATOR_ADDR);
+    let payment_address = addrs.addr(OTHER_ADDR);
+    let withdraw_addr = addrs.addr(WITHDRAW_ADDR);
+
+    let init_msg = Cw721InstantiateMsg {
+        name: "collection".to_string(),
+        symbol: "symbol".to_string(),
+        minter: Some(minter.to_string()),
+        creator: Some(creator.to_string()),
+        withdraw_address: Some(withdraw_addr.to_string()),
+        collection_info_extension: Some(CollectionExtensionMsg {
+            description: Some("description".to_string()),
+            image: Some("ipfs://ark.pass".to_string()),
+            explicit_content: Some(false),
+            external_link: Some("https://interchain.arkprotocol.io".to_string()),
+            start_trading_time: Some(Timestamp::from_seconds(42)),
+            royalty_info: Some(RoyaltyInfoResponse {
+                payment_address: payment_address.to_string(),
+                share: Decimal::bps(1000),
+            }),
+        }),
+    };
+    // test case: happy path
     {
-        let mut app = App::default();
-        let deps = mock_dependencies();
-        let mut addrs = MockAddrFactory::new(deps.api);
-        let mut admin = || addrs.addr("admin");
         let code_id_latest = app.store_code(cw721_base_latest_contract());
         let cw721 = app
             .instantiate_contract(
@@ -425,7 +404,7 @@ fn test_instantiate_016_msg() {
             .unwrap();
         assert_eq!(
             error,
-            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+            Cw721ContractError::Std(StdError::generic_err("Error decoding bech32"))
         );
         // invalid minter
         let mut invalid_init_msg = init_msg.clone();
@@ -444,7 +423,7 @@ fn test_instantiate_016_msg() {
             .unwrap();
         assert_eq!(
             error,
-            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+            Cw721ContractError::Std(StdError::generic_err("Error decoding bech32"))
         );
         // invalid withdraw addr
         let mut invalid_init_msg = init_msg.clone();
@@ -463,7 +442,7 @@ fn test_instantiate_016_msg() {
             .unwrap();
         assert_eq!(
             error,
-            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+            Cw721ContractError::Std(StdError::generic_err("Error decoding bech32"))
         );
         // invalid payment addr
         let mut invalid_init_msg = init_msg.clone();
@@ -492,7 +471,7 @@ fn test_instantiate_016_msg() {
             .unwrap();
         assert_eq!(
             error,
-            Cw721ContractError::Std(StdError::generic_err("Invalid input: invalid"))
+            Cw721ContractError::Std(StdError::generic_err("Error decoding bech32"))
         );
     }
     // test case: backward compatibility using instantiate msg from a 0.16 version on latest contract.
@@ -538,9 +517,11 @@ fn test_update_nft_metadata() {
     let mut app = App::default();
     let deps = mock_dependencies();
     let mut addrs = MockAddrFactory::new(deps.api);
-    let admin = addrs.addr("admin");
+
+    let admin = addrs.addr(ADMIN_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
     let creator = addrs.addr(CREATOR_ADDR);
+    let minter_addr = addrs.addr(MINTER_ADDR);
     let cw721 = app
         .instantiate_contract(
             code_id,
@@ -548,7 +529,7 @@ fn test_update_nft_metadata() {
             &Cw721InstantiateMsg::<DefaultOptionalCollectionExtension> {
                 name: "collection".to_string(),
                 symbol: "symbol".to_string(),
-                minter: Some(addrs.addr(MINTER_ADDR).to_string()),
+                minter: Some(minter_addr.to_string()),
                 creator: None, // in case of none, sender is creator
                 collection_info_extension: None,
                 withdraw_address: None,
@@ -559,7 +540,6 @@ fn test_update_nft_metadata() {
         )
         .unwrap();
     // mint
-    let minter = addrs.addr(MINTER_ADDR);
     let nft_owner = addrs.addr(NFT_OWNER_ADDR);
     let nft_metadata_msg = NftExtensionMsg {
         image: Some("ipfs://foo.bar/image.png".to_string()),
@@ -1201,12 +1181,16 @@ fn test_update_nft_metadata() {
 #[test]
 fn test_queries() {
     // --- setup ---
-    let mut app = new();
-    let admin = app.api().addr_make(ADMIN_ADDR);
+    let mut app = App::default();
+    let deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+
+    let admin = addrs.addr(ADMIN_ADDR);
     let code_id = app.store_code(cw721_base_latest_contract());
-    let creator = app.api().addr_make(CREATOR_ADDR);
-    let minter_addr = app.api().addr_make(MINTER_ADDR);
-    let withdraw_addr = app.api().addr_make(OTHER2_ADDR);
+    let creator = addrs.addr(CREATOR_ADDR);
+    let minter_addr = addrs.addr(MINTER_ADDR);
+    let withdraw_addr = addrs.addr(OTHER_ADDR);
+
     let cw721 = app
         .instantiate_contract(
             code_id,

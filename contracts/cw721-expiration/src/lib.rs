@@ -69,13 +69,9 @@ pub mod entry {
     }
 
     #[cfg_attr(not(feature = "library"), entry_point)]
-    pub fn migrate(
-        deps: DepsMut,
-        env: Env,
-        msg: cw721::msg::Cw721MigrateMsg,
-    ) -> Result<Response, ContractError> {
-        let contract = DefaultCw721ExpirationContract::default();
-        contract.migrate(deps, env, msg, CONTRACT_NAME, CONTRACT_VERSION)
+    pub fn migrate(_deps: DepsMut, _env: Env, _msg: Empty) -> Result<Response, ContractError> {
+        // TODO: allow migration e.g. from cw721-base
+        panic!("This contract does not support migrations")
     }
 }
 
