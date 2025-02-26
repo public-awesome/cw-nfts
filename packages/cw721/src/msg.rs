@@ -465,43 +465,38 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
         _current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
         let sender = info.map(|i| &i.sender);
+
         // start trading time can only be updated by minter
-        let is_minter_or_uninitialized = match sender
+        let can_update_trading_time = match sender
             .map(|addr| MINTER.is_owner(deps.storage, addr))
             .transpose()
         {
-            // if Some(bool), bool represents the `is_owner` check result.
-            // if None, `info` was none and the check is skipped.
-            Ok(is_minter) => is_minter.unwrap_or(true),
-            // `is_owner` returns an error if the store is not initialized.
-            // the check is skipped in this case as well.
-            Err(_) => true,
+            Ok(sender_is_minter) => sender_is_minter.unwrap_or(true),
+            Err(_) => true, // the check is skipped cause the store is not initialized
         };
         if self.start_trading_time.is_some()
             && MINTER.item.exists(deps.storage)
-            && !is_minter_or_uninitialized
+            && !can_update_trading_time
         {
             return Err(Cw721ContractError::NotMinter {});
         }
+
         // all other props collection extension can only be updated by the creator
-        let is_creator_or_uninitialized =
-            match sender.map(|addr| is_owner(deps.storage, addr)).transpose() {
-                // if Some(bool), bool represents the `is_owner` check result.
-                // if None, `info` was none and the check is skipped.
-                Ok(is_minter) => is_minter.unwrap_or(true),
-                // `is_owner` returns an error if the store is not initialized.
-                // the check is skipped in this case as well.
-                Err(_) => true,
-            };
+        let can_update_metadata = match sender.map(|addr| is_owner(deps.storage, addr)).transpose()
+        {
+            Ok(sender_is_owner) => sender_is_owner.unwrap_or(true),
+            Err(_) => true, // the check is skipped cause the store is not initialized
+        };
         if (self.description.is_some()
             || self.image.is_some()
             || self.external_link.is_some()
             || self.explicit_content.is_some())
             && sender.is_some()
-            && !is_creator_or_uninitialized
+            && !can_update_metadata
         {
             return Err(Cw721ContractError::NotCreator {});
         }
+
         // check description length, must not be empty and max 512 chars
         if let Some(description) = &self.description {
             if description.is_empty() {
