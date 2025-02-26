@@ -200,7 +200,7 @@ pub enum Cw721QueryMsg<
     /// Deprecated: use GetCollectionInfoAndExtension instead! Will be removed in next release!
     ContractInfo {},
 
-    /// Returns `ConfigResponse`
+    /// Returns `AllCollectionInfoResponse`
     #[returns(ConfigResponse<TCollectionExtension>)]
     GetConfig {},
 
@@ -256,8 +256,8 @@ pub enum Cw721QueryMsg<
         include_expired: Option<bool>,
     },
 
-    /// Returns all tokens owned by the given address.
-    /// Same as `AllTokens` but with owner filter.
+    /// With Enumerable extension.
+    /// Returns all tokens owned by the given address, [] if unset.
     #[returns(TokensResponse)]
     Tokens {
         owner: String,
@@ -464,18 +464,19 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
         info: Option<&MessageInfo>,
         _current: Option<&CollectionExtension<RoyaltyInfo>>,
     ) -> Result<(), Cw721ContractError> {
-        let sender = info.map(|i| i.sender.clone());
-        // start trading time can only be updated by minter
+        let sender = info.map(|i| &i.sender);
+
         let minter_initialized = MINTER.item.may_load(deps.storage)?;
+        // start trading time can only be updated by minter
         if self.start_trading_time.is_some()
             && minter_initialized.is_some()
             && sender.is_some()
-            && MINTER
-                .assert_owner(deps.storage, &sender.clone().unwrap())
-                .is_err()
+            && MINTER.assert_owner(deps.storage, sender.unwrap()).is_err()
+            && MINTER.item.exists(deps.storage)
         {
             return Err(Cw721ContractError::NotMinter {});
         }
+
         // all other props collection extension can only be updated by the creator
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
         if (self.description.is_some()
@@ -484,12 +485,11 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
             || self.explicit_content.is_some())
             && sender.is_some()
             && creator_initialized.is_some()
-            && CREATOR
-                .assert_owner(deps.storage, &sender.unwrap())
-                .is_err()
+            && CREATOR.assert_owner(deps.storage, sender.unwrap()).is_err()
         {
             return Err(Cw721ContractError::NotCreator {});
         }
+
         // check description length, must not be empty and max 512 chars
         if let Some(description) = &self.description {
             if description.is_empty() {

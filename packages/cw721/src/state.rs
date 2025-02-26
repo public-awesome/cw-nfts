@@ -3,7 +3,7 @@ use cosmwasm_std::{
     from_json, to_json_binary, Addr, Binary, BlockInfo, Decimal, Deps, Empty, Env, MessageInfo,
     StdResult, Storage, Timestamp,
 };
-use cw_ownable::{OwnershipStore, OWNERSHIP};
+use cw_ownable::{OwnershipStore, OWNERSHIP_KEY};
 use cw_storage_plus::{Index, IndexList, IndexedMap, Item, Map, MultiIndex};
 use cw_utils::Expiration;
 use serde::de::DeserializeOwned;
@@ -14,9 +14,9 @@ use crate::{traits::StateFactory, NftExtensionMsg};
 
 /// Creator owns this contract and can update collection info!
 /// !!! Important note here: !!!
-/// - creator is stored using using cw-ownable's OWNERSHIP singleton, so it is not stored here
+/// - creator is stored using cw-ownable's OWNERSHIP singleton, so it is not stored here
 /// - in release v0.18.0 it was used for minter (which is confusing), but now it is used for creator
-pub const CREATOR: OwnershipStore = OWNERSHIP;
+pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
@@ -28,7 +28,7 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
 /// Maximum length of the description field in the collection info.
 pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
-/// Max increase/decrease of of royalty share percentage.
+/// Max increase/decrease of royalty share percentage.
 pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
 /// Max royalty share percentage.
 pub const MAX_ROYALTY_SHARE_PCT: u64 = 10;
@@ -49,14 +49,14 @@ pub struct Cw721Config<
     TNftExtension: Cw721State,
 {
     /// Note: replaces deprecated/legacy key "nft_info"!
-    pub collection_info: Item<'a, CollectionInfo>,
-    pub collection_extension: Map<'a, String, Attribute>,
-    pub num_tokens: Item<'a, u64>,
+    pub collection_info: Item<CollectionInfo>,
+    pub collection_extension: Map<String, Attribute>,
+    pub num_tokens: Item<u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
-    pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
-    pub nft_info: IndexedMap<'a, &'a str, NftInfo<TNftExtension>, TokenIndexes<'a, TNftExtension>>,
-    pub withdraw_address: Item<'a, String>,
+    pub operators: Map<(&'a Addr, &'a Addr), Expiration>,
+    pub nft_info: IndexedMap<&'a str, NftInfo<TNftExtension>, TokenIndexes<'a, TNftExtension>>,
+    pub withdraw_address: Item<String>,
 }
 
 impl<TNftExtension> Default for Cw721Config<'static, TNftExtension>
@@ -82,13 +82,13 @@ where
     TNftExtension: Cw721State,
 {
     fn new(
-        collection_info_key: &'a str,
-        collection_info_extension_key: &'a str,
-        num_tokens_key: &'a str,
-        operator_key: &'a str,
-        nft_info_key: &'a str,
-        nft_info_owner_key: &'a str,
-        withdraw_address_key: &'a str,
+        collection_info_key: &'static str,
+        collection_info_extension_key: &'static str,
+        num_tokens_key: &'static str,
+        operator_key: &'static str,
+        nft_info_key: &'static str,
+        nft_info_owner_key: &'static str,
+        withdraw_address_key: &'static str,
     ) -> Self {
         let indexes = TokenIndexes {
             owner: MultiIndex::new(token_owner_idx, nft_info_key, nft_info_owner_key),

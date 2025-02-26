@@ -2,7 +2,7 @@ use cosmwasm_std::{
     Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Response,
     StdResult, Storage,
 };
-use cw_ownable::{none_or, Action, Ownership, OwnershipError};
+use cw_ownable::{Action, Ownership, OwnershipError};
 use cw_storage_plus::Item;
 use cw_utils::Expiration;
 
@@ -389,26 +389,24 @@ where
 }
 
 pub fn update_minter_ownership<TCustomResponseMsg>(
-    api: &dyn Api,
-    storage: &mut dyn Storage,
+    deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
     action: Action,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let ownership = MINTER.update_ownership(api, storage, &env.block, &info.sender, action)?;
+    let ownership = MINTER.update_ownership(deps, &env.block, &info.sender, action)?;
     Ok(Response::new()
         .add_attribute("update_minter_ownership", info.sender.to_string())
         .add_attributes(ownership.into_attributes()))
 }
 
 pub fn update_creator_ownership<TCustomResponseMsg>(
-    api: &dyn Api,
-    storage: &mut dyn Storage,
+    deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
     action: Action,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let ownership = CREATOR.update_ownership(api, storage, &env.block, &info.sender, action)?;
+    let ownership = CREATOR.update_ownership(deps, &env.block, &info.sender, action)?;
     Ok(Response::new()
         .add_attribute("update_creator_ownership", info.sender.to_string())
         .add_attributes(ownership.into_attributes()))
@@ -697,7 +695,10 @@ pub fn migrate_legacy_minter_and_creator(
             Some(legacy_minter.to_string())
         }
     };
-    Ok(response.add_attribute("creator_and_minter", none_or(creator_and_minter.as_ref())))
+    Ok(response.add_attribute(
+        "creator_and_minter",
+        creator_and_minter.unwrap_or("none".to_string()),
+    ))
 }
 
 /// Migrates only in case collection_info is not present
