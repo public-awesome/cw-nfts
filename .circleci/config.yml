@@ -226,7 +226,6 @@ jobs:
   # We also sanity-check the resultant wasm files.
   wasm-build:
     docker:
-      # Image from https://github.com/cibuilds/github, based on alpine
       - image: rust:1.78.0
     steps:
       - run:

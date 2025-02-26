@@ -27,7 +27,7 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 
 /// Maximum length of the description field in the collection info.
 pub const MAX_COLLECTION_DESCRIPTION_LENGTH: u32 = 512;
-/// Max increase/decrease of of royalty share percentage.
+/// Max increase/decrease of royalty share percentage.
 pub const MAX_ROYALTY_SHARE_DELTA_PCT: u64 = 2;
 /// Max royalty share percentage.
 pub const MAX_ROYALTY_SHARE_PCT: u64 = 10;
@@ -50,7 +50,7 @@ pub struct Cw721Config<
     /// Note: replaces deprecated/legacy key "nft_info"!
     pub collection_info: Item<CollectionInfo>,
     pub collection_extension: Map<String, Attribute>,
-    pub token_count: Item<u64>,
+    pub num_tokens: Item<u64>,
     /// Stored as (granter, operator) giving operator full control over granter's account.
     /// NOTE: granter is the owner, so operator has only control for NFTs owned by granter!
     pub operators: Map<(&'a Addr, &'a Addr), Expiration>,
@@ -83,7 +83,7 @@ where
     fn new(
         collection_info_key: &'static str,
         collection_info_extension_key: &'static str,
-        token_count_key: &'static str,
+        num_tokens_key: &'static str,
         operator_key: &'static str,
         nft_info_key: &'static str,
         nft_info_owner_key: &'static str,
@@ -94,7 +94,7 @@ where
         };
         Self {
             collection_info: Item::new(collection_info_key),
-            token_count: Item::new(token_count_key),
+            num_tokens: Item::new(num_tokens_key),
             operators: Map::new(operator_key),
             nft_info: IndexedMap::new(nft_info_key, indexes),
             withdraw_address: Item::new(withdraw_address_key),
@@ -103,18 +103,18 @@ where
     }
 
     pub fn token_count(&self, storage: &dyn Storage) -> StdResult<u64> {
-        Ok(self.token_count.may_load(storage)?.unwrap_or_default())
+        Ok(self.num_tokens.may_load(storage)?.unwrap_or_default())
     }
 
     pub fn increment_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
         let val = self.token_count(storage)? + 1;
-        self.token_count.save(storage, &val)?;
+        self.num_tokens.save(storage, &val)?;
         Ok(val)
     }
 
     pub fn decrement_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
         let val = self.token_count(storage)? - 1;
-        self.token_count.save(storage, &val)?;
+        self.num_tokens.save(storage, &val)?;
         Ok(val)
     }
 }
