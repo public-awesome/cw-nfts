@@ -16,15 +16,15 @@ Implements:
 The `ExecuteMsg` and `QueryMsg` implementations follow the [CW721 spec](../../packages/cw721/README.md) and are described there.
 Beyond that, we make a few additions:
 
-* `InstantiateMsg` takes name and symbol (for metadata), as well as a **Minter** address. This is a special address that has full
-power to mint new NFTs (but not modify existing ones)
-* `ExecuteMsg::Mint{token_id, owner, token_uri}` - creates a new token with given owner and (optional) metadata. It can only be called by
-the Minter set in `instantiate`.
-* `QueryMsg::Minter{}` - returns the minter address for this contract.
+- `InstantiateMsg` takes name and symbol (for metadata), as well as a **Minter** address. This is a special address that has full
+  power to mint new NFTs (but not modify existing ones)
+- `ExecuteMsg::Mint{token_id, owner, token_uri}` - creates a new token with given owner and (optional) metadata. It can only be called by
+  the Minter set in `instantiate`.
+- `QueryMsg::Minter{}` - returns the minter address for this contract.
 
 It requires all tokens to have defined metadata in the standard format (with no extensions). For generic NFTs this may often be enough.
 
-The *Minter* can either be an external actor (e.g. web server, using PubKey) or another contract. If you just want to customize
+The _Minter_ can either be an external actor (e.g. web server, using PubKey) or another contract. If you just want to customize
 the minting behavior but not other functionality, you could extend this contract (importing code and wiring it together)
 or just create a custom contract as the owner and use that contract to Mint.
 
@@ -32,7 +32,7 @@ If provided, it is expected that the _token_uri_ points to a JSON file following
 
 ## Running this contract
 
-You will need Rust 1.78+ with `wasm32-unknown-unknown` target installed.
+You will need Rust 1.81+ with `wasm32-unknown-unknown` target installed.
 
 You can run unit tests on this via:
 
