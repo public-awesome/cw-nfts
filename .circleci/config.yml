@@ -255,7 +255,7 @@ jobs:
       - run:
           name: Build and optimize contracts
           command: |
-            docker run --volumes-from with_code cosmwasm/workspace-optimizer:0.16.1
+            docker run --volumes-from with_code cosmwasm/optimizer:0.16.1
             docker cp with_code:/code/artifacts ./artifacts
       - run:
           name: List artifacts and checksums
