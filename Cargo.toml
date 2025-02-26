@@ -27,14 +27,12 @@ cw721-metadata-onchain-016  = { git = "https://github.com/CosmWasm/cw-nfts", tag
 cw721-base-017  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721-base" } # needed for testing legacy migration
 cw721-base-018  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721-base" } # needed for testing legacy migration
 cw-multi-test   = { version = "^2.1", features = ["cosmwasm_2_0"] }
-# TODO: switch to official https://github.com/larry0x/cw-plus-plus
-# requires merge of https://github.com/larry0x/cw-plus-plus/pull/25
 cw-ownable      = { version = "^2.1" }
 cw-storage-plus = "^2.0"
 cw-utils        = "^2.0"
 schemars        = "^0.8"
 serde           = { version = "^1.0", default-features = false, features = ["derive"] }
-sha2 = "^0.10"
+sha2            = "^0.10"
 thiserror       = "^1.0"
 url             = "^2.5"
 
