@@ -1,7 +1,7 @@
 use cosmwasm_std::{
     Addr, BlockInfo, CustomMsg, Deps, Empty, Env, Order, StdError, StdResult, Storage,
 };
-use cw_ownable::{get_ownership, Ownership};
+use cw_ownable::Ownership;
 use cw_storage_plus::Bound;
 use cw_utils::{maybe_addr, Expiration};
 
@@ -16,7 +16,8 @@ use crate::{
         NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     state::{
-        Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, MINTER,
+        Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
+        MINTER,
     },
     traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState},
     DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
@@ -70,7 +71,7 @@ pub fn query_minter_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr
 }
 
 pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
-    get_ownership(storage)
+    CREATOR.get_ownership(storage)
 }
 
 pub fn query_collection_info(storage: &dyn Storage) -> StdResult<CollectionInfo> {

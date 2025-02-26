@@ -1,11 +1,8 @@
 use cosmwasm_std::{
     Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Response,
-    StdError, StdResult, Storage,
+    StdResult, Storage,
 };
-use cw_ownable::{
-    assert_owner, get_ownership, initialize_owner, update_ownership, Action, Ownership,
-    OwnershipError,
-};
+use cw_ownable::{Action, Ownership, OwnershipError};
 use cw_storage_plus::Item;
 use cw_utils::Expiration;
 
@@ -18,7 +15,7 @@ use crate::{
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
-    state::{CollectionInfo, Cw721Config, NftInfo, MINTER},
+    state::{CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
     traits::{
         Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
         ToAttributesState,
@@ -106,7 +103,7 @@ pub fn initialize_creator(
     api: &dyn Api,
     creator: Option<&str>,
 ) -> StdResult<Ownership<Addr>> {
-    initialize_owner(storage, api, creator)
+    CREATOR.initialize_owner(storage, api, creator)
 }
 
 pub fn initialize_minter(
@@ -409,7 +406,7 @@ pub fn update_creator_ownership<TCustomResponseMsg>(
     info: &MessageInfo,
     action: Action,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let ownership = update_ownership(deps, &env.block, &info.sender, action)?;
+    let ownership = CREATOR.update_ownership(deps, &env.block, &info.sender, action)?;
     Ok(Response::new()
         .add_attribute("update_creator_ownership", info.sender.to_string())
         .add_attributes(ownership.into_attributes()))
@@ -450,7 +447,7 @@ pub fn set_withdraw_address<TCustomResponseMsg>(
     sender: &Addr,
     address: String,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    assert_owner(deps.storage, sender)?;
+    CREATOR.assert_owner(deps.storage, sender)?;
     deps.api.addr_validate(&address)?;
     let config = Cw721Config::<Option<Empty>>::default();
     config.withdraw_address.save(deps.storage, &address)?;
@@ -463,7 +460,7 @@ pub fn remove_withdraw_address<TCustomResponseMsg>(
     storage: &mut dyn Storage,
     sender: &Addr,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    assert_owner(storage, sender)?;
+    CREATOR.assert_owner(storage, sender)?;
     let config = Cw721Config::<Option<Empty>>::default();
     let address = config.withdraw_address.may_load(storage)?;
     match address {
@@ -581,7 +578,7 @@ pub fn assert_minter(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721Co
 }
 
 pub fn assert_creator(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
-    if assert_owner(storage, sender).is_err() {
+    if CREATOR.assert_owner(storage, sender).is_err() {
         return Err(Cw721ContractError::NotCreator {});
     }
     Ok(())
@@ -632,7 +629,7 @@ pub fn migrate_creator(
     match msg {
         Cw721MigrateMsg::WithUpdate { creator, .. } => {
             if let Some(creator) = creator {
-                initialize_owner(storage, api, Some(creator.as_str()))?;
+                CREATOR.initialize_owner(storage, api, Some(creator.as_str()))?;
                 return Ok(response.add_attribute("creator", creator));
             }
         }
@@ -679,9 +676,10 @@ pub fn migrate_legacy_minter_and_creator(
         return Ok(response);
     }
     // in v0.17/18 cw_ownable::OWNERSHIP was used for minter, now it is used for creator
-    let creator_and_minter = match get_ownership(storage) {
+    let ownership_previously_used_as_minter = CREATOR.item.may_load(storage)?;
+    let creator_and_minter = match ownership_previously_used_as_minter {
         // v0.17/18 ownership migration
-        Ok(ownership) => {
+        Some(ownership) => {
             // owner is used for both: creator and minter
             // since it is already set for creator, we only need to migrate minter
             let owner = ownership.owner.map(|a| a.to_string());
@@ -689,15 +687,13 @@ pub fn migrate_legacy_minter_and_creator(
             owner
         }
         // migration below v0.17
-        Err(StdError::NotFound { .. }) => {
+        None => {
             let legacy_minter_store: Item<Addr> = Item::new("minter");
             let legacy_minter = legacy_minter_store.load(storage)?;
             MINTER.initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
-            initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
+            CREATOR.initialize_owner(storage, api, Some(legacy_minter.as_str()))?;
             Some(legacy_minter.to_string())
         }
-        // store access failed
-        Err(e) => return Err(e.into()),
     };
     Ok(response.add_attribute(
         "creator_and_minter",

@@ -1,3 +1,4 @@
+use super::*;
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
@@ -6,8 +7,8 @@ use crate::{
         NftExtensionMsg, RoyaltyInfoResponse,
     },
     state::{
-        NftExtension, Trait, MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT,
-        MAX_ROYALTY_SHARE_PCT, MINTER,
+        NftExtension, Trait, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
+        MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
     CollectionExtension, RoyaltyInfo,
@@ -17,11 +18,9 @@ use cosmwasm_std::{
     Decimal, Timestamp,
 };
 use cw2::ContractVersion;
-use cw_ownable::{get_ownership, Action};
+use cw_ownable::Action;
 use unit_tests::contract_tests::MockAddrFactory;
 use unit_tests::multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER_ADDR};
-
-use super::*;
 
 #[test]
 fn test_instantiation() {
@@ -93,7 +92,8 @@ fn test_instantiation() {
         .map(|a| a.into_string());
     assert_eq!(minter, Some(addrs.addr("minter").to_string()));
 
-    let creator = get_ownership(deps.as_ref().storage)
+    let creator = CREATOR
+        .get_ownership(deps.as_ref().storage)
         .unwrap()
         .owner
         .map(|a| a.into_string());
@@ -137,7 +137,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(info_minter_and_creator.sender.clone()));
-        let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(info_minter_and_creator.sender));
     }
     // case 2: minter and creator are set
@@ -165,7 +165,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(addrs.addr(MINTER_ADDR)));
-        let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(addrs.addr(CREATOR_ADDR)));
     }
     // case 3: sender is minter and creator is set
@@ -193,7 +193,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(info.sender));
-        let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(addrs.addr(CREATOR_ADDR)));
     }
     // case 4: sender is creator and minter is set
@@ -221,7 +221,7 @@ fn test_instantiation_with_proper_minter_and_creator() {
 
         let minter = MINTER.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(minter, Some(addrs.addr(MINTER_ADDR)));
-        let creator = get_ownership(deps.as_ref().storage).unwrap().owner;
+        let creator = CREATOR.item.load(deps.as_ref().storage).unwrap().owner;
         assert_eq!(creator, Some(info.sender));
     }
 }
