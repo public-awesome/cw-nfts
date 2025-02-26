@@ -9,7 +9,7 @@ license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
 homepage      = "https://cosmwasm.com"
 documentation = "https://docs.cosmwasm.com"
-rust-version  = "1.83"
+rust-version  = "1.81"
 
 [workspace.dependencies]
 cosmwasm-schema            = "^2.2"
