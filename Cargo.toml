@@ -18,9 +18,9 @@ cw2                        = "^2.0"
 cw20                       = "^2.0"
 anyhow                     = "^1.0"
 bech32                     = "^0.11"
-cw721                      = { version = "*", path = "./packages/cw721" }
+cw721                      = { version = "0.20.0", path = "./packages/cw721" }
 cw721-016                  = { version = "0.16.0", package = "cw721" }                  # needed for backwards compatibility and legacy migration
-cw721-base                 = { version = "*", path = "./contracts/cw721-base" }
+cw721-base                 = { version = "0.20.0", path = "./contracts/cw721-base" }
 cw721-base-015             = { version = "0.15.0", package = "cw721-base" }             # needed for testing legacy migration
 cw721-base-016             = { version = "0.16.0", package = "cw721-base" }             # needed for testing legacy migration
 cw721-metadata-onchain-016 = { version = "0.16.0", package = "cw721-metadata-onchain" } # needed for testing legacy migration
