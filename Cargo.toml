@@ -19,13 +19,13 @@ cw20                       = "^2.0"
 anyhow                     = "^1.0"
 bech32                     = "^0.11"
 cw721                      = { version = "*", path = "./packages/cw721" }
-cw721-016                  = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721" }                  # needed for backwards compatibility and legacy migration
+cw721-016                  = { version = "0.16.0", package = "cw721" }                  # needed for backwards compatibility and legacy migration
 cw721-base                 = { version = "*", path = "./contracts/cw721-base" }
-cw721-base-015             = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.15.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-base-016             = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-metadata-onchain-016 = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.16.0", package = "cw721-metadata-onchain" } # needed for testing legacy migration
-cw721-base-017             = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.17.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-base-018             = { git = "https://github.com/CosmWasm/cw-nfts", tag = "v0.18.0", package = "cw721-base" }             # needed for testing legacy migration
+cw721-base-015             = { version = "0.15.0", package = "cw721-base" }             # needed for testing legacy migration
+cw721-base-016             = { version = "0.16.0", package = "cw721-base" }             # needed for testing legacy migration
+cw721-metadata-onchain-016 = { version = "0.16.0", package = "cw721-metadata-onchain" } # needed for testing legacy migration
+cw721-base-017             = { version = "0.17.0", package = "cw721-base" }             # needed for testing legacy migration
+cw721-base-018             = { version = "0.18.0", package = "cw721-base" }             # needed for testing legacy migration
 cw-multi-test              = { version = "^2.2", features = ["cosmwasm_2_1"] }
 cw-ownable                 = { version = "^2.1" }
 cw-storage-plus            = "^2.0"
