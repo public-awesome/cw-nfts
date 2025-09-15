@@ -12,6 +12,7 @@ use crate::{
         Cw721BaseExtensions, Cw721EmptyExtensions, Cw721Extensions, Cw721OnchainExtensions,
     },
     helpers::value_or_empty,
+    legacy::ContractInfoResponse as V16ContractInfoResponse,
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
@@ -713,8 +714,7 @@ pub fn migrate_legacy_collection_info(
         Some(_) => Ok(response),
         None => {
             // contract info = legacy collection info
-            let legacy_collection_info_store: Item<cw721_016::ContractInfoResponse> =
-                Item::new("nft_info");
+            let legacy_collection_info_store: Item<V16ContractInfoResponse> = Item::new("nft_info");
             let legacy_collection_info = legacy_collection_info_store.load(storage)?;
             let collection_info = CollectionInfo {
                 name: legacy_collection_info.name.clone(),

@@ -8,6 +8,7 @@ pub mod query;
 pub mod receiver;
 pub mod state;
 pub mod traits;
+mod legacy;
 
 use cosmwasm_std::Empty;
 pub use cw_utils::Expiration;
