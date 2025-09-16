@@ -309,6 +309,7 @@ pub fn burn_nft<TCustomResponseMsg>(
     Ok(Response::new()
         .add_attribute("action", "burn")
         .add_attribute("sender", info.sender.to_string())
+        .add_attribute("owner", token.owner)
         .add_attribute("token_id", token_id))
 }
 
