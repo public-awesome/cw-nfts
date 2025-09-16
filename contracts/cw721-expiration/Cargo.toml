@@ -1,14 +1,14 @@
 [package]
-name          = "cw721-expiration"
-description   = "CW721 NFT contract allowing NFTs to be expired. Example use case: service subscriptions for a limited period, like access cards, SLAs, cloud services, etc."
 authors       = ["mr-t <mrt@arkprotocol.io>"]
-version       = { workspace = true }
-edition       = { workspace = true }
-license       = { workspace = true }
-repository    = { workspace = true }
-homepage      = { workspace = true }
+description   = "CW721 NFT contract allowing NFTs to be expired. Example use case: service subscriptions for a limited period, like access cards, SLAs, cloud services, etc."
 documentation = { workspace = true }
+edition       = { workspace = true }
+homepage      = { workspace = true }
+license       = { workspace = true }
+name          = "cw721-expiration"
+repository    = { workspace = true }
 rust-version  = { workspace = true }
+version       = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -23,10 +23,10 @@ cosmwasm-std    = { workspace = true }
 cw-ownable      = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2             = { workspace = true }
-cw721      = { workspace = true }
+cw721           = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }
 
 [dev-dependencies]
-cw-multi-test   = { workspace = true }
+cw-multi-test = { workspace = true }

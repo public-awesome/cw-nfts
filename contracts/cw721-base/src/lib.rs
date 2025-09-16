@@ -3,7 +3,7 @@ pub mod msg;
 pub mod state;
 
 // expose so other libs dont need to import cw721
-pub use cw721::*;
+// pub use cw721::*;
 
 // These types are re-exported so that contracts interacting with this
 // one don't need a direct dependency on cw_ownable to use the API.
@@ -11,8 +11,8 @@ pub use cw721::*;
 // `Action` is used in `ExecuteMsg::UpdateMinterOwnership` and `ExecuteMsg::UpdateCreatorOwnership`, `Ownership` is
 // used in `QueryMsg::GetMinterOwnership`, `QueryMsg::GetCreatorOwnership`, and `OwnershipError` is used in
 // `ContractError::Ownership`.
+use cw721::{extension::Cw721BaseExtensions, EmptyOptionalNftExtension};
 pub use cw_ownable::{Action, Ownership, OwnershipError};
-use extension::Cw721BaseExtensions;
 
 // Version info for migration
 pub const CONTRACT_NAME: &str = "crates.io:cw721-base";

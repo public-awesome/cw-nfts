@@ -1,19 +1,16 @@
 [package]
-name          = "cw721"
+authors       = ["Ethan Frey <ethanfrey@users.noreply.github.com>", "Orkun Külçe <orkun@deuslabs.fi>"]
 description   = "Definition and types for the CosmWasm-721 NFT interface"
-authors       = [
-  "Ethan Frey <ethanfrey@users.noreply.github.com>",
-  "Orkun Külçe <orkun@deuslabs.fi>",
-]
-version       = { workspace = true }
-edition       = { workspace = true }
-license       = { workspace = true }
-repository    = { workspace = true }
-homepage      = { workspace = true }
 documentation = { workspace = true }
+edition       = { workspace = true }
+homepage      = { workspace = true }
+license       = { workspace = true }
+name          = "cw721"
+repository    = { workspace = true }
+version       = { workspace = true }
 
 [lib]
-doctest      = false # disable doc tests
+doctest = false # disable doc tests
 
 [dependencies]
 cosmwasm-schema = { workspace = true }
@@ -22,19 +19,13 @@ cw-ownable      = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 cw2             = { workspace = true }
-cw721-016       = { workspace = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }
 url             = { workspace = true }
 
 [dev-dependencies]
-anyhow = { workspace = true }
-bech32 = { workspace = true }
-cw-multi-test   = { workspace = true }
-cw721-base-015  = { workspace = true, features = ["library"] }
-cw721-base-016  = { workspace = true, features = ["library"] }
-cw721-metadata-onchain-016 = { workspace = true}
-cw721-base-017  = { workspace = true, features = ["library"] }
-cw721-base-018  = { workspace = true, features = ["library"] }
-sha2 = { workspace = true }
+anyhow        = { workspace = true }
+bech32        = { workspace = true }
+cw-multi-test = { workspace = true }
+sha2          = { workspace = true }

@@ -5,20 +5,20 @@ default_to_workspace = false
 skip_core_tasks = true
 
 [tasks.fmt]
-command = "cargo"
 args    = ["fmt", "--all", "--check"]
+command = "cargo"
 
 [tasks.test]
-command = "cargo"
 args    = ["test", "--locked"]
+command = "cargo"
 
 [tasks.lint]
-command = "cargo"
 args    = ["clippy", "--tests", "--", "-D", "warnings"]
+command = "cargo"
 
 [tasks.build]
-command = "cargo"
 args    = ["build", "--release", "--locked", "--target", "wasm32-unknown-unknown"]
+command = "cargo"
 
 [tasks.optimize]
 # https://hub.docker.com/r/cosmwasm/workspace-optimizer/tags https://hub.docker.com/r/cosmwasm/workspace-optimizer-arm64/tags
@@ -32,7 +32,7 @@ fi
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  ${image}:0.16.0
+  ${image}:0.17.0
 """
 
 [tasks.schema]
@@ -71,4 +71,9 @@ for crate in $crates; do
   echo "Sleeping before publishing the next crate..."
   sleep 30
 done
+"""
+
+[tasks.format-toml]
+script = """
+taplo fmt
 """
