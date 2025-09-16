@@ -4,15 +4,16 @@ authors = [
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-description = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
+
+description   = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
 documentation = { workspace = true }
-edition = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-name = "cw721-metadata-onchain"
-repository = { workspace = true }
-rust-version = { workspace = true }
-version = { workspace = true }
+edition       = { workspace = true }
+homepage      = { workspace = true }
+license       = { workspace = true }
+name          = "cw721-metadata-onchain"
+repository    = { workspace = true }
+rust-version  = { workspace = true }
+version       = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -1,5 +1,7 @@
 [formatting]
+align_comments      = true
 align_entries       = true
-column_width        = 100
-inline_table_expand = false
+allowed_blank_lines = 2
+column_width        = 120
+compact_arrays      = true
 reorder_keys        = true
