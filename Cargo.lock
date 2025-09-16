@@ -601,6 +601,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",
+ "cw721",
  "cw721-base",
  "schemars",
  "serde",

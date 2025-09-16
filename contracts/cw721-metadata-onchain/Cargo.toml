@@ -1,22 +1,22 @@
 [package]
-name          = "cw721-metadata-onchain"
-description   = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
-authors       = [
+authors = [
   "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-version       = { workspace = true }
-edition       = { workspace = true }
-license       = { workspace = true }
-repository    = { workspace = true }
-homepage      = { workspace = true }
+description = "An opionated `cw721-base` explicitly defining `NftExtension` for metadata on chain"
 documentation = { workspace = true }
-rust-version  = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+name = "cw721-metadata-onchain"
+repository = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
 
 [lib]
-doctest      = false # disable doc tests
 crate-type = ["cdylib", "rlib"]
+doctest    = false              # disable doc tests
 
 [features]
 # use library feature to disable all instantiate/execute/query exports

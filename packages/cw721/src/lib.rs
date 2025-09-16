@@ -2,13 +2,13 @@ pub mod error;
 pub mod execute;
 pub mod extension;
 pub mod helpers;
+mod legacy;
 #[allow(deprecated)]
 pub mod msg;
 pub mod query;
 pub mod receiver;
 pub mod state;
 pub mod traits;
-mod legacy;
 
 use cosmwasm_std::Empty;
 pub use cw_utils::Expiration;
