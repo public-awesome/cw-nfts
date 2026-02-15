@@ -15,6 +15,10 @@ documentation = { workspace = true }
 [lib]
 doctest      = false # disable doc tests
 
+[features]
+default = []
+cw721-016-migrate = ["cw721-016"]
+
 [dependencies]
 cosmwasm-schema = { workspace = true }
 cosmwasm-std    = { workspace = true }
@@ -22,7 +26,7 @@ cw-ownable      = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw-utils        = { workspace = true }
 cw2             = { workspace = true }
-cw721-016       = { workspace = true }
+cw721-016       = { workspace = true, optional = true }
 schemars        = { workspace = true }
 serde           = { workspace = true }
 thiserror       = { workspace = true }

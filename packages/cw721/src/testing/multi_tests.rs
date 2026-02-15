@@ -1,14 +1,7 @@
 use crate::{
-    error::Cw721ContractError,
-    extension::Cw721OnchainExtensions,
-    msg::{
-        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
-        Cw721MigrateMsg, Cw721QueryMsg, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
-    },
-    state::{CollectionInfo, NftExtension, Trait},
-    traits::{Cw721Execute, Cw721Query},
-    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
-    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg, error::Cw721ContractError, extension::Cw721OnchainExtensions, msg::{
+        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse
+    }, state::{CollectionInfo, NftExtension, Trait}, traits::{Cw721Execute, Cw721Query}
 };
 use anyhow::Result;
 use cosmwasm_std::testing::{mock_dependencies, MockApi};
@@ -16,6 +9,8 @@ use cosmwasm_std::{
     Addr, Binary, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
     StdError, Timestamp,
 };
+
+#[cfg(feature = "cw721-016-migrate")]
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_ownable::{Ownership, OwnershipError};

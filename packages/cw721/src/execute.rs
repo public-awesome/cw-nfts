@@ -587,13 +587,36 @@ pub fn assert_creator(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721C
 
 // ------- migrate -------
 pub fn migrate(
+    _deps: DepsMut,
+    _env: Env,
+    _msg: Cw721MigrateMsg,
+    _contract_name: &str,
+    _contract_version: &str,
+) -> Result<Response, Cw721ContractError> {
+    let response = Response::<Empty>::default();
+
+    #[cfg(feature = "cw721-016-migrate")]
+    let response = _migrate_016(
+        response,
+        _deps,
+        _env,
+        _msg,
+        _contract_name,
+        _contract_version,
+    )?;
+    Ok(response)
+}
+
+// ------- migrate -------
+#[cfg(feature = "cw721-016-migrate")]
+pub fn _migrate_016(
+    response: Response,
     deps: DepsMut,
     env: Env,
     msg: Cw721MigrateMsg,
     contract_name: &str,
     contract_version: &str,
 ) -> Result<Response, Cw721ContractError> {
-    let response = Response::<Empty>::default();
     // first migrate legacy data ...
     let response = migrate_legacy_minter_and_creator(deps.storage, deps.api, &env, &msg, response)?;
     let response = migrate_legacy_collection_info(deps.storage, &env, &msg, response)?;
@@ -703,6 +726,7 @@ pub fn migrate_legacy_minter_and_creator(
 }
 
 /// Migrates only in case collection_info is not present
+#[cfg(feature = "cw721-016-migrate")]
 pub fn migrate_legacy_collection_info(
     storage: &mut dyn Storage,
     env: &Env,
