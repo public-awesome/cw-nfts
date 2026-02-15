@@ -3,8 +3,7 @@ use crate::{
     extension::Cw721OnchainExtensions,
     msg::{
         CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
-        Cw721MigrateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse,
-        RoyaltyInfoResponse,
+        Cw721MigrateMsg, Cw721QueryMsg, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
     },
     state::{CollectionInfo, NftExtension, Trait},
     traits::{Cw721Execute, Cw721Query},
@@ -18,6 +17,8 @@ use cosmwasm_std::{
     StdError, Timestamp,
 };
 
+#[cfg(not(feature = "cw721-016-migrate"))]
+use crate::msg::NftInfoResponse;
 #[cfg(feature = "cw721-016-migrate")]
 use cw721_016::NftInfoResponse;
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
