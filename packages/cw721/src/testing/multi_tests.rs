@@ -1,7 +1,15 @@
 use crate::{
-    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg, DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg, error::Cw721ContractError, extension::Cw721OnchainExtensions, msg::{
-        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse
-    }, state::{CollectionInfo, NftExtension, Trait}, traits::{Cw721Execute, Cw721Query}
+    error::Cw721ContractError,
+    extension::Cw721OnchainExtensions,
+    msg::{
+        CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
+        Cw721MigrateMsg, Cw721QueryMsg, NftInfoResponse, NumTokensResponse, OwnerOfResponse,
+        RoyaltyInfoResponse,
+    },
+    state::{CollectionInfo, NftExtension, Trait},
+    traits::{Cw721Execute, Cw721Query},
+    DefaultOptionalCollectionExtension, DefaultOptionalCollectionExtensionMsg,
+    DefaultOptionalNftExtension, DefaultOptionalNftExtensionMsg, NftExtensionMsg,
 };
 use anyhow::Result;
 use cosmwasm_std::testing::{mock_dependencies, MockApi};
