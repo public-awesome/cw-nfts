@@ -1,6 +1,7 @@
 use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
+    legacy::{InstantiateMsg as V16InstantiateMsg, NftInfoResponse as V16NftInfoResponse},
     msg::{
         CollectionExtensionMsg, ConfigResponse, Cw721ExecuteMsg, Cw721InstantiateMsg,
         Cw721MigrateMsg, Cw721QueryMsg, NumTokensResponse, OwnerOfResponse, RoyaltyInfoResponse,
@@ -16,7 +17,7 @@ use cosmwasm_std::{
     Addr, Binary, Decimal, Deps, DepsMut, Empty, Env, MessageInfo, QuerierWrapper, Response,
     StdError, Timestamp,
 };
-use cw721_016::NftInfoResponse;
+
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 use cw_ownable::{Ownership, OwnershipError};
 use cw_utils::Expiration;
@@ -99,7 +100,7 @@ fn query_nft_info(
     querier: QuerierWrapper,
     cw721: &Addr,
     token_id: String,
-) -> NftInfoResponse<Option<NftExtension>> {
+) -> V16NftInfoResponse<Option<NftExtension>> {
     querier
         .query_wasm_smart(
             cw721,
@@ -477,14 +478,13 @@ fn test_instantiate() {
     // test case: backward compatibility using instantiate msg from a 0.16 version on latest contract.
     // This ensures existing 3rd party contracts doesnt need to update as well.
     {
-        use cw721_base_016 as v16;
         let code_id_latest = app.store_code(cw721_base_latest_contract());
 
         let cw721 = app
             .instantiate_contract(
                 code_id_latest,
                 admin.clone(),
-                &v16::InstantiateMsg {
+                &V16InstantiateMsg {
                     name: "collection".to_string(),
                     symbol: "symbol".to_string(),
                     minter: admin.to_string(),

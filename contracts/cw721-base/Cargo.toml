@@ -1,22 +1,23 @@
 [package]
-name          = "cw721-base"
-description   = "`cw721-base` with generic `TNftExtension` and `TCollectionExtension` for empty, on-chain metadata, or custom extensions"
-authors       = [
+authors = [
   "mr-t <mr-t@arkprotocol.io>",
   "Ethan Frey <ethanfrey@users.noreply.github.com>",
   "Orkun Külçe <orkun@deuslabs.fi>",
 ]
-version       = { workspace = true }
-edition       = { workspace = true }
-license       = { workspace = true }
-repository    = { workspace = true }
-homepage      = { workspace = true }
+
+description   = "`cw721-base` with generic `TNftExtension` and `TCollectionExtension` for empty, on-chain metadata, or custom extensions"
 documentation = { workspace = true }
+edition       = { workspace = true }
+homepage      = { workspace = true }
+license       = { workspace = true }
+name          = "cw721-base"
+repository    = { workspace = true }
 rust-version  = { workspace = true }
+version       = { workspace = true }
 
 [lib]
-doctest      = false # disable doc tests
 crate-type = ["cdylib", "rlib"]
+doctest    = false              # disable doc tests
 
 [features]
 # use library feature to disable all instantiate/execute/query exports

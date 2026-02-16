@@ -1,4 +1,4 @@
 [alias]
-wasm = "build --release --lib --target wasm32-unknown-unknown"
+schema    = "run --bin schema"
 unit-test = "test --lib"
-schema = "run --bin schema"
+wasm      = "build --release --lib --target wasm32-unknown-unknown"

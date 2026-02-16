@@ -1,29 +1,30 @@
 [package]
-name = "cw721-receiver-tester"
-description = "A basic contract that can receive a cw721 token for testing purposes"
-authors = ["Christoph Otter <chris@confio.gmbh>"]
-version = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
+authors       = ["Christoph Otter <chris@confio.gmbh>"]
+description   = "A basic contract that can receive a cw721 token for testing purposes"
 documentation = { workspace = true }
+edition       = { workspace = true }
+homepage      = { workspace = true }
+license       = { workspace = true }
+name          = "cw721-receiver-tester"
+repository    = { workspace = true }
 rust-version  = { workspace = true }
+version       = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[features]
-# use library feature to disable all instantiate/execute/query exports
-library = []
-
 [dependencies]
 cosmwasm-schema = { workspace = true }
-cosmwasm-std = { workspace = true }
-cw721-base = { workspace = true, features = ["library"] }
-schemars = { workspace = true }
-serde = { workspace = true }
-thiserror = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw721           = { workspace = true }
+cw721-base      = { workspace = true, features = ["library"] }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+thiserror       = { workspace = true }
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
+
+[features]
+# use library feature to disable all instantiate/execute/query exports
+library = []

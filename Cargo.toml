@@ -1,40 +1,34 @@
 [workspace]
-resolver = "2"
 members  = ["packages/*", "contracts/*"]
+resolver = "2"
 
 [workspace.package]
-version       = "0.20.0"
+documentation = "https://docs.cosmwasm.com"
 edition       = "2021"
+homepage      = "https://cosmwasm.com"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
-homepage      = "https://cosmwasm.com"
-documentation = "https://docs.cosmwasm.com"
 rust-version  = "1.81"
+version       = "0.20.0"
 
 [workspace.dependencies]
-cosmwasm-schema            = "^2.2"
-cosmwasm-std               = "^2.2"
-cw2                        = "^2.0"
-cw20                       = "^2.0"
-anyhow                     = "^1.0"
-bech32                     = "^0.11"
-cw721                      = { version = "*", path = "./packages/cw721" }
-cw721-016                  = { version = "0.16.0", package = "cw721" }                  # needed for backwards compatibility and legacy migration
-cw721-base                 = { version = "*", path = "./contracts/cw721-base" }
-cw721-base-015             = { version = "0.15.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-base-016             = { version = "0.16.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-metadata-onchain-016 = { version = "0.16.0", package = "cw721-metadata-onchain" } # needed for testing legacy migration
-cw721-base-017             = { version = "0.17.0", package = "cw721-base" }             # needed for testing legacy migration
-cw721-base-018             = { version = "0.18.0", package = "cw721-base" }             # needed for testing legacy migration
-cw-multi-test              = { version = "^2.2", features = ["cosmwasm_2_1"] }
-cw-ownable                 = { version = "^2.1" }
-cw-storage-plus            = "^2.0"
-cw-utils                   = "^2.0"
-schemars                   = "^0.8"
-serde                      = { version = "^1.0", default-features = false, features = ["derive"] }
-sha2                       = "^0.10"
-thiserror                  = "^1.0"
-url                        = "^2.5"
+anyhow          = "^1.0"
+bech32          = "^0.11"
+cosmwasm-schema = "^2.2"
+cosmwasm-std    = "^2.2"
+cw-multi-test   = { version = "^2.2", features = ["cosmwasm_2_1"] }
+cw-ownable      = { version = "^2.1" }
+cw-storage-plus = "^2.0"
+cw-utils        = "^2.0"
+cw2             = "^2.0"
+cw20            = "^2.0"
+cw721           = { version = "0.20.0", path = "./packages/cw721" }
+cw721-base      = { version = "0.20.0", path = "./contracts/cw721-base" }
+schemars        = "^0.8"
+serde           = { version = "^1.0", default-features = false, features = ["derive"] }
+sha2            = "^0.10"
+thiserror       = "^1.0"
+url             = "^2.5"
 
 [profile.release.package.cw721-base]
 codegen-units = 1
@@ -65,9 +59,9 @@ codegen-units = 1
 incremental   = false
 
 [profile.release]
-rpath            = false
-lto              = true
-overflow-checks  = true
-opt-level        = 3
 debug            = false
 debug-assertions = false
+lto              = true
+opt-level        = 3
+overflow-checks  = true
+rpath            = false
