@@ -505,6 +505,12 @@
         "image"
       ],
       "properties": {
+        "banner_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "description": {
           "type": "string"
         },

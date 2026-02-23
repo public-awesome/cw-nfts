@@ -62,6 +62,6 @@ incremental   = false
 debug            = false
 debug-assertions = false
 lto              = true
-opt-level        = 3
+opt-level        = "s"
 overflow-checks  = true
 rpath            = false

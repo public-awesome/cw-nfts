@@ -36,6 +36,7 @@ pub const MAX_ROYALTY_SHARE_PCT: u64 = 10;
 pub const ATTRIBUTE_DESCRIPTION: &str = "description";
 pub const ATTRIBUTE_IMAGE: &str = "image";
 pub const ATTRIBUTE_EXTERNAL_LINK: &str = "external_link";
+pub const ATTRIBUTE_BANNER_URL: &str = "banner_url";
 pub const ATTRIBUTE_EXPLICIT_CONTENT: &str = "explicit_content";
 pub const ATTRIBUTE_START_TRADING_TIME: &str = "start_trading_time";
 pub const ATTRIBUTE_ROYALTY_INFO: &str = "royalty_info";
@@ -246,6 +247,7 @@ pub struct CollectionExtension<TRoyaltyInfo> {
     pub description: String,
     pub image: String,
     pub external_link: Option<String>,
+    pub banner_url: Option<String>,
     pub explicit_content: Option<bool>,
     pub start_trading_time: Option<Timestamp>,
     pub royalty_info: Option<TRoyaltyInfo>,

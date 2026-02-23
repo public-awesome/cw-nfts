@@ -14,7 +14,8 @@ use crate::error::Cw721ContractError;
 use crate::execute::{assert_creator, assert_minter};
 use crate::state::{
     Attribute, CollectionExtension, CollectionExtensionAttributes, CollectionInfo, NftInfo, Trait,
-    ATTRIBUTE_DESCRIPTION, ATTRIBUTE_EXPLICIT_CONTENT, ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE,
+    ATTRIBUTE_BANNER_URL, ATTRIBUTE_DESCRIPTION, ATTRIBUTE_EXPLICIT_CONTENT,
+    ATTRIBUTE_EXTERNAL_LINK, ATTRIBUTE_IMAGE,
     ATTRIBUTE_ROYALTY_INFO, ATTRIBUTE_START_TRADING_TIME, CREATOR,
     MAX_COLLECTION_DESCRIPTION_LENGTH, MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
 };
@@ -374,6 +375,7 @@ pub struct CollectionExtensionMsg<TRoyaltyInfoResponse> {
     pub description: Option<String>,
     pub image: Option<String>,
     pub external_link: Option<String>,
+    pub banner_url: Option<String>,
     pub explicit_content: Option<bool>,
     pub start_trading_time: Option<Timestamp>,
     pub royalty_info: Option<TRoyaltyInfoResponse>,
@@ -408,6 +410,9 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
                 }
                 if let Some(external_link) = &self.external_link {
                     updated.external_link = Some(external_link.clone());
+                }
+                if let Some(banner_url) = &self.banner_url {
+                    updated.banner_url = Some(banner_url.clone());
                 }
                 if let Some(explicit_content) = self.explicit_content {
                     updated.explicit_content = Some(explicit_content);
@@ -447,6 +452,7 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
                     description: self.description.clone().unwrap_or_default(),
                     image: self.image.clone().unwrap_or_default(),
                     external_link: self.external_link.clone(),
+                    banner_url: self.banner_url.clone(),
                     explicit_content: self.explicit_content,
                     start_trading_time: self.start_trading_time,
                     royalty_info,
@@ -482,6 +488,7 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
         if (self.description.is_some()
             || self.image.is_some()
             || self.external_link.is_some()
+            || self.banner_url.is_some()
             || self.explicit_content.is_some())
             && sender.is_some()
             && creator_initialized.is_some()
@@ -508,6 +515,9 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
         }
         if let Some(external_link) = &self.external_link {
             Url::parse(external_link)?;
+        }
+        if let Some(banner_url) = &self.banner_url {
+            Url::parse(banner_url)?;
         }
         // no need to check royalty info, as it is checked during creation of RoyaltyInfo
         Ok(())
@@ -730,6 +740,10 @@ where
                 value: to_json_binary(&self.external_link.clone())?,
             },
             Attribute {
+                key: ATTRIBUTE_BANNER_URL.to_string(),
+                value: to_json_binary(&self.banner_url.clone())?,
+            },
+            Attribute {
                 key: ATTRIBUTE_EXPLICIT_CONTENT.to_string(),
                 value: to_json_binary(&self.explicit_content)?,
             },
@@ -766,6 +780,11 @@ where
             .find(|attr| attr.key == ATTRIBUTE_EXTERNAL_LINK)
             .ok_or_else(|| Cw721ContractError::AttributeMissing("external link".to_string()))?
             .value::<Option<String>>()?;
+        let banner_url = attributes
+            .iter()
+            .find(|attr| attr.key == ATTRIBUTE_BANNER_URL)
+            .and_then(|attr| attr.value::<Option<String>>().ok())
+            .unwrap_or(None);
         let explicit_content = attributes
             .iter()
             .find(|attr| attr.key == ATTRIBUTE_EXPLICIT_CONTENT)
@@ -792,6 +811,7 @@ where
             description,
             image,
             external_link,
+            banner_url,
             explicit_content,
             start_trading_time,
             royalty_info,
