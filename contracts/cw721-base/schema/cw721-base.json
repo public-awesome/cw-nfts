@@ -57,6 +57,12 @@
         "description": "NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.",
         "type": "object",
         "properties": {
+          "banner_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "description": {
             "type": [
               "string",
@@ -638,6 +644,12 @@
         "description": "NOTE: In case `info` is not provided in `create()` or `validate()` (like for migration), creator/minter assertion is skipped.",
         "type": "object",
         "properties": {
+          "banner_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "description": {
             "type": [
               "string",
@@ -1341,6 +1353,12 @@
           "image"
         ],
         "properties": {
+          "banner_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "description": {
             "type": "string"
           },
@@ -2008,6 +2026,12 @@
             "image"
           ],
           "properties": {
+            "banner_url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "description": {
               "type": "string"
             },
@@ -2303,6 +2327,12 @@
             "image"
           ],
           "properties": {
+            "banner_url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "description": {
               "type": "string"
             },
@@ -2438,6 +2468,12 @@
             "image"
           ],
           "properties": {
+            "banner_url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "description": {
               "type": "string"
             },

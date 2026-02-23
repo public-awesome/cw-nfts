@@ -158,6 +158,7 @@ fn test_instantiate_with_collection_info_and_extension() {
         image: Some("https://moonphases.org".to_string()),
         explicit_content: Some(true),
         external_link: Some("https://moonphases.org/".to_string()),
+        banner_url: None,
         start_trading_time: Some(Timestamp::from_seconds(0)),
         royalty_info: Some(RoyaltyInfoResponse {
             payment_address: payment.to_string(),
@@ -201,6 +202,7 @@ fn test_instantiate_with_collection_info_and_extension() {
         image: "https://moonphases.org".to_string(),
         explicit_content: Some(true),
         external_link: Some("https://moonphases.org/".to_string()),
+        banner_url: None,
         start_trading_time: Some(Timestamp::from_seconds(0)),
         royalty_info: Some(RoyaltyInfo {
             payment_address: payment,
@@ -246,6 +248,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
         image: Some("https://moonphases.org".to_string()),
         explicit_content: None,
         external_link: None,
+        banner_url: None,
         start_trading_time: None,
         royalty_info: None,
     });
@@ -286,6 +289,7 @@ fn test_instantiate_with_minimal_collection_info_and_extension() {
         image: "https://moonphases.org".to_string(),
         explicit_content: None,
         external_link: None,
+        banner_url: None,
         start_trading_time: None,
         royalty_info: None,
     });

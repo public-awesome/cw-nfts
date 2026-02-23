@@ -238,6 +238,7 @@ fn test_instantiation_with_collection_info() {
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             // no minter owner assertion on start trading time, so even creator can change this here
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
@@ -253,6 +254,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -299,6 +301,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("invalid_url".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -336,6 +339,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("invalid_url".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -373,6 +377,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -407,6 +412,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -446,6 +452,7 @@ fn test_instantiation_with_collection_info() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -492,6 +499,7 @@ fn test_collection_info_update() {
             image: "https://moonphases.org".to_string(),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfo {
                 payment_address: addrs.addr("payment_address"),
@@ -506,6 +514,7 @@ fn test_collection_info_update() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -540,6 +549,7 @@ fn test_collection_info_update() {
             image: None,
             explicit_content: None,
             external_link: None,
+            banner_url: None,
             start_trading_time: None,
             royalty_info: None,
         };
@@ -572,6 +582,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: None, // start trading time belongs to minter - not creator!
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -610,6 +621,7 @@ fn test_collection_info_update() {
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),
                 external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+                banner_url: None,
                 start_trading_time: Some(Timestamp::from_seconds(0)),
                 royalty_info: Some(RoyaltyInfo {
                     payment_address: addrs.addr("payment_address"),
@@ -627,6 +639,7 @@ fn test_collection_info_update() {
             image: None,
             explicit_content: None,
             external_link: None,
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(1)),
             royalty_info: None,
         };
@@ -659,6 +672,7 @@ fn test_collection_info_update() {
                 image: "https://en.wikipedia.org/wiki/Non-fungible_token".to_string(),
                 explicit_content: Some(true),
                 external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+                banner_url: None,
                 start_trading_time: Some(Timestamp::from_seconds(1)),
                 royalty_info: Some(RoyaltyInfo {
                     payment_address: addrs.addr("payment_address"),
@@ -682,6 +696,7 @@ fn test_collection_info_update() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -716,6 +731,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -748,6 +764,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -785,6 +802,7 @@ fn test_collection_info_update() {
             image: Some("invalid_url".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -820,6 +838,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("invalid_url".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -855,6 +874,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -892,6 +912,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -935,6 +956,7 @@ fn test_collection_info_update() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -969,6 +991,7 @@ fn test_collection_info_update() {
             image: Some("https://en.wikipedia.org/wiki/Non-fungible_token".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://github.com/CosmWasm/cw-nfts".to_string()),
+            banner_url: None,
             start_trading_time: None,
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -1053,6 +1076,7 @@ fn test_collection_info_update() {
             image: Some("https://moonphases.org".to_string()),
             explicit_content: Some(true),
             external_link: Some("https://moonphases.org".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(0)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: addrs.addr("payment_address").to_string(),
@@ -1087,6 +1111,7 @@ fn test_collection_info_update() {
             image: None,
             explicit_content: None,
             external_link: None,
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(1)),
             royalty_info: None,
         };

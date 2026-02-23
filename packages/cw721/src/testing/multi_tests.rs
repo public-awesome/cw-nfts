@@ -350,6 +350,7 @@ fn test_instantiate() {
             image: Some("ipfs://ark.pass".to_string()),
             explicit_content: Some(false),
             external_link: Some("https://interchain.arkprotocol.io".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(42)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: payment_address.to_string(),
@@ -452,6 +453,7 @@ fn test_instantiate() {
             image: Some("ipfs://ark.pass".to_string()),
             explicit_content: Some(false),
             external_link: Some("https://interchain.arkprotocol.io".to_string()),
+            banner_url: None,
             start_trading_time: Some(Timestamp::from_seconds(42)),
             royalty_info: Some(RoyaltyInfoResponse {
                 payment_address: "invalid".to_string(),
