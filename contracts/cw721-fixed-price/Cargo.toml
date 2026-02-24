@@ -1,5 +1,6 @@
 [package]
 authors       = ["Vernon Johnson <vtj2105@columbia.edu>"]
+description   = "Fixed price minting contract for CW721 NFTs"
 documentation = { workspace = true }
 edition       = { workspace = true }
 homepage      = { workspace = true }
