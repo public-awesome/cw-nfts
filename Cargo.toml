@@ -9,7 +9,7 @@ homepage      = "https://cosmwasm.com"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
 rust-version  = "1.81"
-version       = "0.20.0"
+version       = "0.21.0"
 
 [workspace.dependencies]
 anyhow          = "^1.0"
@@ -22,8 +22,8 @@ cw-storage-plus = "^2.0"
 cw-utils        = "^2.0"
 cw2             = "^2.0"
 cw20            = "^2.0"
-cw721           = { version = "0.20.0", path = "./packages/cw721" }
-cw721-base      = { version = "0.20.0", path = "./contracts/cw721-base" }
+cw721           = { version = "0.21.0", path = "./packages/cw721" }
+cw721-base      = { version = "0.21.0", path = "./contracts/cw721-base" }
 schemars        = "^0.8"
 serde           = { version = "^1.0", default-features = false, features = ["derive"] }
 sha2            = "^0.10"
