@@ -8,7 +8,7 @@ edition       = "2021"
 homepage      = "https://cosmwasm.com"
 license       = "Apache-2.0"
 repository    = "https://github.com/CosmWasm/cw-nfts"
-rust-version  = "1.81"
+rust-version  = "1.86"
 version       = "0.21.0"
 
 [workspace.dependencies]

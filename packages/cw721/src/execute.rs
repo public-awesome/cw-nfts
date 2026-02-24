@@ -730,44 +730,40 @@ pub fn migrate_legacy_collection_info(
     }
 }
 
-impl<'a>
-    Cw721Execute<
+impl Cw721Execute<
         DefaultOptionalNftExtension,
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
-    > for Cw721OnchainExtensions<'a>
+    > for Cw721OnchainExtensions<'_>
 {
 }
 
-impl<'a>
-    Cw721Execute<
+impl Cw721Execute<
         EmptyOptionalNftExtension,
         EmptyOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
         DefaultOptionalCollectionExtensionMsg,
         Empty,
         Empty,
-    > for Cw721BaseExtensions<'a>
+    > for Cw721BaseExtensions<'_>
 {
 }
 
-impl<'a>
-    Cw721Execute<
+impl Cw721Execute<
         EmptyOptionalNftExtension,
         EmptyOptionalNftExtensionMsg,
         EmptyOptionalCollectionExtension,
         EmptyOptionalCollectionExtensionMsg,
         Empty,
         Empty,
-    > for Cw721EmptyExtensions<'a>
+    > for Cw721EmptyExtensions<'_>
 {
 }
 
 impl<
-        'a,
         TNftExtension,
         TNftExtensionMsg,
         TCollectionExtension,
@@ -785,7 +781,7 @@ impl<
         TCustomResponseMsg,
     >
     for Cw721Extensions<
-        'a,
+        '_,
         TNftExtension,
         TNftExtensionMsg,
         TCollectionExtension,
