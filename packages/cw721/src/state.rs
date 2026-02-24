@@ -78,7 +78,7 @@ where
     }
 }
 
-impl<'a, TNftExtension> Cw721Config<'a, TNftExtension>
+impl<TNftExtension> Cw721Config<'_, TNftExtension>
 where
     TNftExtension: Cw721State,
 {
@@ -162,7 +162,7 @@ where
     pub owner: MultiIndex<'a, Addr, NftInfo<TNftExtension>, String>,
 }
 
-impl<'a, TNftExtension> IndexList<NftInfo<TNftExtension>> for TokenIndexes<'a, TNftExtension>
+impl<TNftExtension> IndexList<NftInfo<TNftExtension>> for TokenIndexes<'_, TNftExtension>
 where
     TNftExtension: Cw721State,
 {

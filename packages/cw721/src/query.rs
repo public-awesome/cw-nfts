@@ -417,23 +417,22 @@ pub fn query_withdraw_address(deps: Deps) -> StdResult<Option<String>> {
         .may_load(deps.storage)
 }
 
-impl<'a> Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
-    for Cw721OnchainExtensions<'a>
+impl Cw721Query<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
+    for Cw721OnchainExtensions<'_>
 {
 }
 
-impl<'a> Cw721Query<EmptyOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
-    for Cw721BaseExtensions<'a>
+impl Cw721Query<EmptyOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>
+    for Cw721BaseExtensions<'_>
 {
 }
 
-impl<'a> Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
-    for Cw721EmptyExtensions<'a>
+impl Cw721Query<EmptyOptionalNftExtension, EmptyOptionalCollectionExtension, Empty>
+    for Cw721EmptyExtensions<'_>
 {
 }
 
 impl<
-        'a,
         TNftExtension,
         TNftExtensionMsg,
         TCollectionExtension,
@@ -443,7 +442,7 @@ impl<
         TCustomResponseMsg,
     > Cw721Query<TNftExtension, TCollectionExtension, TExtensionQueryMsg>
     for Cw721Extensions<
-        'a,
+        '_,
         TNftExtension,
         TNftExtensionMsg,
         TCollectionExtension,

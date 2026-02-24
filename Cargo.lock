@@ -491,7 +491,7 @@ dependencies = [
 
 [[package]]
 name = "cw2981-royalties"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -506,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "cw721"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "anyhow",
  "bech32",
@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-base"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-expiration"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-fixed-price"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -571,7 +571,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-metadata-onchain"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -583,7 +583,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-non-transferable"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
@@ -596,7 +596,7 @@ dependencies = [
 
 [[package]]
 name = "cw721-receiver-tester"
-version = "0.20.0"
+version = "0.21.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
