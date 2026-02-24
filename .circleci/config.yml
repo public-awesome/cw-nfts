@@ -164,7 +164,7 @@ jobs:
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
       - restore_cache:
           keys:
-            - cargocache-v2-cw721:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-cw721:1.86.0-{{ checksum "~/project/Cargo.lock" }}
       - run:
           name: Build library for native target
           command: cargo build --locked
@@ -187,7 +187,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-cw721:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-cw721:1.86.0-{{ checksum "~/project/Cargo.lock" }}
 
   lint:
     docker:
@@ -246,9 +246,11 @@ jobs:
           command: |
             # create a dummy container which will hold a volume with config
             docker create -v /code --name with_code alpine /bin/true
-            # copy a config file into this volume
+            # copy config files into this volume
             docker cp Cargo.toml with_code:/code
             docker cp Cargo.lock with_code:/code
+            docker cp rust-toolchain.toml with_code:/code
+            docker cp .cargo with_code:/code
             # copy code into this volume
             docker cp ./contracts with_code:/code
             docker cp ./packages with_code:/code
@@ -294,13 +296,20 @@ jobs:
       - setup_remote_docker
       - checkout
       - run:
-          name: Build development contracts
+          name: Prepare volume with source code
           command: |
-            docker run --rm -v "$(pwd)":/code \
-              --mount type=volume,source="$(basename $(pwd))_cache",target=/target \
-              --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-              --platform linux/amd64 \
-              cosmwasm/optimizer:0.17.0
+            docker create -v /code --name with_code alpine /bin/true
+            docker cp Cargo.toml with_code:/code
+            docker cp Cargo.lock with_code:/code
+            docker cp rust-toolchain.toml with_code:/code
+            docker cp .cargo with_code:/code
+            docker cp ./contracts with_code:/code
+            docker cp ./packages with_code:/code
+      - run:
+          name: Build and optimize contracts
+          command: |
+            docker run --volumes-from with_code cosmwasm/optimizer:0.17.0
+            docker cp with_code:/code/artifacts ./artifacts
       - run:
           name: Show data
           command: |

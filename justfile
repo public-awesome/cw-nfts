@@ -23,7 +23,7 @@ optimize:
       image="cosmwasm/optimizer"
     fi
     docker run --rm -v "$(pwd)":/code \
-      --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+      --mount type=volume,source="$(basename "$(pwd)")_cache",target=/target \
       --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
       ${image}:0.17.0
 
