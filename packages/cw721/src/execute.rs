@@ -730,7 +730,8 @@ pub fn migrate_legacy_collection_info(
     }
 }
 
-impl Cw721Execute<
+impl
+    Cw721Execute<
         DefaultOptionalNftExtension,
         DefaultOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
@@ -741,7 +742,8 @@ impl Cw721Execute<
 {
 }
 
-impl Cw721Execute<
+impl
+    Cw721Execute<
         EmptyOptionalNftExtension,
         EmptyOptionalNftExtensionMsg,
         DefaultOptionalCollectionExtension,
@@ -752,7 +754,8 @@ impl Cw721Execute<
 {
 }
 
-impl Cw721Execute<
+impl
+    Cw721Execute<
         EmptyOptionalNftExtension,
         EmptyOptionalNftExtensionMsg,
         EmptyOptionalCollectionExtension,
