@@ -1415,16 +1415,21 @@ fn test_additional_minters_add_remove() {
         .unwrap();
 
     // query additional minters
-    let res = contract
-        .query(
-            deps.as_ref(),
-            &env,
-            Cw721QueryMsg::<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>::GetAdditionalMinters {
-                start_after: None,
-                limit: None,
-            },
-        )
-        .unwrap();
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 1);
     assert_eq!(response.minters[0], additional_minter.to_string());
@@ -1455,16 +1460,21 @@ fn test_additional_minters_add_remove() {
         .unwrap();
 
     // query shows empty list
-    let res = contract
-        .query(
-            deps.as_ref(),
-            &env,
-            Cw721QueryMsg::<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>::GetAdditionalMinters {
-                start_after: None,
-                limit: None,
-            },
-        )
-        .unwrap();
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 0);
 
@@ -1742,45 +1752,60 @@ fn test_additional_minters_query_pagination() {
     }
 
     // query all
-    let res = contract
-        .query(
-            deps.as_ref(),
-            &env,
-            Cw721QueryMsg::<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>::GetAdditionalMinters {
-                start_after: None,
-                limit: None,
-            },
-        )
-        .unwrap();
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 3);
 
     // query with limit = 1
-    let res = contract
-        .query(
-            deps.as_ref(),
-            &env,
-            Cw721QueryMsg::<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>::GetAdditionalMinters {
-                start_after: None,
-                limit: Some(1),
-            },
-        )
-        .unwrap();
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: Some(1),
+                },
+            )
+            .unwrap();
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 1);
     let first = response.minters[0].clone();
 
     // query with start_after for pagination
-    let res = contract
-        .query(
-            deps.as_ref(),
-            &env,
-            Cw721QueryMsg::<DefaultOptionalNftExtension, DefaultOptionalCollectionExtension, Empty>::GetAdditionalMinters {
-                start_after: Some(first),
-                limit: Some(10),
-            },
-        )
-        .unwrap();
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: Some(first),
+                    limit: Some(10),
+                },
+            )
+            .unwrap();
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 2);
 }

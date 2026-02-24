@@ -219,9 +219,7 @@ pub trait Cw721Execute<
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             Cw721ExecuteMsg::Burn { token_id } => self.burn_nft(deps, env, info, token_id),
-            Cw721ExecuteMsg::AddMinter { minter } => {
-                self.add_additional_minter(deps, info, minter)
-            }
+            Cw721ExecuteMsg::AddMinter { minter } => self.add_additional_minter(deps, info, minter),
             Cw721ExecuteMsg::RemoveMinter { minter } => {
                 self.remove_additional_minter(deps, info, minter)
             }
@@ -630,10 +628,7 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCreatorOwnership {} => Ok(to_json_binary(
                 &self.query_creator_ownership(deps.storage)?,
             )?),
-            Cw721QueryMsg::GetAdditionalMinters {
-                start_after,
-                limit,
-            } => Ok(to_json_binary(
+            Cw721QueryMsg::GetAdditionalMinters { start_after, limit } => Ok(to_json_binary(
                 &self.query_additional_minters(deps, start_after, limit)?,
             )?),
             Cw721QueryMsg::Extension { msg } => self.query_extension(deps, env, msg),
