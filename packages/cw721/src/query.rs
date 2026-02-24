@@ -11,13 +11,14 @@ use crate::{
         Cw721BaseExtensions, Cw721EmptyExtensions, Cw721Extensions, Cw721OnchainExtensions,
     },
     msg::{
-        AllInfoResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
-        CollectionInfoAndExtensionResponse, ConfigResponse, MinterResponse, NftInfoResponse,
-        NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
+        AdditionalMintersResponse, AllInfoResponse, AllNftInfoResponse, ApprovalResponse,
+        ApprovalsResponse, CollectionInfoAndExtensionResponse, ConfigResponse, MinterResponse,
+        NftInfoResponse, NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse,
+        TokensResponse,
     },
     state::{
-        Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo, CREATOR,
-        MINTER,
+        Approval, CollectionExtensionAttributes, CollectionInfo, Cw721Config, NftInfo,
+        ADDITIONAL_MINTERS, CREATOR, MINTER,
     },
     traits::{Contains, Cw721CustomMsg, Cw721Query, Cw721State, FromAttributesState},
     DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
@@ -72,6 +73,22 @@ pub fn query_minter_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr
 
 pub fn query_creator_ownership(storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
     CREATOR.get_ownership(storage)
+}
+
+pub fn query_additional_minters(
+    deps: Deps,
+    start_after: Option<String>,
+    limit: Option<u32>,
+) -> StdResult<AdditionalMintersResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    let start_addr = maybe_addr(deps.api, start_after)?;
+    let start = start_addr.as_ref().map(Bound::exclusive);
+    let minters = ADDITIONAL_MINTERS
+        .keys(deps.storage, start, None, Order::Ascending)
+        .take(limit)
+        .map(|item| item.map(|addr| addr.to_string()))
+        .collect::<StdResult<Vec<_>>>()?;
+    Ok(AdditionalMintersResponse { minters })
 }
 
 pub fn query_collection_info(storage: &dyn Storage) -> StdResult<CollectionInfo> {

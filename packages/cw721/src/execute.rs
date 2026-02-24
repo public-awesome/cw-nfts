@@ -16,7 +16,7 @@ use crate::{
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
-    state::{CollectionInfo, Cw721Config, NftInfo, CREATOR, MINTER},
+    state::{CollectionInfo, Cw721Config, NftInfo, ADDITIONAL_MINTERS, CREATOR, MINTER},
     traits::{
         Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
         ToAttributesState,
@@ -572,11 +572,58 @@ pub fn check_can_send<TNftExtension>(
     }
 }
 
-pub fn assert_minter(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
+/// Checks that the sender is the primary minter (manager). Used for admin operations
+/// like adding/removing additional minters and updating minter ownership.
+pub fn assert_minter_owner(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
     if MINTER.assert_owner(storage, sender).is_err() {
-        return Err(Cw721ContractError::NotMinter {});
+        return Err(Cw721ContractError::NotMinterOwner {});
     }
     Ok(())
+}
+
+/// Checks that the sender is authorized to mint. Accepts the primary minter OR any additional minter.
+pub fn assert_minter(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {
+    if MINTER.assert_owner(storage, sender).is_ok() {
+        return Ok(());
+    }
+    if ADDITIONAL_MINTERS.has(storage, sender) {
+        return Ok(());
+    }
+    Err(Cw721ContractError::NotMinter {})
+}
+
+pub fn add_additional_minter<TCustomResponseMsg>(
+    deps: DepsMut,
+    info: &MessageInfo,
+    minter: String,
+) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
+    assert_minter_owner(deps.storage, &info.sender)?;
+    let minter_addr = deps.api.addr_validate(&minter)?;
+    if ADDITIONAL_MINTERS.has(deps.storage, &minter_addr) {
+        return Err(Cw721ContractError::MinterAlreadyExists {});
+    }
+    ADDITIONAL_MINTERS.save(deps.storage, &minter_addr, &Empty {})?;
+    Ok(Response::new()
+        .add_attribute("action", "add_additional_minter")
+        .add_attribute("sender", info.sender.to_string())
+        .add_attribute("minter", minter))
+}
+
+pub fn remove_additional_minter<TCustomResponseMsg>(
+    deps: DepsMut,
+    info: &MessageInfo,
+    minter: String,
+) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
+    assert_minter_owner(deps.storage, &info.sender)?;
+    let minter_addr = deps.api.addr_validate(&minter)?;
+    if !ADDITIONAL_MINTERS.has(deps.storage, &minter_addr) {
+        return Err(Cw721ContractError::MinterNotFound {});
+    }
+    ADDITIONAL_MINTERS.remove(deps.storage, &minter_addr);
+    Ok(Response::new()
+        .add_attribute("action", "remove_additional_minter")
+        .add_attribute("sender", info.sender.to_string())
+        .add_attribute("minter", minter))
 }
 
 pub fn assert_creator(storage: &dyn Storage, sender: &Addr) -> Result<(), Cw721ContractError> {

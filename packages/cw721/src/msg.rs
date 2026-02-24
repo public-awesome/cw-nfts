@@ -96,6 +96,15 @@ pub enum Cw721ExecuteMsg<
         token_id: String,
     },
 
+    /// Add an additional minter. Only the primary minter (manager) can call this.
+    AddMinter {
+        minter: String,
+    },
+    /// Remove an additional minter. Only the primary minter (manager) can call this.
+    RemoveMinter {
+        minter: String,
+    },
+
     /// Custom msg execution. This is a no-op in default implementation.
     UpdateExtension {
         msg: TExtensionMsg,
@@ -233,6 +242,13 @@ pub enum Cw721QueryMsg<
 
     #[returns(Ownership<Addr>)]
     GetCreatorOwnership {},
+
+    /// Returns the list of additional minters (paginated).
+    #[returns(AdditionalMintersResponse)]
+    GetAdditionalMinters {
+        start_after: Option<String>,
+        limit: Option<u32>,
+    },
 
     /// With MetaData Extension.
     /// Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema*
@@ -883,6 +899,11 @@ pub struct TokensResponse {
 #[cw_serde]
 pub struct MinterResponse {
     pub minter: Option<String>,
+}
+
+#[cw_serde]
+pub struct AdditionalMintersResponse {
+    pub minters: Vec<String>,
 }
 
 #[cw_serde]
