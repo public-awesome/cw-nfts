@@ -3,19 +3,21 @@ use crate::{
     error::Cw721ContractError,
     extension::Cw721OnchainExtensions,
     msg::{
-        CollectionExtensionMsg, CollectionInfoMsg, Cw721ExecuteMsg, Cw721InstantiateMsg,
-        NftExtensionMsg, RoyaltyInfoResponse,
+        AdditionalMintersResponse, CollectionExtensionMsg, CollectionInfoMsg, Cw721ExecuteMsg,
+        Cw721InstantiateMsg, Cw721QueryMsg, NftExtensionMsg, RoyaltyInfoResponse,
     },
     state::{
         NftExtension, Trait, CREATOR, MAX_COLLECTION_DESCRIPTION_LENGTH,
         MAX_ROYALTY_SHARE_DELTA_PCT, MAX_ROYALTY_SHARE_PCT, MINTER,
     },
     traits::{Cw721Execute, Cw721Query},
-    CollectionExtension, RoyaltyInfo,
+    CollectionExtension, DefaultOptionalCollectionExtension, DefaultOptionalNftExtension,
+    RoyaltyInfo,
 };
 use cosmwasm_std::{
+    from_json,
     testing::{mock_dependencies, mock_env},
-    Decimal, Timestamp,
+    Decimal, Empty, Timestamp,
 };
 use cw2::ContractVersion;
 use cw_ownable::Action;
@@ -1369,4 +1371,441 @@ fn test_nft_mint() {
         let result = res.unwrap();
         assert_eq!(result.len(), 2);
     }
+}
+
+#[test]
+fn test_additional_minters_add_remove() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    // instantiate with separate minter and creator
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    let additional_minter = addrs.addr("additional_minter");
+
+    // primary minter can add an additional minter
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap();
+
+    // query additional minters
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 1);
+    assert_eq!(response.minters[0], additional_minter.to_string());
+
+    // adding same minter again should fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::MinterAlreadyExists {});
+
+    // primary minter can remove an additional minter
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::RemoveMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap();
+
+    // query shows empty list
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 0);
+
+    // removing non-existent minter should fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::RemoveMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::MinterNotFound {});
+}
+
+#[test]
+fn test_additional_minter_can_mint() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    let additional_minter = addrs.addr("additional_minter");
+    let info_additional = addrs.info("additional_minter");
+
+    // additional minter cannot mint before being added
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::Mint {
+                token_id: "1".to_string(),
+                owner: addrs.addr("owner1").to_string(),
+                token_uri: Some("https://example.com/1".into()),
+                extension: None,
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotMinter {});
+
+    // add additional minter
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap();
+
+    // additional minter can now mint
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::Mint {
+                token_id: "1".to_string(),
+                owner: addrs.addr("owner1").to_string(),
+                token_uri: Some("https://example.com/1".into()),
+                extension: None,
+            },
+        )
+        .unwrap();
+
+    // primary minter can still mint
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::Mint {
+                token_id: "2".to_string(),
+                owner: addrs.addr("owner2").to_string(),
+                token_uri: Some("https://example.com/2".into()),
+                extension: None,
+            },
+        )
+        .unwrap();
+
+    // remove additional minter and verify they can no longer mint
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::RemoveMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap();
+
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::Mint {
+                token_id: "3".to_string(),
+                owner: addrs.addr("owner3").to_string(),
+                token_uri: Some("https://example.com/3".into()),
+                extension: None,
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotMinter {});
+}
+
+#[test]
+fn test_additional_minter_cannot_manage_minters() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    let additional_minter = addrs.addr("additional_minter");
+    let info_additional = addrs.info("additional_minter");
+
+    // add additional minter
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap();
+
+    // additional minter CANNOT add other minters
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::AddMinter {
+                minter: addrs.addr("another").to_string(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotMinterOwner {});
+
+    // additional minter CANNOT remove minters
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::RemoveMinter {
+                minter: additional_minter.to_string(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotMinterOwner {});
+
+    // additional minter CANNOT update minter ownership
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_additional,
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
+                new_owner: addrs.addr("another").to_string(),
+                expiry: None,
+            }),
+        )
+        .unwrap_err();
+    // UpdateMinterOwnership goes through cw_ownable, which returns OwnershipError
+    assert!(matches!(err, Cw721ContractError::Ownership(..)));
+
+    // random address still cannot mint
+    let info_random = addrs.info("random");
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_random,
+            Cw721ExecuteMsg::Mint {
+                token_id: "1".to_string(),
+                owner: addrs.addr("owner").to_string(),
+                token_uri: Some("https://example.com/1".into()),
+                extension: None,
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotMinter {});
+}
+
+#[test]
+fn test_additional_minters_query_pagination() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    // add 3 additional minters
+    let minter_a = addrs.addr("minter_a");
+    let minter_b = addrs.addr("minter_b");
+    let minter_c = addrs.addr("minter_c");
+
+    for m in [&minter_a, &minter_b, &minter_c] {
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_minter,
+                Cw721ExecuteMsg::AddMinter {
+                    minter: m.to_string(),
+                },
+            )
+            .unwrap();
+    }
+
+    // query all
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 3);
+
+    // query with limit = 1
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: Some(1),
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 1);
+    let first = response.minters[0].clone();
+
+    // query with start_after for pagination
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: Some(first),
+                    limit: Some(10),
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 2);
 }

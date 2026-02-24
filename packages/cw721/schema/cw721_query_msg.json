@@ -308,6 +308,36 @@
       "additionalProperties": false
     },
     {
+      "description": "Returns the list of additional minters (paginated).",
+      "type": "object",
+      "required": [
+        "get_additional_minters"
+      ],
+      "properties": {
+        "get_additional_minters": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "start_after": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "With MetaData Extension. Returns metadata about one particular token, based on *ERC721 Metadata JSON Schema* but directly from the contract",
       "type": "object",
       "required": [

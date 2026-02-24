@@ -363,6 +363,50 @@
         "additionalProperties": false
       },
       {
+        "description": "Add an additional minter. Only the primary minter (manager) can call this.",
+        "type": "object",
+        "required": [
+          "add_minter"
+        ],
+        "properties": {
+          "add_minter": {
+            "type": "object",
+            "required": [
+              "minter"
+            ],
+            "properties": {
+              "minter": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "description": "Remove an additional minter. Only the primary minter (manager) can call this.",
+        "type": "object",
+        "required": [
+          "remove_minter"
+        ],
+        "properties": {
+          "remove_minter": {
+            "type": "object",
+            "required": [
+              "minter"
+            ],
+            "properties": {
+              "minter": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
         "description": "Custom msg execution. This is a no-op in default implementation.",
         "type": "object",
         "required": [
