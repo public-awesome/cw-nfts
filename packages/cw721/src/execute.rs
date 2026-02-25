@@ -1,6 +1,6 @@
 use cosmwasm_std::{
-    Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Response,
-    StdResult, Storage,
+    Addr, Api, BankMsg, Binary, Coin, CustomMsg, Deps, DepsMut, Empty, Env, MessageInfo, Order,
+    Response, StdResult, Storage,
 };
 use cw_ownable::{Action, Ownership, OwnershipError};
 use cw_storage_plus::Item;
@@ -16,7 +16,10 @@ use crate::{
     msg::{CollectionInfoMsg, Cw721InstantiateMsg, Cw721MigrateMsg, NftInfoMsg},
     query::query_collection_info_and_extension,
     receiver::Cw721ReceiveMsg,
-    state::{CollectionInfo, Cw721Config, NftInfo, ADDITIONAL_MINTERS, CREATOR, MINTER},
+    state::{
+        CollectionInfo, Cw721Config, NftInfo, ADDITIONAL_MINTERS, CREATOR, MAX_ADDITIONAL_MINTERS,
+        MINTER,
+    },
     traits::{
         Cw721CustomMsg, Cw721Execute, Cw721State, FromAttributesState, StateFactory,
         ToAttributesState,
@@ -601,6 +604,14 @@ pub fn add_additional_minter<TCustomResponseMsg>(
     let minter_addr = deps.api.addr_validate(&minter)?;
     if ADDITIONAL_MINTERS.has(deps.storage, &minter_addr) {
         return Err(Cw721ContractError::MinterAlreadyExists {});
+    }
+    let count = ADDITIONAL_MINTERS
+        .keys(deps.storage, None, None, Order::Ascending)
+        .count();
+    if count >= MAX_ADDITIONAL_MINTERS as usize {
+        return Err(Cw721ContractError::MaxAdditionalMintersExceeded {
+            max: MAX_ADDITIONAL_MINTERS,
+        });
     }
     ADDITIONAL_MINTERS.save(deps.storage, &minter_addr, &Empty {})?;
     Ok(Response::new()

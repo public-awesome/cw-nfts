@@ -1809,3 +1809,89 @@ fn test_additional_minters_query_pagination() {
     let response: AdditionalMintersResponse = from_json(res).unwrap();
     assert_eq!(response.minters.len(), 2);
 }
+
+#[test]
+fn test_additional_minters_max_cap() {
+    use crate::state::MAX_ADDITIONAL_MINTERS;
+
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    // add MAX_ADDITIONAL_MINTERS minters successfully (10 fixed names)
+    let names = ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"];
+    assert_eq!(names.len(), MAX_ADDITIONAL_MINTERS as usize);
+
+    for name in &names {
+        contract
+            .execute(
+                deps.as_mut(),
+                &env,
+                &info_minter,
+                Cw721ExecuteMsg::AddMinter {
+                    minter: addrs.addr(name).to_string(),
+                },
+            )
+            .unwrap();
+    }
+
+    // adding one more should fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: addrs.addr("one_too_many").to_string(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(
+        err,
+        Cw721ContractError::MaxAdditionalMintersExceeded {
+            max: MAX_ADDITIONAL_MINTERS
+        }
+    );
+
+    // remove one and add again should succeed
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::RemoveMinter {
+                minter: addrs.addr("m0").to_string(),
+            },
+        )
+        .unwrap();
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: addrs.addr("replacement").to_string(),
+            },
+        )
+        .unwrap();
+}

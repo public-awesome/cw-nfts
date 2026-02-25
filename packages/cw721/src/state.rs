@@ -22,6 +22,8 @@ pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
 /// Additional minters that can mint NFTs but cannot manage minter ownership.
 /// Stored as a set (Map<&Addr, Empty>) - the primary minter (MINTER owner) can add/remove these.
 pub const ADDITIONAL_MINTERS: Map<&Addr, Empty> = Map::new("additional_minters");
+/// Maximum number of additional minters allowed.
+pub const MAX_ADDITIONAL_MINTERS: u32 = 10;
 
 // ----------------------
 // NOTE: below are max restrictions for default collection extension (CollectionExtensionResponse)

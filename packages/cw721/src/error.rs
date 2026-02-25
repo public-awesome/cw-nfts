@@ -82,6 +82,9 @@ pub enum Cw721ContractError {
     #[error("Address is already an additional minter")]
     MinterAlreadyExists {},
 
+    #[error("Maximum number of additional minters ({max}) reached")]
+    MaxAdditionalMintersExceeded { max: u32 },
+
     #[error("Address is not an additional minter")]
     MinterNotFound {},
 
