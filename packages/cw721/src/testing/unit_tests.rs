@@ -20,7 +20,7 @@ use cosmwasm_std::{
     Decimal, Empty, Timestamp,
 };
 use cw2::ContractVersion;
-use cw_ownable::Action;
+use cw_ownable::{Action, OwnershipError};
 use unit_tests::contract_tests::MockAddrFactory;
 use unit_tests::multi_tests::{CREATOR_ADDR, MINTER_ADDR, OTHER_ADDR};
 
@@ -1894,4 +1894,240 @@ fn test_additional_minters_max_cap() {
             },
         )
         .unwrap();
+}
+
+#[test]
+fn test_additional_minters_cleared_on_ownership_transfer() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    // add two additional minters
+    let additional_minter1 = addrs.addr("additional_minter1");
+    let additional_minter2 = addrs.addr("additional_minter2");
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter1.to_string(),
+            },
+        )
+        .unwrap();
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter2.to_string(),
+            },
+        )
+        .unwrap();
+
+    // confirm they exist
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 2);
+
+    // propose transfer — minters should NOT be cleared yet
+    let new_owner = addrs.addr("new_owner");
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
+                new_owner: new_owner.to_string(),
+                expiry: None,
+            }),
+        )
+        .unwrap();
+
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 2);
+
+    // accept transfer as new owner — minters should be cleared
+    let info_new_owner = addrs.info("new_owner");
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_new_owner,
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
+        )
+        .unwrap();
+
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 0);
+}
+
+#[test]
+fn test_additional_minters_not_cleared_on_expired_transfer() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let mut env = mock_env();
+    let contract = Cw721OnchainExtensions::default();
+
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: None,
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    // add two additional minters
+    let additional_minter1 = addrs.addr("additional_minter1");
+    let additional_minter2 = addrs.addr("additional_minter2");
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter1.to_string(),
+            },
+        )
+        .unwrap();
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::AddMinter {
+                minter: additional_minter2.to_string(),
+            },
+        )
+        .unwrap();
+
+    // propose transfer with an expiry at block height 100
+    let new_owner = addrs.addr("new_owner");
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::TransferOwnership {
+                new_owner: new_owner.to_string(),
+                expiry: Some(cw_utils::Expiration::AtHeight(100)),
+            }),
+        )
+        .unwrap();
+
+    // advance block height past the expiry
+    env.block.height = 200;
+
+    // accept should fail because the transfer has expired
+    let info_new_owner = addrs.info("new_owner");
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_new_owner,
+            Cw721ExecuteMsg::UpdateMinterOwnership(Action::AcceptOwnership),
+        )
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            Cw721ContractError::Ownership(OwnershipError::TransferExpired)
+        ),
+        "expected TransferExpired, got: {err:?}"
+    );
+
+    // additional minters should still be intact (clear was reverted)
+    let res =
+        contract
+            .query(
+                deps.as_ref(),
+                &env,
+                Cw721QueryMsg::<
+                    DefaultOptionalNftExtension,
+                    DefaultOptionalCollectionExtension,
+                    Empty,
+                >::GetAdditionalMinters {
+                    start_after: None,
+                    limit: None,
+                },
+            )
+            .unwrap();
+    let response: AdditionalMintersResponse = from_json(res).unwrap();
+    assert_eq!(response.minters.len(), 2);
 }

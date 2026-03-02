@@ -393,13 +393,25 @@ where
     Ok(res)
 }
 
+/// Updates minter ownership and clears all additional minters when ownership
+/// is accepted or renounced.
+///
+/// Safety: clearing iterates all additional minters, but this is bounded by
+/// [`MAX_ADDITIONAL_MINTERS`], so gas cost is negligible.
 pub fn update_minter_ownership<TCustomResponseMsg>(
-    deps: DepsMut,
+    mut deps: DepsMut,
     env: &Env,
     info: &MessageInfo,
     action: Action,
 ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
-    let ownership = MINTER.update_ownership(deps, &env.block, &info.sender, action)?;
+    let clear_minters = matches!(action, Action::AcceptOwnership | Action::RenounceOwnership);
+    let ownership = MINTER.update_ownership(deps.branch(), &env.block, &info.sender, action)?;
+    if clear_minters {
+        // Clear all additional minters to prevent the previous owner's delegates
+        // from retaining minting privileges under the new owner.
+        // Iteration is bounded by MAX_ADDITIONAL_MINTERS — no gas risk.
+        ADDITIONAL_MINTERS.clear(deps.storage);
+    }
     Ok(Response::new()
         .add_attribute("update_minter_ownership", info.sender.to_string())
         .add_attributes(ownership.into_attributes()))
