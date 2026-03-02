@@ -1,6 +1,8 @@
 # Check formatting
-fmt:
+check-fmt:
     cargo fmt --all --check
+fmt:
+    cargo fmt --all
 
 # Run tests
 test:

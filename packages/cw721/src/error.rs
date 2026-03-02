@@ -76,6 +76,18 @@ pub enum Cw721ContractError {
     #[error("Trait display type in metadata must not be empty")]
     TraitDisplayTypeEmpty {},
 
+    #[error("Caller is not the minter owner (manager)")]
+    NotMinterOwner {},
+
+    #[error("Address is already an additional minter")]
+    MinterAlreadyExists {},
+
+    #[error("Maximum number of additional minters ({max}) reached")]
+    MaxAdditionalMintersExceeded { max: u32 },
+
+    #[error("Address is not an additional minter")]
+    MinterNotFound {},
+
     #[error("Internal error. Missing argument: Info")]
     NoInfo,
 }

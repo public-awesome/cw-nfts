@@ -13,20 +13,21 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{
     error::Cw721ContractError,
     execute::{
-        approve, approve_all, burn_nft, initialize_creator, initialize_minter, instantiate,
-        instantiate_with_version, migrate, mint, remove_withdraw_address, revoke, revoke_all,
-        send_nft, set_withdraw_address, transfer_nft, update_collection_info,
-        update_creator_ownership, update_minter_ownership, update_nft_info, withdraw_funds,
+        add_additional_minter, approve, approve_all, burn_nft, initialize_creator,
+        initialize_minter, instantiate, instantiate_with_version, migrate, mint,
+        remove_additional_minter, remove_withdraw_address, revoke, revoke_all, send_nft,
+        set_withdraw_address, transfer_nft, update_collection_info, update_creator_ownership,
+        update_minter_ownership, update_nft_info, withdraw_funds,
     },
     msg::{
-        AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
+        AdditionalMintersResponse, AllNftInfoResponse, ApprovalResponse, ApprovalsResponse,
         CollectionInfoAndExtensionResponse, CollectionInfoMsg, Cw721ExecuteMsg,
         Cw721InstantiateMsg, Cw721MigrateMsg, Cw721QueryMsg, MinterResponse, NftInfoResponse,
         NumTokensResponse, OperatorResponse, OperatorsResponse, OwnerOfResponse, TokensResponse,
     },
     query::{
-        query_all_nft_info, query_all_tokens, query_approval, query_approvals,
-        query_collection_extension_attributes, query_collection_info,
+        query_additional_minters, query_all_nft_info, query_all_tokens, query_approval,
+        query_approvals, query_collection_extension_attributes, query_collection_info,
         query_collection_info_and_extension, query_creator_ownership, query_minter,
         query_minter_ownership, query_nft_info, query_num_tokens, query_operator, query_operators,
         query_owner_of, query_tokens, query_withdraw_address,
@@ -218,6 +219,10 @@ pub trait Cw721Execute<
                 msg,
             } => self.send_nft(deps, env, info, contract, token_id, msg),
             Cw721ExecuteMsg::Burn { token_id } => self.burn_nft(deps, env, info, token_id),
+            Cw721ExecuteMsg::AddMinter { minter } => self.add_additional_minter(deps, info, minter),
+            Cw721ExecuteMsg::RemoveMinter { minter } => {
+                self.remove_additional_minter(deps, info, minter)
+            }
             #[allow(deprecated)]
             Cw721ExecuteMsg::UpdateOwnership(action) => {
                 self.update_minter_ownership(deps, env, info, action)
@@ -340,6 +345,24 @@ pub trait Cw721Execute<
         token_id: String,
     ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
         burn_nft::<TCustomResponseMsg>(deps, env, info, token_id)
+    }
+
+    fn add_additional_minter(
+        &self,
+        deps: DepsMut,
+        info: &MessageInfo,
+        minter: String,
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
+        add_additional_minter::<TCustomResponseMsg>(deps, info, minter)
+    }
+
+    fn remove_additional_minter(
+        &self,
+        deps: DepsMut,
+        info: &MessageInfo,
+        minter: String,
+    ) -> Result<Response<TCustomResponseMsg>, Cw721ContractError> {
+        remove_additional_minter::<TCustomResponseMsg>(deps, info, minter)
     }
 
     // ------- opionated cw721 functions -------
@@ -605,6 +628,9 @@ pub trait Cw721Query<
             Cw721QueryMsg::GetCreatorOwnership {} => Ok(to_json_binary(
                 &self.query_creator_ownership(deps.storage)?,
             )?),
+            Cw721QueryMsg::GetAdditionalMinters { start_after, limit } => Ok(to_json_binary(
+                &self.query_additional_minters(deps, start_after, limit)?,
+            )?),
             Cw721QueryMsg::Extension { msg } => self.query_extension(deps, env, msg),
             Cw721QueryMsg::GetCollectionExtension { msg } => {
                 self.query_custom_collection_extension(deps, env, msg)
@@ -628,6 +654,15 @@ pub trait Cw721Query<
 
     fn query_creator_ownership(&self, storage: &dyn Storage) -> StdResult<Ownership<Addr>> {
         query_creator_ownership(storage)
+    }
+
+    fn query_additional_minters(
+        &self,
+        deps: Deps,
+        start_after: Option<String>,
+        limit: Option<u32>,
+    ) -> StdResult<AdditionalMintersResponse> {
+        query_additional_minters(deps, start_after, limit)
     }
 
     fn query_collection_info(&self, deps: Deps) -> StdResult<CollectionInfo> {

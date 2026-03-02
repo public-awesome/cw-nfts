@@ -19,6 +19,13 @@ use crate::{traits::StateFactory, NftExtensionMsg};
 pub const CREATOR: OwnershipStore = OwnershipStore::new(OWNERSHIP_KEY);
 /// - minter is stored in the contract storage using cw_ownable::OwnershipStore (same as for OWNERSHIP but with different key)
 pub const MINTER: OwnershipStore = OwnershipStore::new("collection_minter");
+/// Additional minters that can mint NFTs but cannot manage minter ownership.
+/// Stored as a set (Map<&Addr, Empty>) — the primary minter (MINTER owner) can add/remove these.
+/// All additional minters are cleared on ownership transfer (accept/renounce).
+pub const ADDITIONAL_MINTERS: Map<&Addr, Empty> = Map::new("additional_minters");
+/// Maximum number of additional minters allowed. This cap bounds both the cost of
+/// adding a new minter (count check) and clearing all minters on ownership transfer.
+pub const MAX_ADDITIONAL_MINTERS: u32 = 10;
 
 // ----------------------
 // NOTE: below are max restrictions for default collection extension (CollectionExtensionResponse)
