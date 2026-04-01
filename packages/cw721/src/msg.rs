@@ -505,7 +505,8 @@ impl StateFactory<CollectionExtension<RoyaltyInfo>>
             || self.image.is_some()
             || self.external_link.is_some()
             || self.banner_url.is_some()
-            || self.explicit_content.is_some())
+            || self.explicit_content.is_some()
+            || self.royalty_info.is_some())
             && sender.is_some()
             && creator_initialized.is_some()
             && CREATOR.assert_owner(deps.storage, sender.unwrap()).is_err()
@@ -721,7 +722,7 @@ where
             return Err(Cw721ContractError::CollectionSymbolEmpty {});
         }
         // collection metadata can only be updated by the creator. creator assertion is skipped for these cases:
-        // - CREATOR store is empty/not initioized (like in instantiation)
+        // - CREATOR store is empty/not initialized (like in instantiation)
         // - info is none (like in migration)
         let creator_initialized = CREATOR.item.may_load(deps.storage)?;
         if (self.name.is_some() || self.symbol.is_some())

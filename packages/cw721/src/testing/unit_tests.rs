@@ -1156,6 +1156,197 @@ fn test_collection_info_update() {
 }
 
 #[test]
+fn test_update_collection_info_non_creator_rejected() {
+    let mut deps = mock_dependencies();
+    let mut addrs = MockAddrFactory::new(deps.api);
+    let env = mock_env();
+    let info_creator = addrs.info(CREATOR_ADDR);
+    let contract = Cw721OnchainExtensions::default();
+    contract
+        .instantiate_with_version(
+            deps.as_mut(),
+            &env,
+            &info_creator,
+            Cw721InstantiateMsg {
+                name: "collection_name".into(),
+                symbol: "collection_symbol".into(),
+                collection_info_extension: Some(CollectionExtensionMsg {
+                    description: Some("description".into()),
+                    image: Some("https://example.com/image.png".to_string()),
+                    explicit_content: None,
+                    external_link: None,
+                    banner_url: None,
+                    start_trading_time: None,
+                    royalty_info: None,
+                }),
+                creator: Some(addrs.addr(CREATOR_ADDR).into()),
+                minter: Some(addrs.addr(MINTER_ADDR).into()),
+                withdraw_address: None,
+            },
+            "contract_name",
+            "contract_version",
+        )
+        .unwrap();
+
+    let info_other = addrs.info(OTHER_ADDR);
+
+    // non-creator updating name+symbol should fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_other,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: Some("new_name".into()),
+                    symbol: Some("new_symbol".into()),
+                    extension: None::<CollectionExtensionMsg<RoyaltyInfoResponse>>,
+                },
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotCreator {});
+
+    // non-creator updating extension only should also fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_other,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: None,
+                    symbol: None,
+                    extension: Some(CollectionExtensionMsg {
+                        description: Some("hacked".into()),
+                        image: None,
+                        explicit_content: None,
+                        external_link: None,
+                        banner_url: None,
+                        start_trading_time: None,
+                        royalty_info: None,
+                    }),
+                },
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotCreator {});
+
+    // non-creator updating royalty_info should fail
+    let err = contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_other,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: None,
+                    symbol: None,
+                    extension: Some(CollectionExtensionMsg {
+                        description: None,
+                        image: None,
+                        explicit_content: None,
+                        external_link: None,
+                        banner_url: None,
+                        start_trading_time: None,
+                        royalty_info: Some(RoyaltyInfoResponse {
+                            payment_address: addrs.addr(OTHER_ADDR).to_string(),
+                            share: Decimal::percent(5).to_string().parse().unwrap(),
+                        }),
+                    }),
+                },
+            },
+        )
+        .unwrap_err();
+    assert_eq!(err, Cw721ContractError::NotCreator {});
+
+    // minter can update start_trading_time (allowed)
+    let info_minter = addrs.info(MINTER_ADDR);
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_minter,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: None,
+                    symbol: None,
+                    extension: Some(CollectionExtensionMsg {
+                        description: None,
+                        image: None,
+                        explicit_content: None,
+                        external_link: None,
+                        banner_url: None,
+                        start_trading_time: Some(Timestamp::from_seconds(999)),
+                        royalty_info: None,
+                    }),
+                },
+            },
+        )
+        .unwrap();
+
+    // creator can update extension fields
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_creator,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: None,
+                    symbol: None,
+                    extension: Some(CollectionExtensionMsg {
+                        description: Some("updated by creator".into()),
+                        image: None,
+                        explicit_content: None,
+                        external_link: None,
+                        banner_url: None,
+                        start_trading_time: None,
+                        royalty_info: None,
+                    }),
+                },
+            },
+        )
+        .unwrap();
+
+    // creator can update royalty_info
+    contract
+        .execute(
+            deps.as_mut(),
+            &env,
+            &info_creator,
+            Cw721ExecuteMsg::UpdateCollectionInfo {
+                collection_info: CollectionInfoMsg {
+                    name: None,
+                    symbol: None,
+                    extension: Some(CollectionExtensionMsg {
+                        description: None,
+                        image: None,
+                        explicit_content: None,
+                        external_link: None,
+                        banner_url: None,
+                        start_trading_time: None,
+                        royalty_info: Some(RoyaltyInfoResponse {
+                            payment_address: addrs.addr(CREATOR_ADDR).to_string(),
+                            share: Decimal::percent(5).to_string().parse().unwrap(),
+                        }),
+                    }),
+                },
+            },
+        )
+        .unwrap();
+
+    // verify royalty_info was updated
+    let collection_info = Cw721OnchainExtensions::default()
+        .query_collection_info_and_extension(deps.as_ref())
+        .unwrap();
+    let extension = collection_info.extension.unwrap();
+    let royalty = extension.royalty_info.unwrap();
+    assert_eq!(royalty.payment_address, addrs.addr(CREATOR_ADDR));
+    assert_eq!(royalty.share, Decimal::percent(5));
+}
+
+#[test]
 fn test_nft_mint() {
     // case 1: mint without onchain metadata
     {
