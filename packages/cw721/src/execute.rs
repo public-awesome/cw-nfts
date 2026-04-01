@@ -449,14 +449,15 @@ where
     let nft_info_msg = NftInfoMsg {
         owner: current_nft_info.owner.to_string(),
         approvals: current_nft_info.approvals.clone(),
-        token_uri,
+        token_uri: token_uri.clone(),
         extension: msg,
     };
     let updated = nft_info_msg.create(deps.as_ref(), env, info, Some(&current_nft_info))?;
     contract.nft_info.save(deps.storage, &token_id, &updated)?;
     Ok(Response::new()
         .add_attribute("action", "update_nft_info")
-        .add_attribute("token_id", token_id))
+        .add_attribute("token_id", token_id)
+        .add_attribute("token_uri", token_uri.unwrap_or_default()))
 }
 
 pub fn set_withdraw_address<TCustomResponseMsg>(
